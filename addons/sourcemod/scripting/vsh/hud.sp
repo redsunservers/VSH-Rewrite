@@ -30,7 +30,7 @@ public void Hud_Think(int iClient)
 		{
 			for (int iBoss = 1; iBoss <= MaxClients; iBoss++)
 			{
-				SaxtonHaleBase boss = SaxtonHaleBase(iClient);
+				SaxtonHaleBase boss = SaxtonHaleBase(iBoss);
 				if (IsClientInGame(iBoss) && IsPlayerAlive(iBoss) && boss.bValid && !boss.bMinion)
 				{
 					int iRage = RoundToFloor(float(boss.iRageDamage) / float(boss.iMaxRageDamage) * 100.0);
