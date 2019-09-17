@@ -1,4 +1,4 @@
-# VSH-Rewrite
+# VSH-Rewrite [![Build Status](https://travis-ci.com/redsunservers/VSH-Rewrite.svg?branch=master)](https://travis-ci.com/redsunservers/VSH-Rewrite)
 
 A complete rewrite for one of largest custom gamemode, Versus Saxton Hale. [Originaly made by Eggman, released public on 1st February 2011](https://forums.alliedmods.net/showthread.php?t=146884?t=146884)
 VSH-Rewrite started its development by [Kenzzer](https://github.com/Kenzzer) at alpha stange on November 4th 2017, then continued by [42](https://github.com/FortyTwoFortyTwo) from 18th October 2018. Plugin then released public on September 17th 2019.
