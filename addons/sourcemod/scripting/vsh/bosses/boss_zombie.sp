@@ -63,7 +63,7 @@ methodmap CZombie < SaxtonHaleBase
 	
 	public Action OnVoiceCommand(char sCmd1[8], char sCmd2[8])
 	{
-		if (StrEqual(sCmd1, "0") && StrEqual(sCmd2, "0"))
+		if (sCmd1[0] == '0' && sCmd2[0] == '0')
 		{
 			//Since zombie scout cant get healed from medic, dont allow him to call medic
 			PrintHintText(this.iClient, "You can't heal as zombie!");
