@@ -104,7 +104,7 @@ methodmap CBraveJump < SaxtonHaleBase
 		if (this.iJumpCharge > 0)
 			Format(sMessage, sizeof(sMessage), "Jump charge: %0.2f%%. Look up and stand up to use super-jump.", (float(this.iJumpCharge)/float(this.iMaxJumpCharge))*100.0);
 		else
-			Format(sMessage, sizeof(sMessage), "Hold right click or crouch to use your super-jump!");
+			Format(sMessage, sizeof(sMessage), "Hold right click to use your super-jump!");
 		
 		if (g_flJumpCooldownWait[this.iClient] != 0.0 && g_flJumpCooldownWait[this.iClient] > GetGameTime())
 		{
@@ -127,13 +127,13 @@ methodmap CBraveJump < SaxtonHaleBase
 	
 	public void OnButtonHold(int button)
 	{
-		if ((button == IN_DUCK) || (button == IN_ATTACK2))
+		if (button == IN_ATTACK2)
 			g_bBraveJumpHoldingChargeButton[this.iClient] = true;
 	}
 	
 	public void OnButtonRelease(int button)
 	{
-		if ((button == IN_DUCK) || (button == IN_ATTACK2))
+		if (button == IN_ATTACK2)
 		{
 			if (TF2_IsPlayerInCondition(this.iClient, TFCond_Dazed))//Can't jump if stunned
 				return;
