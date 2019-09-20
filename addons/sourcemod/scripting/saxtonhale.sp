@@ -2127,17 +2127,19 @@ public Action Client_VoiceCommand(int iClient, const char[] sCommand, int iArgs)
 	GetCmdArg(1, sCmd1, sizeof(sCmd1));
 	GetCmdArg(2, sCmd2, sizeof(sCmd2));
 
-	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 	Action action = Plugin_Continue;
-	if (sCmd1[0] == '0' && sCmd2[0] == '0' && IsPlayerAlive(iClient) && boss.bValid)
+	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
+	if (boss.bValid && IsPlayerAlive(iClient))
 	{
-		if (boss.bValid && boss.iMaxRageDamage != -1 && (boss.iRageDamage >= boss.iMaxRageDamage))
+		action = boss.CallFunction("OnVoiceCommand", sCmd1, sCmd2);
+		
+		if (sCmd1[0] == '0' && sCmd2[0] == '0' && boss.iMaxRageDamage != -1 && (boss.iRageDamage >= boss.iMaxRageDamage))
 		{
 			boss.CallFunction("OnRage");
 			action = Plugin_Handled;
 		}
 	}
-
+	
 	return action;
 }
 
