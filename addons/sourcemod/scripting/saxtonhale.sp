@@ -350,6 +350,7 @@ Handle g_hSDKEquipWearable = null;
 #include "vsh/bosses/boss_brutalsniper.sp"
 #include "vsh/bosses/boss_announcer.sp"
 #include "vsh/bosses/boss_horsemann.sp"
+#include "vsh/bosses/boss_bonkboy.sp"
 #include "vsh/bosses/boss_seeman.sp"
 #include "vsh/bosses/boss_seeldier.sp"
 #include "vsh/bosses/boss_blutarch.sp"
@@ -488,6 +489,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterBoss("CBrutalSniper");
 	SaxtonHale_RegisterBoss("CAnnouncer");
 	SaxtonHale_RegisterBoss("CHorsemann");
+	SaxtonHale_RegisterBoss("CBonkBoy");
 	
 	//Register misc bosses
 	SaxtonHale_RegisterBoss("CSeeMan", "CSeeldier");
