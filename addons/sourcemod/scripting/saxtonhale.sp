@@ -1581,14 +1581,18 @@ public Action Event_PlayerInventoryUpdate(Event event, const char[] sName, bool 
 								TF2Attrib_SetByDefIndex(iWeapon, StringToInt(atts[j]), StringToFloat(atts[j+1]));
 
 							TF2Attrib_ClearCache(iWeapon);
-
-							//Reset max ammo after giving attribs
-							if (HasEntProp(iWeapon, Prop_Send, "m_iPrimaryAmmoType") && GetEntProp(iWeapon, Prop_Send, "m_iPrimaryAmmoType") > -1)
-							{
-								int iClip = SDK_GetMaxClip(iWeapon);
-								if (iClip > 0) SetEntProp(iWeapon, Prop_Send, "m_iClip1", iClip);
-							}
 						}
+						
+						// Set clip size to weapon in both class slot and specific index
+						int iClip = -1;
+						switch (i)
+						{
+							case 0: iClip = g_ConfigClass[nClass][iSlot].GetClip();
+							case 1: iClip = g_ConfigIndex.GetClip(iIndex);
+						}
+						
+						if (iClip > -1)
+							SetEntProp(iWeapon, Prop_Send, "m_iClip1", iClip);
 					}
 				}
 			}
