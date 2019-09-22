@@ -79,6 +79,16 @@ methodmap ConfigClass < StringMap
 		
 		else return -1;
 	}
+	
+	//Return clip size class slot should have on spawn, -1 if not specified
+	public int GetClip()
+	{
+		char sValue[MAXLEN_CONFIG_VALUE];
+		if (this.GetString("clip", sValue, sizeof(sValue)))
+			return StringToInt(sValue);
+		
+		else return -1;
+	}
 };
 
 methodmap ConfigIndex < ArrayList
@@ -228,6 +238,19 @@ methodmap ConfigIndex < ArrayList
 			return StringToInt(sValue);
 		
 		return -1;
+	}
+	
+	//Return clip size weapon index should have on spawn, -1 if not specified
+	public int GetClip(int iIndex)
+	{
+		StringMap sMap = this.GetStringMap(iIndex);
+		if (sMap == null) return -1;
+		
+		char sValue[MAXLEN_CONFIG_VALUE];
+		if (sMap.GetString("clip", sValue, sizeof(sValue)))
+			return StringToInt(sValue);
+		
+		else return -1;
 	}
 };
 
