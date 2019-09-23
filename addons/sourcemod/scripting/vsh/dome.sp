@@ -13,6 +13,7 @@ static float g_flDomeStart = 0.0;
 static float g_flDomeRadius = 0.0;
 static float g_flDomePreviousGameTime = 0.0;
 static float g_flDomeFreeze = 0.0;
+static float g_flDomePlayerDeath = 0.0;
 static float g_flDomePlayerTime[TF_MAXPLAYERS+1] = 0.0;
 static bool g_bDomePlayerOutside[TF_MAXPLAYERS+1] = false;
 static Handle g_hDomeTimerBleed = null;
@@ -140,6 +141,8 @@ void Dome_RoundSelected(Event event)
 
 void Dome_RoundArenaStart()
 {
+	g_flDomePlayerDeath = GetGameTime();
+	
 	if (!g_ConfigConvar.LookupBool("vsh_dome_enable")) return;
 	
 	g_flDomeEnableTime = GetGameTime() + 60.0;	//60 seconds initial time
@@ -150,11 +153,24 @@ void Dome_PlayerDeath(int iPlayerCount)
 {
 	if (!g_ConfigConvar.LookupBool("vsh_dome_enable")) return;
 	
+	float flGameTime = GetGameTime();
+	float flFreeze = g_ConfigConvar.LookupFloat("vsh_dome_freeze_duration");
+	
+	g_flDomePlayerDeath += flFreeze;	//Add previous death by freeze time
+	
+	//Cap min by current game time
+	if (g_flDomePlayerDeath > flGameTime)
+		g_flDomePlayerDeath = flGameTime;
+	
+	//Cap max if player death didnt happen in a long time
+	if (g_flDomePlayerDeath < flGameTime - 40.0)
+		g_flDomePlayerDeath = flGameTime - 40.0;
+	
 	//Check if dome isnt enabled yet
 	if (g_flDomeStart == 0.0)
 	{
 		//Add time everytime (non-zombie) attack team dies
-		g_flDomeEnableTime += g_ConfigConvar.LookupFloat("vsh_dome_freeze_duration");
+		g_flDomeEnableTime += flFreeze;
 
 		//Calculate max time we can allow for dome to start based on current alive player count
 		float flMaxTime = float(iPlayerCount) * 8.0;
@@ -162,14 +178,13 @@ void Dome_PlayerDeath(int iPlayerCount)
 			flMaxTime = 60.0;
 		
 		//If dome is going to be triggered longer than max time, set as that time
-		float flGameTime = GetGameTime();
 		if (g_flDomeEnableTime > flGameTime + flMaxTime)
 			g_flDomeEnableTime = flGameTime + flMaxTime;
 	}
 	else
 	{
 		//If boss kills attack team while dome is on, pause dome
-		g_flDomeFreeze = GetGameTime() + g_ConfigConvar.LookupFloat("vsh_dome_freeze_duration");
+		g_flDomeFreeze = GetGameTime() + flFreeze;
 	}
 }
 
@@ -389,14 +404,9 @@ public Action Dome_TimerBleed(Handle hTimer)
 				float flDamage;
 				if (SaxtonHale_IsValidBoss(i, false))
 				{
-					//Calculate max possible damage to deal boss based from player count
-					flDamage = float(g_iTotalAttackCount) * 25.0;
-					
-					//Scale damage down by current progress dome is at
-					float flRadiusMax = g_ConfigConvar.LookupFloat("vsh_dome_radius_max");
-					float flRadiusMin = g_ConfigConvar.LookupFloat("vsh_dome_radius_min");
-					float flRadiusPrecentage = (g_flDomeRadius - flRadiusMin) / (flRadiusMax - flRadiusMin);
-					flDamage *= (1.0 - flRadiusPrecentage);
+					//Scale damage down by player deaths and total amount of players
+					float flTimeGap = GetGameTime() - g_flDomePlayerDeath;
+					flDamage = float(g_iTotalAttackCount) * flTimeGap * 3.0;
 				}
 				else
 				{
