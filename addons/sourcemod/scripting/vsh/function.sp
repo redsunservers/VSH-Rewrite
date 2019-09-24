@@ -9,8 +9,8 @@ static any g_FunctionStackTemp[FUNCTION_CALLSTACK_MAX][FUNCTION_PARAM_MAX+1][FUN
 
 static StringMap g_mFunctionExecType;	//ExecType of the forward
 static StringMap g_mFunctionParamType;	//Array of ParamType of the forward from 1 to FUNCTION_PARAM_MAX, 0 for size of param
-static StringMap g_mFunctionHook;		//ArrayList of datapack, hooks to call
 static StringMap g_mFunctionPlugin;		//Plugin handle connected to methodmap, for calling function
+static StringMap g_mFunctionHook[SaxtonHaleHookMode];	//PrivateForward of hooks
 
 void Function_Init()
 {
@@ -18,9 +18,10 @@ void Function_Init()
 	
 	g_mFunctionExecType = new StringMap();
 	g_mFunctionParamType = new StringMap();
-	g_mFunctionHook = new StringMap();
-	
 	g_mFunctionPlugin = new StringMap();
+	
+	for (int i = 0; i < sizeof(g_mFunctionHook); i++)
+		g_mFunctionHook[i] = new StringMap();
 	
 	//Boss functions
 	SaxtonHale_InitFunction("CreateBoss", ET_Single, Param_String);
@@ -121,25 +122,20 @@ any Function_Start(SaxtonHaleBase boss)
 {
 	Action action = Plugin_Continue;
 	any returnValue = 0;
+	Handle hPrivateForward;
 	char sBuffer[64];
 	
-	ArrayList aFunctionHook = Function_GetHook(g_sFunctionStackName[g_iFunctionStack]);
-	
 	//Start pre hooks
-	if (aFunctionHook != null)
+	int hookType = view_as<int>(VSHHookMode_Pre);	//I hate this
+	if (g_mFunctionHook[hookType].GetValue(g_sFunctionStackName[g_iFunctionStack], hPrivateForward))
 	{
-		int iLength = aFunctionHook.Length;
-		for (int i = 0; i < iLength; i++)
+		if (GetForwardFunctionCount(hPrivateForward) == 0)
 		{
-			DataPack data = aFunctionHook.Get(i);
-			data.Reset();
-			if (data.ReadCell() == VSHHookMode_Pre)
-			{
-				Handle hPlugin = data.ReadCell();
-				SaxtonHaleHookCallback callback = view_as<SaxtonHaleHookCallback>(data.ReadFunction());
-				if (!Function_CallHook(boss, hPlugin, callback, action, returnValue)) return returnValue;
-			}
+			//One of plugin unloaded, caused function count 0. Don't need to keep handle now
+			delete hPrivateForward;
+			g_mFunctionHook[hookType].Remove(g_sFunctionStackName[g_iFunctionStack]);
 		}
+		else if (!Function_CallHook(boss, hPrivateForward, action, returnValue)) return returnValue;
 	}
 	
 	//Call base_boss
@@ -174,20 +170,16 @@ any Function_Start(SaxtonHaleBase boss)
 	}
 	
 	//Start post hooks
-	if (aFunctionHook != null)
+	hookType = view_as<int>(VSHHookMode_Post);
+	if (g_mFunctionHook[hookType].GetValue(g_sFunctionStackName[g_iFunctionStack], hPrivateForward))
 	{
-		int iLength = aFunctionHook.Length;
-		for (int i = 0; i < iLength; i++)
+		if (GetForwardFunctionCount(hPrivateForward) == 0)
 		{
-			DataPack data = aFunctionHook.Get(i);
-			data.Reset();
-			if (data.ReadCell() == VSHHookMode_Post)
-			{
-				Handle hPlugin = data.ReadCell();
-				SaxtonHaleHookCallback callback = view_as<SaxtonHaleHookCallback>(data.ReadFunction());
-				if (!Function_CallHook(boss, hPlugin, callback, action, returnValue)) return returnValue;
-			}
+			//One of plugin unloaded, caused function count 0. Don't need to keep handle now
+			delete hPrivateForward;
+			g_mFunctionHook[hookType].Remove(g_sFunctionStackName[g_iFunctionStack]);
 		}
+		else if (!Function_CallHook(boss, hPrivateForward, action, returnValue)) return returnValue;
 	}
 	
 	return returnValue;
@@ -301,50 +293,34 @@ bool Function_Call(SaxtonHaleBase boss, const char[] sClass, Action action, any 
 
 void Function_Hook(const char[] sName, Handle hPlugin, SaxtonHaleHookCallback callback, SaxtonHaleHookMode hookType)
 {
-	ArrayList aFunctionHook;
+	Handle hPrivateForward;
+	if (!g_mFunctionHook[hookType].GetValue(sName, hPrivateForward))	//Get existing private forward
+	{
+		//If does not exist, create new private forward
+		hPrivateForward = CreateForward(ET_Hook, Param_Cell, Param_CellByRef);
+		g_mFunctionHook[hookType].SetValue(sName, hPrivateForward);
+	}
 	
-	if (!g_mFunctionHook.GetValue(sName, aFunctionHook))	//ArrayList does not exist, create new one
-		aFunctionHook = new ArrayList();
-	
-	DataPack data = new DataPack();
-	data.WriteCell(hookType);
-	data.WriteCell(hPlugin);
-	data.WriteFunction(callback);
-	
-	aFunctionHook.Push(data);
-	g_mFunctionHook.SetValue(sName, aFunctionHook);	//Really only needed if new array
+	AddToForward(hPrivateForward, hPlugin, callback);
 }
 
 void Function_Unhook(const char[] sName, Handle hPlugin, SaxtonHaleHookCallback callback, SaxtonHaleHookMode hookType)
 {
-	ArrayList aFunctionHook;
-	if (!g_mFunctionHook.GetValue(sName, aFunctionHook))	//No hook functions to unhook
-		return;
+	Handle hPrivateForward;
+	if (!g_mFunctionHook[hookType].GetValue(sName, hPrivateForward))	//Get private forward to remove
+		return;	//No hook functions to unhook
 	
-	int iLength = aFunctionHook.Length;
-	for (int i = iLength-1; i >= 0; i--)
+	RemoveFromForward(hPrivateForward, hPlugin, callback);
+	
+	if (GetForwardFunctionCount(hPrivateForward) == 0)
 	{
-		DataPack data = aFunctionHook.Get(i);
-		data.Reset();
-		
-		if (data.ReadCell() == hookType
-			&& data.ReadCell() == hPlugin
-			&& data.ReadFunction() == callback)
-		{
-			delete data;
-			aFunctionHook.Erase(i);
-			
-			if (aFunctionHook.Length == 0)
-			{
-				//No more hooks in function, delete
-				delete aFunctionHook;
-				g_mFunctionHook.Remove(sName);
-			}
-		}
+		//No more hooks in forward
+		delete hPrivateForward;
+		g_mFunctionHook[hookType].Remove(sName);
 	}
 }
 
-bool Function_CallHook(SaxtonHaleBase boss, Handle hPlugin, SaxtonHaleHookCallback callback, Action &action, any &returnValue)
+bool Function_CallHook(SaxtonHaleBase boss, Handle hPrivateForward, Action &action, any &returnValue)
 {
 	//Copy final to temps for hook to use temp params
 	int iSize = g_FunctionStackFinal[g_iFunctionStack][0][0];
@@ -353,14 +329,16 @@ bool Function_CallHook(SaxtonHaleBase boss, Handle hPlugin, SaxtonHaleHookCallba
 			g_FunctionStackTemp[g_iFunctionStack][iParam][iArray] = g_FunctionStackFinal[g_iFunctionStack][iParam][iArray];
 	
 	//Start call
-	Call_StartFunction(hPlugin, callback);
+	Call_StartForward(hPrivateForward);
 	Call_PushCell(boss);
 	
 	any returnTemp = returnValue;
 	Call_PushCellRef(returnTemp);
 	
 	Action actionTemp;
-	Call_Finish(actionTemp);
+	int iError = Call_Finish(actionTemp);
+	if (iError != SP_ERROR_NONE)
+		ThrowError("Unable to call hook forward (Function %s, error code %d)", g_sFunctionStackName[g_iFunctionStack], iError);
 	
 	//If stop, set return and params, stop any further functions called
 	if (actionTemp == Plugin_Stop)
@@ -442,15 +420,6 @@ void Function_GetParamTypeName(ParamType paramType, char[] sName, int iLength)
 		case Param_VarArgs: Format(sName, iLength, "Param_VarArgs");
 		default: Format(sName, iLength, "Unknown Param");
 	}
-}
-
-ArrayList Function_GetHook(const char[] sName)
-{
-	ArrayList aFunctionHook;
-	if (!g_mFunctionHook.GetValue(sName, aFunctionHook))
-		return null;
-	
-	return aFunctionHook;
 }
 
 bool Function_AddPlugin(const char[] sClass, Handle hPlugin)
