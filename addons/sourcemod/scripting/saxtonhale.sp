@@ -1245,9 +1245,14 @@ public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcas
 				Format(sMessage, sizeof(sMessage), "%s %s", sMessage, sBuffer);
 			}
 			
-			//Get Boss name and healths
+			//Get Boss name
 			boss.CallFunction("GetBossName", sBuffer, sizeof(sBuffer));
-			Format(sMessage, sizeof(sMessage), "%s %s had %d of %d health left", sMessage, sBuffer, GetEntProp(iClient, Prop_Send, "m_iHealth"), SDK_GetMaxHealth(iClient));
+			
+			//Format with health
+			if (IsPlayerAlive(iClient))
+				Format(sMessage, sizeof(sMessage), "%s %s had %d of %d health left", sMessage, sBuffer, boss.iHealth, boss.iMaxHealth);
+			else
+				Format(sMessage, sizeof(sMessage), "%s %s died with %d max health", sMessage, sBuffer, boss.iMaxHealth);
 		}
 	}
 
