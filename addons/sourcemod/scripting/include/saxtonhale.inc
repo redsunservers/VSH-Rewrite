@@ -274,8 +274,6 @@ typeset SaxtonHaleHookCallback
 /**
  * Hook a boss function to use when function get called. Also allows to override return and params before returning real value
  *
- * @note Make sure plugin unhooks a function once unloaded
- *
  * @param sName             Name of function to hook.
  * @param callback          Callback when function get called.
  * @param hookType          Type of hook, pre to call before functions get called, or post to call after functions get called. Overriding return and params work on both pre and post.
@@ -285,6 +283,8 @@ native void SaxtonHale_HookFunction(const char[] sName, SaxtonHaleHookCallback c
 
 /**
  * Unhook a boss function
+ *
+ * @note It is not necessary to unhook a function on plugin end
  *
  * @param sName             Name of function to unhook.
  * @param callback          Callback when function get called.
