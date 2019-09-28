@@ -519,7 +519,7 @@ native bool SaxtonHale_ForceSpecialRound(int iClient = 0, TFClassType nClass = T
  * @param iClient	    	Client to set new preferences
  * @param preferences	    New preferences to set
  * @noreturn
- * @error                   Invalid client index or client not in game
+ * @error                   Invalid client index or client not connected
  */
 native void SaxtonHale_SetPreferences(int iClient, int iPreferences);
 
@@ -529,7 +529,7 @@ native void SaxtonHale_SetPreferences(int iClient, int iPreferences);
  * @param iClient        	Client to set new preferences
  * @param iQueue        	Queue points to set
  * @noreturn
- * @error                   Invalid client index or client not in game
+ * @error                   Invalid client index or client not connected
  */
 native void SaxtonHale_SetQueue(int iClient, int iQueue);
 
@@ -539,7 +539,7 @@ native void SaxtonHale_SetQueue(int iClient, int iQueue);
  * @param iClient           Client to set new winstreak
  * @param iWinstreak    	Winstreak amount to set
  * @noreturn
- * @error                   Invalid client index or client not in game
+ * @error                   Invalid client index or client not connected
  */
 native void SaxtonHale_SetWinstreak(int iClient, int iWinstreak);
 
@@ -556,7 +556,7 @@ native bool SaxtonHale_IsWinstreakEnable();
  * @param iClient        	Client to set admin status
  * @param bEnable        	True if allow to give admin command, false otherwise
  * @noreturn
- * @error                   Invalid client index or client not in game
+ * @error                   Invalid client index or client not connected
  */
 native void SaxtonHale_SetAdmin(int iClient, bool bEnable);
 
@@ -566,7 +566,7 @@ native void SaxtonHale_SetAdmin(int iClient, bool bEnable);
  * @param iClient        	Client to set punishment status
  * @param bEnable        	True if give punishment, false otherwise
  * @noreturn
- * @error                   Invalid client index or client not in game
+ * @error                   Invalid client index or client not connected
  */
 native void SaxtonHale_SetPunishment(int iClient, bool bEnable);
 

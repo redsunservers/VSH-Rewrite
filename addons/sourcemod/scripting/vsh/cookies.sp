@@ -33,6 +33,7 @@ void Cookies_OnClientJoin(int iClient)
 {
 	if (IsFakeClient(iClient))
 	{
+		//Bots dont use cookies
 		Preferences_SetAll(iClient, 0);
 		Queue_SetPlayerPoints(iClient, 0);
 		Winstreak_SetCurrent(iClient, 0);
@@ -41,18 +42,12 @@ void Cookies_OnClientJoin(int iClient)
 	
 	if (g_ConfigConvar.LookupBool("vsh_cookies_preferences"))
 		Cookies_RefreshPreferences(iClient);
-	else
-		Preferences_SetAll(iClient, -1);
 	
 	if (g_ConfigConvar.LookupBool("vsh_cookies_queue"))
 		Cookies_RefreshQueue(iClient);
-	else
-		Queue_SetPlayerPoints(iClient, -1);
 	
 	if (g_ConfigConvar.LookupBool("vsh_cookies_winstreak"))
 		Cookies_RefreshWinstreak(iClient);
-	else
-		Winstreak_SetCurrent(iClient, -1);
 }
 
 void Cookies_RefreshPreferences(int iClient)
