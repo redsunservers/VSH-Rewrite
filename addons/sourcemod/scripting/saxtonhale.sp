@@ -528,9 +528,18 @@ public void OnPluginStart()
 	
 	Config_Refresh();
 	
+	//Incase of lateload, call client join functions
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
+	{
+		if (IsClientConnected(iClient))
+			OnClientConnected(iClient);
+		
 		if (IsClientInGame(iClient))
+		{
 			OnClientPutInServer(iClient);
+			OnClientPostAdminCheck(iClient);
+		}
+	}
 }
 
 public void OnPluginEnd()
@@ -1827,11 +1836,8 @@ public Action Timer_EntityCleanup(Handle hTimer, int iRef)
 	return Plugin_Handled;
 }
 
-public void OnClientPutInServer(int iClient)
+public void OnClientConnected(int iClient)
 {
-	DHookEntity(g_hHookGetMaxHealth, false, iClient);
-	SDKHook(iClient, SDKHook_PreThink, Client_OnThink);
-	SDKHook(iClient, SDKHook_OnTakeDamage, Client_OnTakeDamage);
 	Network_ResetClient(iClient);
 
 	g_flPlayerSpeedMultiplier[iClient] = 1.0;
@@ -1847,8 +1853,23 @@ public void OnClientPutInServer(int iClient)
 	ClassLimit_SetMainClass(iClient, TFClass_Unknown);
 	ClassLimit_SetDesiredClass(iClient, TFClass_Unknown);
 	
-	Cookies_OnClientJoin(iClient);
+	//-1 as unknown
+	Preferences_SetAll(iClient, -1);
+	Queue_SetPlayerPoints(iClient, -1);
+	Winstreak_SetCurrent(iClient, -1);
+}
+
+public void OnClientPutInServer(int iClient)
+{
+	DHookEntity(g_hHookGetMaxHealth, false, iClient);
+	SDKHook(iClient, SDKHook_PreThink, Client_OnThink);
+	SDKHook(iClient, SDKHook_OnTakeDamage, Client_OnTakeDamage);
 	
+	Cookies_OnClientJoin(iClient);
+}
+
+public void OnClientPostAdminCheck(int iClient)
+{
 	AdminId iAdmin = GetUserAdmin(iClient);
 	if (iAdmin.HasFlag(Admin_RCON) || iAdmin.HasFlag(Admin_Root))
 		Client_AddFlag(iClient, haleClientFlags_Admin);

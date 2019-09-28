@@ -561,8 +561,8 @@ public int Native_SetPreferences(Handle hPlugin, int iNumParams)
 	
 	if (iClient <= 0 || iClient > MaxClients)
 		ThrowNativeError(SP_ERROR_NATIVE, "Client index %d is invalid", iClient);
-	if (!IsClientInGame(iClient))
-		ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not in game", iClient);
+	if (!IsClientConnected(iClient))
+		ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not connected", iClient);
 
 	Preferences_SetAll(iClient, iPreferences);
 }
@@ -575,8 +575,8 @@ public int Native_SetQueue(Handle hPlugin, int iNumParams)
 	
 	if (iClient <= 0 || iClient > MaxClients)
 		ThrowNativeError(SP_ERROR_NATIVE, "Client index %d is invalid", iClient);
-	if (!IsClientInGame(iClient))
-		ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not in game", iClient);
+	if (!IsClientConnected(iClient))
+		ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not connected", iClient);
 
 	Queue_SetPlayerPoints(iClient, iQueue);
 }
@@ -589,8 +589,8 @@ public int Native_SetWinstreak(Handle hPlugin, int iNumParams)
 	
 	if (iClient <= 0 || iClient > MaxClients)
 		ThrowNativeError(SP_ERROR_NATIVE, "Client index %d is invalid", iClient);
-	if (!IsClientInGame(iClient))
-		ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not in game", iClient);
+	if (!IsClientConnected(iClient))
+		ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not connected", iClient);
 
 	Winstreak_SetCurrent(iClient, iWinstreak);
 }
@@ -609,8 +609,8 @@ public int Native_SetAdmin(Handle hPlugin, int iNumParams)
 	
 	if (iClient <= 0 || iClient > MaxClients)
 		ThrowNativeError(SP_ERROR_NATIVE, "Client index %d is invalid", iClient);
-	if (!IsClientInGame(iClient))
-		ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not in game", iClient);
+	if (!IsClientConnected(iClient))
+		ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not connected", iClient);
 
 	if (bEnable)
 		Client_AddFlag(iClient, haleClientFlags_Admin);
@@ -626,8 +626,8 @@ public int Native_SetPunishment(Handle hPlugin, int iNumParams)
 	
 	if (iClient <= 0 || iClient > MaxClients)
 		ThrowNativeError(SP_ERROR_NATIVE, "Client index %d is invalid", iClient);
-	if (!IsClientInGame(iClient))
-		ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not in game", iClient);
+	if (!IsClientConnected(iClient))
+		ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not connected", iClient);
 
 	if (bEnable)
 		Client_AddFlag(iClient, haleClientFlags_Punishment);
