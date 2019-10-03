@@ -59,9 +59,7 @@ methodmap CHorsemann < SaxtonHaleBase
 	{
 		boss.CallFunction("CreateAbility", "CWallClimb");
 		boss.CallFunction("CreateAbility", "CTeleportSwap");
-		CScareRage scareAbility = boss.CallFunction("CreateAbility", "CScareRage");
-		scareAbility.flRadius = 800.0;
-		//boss.CallFunction("CreateAbility", "CRageGhost");
+		boss.CallFunction("CreateAbility", "CRageGhost");
 		
 		boss.iBaseHealth = 800;
 		boss.iHealthPerPlayer = 800;
