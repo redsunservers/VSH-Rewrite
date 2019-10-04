@@ -229,15 +229,7 @@ methodmap CRageGhost < SaxtonHaleBase
 				//Visual/Sound effects
 				for (int i = 0; i < iLength; i++)
 				{
-					BfWrite bf = UserMessageToBfWrite(StartMessageOne("Fade", iSpooked[i]));
-					bf.WriteShort(2000);	//Fade duration
-					bf.WriteShort(0);
-					bf.WriteShort(0x0001);
-					bf.WriteByte(255);		//Red
-					bf.WriteByte(0);		//Green
-					bf.WriteByte(255);		//Blue
-					bf.WriteByte(160);		//Alpha
-					EndMessage();
+					CreateFade(iSpooked[i], _, 255, 0, 255, 160);
 					
 					char sSound[PLATFORM_MAX_PATH];
 					this.CallFunction("GetSoundAbility", "CRageGhost", sSound, sizeof(sSound));

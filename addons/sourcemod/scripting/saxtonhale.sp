@@ -3041,7 +3041,7 @@ stock int TF2_SpawnParticle(char[] sParticle, float vecOrigin[3] = NULL_VECTOR, 
 		AcceptEntityInput(iParticle, "Start");
 	}
 	
-	//Really only need ref of entity
+	//Return ref of entity
 	return EntIndexToEntRef(iParticle);
 }
 
@@ -3135,6 +3135,19 @@ void Frame_KillLight(int iRef)
 	int iLight = EntRefToEntIndex(iRef);
 	if (iLight > MaxClients)
 		AcceptEntityInput(iLight, "Kill");
+}
+
+stock void CreateFade(int iClient, int iDuration = 2000, int iRed = 255, int iGreen = 255, int iBlue = 255, int iAlpha = 255)
+{
+	BfWrite bf = UserMessageToBfWrite(StartMessageOne("Fade", iClient));
+	bf.WriteShort(iDuration);	//Fade duration
+	bf.WriteShort(0);
+	bf.WriteShort(0x0001);
+	bf.WriteByte(iRed);			//Red
+	bf.WriteByte(iGreen);		//Green
+	bf.WriteByte(iBlue);		//Blue
+	bf.WriteByte(iAlpha);		//Alpha
+	EndMessage();
 }
 
 stock void BroadcastSoundToTeam(int team, const char[] strSound)
