@@ -10,7 +10,7 @@ static any g_FunctionStackTemp[FUNCTION_CALLSTACK_MAX][FUNCTION_PARAM_MAX+1][FUN
 static StringMap g_mFunctionExecType;	//ExecType of the forward
 static StringMap g_mFunctionParamType;	//Array of ParamType of the forward from 1 to FUNCTION_PARAM_MAX, 0 for size of param
 static StringMap g_mFunctionPlugin;		//Plugin handle connected to methodmap, for calling function
-static StringMap g_mFunctionHook[SaxtonHaleHookMode];	//PrivateForward of hooks
+static StringMap g_mFunctionHook[view_as<int>(SaxtonHaleHookMode)];	//PrivateForward of hooks
 
 void Function_Init()
 {
