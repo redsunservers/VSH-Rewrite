@@ -229,7 +229,7 @@ methodmap CRageGhost < SaxtonHaleBase
 				//Visual/Sound effects
 				for (int i = 0; i < iLength; i++)
 				{
-					CreateFade(iSpooked[i], _, 255, 0, 255, 160);
+					CreateFade(iSpooked[i], 1000, 160, 56, 204, 160);
 					
 					char sSound[PLATFORM_MAX_PATH];
 					this.CallFunction("GetSoundAbility", sSound, sizeof(sSound), "CRageGhost");
