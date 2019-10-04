@@ -5,7 +5,15 @@
 
 static float g_flGhostRadius[TF_MAXPLAYERS+1];
 static float g_flGhostDuration[TF_MAXPLAYERS+1];
+static float g_flGhostHealSteal[TF_MAXPLAYERS+1];
+static float g_flGhostHealGain[TF_MAXPLAYERS+1];
+
+static float g_flGhostHealStartTime[TF_MAXPLAYERS+1][TF_MAXPLAYERS+1];
+static int g_iGhostHealStealCount[TF_MAXPLAYERS+1][TF_MAXPLAYERS+1];
+static int g_iGhostHealGainCount[TF_MAXPLAYERS+1][TF_MAXPLAYERS+1];
+
 static float g_flGhostLastSpookTime[TF_MAXPLAYERS+1];
+
 static bool g_bGhostEnable[TF_MAXPLAYERS+1];
 
 static int g_iGhostParticleBeam[TF_MAXPLAYERS+1][TF_MAXPLAYERS+1];
@@ -37,6 +45,30 @@ methodmap CRageGhost < SaxtonHaleBase
 		}
 	}
 	
+	property float flHealSteal
+	{
+		public get()
+		{
+			return g_flGhostHealSteal[this.iClient];
+		}
+		public set(float val)
+		{
+			g_flGhostHealSteal[this.iClient] = val;
+		}
+	}
+	
+	property float flHealGain
+	{
+		public get()
+		{
+			return g_flGhostHealGain[this.iClient];
+		}
+		public set(float val)
+		{
+			g_flGhostHealGain[this.iClient] = val;
+		}
+	}
+	
 	public void GetModel(char[] sModel, int iLength)
 	{
 		//Override boss's model during GetModel function
@@ -49,6 +81,8 @@ methodmap CRageGhost < SaxtonHaleBase
 		//Default values, these can be changed if needed
 		ability.flRadius = 400.0;
 		ability.flDuration = 5.0;
+		ability.flHealSteal = 20.0;	//Steals hp per second
+		ability.flHealGain = 40.0;	//Gains hp per second
 		
 		g_bGhostEnable[ability.iClient] = false;
 		g_flGhostLastSpookTime[ability.iClient] = 0.0;
@@ -133,21 +167,45 @@ methodmap CRageGhost < SaxtonHaleBase
 						iSpooked[iLength] = iVictim;
 						iLength++;
 						
-						//No beam for victim yet
-						int iParticle = EntRefToEntIndex(g_iGhostParticleBeam[iClient][iVictim]);
-						if (iParticle <= 0 || !IsValidEdict(iParticle))
+						//Set time when victim entered
+						if (g_flGhostHealStartTime[iClient][iVictim] == 0.0)
 						{
+							g_flGhostHealStartTime[iClient][iVictim] = GetGameTime();
+							
 							vecTargetOrigin[2] += 42.0;
 							float vecTargetAngles[3];
 							GetClientAbsAngles(iClient, vecTargetAngles);
 							g_iGhostParticleBeam[iClient][iVictim] = TF2_SpawnParticle(sParticle[iTeam], vecTargetOrigin, vecTargetAngles, true, iVictim, EntRefToEntIndex(g_iGhostParticleCentre[iClient]));
 						}
+						
+						//Calculate on heal steal
+						float flTimeGap = GetGameTime() - g_flGhostHealStartTime[iClient][iVictim];
+						
+						int iExpectedSteal = RoundToCeil(flTimeGap * this.flHealSteal);
+						if (iExpectedSteal > g_iGhostHealStealCount[iClient][iVictim])
+						{
+							float flDamage = float(iExpectedSteal - g_iGhostHealStealCount[iClient][iVictim]);
+							SDKHooks_TakeDamage(iVictim, iClient, iClient, flDamage, DMG_PREVENT_PHYSICS_FORCE);
+							g_iGhostHealStealCount[iClient][iVictim] = iExpectedSteal;
+						}
+						
+						int iExpectedGain = RoundToCeil(flTimeGap * this.flHealGain);
+						if (iExpectedGain > g_iGhostHealGainCount[iClient][iVictim])
+						{
+							Client_AddHealth(iClient, iExpectedGain - g_iGhostHealGainCount[iClient][iVictim]);
+							g_iGhostHealGainCount[iClient][iVictim] = iExpectedGain;
+						}
 					}
 				}
 				
 				//Check if beam ent need to be killed, from out of range or client death/disconnect
-				if (!bSpook)
+				if (!bSpook && g_flGhostHealStartTime[iClient][iVictim] != 0.0)
+				{
+					g_flGhostHealStartTime[iClient][iVictim] = 0.0;
+					g_iGhostHealStealCount[iClient][iVictim] = 0;
+					g_iGhostHealGainCount[iClient][iVictim] = 0;
 					Timer_EntityCleanup(null, g_iGhostParticleBeam[iClient][iVictim]);
+				}
 			}
 			
 			//Random Spook effects, 1.5 sec cooldown
@@ -241,7 +299,12 @@ methodmap CRageGhost < SaxtonHaleBase
 			
 			Timer_EntityCleanup(null, g_iGhostParticleCentre[iClient]);
 			for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
+			{
+				g_flGhostHealStartTime[iClient][iVictim] = 0.0;
+				g_iGhostHealStealCount[iClient][iVictim] = 0;
+				g_iGhostHealGainCount[iClient][iVictim] = 0;
 				Timer_EntityCleanup(null, g_iGhostParticleBeam[iClient][iVictim]);
+			}
 			
 			//Update model
 			ApplyBossModel(this.iClient);

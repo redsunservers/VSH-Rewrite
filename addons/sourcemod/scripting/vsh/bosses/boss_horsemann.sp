@@ -61,10 +61,10 @@ methodmap CHorsemann < SaxtonHaleBase
 		boss.CallFunction("CreateAbility", "CTeleportSwap");
 		boss.CallFunction("CreateAbility", "CRageGhost");
 		
-		boss.iBaseHealth = 800;
-		boss.iHealthPerPlayer = 800;
+		boss.iBaseHealth = 700;
+		boss.iHealthPerPlayer = 650;
 		boss.nClass = TFClass_DemoMan;
-		boss.iMaxRageDamage = 2500;
+		boss.iMaxRageDamage = 3000;
 	}
 	
 	public void GetBossName(char[] sName, int length)
