@@ -232,9 +232,9 @@ methodmap CRageGhost < SaxtonHaleBase
 					CreateFade(iSpooked[i], _, 255, 0, 255, 160);
 					
 					char sSound[PLATFORM_MAX_PATH];
-					this.CallFunction("GetSoundAbility", "CRageGhost", sSound, sizeof(sSound));
+					this.CallFunction("GetSoundAbility", sSound, sizeof(sSound), "CRageGhost");
 					if (!StrEmpty(sSound))
-						EmitSoundToClient(iClient, sSound, _, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
+						EmitSoundToClient(iSpooked[i], sSound);
 				}
 				
 				//Random teleports
