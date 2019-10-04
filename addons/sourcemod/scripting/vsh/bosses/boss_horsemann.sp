@@ -74,15 +74,16 @@ methodmap CHorsemann < SaxtonHaleBase
 	
 	public void GetBossInfo(char[] sInfo, int length)
 	{
-		StrCat(sInfo, length, "\nHealth: Medium");
+		StrCat(sInfo, length, "\nHealth: Low");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nAbilities");
 		StrCat(sInfo, length, "\n- Wall Climb");
 		StrCat(sInfo, length, "\n- Teleport Swap");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- Scares players at medium range for 5 seconds");
-		StrCat(sInfo, length, "\n- 200%% Rage: Larger range and extends duration to 7.5 seconds");
+		StrCat(sInfo, length, "\n- Becomes ghost to fly, immute to damage, and unable to attack for 5 seconds");
+		StrCat(sInfo, length, "\n- Steals health from nearby players with random spooky effects");
+		StrCat(sInfo, length, "\n- 200%% Rage: Extends duration to 10 seconds");
 	}
 	
 	public void OnSpawn()
