@@ -117,16 +117,24 @@ methodmap CRageGhost < SaxtonHaleBase
 		vecOrigin[2] += 42.0;
 		g_iGhostParticleCentre[iClient] = TF2_SpawnParticle("", vecOrigin, vecAngles, false, iClient);
 		
-		//Stun
+		//Stun and Fly
 		float flDuration = this.flDuration * (this.bSuperRage ? 2 : 1);
-		TF2_StunPlayer(iClient, flDuration, 0.0, TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT, 0);
-		/*
+		TF2_StunPlayer(iClient, flDuration, 0.0, TF_STUNFLAG_GHOSTEFFECT|TF_STUNFLAG_NOSOUNDOREFFECT, 0);
+		TF2_AddCondition(iClient, TFCond_SwimmingNoEffects, flDuration);
+		
+		//Get active weapon and dont render
+		int iWeapon = GetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon");
+		if (IsValidEdict(iWeapon))
+		{
+			SetEntityRenderMode(iWeapon, RENDER_TRANSCOLOR);
+			SetEntityRenderColor(iWeapon, _, _, _, 0);
+		}
+		
 		//Thirdperson
 		int iFlags = GetCommandFlags("thirdperson");
 		SetCommandFlags("thirdperson", iFlags & (~FCVAR_CHEAT));
 		ClientCommand(this.iClient, "thirdperson");
 		SetCommandFlags("thirdperson", iFlags);
-		*/
 	}
 	
 	public void OnThink()
@@ -313,14 +321,28 @@ methodmap CRageGhost < SaxtonHaleBase
 			float vecOrigin[3];
 			GetClientAbsOrigin(iClient, vecOrigin);
 			CreateTimer(3.0, Timer_EntityCleanup, TF2_SpawnParticle(PARTICLE_GHOST, vecOrigin));
-			/*
+			
+			//Get active weapon and make it visible again
+			int iWeapon = GetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon");
+			if (IsValidEdict(iWeapon))
+			{
+				SetEntityRenderMode(iWeapon, RENDER_NORMAL);
+				SetEntityRenderColor(iWeapon, _, _, _, 255);
+			}
+			
 			//Firstperson
 			int iFlags = GetCommandFlags("firstperson");
 			SetCommandFlags("firstperson", iFlags & (~FCVAR_CHEAT));
 			ClientCommand(iClient, "firstperson");
 			SetCommandFlags("firstperson", iFlags);
-			*/
 		}
+	}
+	
+	public void OnButton(int &buttons)
+	{
+		//Don't allow him to attack during rage
+		if (g_bGhostEnable[this.iClient] && buttons & IN_ATTACK)
+			buttons &= ~IN_ATTACK;
 	}
 	
 	public void Destroy()
