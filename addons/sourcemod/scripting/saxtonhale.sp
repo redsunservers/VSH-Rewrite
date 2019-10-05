@@ -3015,19 +3015,34 @@ stock void TF2_Explode(int iAttacker = -1, float flPos[3], float flDamage, float
 		SDKHooks_TakeDamage(iBomb, 0, iAttacker, 9999.0);
 }
 
-stock int TF2_SpawnParticle(int iClient, char[] sParticle)
+stock int TF2_SpawnParticle(char[] sParticle, float vecOrigin[3] = NULL_VECTOR, float flAngles[3] = NULL_VECTOR, bool bActivate = true, int iEntity = 0, int iControlPoint = 0)
 {
-	float vecOrigin[3];
-	GetClientAbsOrigin(iClient, vecOrigin);
-	
 	int iParticle = CreateEntityByName("info_particle_system");
-	TeleportEntity(iParticle, vecOrigin, NULL_VECTOR, NULL_VECTOR);
+	TeleportEntity(iParticle, vecOrigin, flAngles, NULL_VECTOR);
 	DispatchKeyValue(iParticle, "effect_name", sParticle);
 	DispatchSpawn(iParticle);
-	ActivateEntity(iParticle);
-	AcceptEntityInput(iParticle, "Start");
 	
-	return iParticle;
+	if (0 < iEntity && IsValidEntity(iEntity))
+	{
+		SetVariantString("!activator");
+		AcceptEntityInput(iParticle, "SetParent", iEntity);
+	}
+	
+	if (0 < iControlPoint && IsValidEntity(iControlPoint))
+	{
+		//Array netprop, but really only need element 0 anyway
+		SetEntPropEnt(iParticle, Prop_Send, "m_hControlPointEnts", iControlPoint, 0);
+		SetEntProp(iParticle, Prop_Send, "m_iControlPointParents", iControlPoint, _, 0);
+	}
+	
+	if (bActivate)
+	{
+		ActivateEntity(iParticle);
+		AcceptEntityInput(iParticle, "Start");
+	}
+	
+	//Return ref of entity
+	return EntIndexToEntRef(iParticle);
 }
 
 stock void TF2_TeleportSwap(int iClient[2])
@@ -3048,8 +3063,7 @@ stock void TF2_TeleportSwap(int iClient[2])
 		GetEntPropVector(iClient[i], Prop_Data, "m_vecVelocity", vecVel[i]);
 		
 		//Create particle
-		int iParticle = TF2_SpawnParticle(iClient[i], PARTICLE_GHOST);
-		CreateTimer(3.0, Timer_EntityCleanup, EntIndexToEntRef(iParticle));
+		CreateTimer(3.0, Timer_EntityCleanup, TF2_SpawnParticle(PARTICLE_GHOST, vecOrigin[i], vecAngles[i]));
 	}
 	
 	for (int i = 0; i <= 1; i++)
@@ -3121,6 +3135,19 @@ void Frame_KillLight(int iRef)
 	int iLight = EntRefToEntIndex(iRef);
 	if (iLight > MaxClients)
 		AcceptEntityInput(iLight, "Kill");
+}
+
+stock void CreateFade(int iClient, int iDuration = 2000, int iRed = 255, int iGreen = 255, int iBlue = 255, int iAlpha = 255)
+{
+	BfWrite bf = UserMessageToBfWrite(StartMessageOne("Fade", iClient));
+	bf.WriteShort(iDuration);	//Fade duration
+	bf.WriteShort(0);
+	bf.WriteShort(0x0001);
+	bf.WriteByte(iRed);			//Red
+	bf.WriteByte(iGreen);		//Green
+	bf.WriteByte(iBlue);		//Blue
+	bf.WriteByte(iAlpha);		//Alpha
+	EndMessage();
 }
 
 stock void BroadcastSoundToTeam(int team, const char[] strSound)

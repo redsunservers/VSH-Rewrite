@@ -59,14 +59,12 @@ methodmap CHorsemann < SaxtonHaleBase
 	{
 		boss.CallFunction("CreateAbility", "CWallClimb");
 		boss.CallFunction("CreateAbility", "CTeleportSwap");
-		CScareRage scareAbility = boss.CallFunction("CreateAbility", "CScareRage");
-		scareAbility.flRadius = 800.0;
-		//boss.CallFunction("CreateAbility", "CRageGhost");
+		boss.CallFunction("CreateAbility", "CRageGhost");
 		
-		boss.iBaseHealth = 800;
-		boss.iHealthPerPlayer = 800;
+		boss.iBaseHealth = 700;
+		boss.iHealthPerPlayer = 650;
 		boss.nClass = TFClass_DemoMan;
-		boss.iMaxRageDamage = 2500;
+		boss.iMaxRageDamage = 3000;
 	}
 	
 	public void GetBossName(char[] sName, int length)
@@ -76,15 +74,16 @@ methodmap CHorsemann < SaxtonHaleBase
 	
 	public void GetBossInfo(char[] sInfo, int length)
 	{
-		StrCat(sInfo, length, "\nHealth: Medium");
+		StrCat(sInfo, length, "\nHealth: Low");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nAbilities");
 		StrCat(sInfo, length, "\n- Wall Climb");
 		StrCat(sInfo, length, "\n- Teleport Swap");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- Scares players at medium range for 5 seconds");
-		StrCat(sInfo, length, "\n- 200%% Rage: Larger range and extends duration to 7.5 seconds");
+		StrCat(sInfo, length, "\n- Becomes ghost to fly, immute to damage, and unable to attack for 5 seconds");
+		StrCat(sInfo, length, "\n- Steals health from nearby players with random spooky effects");
+		StrCat(sInfo, length, "\n- 200%% Rage: Extends duration to 10 seconds");
 	}
 	
 	public void OnSpawn()
@@ -124,7 +123,7 @@ methodmap CHorsemann < SaxtonHaleBase
 		}
 	}
 	
-	public void GetAbilitySound(char[] sSound, int length, const char[] sType)
+	public void GetSoundAbility(char[] sSound, int length, const char[] sType)
 	{
 		if (strcmp(sType, "CRageGhost") == 0)
 			strcopy(sSound, length, g_strHorsemannGhost[GetRandomInt(0,sizeof(g_strHorsemannGhost)-1)]);

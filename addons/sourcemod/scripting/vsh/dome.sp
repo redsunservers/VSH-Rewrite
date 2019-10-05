@@ -306,7 +306,7 @@ void Dome_Frame_Prepare(int iRef)
 					else
 						flAlpha = (flDistanceMultiplier - DOME_FADE_START_MULTIPLIER) * (1.0/(1.0-DOME_FADE_START_MULTIPLIER)) * DOME_FADE_ALPHA_MAX * (flRender/255.0);
 					
-					Dome_Fade(i, RoundToNearest(flAlpha));
+					CreateFade(i, _, g_vecColor[0], g_vecColor[1], g_vecColor[2], RoundToNearest(flAlpha));
 				}
 			}
 		}
@@ -377,7 +377,7 @@ void Dome_Frame_Shrink(int iRef)
 				else
 					flAlpha = (flDistanceMultiplier - DOME_FADE_START_MULTIPLIER) * (1.0/(1.0-DOME_FADE_START_MULTIPLIER)) * DOME_FADE_ALPHA_MAX;
 				
-				Dome_Fade(i, RoundToNearest(flAlpha));
+				CreateFade(i, _, g_vecColor[0], g_vecColor[1], g_vecColor[2], RoundToNearest(flAlpha));
 			}
 		}
 	}
@@ -450,19 +450,6 @@ void Dome_Building_Damage(int iEntity)
 	
 	SetVariantInt(15);
 	AcceptEntityInput(iEntity, "RemoveHealth");
-}
-
-void Dome_Fade(int iClient, int iAlpha)
-{
-	Handle hFade = StartMessageOne("Fade", iClient);
-	BfWriteShort(hFade, 2000);				//Fade duration
-	BfWriteShort(hFade, 0);
-	BfWriteShort(hFade, 0x0001);
-	BfWriteByte(hFade, g_vecColor[0]);	//Red
-	BfWriteByte(hFade, g_vecColor[1]);	//Green
-	BfWriteByte(hFade, g_vecColor[2]);	//Blue
-	BfWriteByte(hFade, iAlpha);				//Alpha
-	EndMessage();
 }
 
 void Dome_UpdateRadius()
