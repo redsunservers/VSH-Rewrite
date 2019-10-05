@@ -4,6 +4,7 @@
 static float g_flChargeRageDuration[TF_MAXPLAYERS+1];
 static float g_flChargePreviousSound[TF_MAXPLAYERS+1];
 static bool g_bChargeIsCharging[TF_MAXPLAYERS+1] = false;
+
 static bool g_bChargeRage[TF_MAXPLAYERS+1] = false;
 
 methodmap CWeaponCharge < SaxtonHaleBase
@@ -26,6 +27,9 @@ methodmap CWeaponCharge < SaxtonHaleBase
 		g_flChargePreviousSound[ability.iClient] = 0.0;
 		g_bChargeIsCharging[ability.iClient] = false;
 		g_bChargeRage[ability.iClient] = false;
+		
+		//Hook touchs to check for charge bash damage
+		SDKHook(ability.iClient, SDKHook_StartTouchPost, Charge_StartTouch);
 	}
 	
 	public void OnSpawn()
@@ -122,4 +126,54 @@ methodmap CWeaponCharge < SaxtonHaleBase
 		else
 			buttons &= ~IN_ATTACK2;
 	}
+	
+	public Action OnPlayerKilled(Event event, int iVictim)
+	{
+		//Because SDKHooks_TakeDamage doesnt even set damage sources from chargin targe properly
+		int iInflictor = event.GetInt("inflictor_entindex");
+		if (iInflictor > MaxClients && IsValidEdict(iInflictor))
+		{
+			char sClassname[256];
+			GetEntityClassname(iInflictor, sClassname, sizeof(sClassname));
+			if (StrEqual(sClassname, "tf_wearable_demoshield"))
+			{
+				event.SetString("weapon_logclassname", "demoshield");
+				event.SetString("weapon", "demoshield");
+				event.SetInt("customkill", TF_CUSTOM_CHARGE_IMPACT);
+			}
+		}
+	}
+	
+	public void Destroy()
+	{
+		SDKUnhook(this.iClient, SDKHook_StartTouch, Charge_StartTouch);
+	}
 };
+
+public void Charge_StartTouch(int iClient, int iToucher)
+{
+	if (0 < iToucher <= MaxClients && TF2_IsPlayerInCondition(iClient, TFCond_Charging) && GetClientTeam(iClient) != GetClientTeam(iToucher) && GetClientTeam(iToucher) > 1)
+	{
+		//Deal damage a frame later, otherwise possible crash
+		DataPack data = new DataPack();
+		data.WriteCell(iClient);
+		data.WriteCell(iToucher);
+		
+		RequestFrame(Charge_BashDamage, data);
+	}
+}
+
+public void Charge_BashDamage(DataPack data)
+{
+	data.Reset();
+	int iClient = data.ReadCell();
+	int iToucher = data.ReadCell();
+	delete data;
+	
+	if (IsClientInGame(iClient) && IsPlayerAlive(iClient) && IsClientInGame(iToucher) && IsPlayerAlive(iToucher))
+	{
+		int iWeapon = TF2_GetItemInSlot(iClient, WeaponSlot_Secondary);
+		if (iWeapon > MaxClients && IsValidEdict(iWeapon))
+			SDKHooks_TakeDamage(iToucher, iWeapon, iClient, 500.0, DMG_CLUB, iWeapon);
+	}
+}
