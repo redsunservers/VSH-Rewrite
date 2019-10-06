@@ -143,7 +143,7 @@ methodmap CWeaponCharge < SaxtonHaleBase
 	
 	public void Destroy()
 	{
-		SDKUnhook(this.iClient, SDKHook_StartTouch, Charge_StartTouch);
+		SDKUnhook(this.iClient, SDKHook_StartTouchPost, Charge_StartTouch);
 	}
 };
 
