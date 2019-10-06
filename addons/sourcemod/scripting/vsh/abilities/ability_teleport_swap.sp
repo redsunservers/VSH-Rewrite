@@ -164,7 +164,7 @@ methodmap CTeleportSwap < SaxtonHaleBase
 				this.iCharge = 0;
 				
 				char sSound[PLATFORM_MAX_PATH];
-				this.CallFunction("GetSoundAbility", "CTeleportSwap", sSound, sizeof(sSound));
+				this.CallFunction("GetSoundAbility", sSound, sizeof(sSound), "CTeleportSwap");
 				if (!StrEmpty(sSound))
 					EmitSoundToAll(sSound, this.iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
 			}
