@@ -54,7 +54,7 @@ methodmap CWeaponCharge < SaxtonHaleBase
 			if (g_flChargePreviousSound[iClient] < GetGameTime() - 1.0)
 			{
 				char sSound[PLATFORM_MAX_PATH];
-				this.CallFunction("GetSoundAbility", "CWeaponCharge", sSound, sizeof(sSound));
+				this.CallFunction("GetSoundAbility", sSound, sizeof(sSound), "CWeaponCharge");
 				if (!StrEmpty(sSound))
 					EmitSoundToAll(sSound, iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
 				
