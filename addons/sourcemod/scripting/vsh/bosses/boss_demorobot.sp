@@ -146,7 +146,7 @@ methodmap CDemoRobot < SaxtonHaleBase
 		}
 	}
 	
-	public void GetAbilitySound(char[] sSound, int length, const char[] sType)
+	public void GetSoundAbility(char[] sSound, int length, const char[] sType)
 	{
 		if (strcmp(sType, "CBraveJump") == 0)
 			strcopy(sSound, length, g_strDemoRobotJump[GetRandomInt(0,sizeof(g_strDemoRobotJump)-1)]);

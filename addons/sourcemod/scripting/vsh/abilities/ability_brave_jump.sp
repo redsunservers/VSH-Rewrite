@@ -162,7 +162,7 @@ methodmap CBraveJump < SaxtonHaleBase
 				this.iJumpCharge = 0;
 				
 				char sSound[PLATFORM_MAX_PATH];
-				this.CallFunction("GetSoundAbility", "CBraveJump", sSound, sizeof(sSound));
+				this.CallFunction("GetSoundAbility", sSound, sizeof(sSound), "CBraveJump");
 				if (!StrEmpty(sSound))
 					EmitSoundToAll(sSound, this.iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
 			}
