@@ -5,6 +5,7 @@ static float g_flChargeRageDuration[TF_MAXPLAYERS+1];
 static float g_flChargePreviousSound[TF_MAXPLAYERS+1];
 static bool g_bChargeIsCharging[TF_MAXPLAYERS+1] = false;
 static bool g_bChargeRage[TF_MAXPLAYERS+1] = false;
+static bool g_bChargeJump[TF_MAXPLAYERS+1] = false;
 
 methodmap CWeaponCharge < SaxtonHaleBase
 {
@@ -40,8 +41,11 @@ methodmap CWeaponCharge < SaxtonHaleBase
 		
 		Hud_AddText(iClient, "Use your reload key to charge!");
 		
-		if (g_bChargeRage[iClient] && this.flRageLastTime > GetGameTime() - flDuration)
+		//Check if currently rage charging, and not attempting to jump
+		if (g_bChargeRage[iClient] && this.flRageLastTime > GetGameTime() - flDuration && !(g_bChargeJump[iClient] && GetEntityFlags(iClient) & FL_ONGROUND))
 		{
+			g_bChargeJump[iClient] = false;
+			
 			//Spam charge sound every second because we like to make this very annoying
 			if (g_flChargePreviousSound[iClient] < GetGameTime() - 1.0)
 			{
@@ -62,10 +66,11 @@ methodmap CWeaponCharge < SaxtonHaleBase
 				TF2_AddCondition(this.iClient, TFCond_Charging, TFCondDuration_Infinite);
 			}
 		}
-		else if (g_bChargeRage[iClient])
+		else if (g_bChargeRage[iClient] && this.flRageLastTime <= GetGameTime() - flDuration)
 		{
 			//Rage ended, remove charge
 			g_bChargeRage[iClient] = false;
+			g_bChargeJump[iClient] = false;
 			TF2_RemoveCondition(iClient, TFCond_Charging);
 			
 			//Remove extra duration and turn control
@@ -121,5 +126,12 @@ methodmap CWeaponCharge < SaxtonHaleBase
 			buttons |= IN_ATTACK2;
 		else
 			buttons &= ~IN_ATTACK2;
+		
+		//If attempted to jump while charge rage, remove charge cond to allow jump
+		if (buttons & IN_JUMP && g_bChargeRage[this.iClient] && GetEntityFlags(this.iClient) & FL_ONGROUND)
+		{
+			g_bChargeJump[this.iClient] = true;
+			TF2_RemoveCondition(this.iClient, TFCond_Charging);
+		}
 	}
 };
