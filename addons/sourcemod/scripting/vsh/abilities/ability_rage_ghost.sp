@@ -80,7 +80,7 @@ methodmap CRageGhost < SaxtonHaleBase
 	{
 		//Default values, these can be changed if needed
 		ability.flRadius = 400.0;
-		ability.flDuration = 5.0;
+		ability.flDuration = 8.0;
 		ability.flHealSteal = 20.0;	//Steals hp per second
 		ability.flHealGain = 40.0;	//Gains hp per second
 		

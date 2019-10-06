@@ -81,9 +81,9 @@ methodmap CHorsemann < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- Teleport Swap");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- Becomes ghost to fly, immute to damage, and unable to attack for 5 seconds");
+		StrCat(sInfo, length, "\n- Becomes ghost to fly, immute to damage, and unable to attack for 8 seconds");
 		StrCat(sInfo, length, "\n- Steals health from nearby players with random spooky effects");
-		StrCat(sInfo, length, "\n- 200%% Rage: Extends duration to 10 seconds");
+		StrCat(sInfo, length, "\n- 200%% Rage: Extends duration to 16 seconds");
 	}
 	
 	public void OnSpawn()
