@@ -11,7 +11,7 @@ VSH-Rewrite started its development by [Kenzzer](https://github.com/Kenzzer) at 
 - Winstreak. Everytime boss wins a round, health pool gets smaller until a single boss death to reset all progress, for players to take the challenge
 
 ## Requirements
-- Sourcemod 1.9 or 1.10
+- SourceMod 1.10
 - [tf2attributes](https://forums.alliedmods.net/showthread.php?t=210221)
 - [tf_econ_data](https://forums.alliedmods.net/showthread.php?t=315011)
 - [dhooks with detour support](https://forums.alliedmods.net/showpost.php?p=2588686&postcount=589)

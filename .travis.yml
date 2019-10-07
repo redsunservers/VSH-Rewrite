@@ -7,7 +7,6 @@ addons:
       - lib32stdc++6
 
 env:
-  - SMVERSION=1.9
   - SMVERSION=1.10
 
 install:
