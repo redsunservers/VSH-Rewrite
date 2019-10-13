@@ -24,21 +24,7 @@ public void Hud_Think(int iClient)
 		//Display Boss's health
 		Format(sMessage, sizeof(sMessage), "Boss Health: %i/%i", g_iHealthBarHealth, g_iHealthBarMaxHealth);
 		
-		//Boss rage
-		int iVal;
-		if (Tags_GetInt(iClient, WeaponSlot_Melee, "rage_view", iVal) && iVal == 1)
-		{
-			for (int iBoss = 1; iBoss <= MaxClients; iBoss++)
-			{
-				SaxtonHaleBase boss = SaxtonHaleBase(iBoss);
-				if (IsClientInGame(iBoss) && IsPlayerAlive(iBoss) && boss.bValid && !boss.bMinion)
-				{
-					int iRage = RoundToFloor(float(boss.iRageDamage) / float(boss.iMaxRageDamage) * 100.0);
-					Format(sMessage, sizeof(sMessage), "%s | Boss Rage: %i%%%%", sMessage, iRage);
-					break;
-				}
-			}
-		}
+		//TODO Boss rage
 		
 		Hud_AddText(iClient, sMessage);
 

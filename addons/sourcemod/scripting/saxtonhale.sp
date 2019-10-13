@@ -20,6 +20,7 @@
 
 #define MAX_BUTTONS 		26
 #define MAX_TYPE_CHAR		32	//Max char size of methodmaps name
+#define MAXLEN_CONFIG_VALUE 256	//Max config string buffer size
 
 #define	TFTeam_Unassigned 	0
 #define	TFTeam_Spectator 	1
@@ -321,8 +322,6 @@ Handle g_hSDKRemoveWearable = null;
 Handle g_hSDKGetEquippedWearable = null;
 Handle g_hSDKEquipWearable = null;
 
-#include "vsh/config.sp"
-
 #include "vsh/base_ability.sp"
 #include "vsh/base_modifiers.sp"
 #include "vsh/base_boss.sp"
@@ -363,10 +362,23 @@ Handle g_hSDKEquipWearable = null;
 #include "vsh/modifiers/modifiers_electric.sp"
 #include "vsh/modifiers/modifiers_angry.sp"
 
-#include "vsh/menu.sp"
+#include "vsh/tags/tags_target.sp"
+#include "vsh/tags/tags_filter.sp"
+#include "vsh/tags/tags_params.sp"
+#include "vsh/tags/tags_block.sp"
+#include "vsh/tags/tags_function.sp"
+#include "vsh/tags/tags_call.sp"
+#include "vsh/tags/tags_core.sp"
+#include "vsh/tags/tags_damage.sp"
+#include "vsh/tags/tags_name.sp"
+#include "vsh/tags.sp"
+
+#include "vsh/config.sp"
+
 #include "vsh/menu/menu_admin.sp"
 #include "vsh/menu/menu_boss.sp"
 #include "vsh/menu/menu_weapon.sp"
+#include "vsh/menu.sp"
 
 #include "vsh/classlimit.sp"
 #include "vsh/command.sp"
@@ -380,7 +392,6 @@ Handle g_hSDKEquipWearable = null;
 #include "vsh/nextboss.sp"
 #include "vsh/preferences.sp"
 #include "vsh/queue.sp"
-#include "vsh/tags.sp"
 #include "vsh/winstreak.sp"
 
 public Plugin myinfo =
@@ -465,9 +476,8 @@ public void OnPluginStart()
 	g_aAllBossesType = new ArrayList(MAX_TYPE_CHAR);
 	g_aModifiersType = new ArrayList(MAX_TYPE_CHAR);
 	
-	SDK_Init();
-	
 	Config_Init();
+	SDK_Init();
 	
 	ClassLimit_Init();
 	Command_Init();
@@ -476,6 +486,8 @@ public void OnPluginStart()
 	Function_Init();
 	Menu_Init();
 	NextBoss_Init();
+	TagsCore_Init();
+	TagsName_Init();
 	Winstreak_Init();
 	
 	//Register normal bosses
@@ -755,10 +767,6 @@ public void OnEntityCreated(int iEntity, const char[] sClassname)
 	{
 		SDKHook(iEntity, SDKHook_StartTouch, Crossbow_OnTouch);
 	}
-	else if (strcmp(sClassname, "tf_projectile_arrow") == 0)
-	{
-		SDKHook(iEntity, SDKHook_StartTouchPost, Arrow_OnTouch);
-	}
 	else if(strncmp(sClassname, "item_healthkit_", 15) == 0
 		|| strncmp(sClassname, "item_ammopack_", 14) == 0
 		|| strcmp(sClassname, "tf_ammo_pack") == 0
@@ -938,7 +946,7 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 		g_iPlayerDamage[iClient] = 0;
 		g_iPlayerAssistDamage[iClient] = 0;
 		ClassLimit_SetMainClass(iClient, TFClass_Unknown);
-
+		
 		if (!SaxtonHale_IsValidAttack(iClient)) continue;
 
 		//Display weapon balances in chat
@@ -952,12 +960,6 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 			
 			if (IsValidEdict(iWeapon))
 			{
-				ArrayList aVal;
-				if (Tags_GetArray(iClient, iSlot, "spawn_cond_add", aVal) && aVal.Length > 0)
-					ApplyPlayerCond(iClient, aVal, TFCondDuration_Infinite);
-				
-				delete aVal;
-				
 				int iIndex = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
 				for (int i = 0; i <= 1; i++)
 				{					
@@ -1326,20 +1328,9 @@ public Action Event_PlayerSpawn(Event event, const char[] sName, bool bDontBroad
 	// Player spawned, if they are a boss, call their spawn function
 	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 	if (boss.bValid)
-	{
 		boss.CallFunction("OnSpawn");
-	}
 	else
-	{
-		//Give medigun uber on spawn
-		float flVal = 0.0;
-		if (Tags_GetFloat(iClient, WeaponSlot_Secondary, "spawn_uber", flVal) && flVal > 0.0)
-		{
-			int iSecondaryWep = GetPlayerWeaponSlot(iClient, WeaponSlot_Secondary);
-			if (IsValidEdict(iSecondaryWep))
-				SetEntPropFloat(iSecondaryWep, Prop_Send, "m_flChargeLevel", flVal);
-		}
-	}
+		TagsCore_CallAll(iClient, TagsCall_Spawn);
 }
 
 void Frame_VerifyTeam(int userid)
@@ -1614,6 +1605,8 @@ public Action Event_PlayerInventoryUpdate(Event event, const char[] sName, bool 
 	}
 
 	if (g_iTotalRoundPlayed <= 0) return;
+	
+	TagsCore_RefreshClient(iClient);
 
 	RequestFrame(Frame_VerifyTeam, GetClientUserId(iClient));
 }
@@ -1675,8 +1668,6 @@ public Action Event_PlayerHurt(Event event, const char[] sName, bool bDontBroadc
 					}
 				}
 			}
-			
-			Tags_PlayerHurt(iClient, iAttacker, iDamageAmount);
 		}
 	}
 }
@@ -1689,7 +1680,7 @@ public Action Event_BuffBannerDeployed(Event event, const char[] sName, bool bDo
 	int iClient = GetClientOfUserId(event.GetInt("buff_owner"));
 	if (GetClientTeam(iClient) <= 1 || SaxtonHale_IsValidBoss(iClient)) return;
 
-	Tags_CallEvent(iClient, WeaponSlot_Secondary);
+	TagsCore_CallAll(iClient, TagsCall_Banner);
 }
 
 public Action Event_UberDeployed(Event event, const char[] sName, bool bDontBroadcast)
@@ -1700,34 +1691,7 @@ public Action Event_UberDeployed(Event event, const char[] sName, bool bDontBroa
 	int iClient = GetClientOfUserId(GetEventInt(event, "userid"));
 	if (GetClientTeam(iClient) <= 1 || SaxtonHale_IsValidBoss(iClient)) return;
 
-	int iSlot = WeaponSlot_Secondary;
-	ArrayList aVal;
-	
-	//monkaS
-	if (Tags_GetArray(iClient, iSlot, "uber_cycle_cond", aVal) && aVal.Length > 0)
-	{
-		int iWeapon = TF2_GetItemInSlot(iClient, iSlot);
-		int iType = GetEntProp(iWeapon, Prop_Send, "m_nChargeResistType");
-		
-		if (0 <= iType < aVal.Length)
-		{
-			TFCond nCond = view_as<TFCond>(RoundToNearest(aVal.Get(iType)));
-			if (view_as<int>(nCond) >= 0)
-			{
-				int iHealTarget = GetEntPropEnt(iWeapon, Prop_Send, "m_hHealingTarget");
-				if (0 < iHealTarget <= MaxClients && IsClientInGame(iHealTarget))
-				{
-					float flDuration = -1.0;
-					Tags_GetFloat(iClient, iSlot, "event_duration", flDuration);
-					TF2_AddCondition(iHealTarget, nCond, flDuration);
-				}
-			}
-		}
-	}
-	
-	delete aVal;
-	
-	Tags_CallEvent(iClient, iSlot);
+	TagsCore_CallAll(iClient, TagsCall_Uber);
 }
 
 public Action Event_Jarated(UserMsg msg_id, Handle msg, const int[] players, int playersNum, bool reliable, bool init)
@@ -1743,23 +1707,18 @@ public Action Event_Jarated(UserMsg msg_id, Handle msg, const int[] players, int
 	SaxtonHaleBase bossVictim = SaxtonHaleBase(iVictim);
 	if (GetClientTeam(iVictim) <= 1 || !bossVictim.bValid) return;
 
-	Tags_CallEvent(iThrower, WeaponSlot_Secondary);
-	
-	int iVal;
-
-	if (Tags_GetInt(iThrower, WeaponSlot_Secondary, "jarate_remove", iVal) && iVal == 1)
-		RequestFrame(Frame_RemoveJarate, EntIndexToEntRef(iVictim));	//If done same frame, server crashes
-
-	if (Tags_GetInt(iThrower, WeaponSlot_Secondary, "jarate_rage", iVal) && iVal != 0)
-		bossVictim.CallFunction("AddRage", iVal);
+	//Possible crash if called in same frame
+	RequestFrame(Frame_CallJarate, EntIndexToEntRef(iVictim));
 }
 
-public void Frame_RemoveJarate(int iRef)
+public void Frame_CallJarate(int iRef)
 {
 	int iClient = EntRefToEntIndex(iRef);
 	
-	if (TF2_IsPlayerInCondition(iClient, TFCond_Jarated))
-			TF2_RemoveCondition(iClient, TFCond_Jarated);
+	if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient) || !IsPlayerAlive(iClient))
+		return;
+		
+	TagsCore_CallAll(iClient, TagsCall_Jarate);
 }
 
 public void TF2_OnConditionAdded(int iClient, TFCond nCond)
@@ -1773,8 +1732,6 @@ public void TF2_OnConditionAdded(int iClient, TFCond nCond)
 		TF2_RemoveCondition(iClient, TFCond_Taunting);
 		PrintToChat(iClient, "%s%s Rock, Paper, Scissors taunt is disabled in this gamemode", VSH_TAG, VSH_ERROR_COLOR);
 	}
-	
-	Tags_ConditionAdded(iClient, nCond);
 }
 
 public Action Timer_RoundStartSound(Handle hTimer, int iClient)
@@ -1893,7 +1850,7 @@ public void OnClientDisconnect(int iClient)
 
 	g_iClientFlags[iClient] = 0;
 
-	for (int i = 1; i <= TF_MAXPLAYERS; i++)
+	for (int i = 1; i <= MaxClients; i++)
 		g_iPlayerTotalBackstab[iClient][i] = 0;
 	
 	ClassLimit_SetMainClass(iClient, TFClass_Unknown);
@@ -1902,6 +1859,11 @@ public void OnClientDisconnect(int iClient)
 	Preferences_SetAll(iClient, -1);
 	Queue_SetPlayerPoints(iClient, -1);
 	Winstreak_SetCurrent(iClient, -1);
+}
+
+public void OnClientDisconnect_Post(int iClient)
+{
+	TagsCore_RefreshClient(iClient);	//Free the memory
 }
 
 public void Client_OnThink(int iClient)
@@ -1915,6 +1877,7 @@ public void Client_OnThink(int iClient)
 	else
 	{
 		Tags_OnThink(iClient);
+		//TagsCore_CallAll(iClient, TagsCall_Think);
 		
 		TFClassType nClass = TF2_GetPlayerClass(iClient);
 		
@@ -2003,7 +1966,7 @@ public Action Client_OnTakeDamage(int victim, int &attacker, int &inflictor, flo
 			return finalAction;
 		
 		//Call damage tags
-		action = Tags_OnTakeDamage(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
+		action = TagsDamage_OnTakeDamage(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
 		if (action > finalAction)
 			finalAction = action;
 		
@@ -2366,8 +2329,6 @@ void Client_OnButton(int iClient, int &buttons)
 	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 	if (boss.bValid)
 		boss.CallFunction("OnButton", buttons);
-	else
-		Tags_OnButton(iClient, buttons);
 }
 
 void Client_OnButtonPress(int iClient, int button)
@@ -2420,6 +2381,32 @@ public bool Client_HasFlag(int iClient, haleClientFlags flag)
 	return !!(g_iClientFlags[iClient] & view_as<int>(flag));
 }
 
+stock int Client_GetEyeTarget(int iClient)
+{
+	float vecPos[3], vecAng[3];
+	GetClientEyePosition(iClient, vecPos);
+	GetClientEyeAngles(iClient, vecAng);
+	
+	Handle hTrace = TR_TraceRayFilterEx(vecPos, vecAng, MASK_PLAYERSOLID, RayType_Infinite, TraceRay_DontHitEntity, iClient);
+	int iHit = TR_GetEntityIndex(hTrace);
+	delete hTrace;
+	
+	return iHit;
+}
+
+stock int Client_GetBuilding(int iClient, const char[] sBuilding)
+{
+	int iBuilding = MaxClients+1;
+	while((iBuilding = FindEntityByClassname(iBuilding, sBuilding)) > MaxClients)
+	{
+		//Check if same builder
+		if (GetEntPropEnt(iBuilding, Prop_Send, "m_hBuilder") == iClient)
+			return iBuilding;
+	}
+	
+	return -1;
+}
+
 public Action Crossbow_OnTouch(int iEntity, int iToucher)
 {
 	if (!SaxtonHale_IsValidBoss(iToucher))
@@ -2456,9 +2443,18 @@ public Action TF2_CalcIsAttackCritical(int iClient, int iWeapon, char[] sWepClas
 	
 	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 	if (boss.bValid)
+	{
 		return boss.CallFunction("OnAttackCritical", iWeapon, bResult);
+	}
 	else
-		return Tags_AttackCritical(iClient, iWeapon, bResult);
+	{
+		int iIndex = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
+		int iSlot = TF2_GetSlotInItem(iIndex, TF2_GetPlayerClass(iClient));
+		
+		//TODO override result
+		TagsCore_CallSlot(iClient, TagsCall_Attack, iSlot);
+		return Plugin_Continue;
+	}
 }
 
 public Action NormalSoundHook(int clients[MAXPLAYERS], int &numClients, char sample[PLATFORM_MAX_PATH], int &entity, int &channel, float &volume, int &level, int &pitch, int &flags, char soundEntry[PLATFORM_MAX_PATH], int &seed)
@@ -2638,11 +2634,14 @@ public MRESReturn Hook_AllowedToHealTarget(int iMedigun, Handle hReturn, Handle 
 			return MRES_Supercede;
 		}
 		
-		if (Tags_IsAllowedToHealTarget(iMedigun, iHealTarget))
+		//TODO override result
+		/*
+		if (TagsCore_CallSlot(iClient, TagsCall_Heal, WeaponSlot_Secondary))
 		{
 			DHookSetReturn(hReturn, true);
 			return MRES_Supercede;
 		}
+		*/
 	}
 	
 	return MRES_Ignored;
@@ -2908,6 +2907,23 @@ stock void TF2_RemoveItemInSlot(int client, int slot)
 		SDK_RemoveWearable(client, iWearable);
 		AcceptEntityInput(iWearable, "Kill");
 	}
+}
+
+stock int TF2_GetPatient(int iClient)
+{
+	if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient) || !IsPlayerAlive(iClient))
+		return -1;
+	
+	int iWeapon = TF2_GetItemInSlot(iClient, WeaponSlot_Secondary);
+	if (!IsValidEdict(iWeapon))
+		return -1;
+			
+	char sClassname[256];
+	GetEntityClassname(iWeapon, sClassname, sizeof(sClassname));
+	if (!StrEqual(sClassname, "tf_weapon_medigun"))
+		return -1;
+	
+	return GetEntPropEnt(iWeapon, Prop_Send, "m_hHealingTarget");
 }
 
 stock int TF2_CreateAndEquipWeapon(int iClient, int iIndex, char[] sClassnameTemp = NULL_STRING, int iLevel = 0, TFQuality iQuality = TFQual_Normal, char[] sAttrib = NULL_STRING, bool bAttrib = false)

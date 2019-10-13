@@ -1,6 +1,5 @@
 #define CONFIG_FILE "configs/vsh/vsh.cfg"
 #define CONFIG_MAPS "configs/vsh/maps.cfg"
-#define MAXLEN_CONFIG_VALUE 256
 
 methodmap ConfigClass < StringMap
 {
@@ -17,21 +16,33 @@ methodmap ConfigClass < StringMap
 			{
 				if (kv.JumpToKey(g_strSlotName[iSlot], false))	//Jump to slot name
 				{
-					if (kv.GotoFirstSubKey(false))		//Go to first subkeys (desp, attrib etc)
+					if (kv.GotoFirstSubKey(false))		//Go to first subkeys (attrib, desp etc)
 					{
 						do								//Loop through each subkeys from that slot
 						{
-							char sSubkey[MAXLEN_CONFIG_VALUE], sValue[MAXLEN_CONFIG_VALUE];
+							char sSubkey[MAXLEN_CONFIG_VALUE];
+							kv.GetSectionName(sSubkey, sizeof(sSubkey));	//Subkey (attrib, desp etc)
 							
-							kv.GetSectionName(sSubkey, sizeof(sSubkey));	//Subkey (class, attrib etc)
-							kv.GetString(NULL_STRING, sValue, sizeof(sValue), "");	//Value of that subkey
-							
-							TrimString(sSubkey);
-							TrimString(sValue);
-							
-							this.SetString(sSubkey, sValue);
+							TagsCall nCall = TagsCall_GetType(sSubkey);
+							if (nCall != TagsCall_Invalid)
+							{
+								//Tags stuff
+								Tags tagsStruct;
+								tagsStruct.nClass = nClass;
+								tagsStruct.iSlot = iSlot;
+								tagsStruct.iIndex = -1;
+								tagsStruct.nCall = nCall;
+								tagsStruct.Load(kv);
+							}
+							else
+							{
+								char sValue[MAXLEN_CONFIG_VALUE];
+								kv.GetString(NULL_STRING, sValue, sizeof(sValue), "");	//Value of that subkey
+								this.SetString(sSubkey, sValue);
+							}
 						}
 						while (kv.GotoNextKey(false));
+						kv.GoBack();
 					}
 					kv.GoBack();
 				}
@@ -39,7 +50,6 @@ methodmap ConfigClass < StringMap
 			}
 			kv.GoBack();
 		}
-		kv.GoBack();
 	}
 	
 	//Return string list of changed attributes weapon slot from class should have, false if doesnt exist
@@ -52,12 +62,6 @@ methodmap ConfigClass < StringMap
 	public bool GetDesp(char[] sValue, int iLength)
 	{
 		return this.GetString("desp", sValue, iLength);
-	}
-	
-	//Return string of tags, false if doesnt exist
-	public bool GetTags(char[] sValue, int iLength)
-	{
-		return this.GetString("tags", sValue, iLength);
 	}
 	
 	//Return 1 if class slot should have minicrit, 0 if should not have one, -1 if not specified
@@ -108,22 +112,33 @@ methodmap ConfigIndex < ArrayList
 				{
 					char sIndex[MAXLEN_CONFIG_VALUE];
 					kv.GetSectionName(sIndex, sizeof(sIndex));	//Index of the weapon
+					int iIndex = StringToInt(sIndex);
 					StringMap sMap = new StringMap();
 					
-					if (kv.GotoFirstSubKey(false))		//Go to first subkeys from that index (class, attrib etc)
+					if (kv.GotoFirstSubKey(false))		//Go to first subkeys from that index (attrib, desp etc)
 					{
 						do								//Loop through each subkeys from that index
 						{
 							char sSubkey[MAXLEN_CONFIG_VALUE];
-							char sValue[MAXLEN_CONFIG_VALUE];
+							kv.GetSectionName(sSubkey, sizeof(sSubkey));	//Subkey (attrib, desp etc)
 							
-							kv.GetSectionName(sSubkey, sizeof(sSubkey));	//Subkey (class, attrib etc)
-							kv.GetString(NULL_STRING, sValue, sizeof(sValue), "");	//Value of that subkey
-							
-							TrimString(sSubkey);
-							TrimString(sValue);
-							
-							sMap.SetString(sSubkey, sValue);
+							TagsCall nCall = TagsCall_GetType(sSubkey);
+							if (nCall != TagsCall_Invalid)
+							{
+								//Tags stuff
+								Tags tagsStruct;
+								tagsStruct.nClass = TFClass_Unknown;
+								tagsStruct.iSlot = -1;
+								tagsStruct.iIndex = iIndex;
+								tagsStruct.nCall = nCall;
+								tagsStruct.Load(kv);
+							}
+							else
+							{
+								char sValue[MAXLEN_CONFIG_VALUE];
+								kv.GetString(NULL_STRING, sValue, sizeof(sValue), "");	//Value of that subkey
+								sMap.SetString(sSubkey, sValue);
+							}
 						}
 						while(kv.GotoNextKey(false));
 						kv.GoBack();
@@ -131,7 +146,7 @@ methodmap ConfigIndex < ArrayList
 					
 					int iSize = this.Length;
 					this.Resize(iSize+1);
-					this.Set(iSize, StringToInt(sIndex), 0);
+					this.Set(iSize, iIndex, 0);
 					this.Set(iSize, sMap, 1);
 				}
 				while(kv.GotoNextKey(false));
@@ -203,15 +218,6 @@ methodmap ConfigIndex < ArrayList
 		if (sMap == null) return false;
 		
 		return sMap.GetString("desp", sValue, iLength);
-	}
-	
-	//Return string tags, false if doesnt exist
-	public bool GetTags(int iIndex, char[] sValue, int iLength)
-	{
-		StringMap sMap = this.GetStringMap(iIndex);
-		if (sMap == null) return false;
-		
-		return sMap.GetString("tags", sValue, iLength);
 	}
 	
 	//Return 1 if weapon index should have minicrit, 0 if should not have one, -1 if not specified
@@ -362,6 +368,8 @@ void Config_Refresh()
 	
 	g_ConfigIndex.Clear();
 	g_ConfigConvar.Clear();
+	TagsCore_Clear();
+	TagsName_Clear();
 	
 	KeyValues kv = Config_LoadFile(CONFIG_FILE);
 	if (kv == null) return;
@@ -412,6 +420,10 @@ void Config_Refresh()
 	}
 	
 	delete kv;
+	
+	TagsName_Load();
+	for (int iClient = 0; iClient <= MaxClients; iClient++)
+		TagsCore_RefreshClient(iClient);
 	
 	ClassLimit_Refresh();
 	Cookies_Refresh();
