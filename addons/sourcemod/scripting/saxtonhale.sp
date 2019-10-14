@@ -299,7 +299,6 @@ int g_iHealthBarMaxHealth;
 //Player data
 float g_flPlayerSpeedMultiplier[TF_MAXPLAYERS+1];
 int g_iPlayerLastButtons[TF_MAXPLAYERS+1];
-int g_iPlayerTotalBackstab[TF_MAXPLAYERS+1][TF_MAXPLAYERS+1];
 int g_iPlayerDamage[TF_MAXPLAYERS+1];
 int g_iPlayerAssistDamage[TF_MAXPLAYERS+1];
 bool g_bPlayerTriggerSpecialRound[TF_MAXPLAYERS+1];
@@ -890,9 +889,6 @@ public Action Event_RoundStart(Event event, const char[] sName, bool bDontBroadc
 		g_iPlayerAssistDamage[iClient] = 0;
 		g_iClientOwner[iClient] = 0;
 
-		for (int i = 1; i <= TF_MAXPLAYERS; i++)
-			g_iPlayerTotalBackstab[iClient][i] = 0;
-
 		int iColor[4];
 		iColor[0] = 255; iColor[1] = 255; iColor[2] = 255; iColor[3] = 255;
 		Hud_SetColor(iClient, iColor);
@@ -1329,8 +1325,6 @@ public Action Event_PlayerSpawn(Event event, const char[] sName, bool bDontBroad
 	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 	if (boss.bValid)
 		boss.CallFunction("OnSpawn");
-	else
-		TagsCore_CallAll(iClient, TagsCall_Spawn);
 }
 
 void Frame_VerifyTeam(int userid)
@@ -1607,7 +1601,12 @@ public Action Event_PlayerInventoryUpdate(Event event, const char[] sName, bool 
 	if (g_iTotalRoundPlayed <= 0) return;
 	
 	TagsCore_RefreshClient(iClient);
-
+	
+	Hud_SetRageView(iClient, false);
+	
+	if (SaxtonHale_IsValidAttack(iClient))
+		TagsCore_CallAll(iClient, TagsCall_Spawn);
+	
 	RequestFrame(Frame_VerifyTeam, GetClientUserId(iClient));
 }
 
@@ -1804,9 +1803,6 @@ public void OnClientConnected(int iClient)
 	g_bPlayerTriggerSpecialRound[iClient] = false;
 	g_iClientOwner[iClient] = 0;
 
-	for (int i = 1; i <= TF_MAXPLAYERS; i++)
-		g_iPlayerTotalBackstab[iClient][i] = 0;
-	
 	ClassLimit_SetMainClass(iClient, TFClass_Unknown);
 	ClassLimit_SetDesiredClass(iClient, TFClass_Unknown);
 	
@@ -1850,9 +1846,6 @@ public void OnClientDisconnect(int iClient)
 
 	g_iClientFlags[iClient] = 0;
 
-	for (int i = 1; i <= MaxClients; i++)
-		g_iPlayerTotalBackstab[iClient][i] = 0;
-	
 	ClassLimit_SetMainClass(iClient, TFClass_Unknown);
 	ClassLimit_SetDesiredClass(iClient, TFClass_Unknown);
 	
@@ -1877,7 +1870,7 @@ public void Client_OnThink(int iClient)
 	else
 	{
 		Tags_OnThink(iClient);
-		//TagsCore_CallAll(iClient, TagsCall_Think);
+		TagsCore_CallAll(iClient, TagsCall_Think);
 		
 		TFClassType nClass = TF2_GetPlayerClass(iClient);
 		
@@ -2014,13 +2007,6 @@ public Action Client_OnTakeDamage(int victim, int &attacker, int &inflictor, flo
 						finalAction = Plugin_Changed;
 					}
 					
-					if (strcmp(sWeaponClass, "tf_weapon_katana") == 0)
-					{
-						SetEntProp(weapon, Prop_Send, "m_bIsBloody", true);
-						if (GetEntProp(attacker, Prop_Send, "m_iKillCountSinceLastDeploy") < 1)
-							SetEntProp(attacker, Prop_Send, "m_iKillCountSinceLastDeploy", 1);
-					}
-					
 					if (inflictor > MaxClients)
 					{
 						char strInflictor[32];
@@ -2029,77 +2015,6 @@ public Action Client_OnTakeDamage(int victim, int &attacker, int &inflictor, flo
 						{
 							damagetype |= DMG_PREVENT_PHYSICS_FORCE;
 							finalAction = Plugin_Changed;
-						}
-					}
-					
-					if (weapon > MaxClients)
-					{
-						//Turn attributes that require a kill into a "on hit" attribute.
-						float flVal;
-						
-						if (strcmp(sWeaponClass, "tf_weapon_sword") == 0 && TF2_WeaponFindAttribute(weapon, ATTRIB_DECAPITATE_TYPE, flVal) && flVal > 0.0)
-						{
-							//Update heads
-							int iNewHeads = GetEntProp(attacker, Prop_Send, "m_iDecapitations")+1;
-							SetEntProp(attacker, Prop_Send, "m_iDecapitations", iNewHeads);
-							//Update player's health
-							Client_AddHealth(attacker, 15, 15);
-							//Recalculate player's speed
-							TF2_AddCondition(attacker, TFCond_SpeedBuffAlly, 0.01);
-
-							finalAction = Plugin_Changed;
-						}
-						
-						if (TF2_WeaponFindAttribute(weapon, ATTRIB_HEALTH_PACK_ON_KILL, flVal) && flVal != 0.0)
-						{
-							for (int i = 0; i < 2; i++)
-							{
-								int iHealthPack = CreateEntityByName("item_healthkit_small");
-								float vecPos[3];
-								GetClientAbsOrigin(attacker, vecPos);
-								vecPos[2] += 20.0;
-								if (iHealthPack > MaxClients)
-								{
-									DispatchKeyValue(iHealthPack, "OnPlayerTouch", "!self,Kill,,0,-1");
-									DispatchSpawn(iHealthPack);
-									SetEntProp(iHealthPack, Prop_Send, "m_iTeamNum", GetClientTeam(attacker));
-									SetEntityMoveType(iHealthPack, MOVETYPE_VPHYSICS);
-									float vecVel[3];
-									vecVel[0] = float(GetRandomInt(-10, 10)), vecVel[1] = float(GetRandomInt(-10, 10)), vecVel[2] = 50.0;
-									TeleportEntity(iHealthPack, vecPos, NULL_VECTOR, vecVel);
-								}
-							}
-						}
-						
-						if (TF2_WeaponFindAttribute(weapon, ATTRIB_FOCUS_ON_KILL, flVal) && flVal > 0.0)
-						{
-							float flMeter = GetEntPropFloat(attacker, Prop_Send, "m_flRageMeter");
-							flMeter += flVal;
-							if (flMeter > 100.0) flMeter = 100.0;
-							SetEntPropFloat(attacker, Prop_Send, "m_flRageMeter", flMeter);
-						}
-						
-						if (TF2_WeaponFindAttribute(weapon, ATTRIB_MELEE_KILL_CHARGE_METER, flVal) && flVal > 0.0)
-						{
-							float flMeter = GetEntPropFloat(attacker, Prop_Send, "m_flChargeMeter");
-							flMeter += flVal * 100.0;
-							if (flMeter > 100.0) flMeter = 100.0;
-							SetEntPropFloat(attacker, Prop_Send, "m_flChargeMeter", flMeter);
-						}
-						
-						if (TF2_WeaponFindAttribute(weapon, ATTRIB_CRITBOOST_ON_KILL, flVal) && flVal > 0.0)
-							TF2_AddCondition(attacker, TFCond_CritOnDamage, flVal);
-	
-						if (TF2_WeaponFindAttribute(weapon, ATTRIB_HEAL_ON_KILL, flVal) && flVal > 0.0)
-						{
-							int iMaxHealth = SDK_GetMaxHealth(attacker);
-							Client_AddHealth(attacker, RoundToNearest(flVal), RoundToNearest(float(iMaxHealth) * 0.5));
-						}
-						
-						if (TF2_WeaponFindAttribute(weapon, ATTRIB_HEAL_ON_KILL_BASE_HEALTH, flVal) && flVal > 0.0)
-						{
-							int iMaxHealth = SDK_GetMaxHealth(attacker);
-							Client_AddHealth(attacker, RoundToNearest(float(iMaxHealth) * flVal / 100.0), RoundToNearest(float(iMaxHealth) * 0.5));
 						}
 					}
 				}
@@ -2451,8 +2366,16 @@ public Action TF2_CalcIsAttackCritical(int iClient, int iWeapon, char[] sWepClas
 		int iIndex = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
 		int iSlot = TF2_GetSlotInItem(iIndex, TF2_GetPlayerClass(iClient));
 		
-		//TODO override result
 		TagsCore_CallSlot(iClient, TagsCall_Attack, iSlot);
+		
+		//Override crit result
+		bool bNewResult = TagsCore_IsAttackCrit(iClient, TagsCall_Attack, iSlot);
+		if (bResult != bNewResult)
+		{
+			bResult = bNewResult;
+			return Plugin_Changed;
+		}
+		
 		return Plugin_Continue;
 	}
 }
@@ -2634,14 +2557,12 @@ public MRESReturn Hook_AllowedToHealTarget(int iMedigun, Handle hReturn, Handle 
 			return MRES_Supercede;
 		}
 		
-		//TODO override result
-		/*
-		if (TagsCore_CallSlot(iClient, TagsCall_Heal, WeaponSlot_Secondary))
+		TagsCore_CallSlot(iClient, TagsCall_Heal, WeaponSlot_Secondary);
+		if (TagsCore_CanHealBuilding(iClient, TagsCall_Heal, WeaponSlot_Secondary))
 		{
 			DHookSetReturn(hReturn, true);
 			return MRES_Supercede;
 		}
-		*/
 	}
 	
 	return MRES_Ignored;

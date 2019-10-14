@@ -2,10 +2,13 @@ enum TagsFilterType			//List of possible filters
 {
 	TagsFilterType_Invalid = -1,
 	TagsFilterType_Cond = 0,
+	TagsFilterType_ActiveWeapon,
+	TagsFilterType_AttackWeapon,
 	TagsFilterType_Aim,
 	TagsFilterType_SentryTarget,
 	TagsFilterType_DamageType,
 	TagsFilterType_DamageCustom,
+	TagsFilterType_BackstabCount,
 }
 
 enum struct TagsFilterStruct
@@ -19,62 +22,60 @@ enum struct TagsFilterStruct
 		
 		switch (this.nType)
 		{
-			case TagsFilterType_Cond:
+			case TagsFilterType_Cond, TagsFilterType_BackstabCount:
 			{
-				//Get cond num
-				if (!StringToIntEx(sValue, this.nValue))
-				{
-					LogMessage("WARNING: Invalid value found in 'cond' filter (%s)", sValue);
-					return false;
-				}
+				//Get number from string
+				return !!StringToIntEx(sValue, this.nValue);
+			}
+			case TagsFilterType_ActiveWeapon, TagsFilterType_AttackWeapon:
+			{
+				//Get target type
+				this.nValue = TagsTarget_GetType(sValue);
+				return !(this.nValue == TagsTarget_Invalid);
 			}
 			case TagsFilterType_Aim, TagsFilterType_SentryTarget:
 			{
-				//Right now both only supports "boss", do we need to expand this?
 				this.nValue = 1;
+				return true;
 			}
 			case TagsFilterType_DamageType:
 			{
 				this.nValue = TagsFilter_GetDamageType(sValue);
-				if (this.nValue == 0)
-				{
-					LogMessage("WARNING: Invalid target found in 'damagetype' filter (%s)", sType, sValue);
-					return false;
-				}
+				return this.nValue != 0;
 			}
 			case TagsFilterType_DamageCustom:
 			{
 				this.nValue = TagsFilter_GetDamageCustom(sValue);
-				if (this.nValue == 0)
-				{
-					LogMessage("WARNING: Invalid target found in 'damagecustom' filter (%s)", sType, sValue);
-					return false;
-				}
-			}
-			default:
-			{
-				LogMessage("WARNING: Invalid filter type '%s' found in config", sType);
-				return false;
+				return this.nValue != 0;
 			}
 		}
 		
-		return true;
+		return false;
 	}
 	
 	bool IsAllowed(int iClient)
 	{
-		//Check if any of the statement is false, end if so
+		//Return true/false based on what type and value
 		switch (this.nType)
 		{
 			case TagsFilterType_Cond:
 			{
-				if (TF2_IsPlayerInCondition(iClient, this.nValue))
-					return true;
+				return TF2_IsPlayerInCondition(iClient, this.nValue);
+			}
+			case TagsFilterType_ActiveWeapon:
+			{
+				int iTargetWeapon = TagsTarget_GetTarget(iClient, this.nValue);
+				int iActiveWeapon = GetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon");
+				return (iTargetWeapon > MaxClients && iTargetWeapon == iActiveWeapon);
+			}
+			case TagsFilterType_AttackWeapon:
+			{
+				int iSlot = TagsTarget_GetWeaponSlot(this.nValue);
+				return (TagsDamage_GetWeapon() == TF2_GetItemInSlot(TagsDamage_GetAttacker(), iSlot));
 			}
 			case TagsFilterType_Aim:
 			{
-				if (SaxtonHale_IsValidBoss(Client_GetEyeTarget(iClient)))
-					return true;
+				return SaxtonHale_IsValidBoss(Client_GetEyeTarget(iClient));
 			}
 			case TagsFilterType_SentryTarget:
 			{
@@ -83,8 +84,7 @@ enum struct TagsFilterStruct
 				{
 					//Check if target is valid boss
 					int iTarget = GetEntPropEnt(iSentry, Prop_Send, "m_hEnemy");
-					if (SaxtonHale_IsValidBoss(iTarget))
-						return true;
+					return SaxtonHale_IsValidBoss(iTarget);
 				}
 			}
 			case TagsFilterType_DamageType:
@@ -94,6 +94,10 @@ enum struct TagsFilterStruct
 			case TagsFilterType_DamageCustom:
 			{
 				return TagsDamage_HasDamageCustom(this.nValue);
+			}
+			case TagsFilterType_BackstabCount:
+			{
+				return Tags_GetBackstabCount(iClient, TagsDamage_GetVictim()) >= this.nValue;
 			}
 		}
 		
@@ -127,6 +131,8 @@ methodmap TagsFilter < ArrayList
 			TagsFilterStruct filterStruct;
 			if (filterStruct.Load(sType, sValue))
 				filter.PushArray(filterStruct);
+			else
+				LogMessage("WARNING: Invalid type found in '%s' filter (%s)", sType, sValue);
 		}
 		while (kv.GotoNextKey(false));
 		kv.GoBack();	//From list of filters
@@ -163,10 +169,13 @@ TagsFilterType TagsFilter_GetType(const char[] sTarget)
 	{
 		mFilterType = new StringMap();
 		mFilterType.SetValue("cond", TagsFilterType_Cond);
+		mFilterType.SetValue("activeweapon", TagsFilterType_ActiveWeapon);
+		mFilterType.SetValue("attackweapon", TagsFilterType_AttackWeapon);
 		mFilterType.SetValue("aim", TagsFilterType_Aim);
 		mFilterType.SetValue("sentrytarget", TagsFilterType_SentryTarget);
 		mFilterType.SetValue("damagetype", TagsFilterType_DamageType);
 		mFilterType.SetValue("damagecustom", TagsFilterType_DamageCustom);
+		mFilterType.SetValue("backstabcount", TagsFilterType_BackstabCount);
 	}
 	
 	TagsFilterType nFilterType = TagsFilterType_Invalid;

@@ -30,6 +30,14 @@ int TagsDamage_GetAttacker()
 	return g_damageStruct.iAttacker;
 }
 
+int TagsDamage_GetWeapon()
+{
+	if (!g_bTagsDamageCall)
+		PluginStop(true, "[VSH] ATTEMPTING TO GET WEAPON WHILE OUTSIDE OF DAMAGE CALL!!!!");
+	
+	return g_damageStruct.iWeapon;
+}
+
 bool TagsDamage_HasDamageType(int iDamageType)
 {
 	if (!g_bTagsDamageCall)
@@ -39,7 +47,7 @@ bool TagsDamage_HasDamageType(int iDamageType)
 	if (iDamageType >= 0)
 		return !!(g_damageStruct.iDamageType & iDamageType);
 	else
-		return !(g_damageStruct.iDamageType & iDamageType);
+		return !(g_damageStruct.iDamageType & -iDamageType);
 }
 
 bool TagsDamage_HasDamageCustom(int iDamageCustom)
@@ -49,12 +57,12 @@ bool TagsDamage_HasDamageCustom(int iDamageCustom)
 	
 	//We use negative number as reverse of yes/no
 	if (iDamageCustom >= 0)
-		return !!(g_damageStruct.iDamageType == iDamageCustom);
+		return !!(g_damageStruct.iDamageCustom == iDamageCustom);
 	else
-		return !(g_damageStruct.iDamageType == iDamageCustom);
+		return !(g_damageStruct.iDamageCustom == -iDamageCustom);
 }
 
-public Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	//Get values to pass around
 	TagsDamage damageStruct;
@@ -101,7 +109,6 @@ public Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor,
 		weapon = damageStruct.iWeapon;
 		damageForce = damageStruct.flDamageForce;
 		damagePosition = damageStruct.flDamagePosition;
-		damagecustom = damageStruct.iDamageCustom;
 	}
 	
 	return action;
@@ -109,30 +116,20 @@ public Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor,
 
 Action Tags_CallSlotDamage(int iClient, TagsCall nCall, int iSlot, TagsDamage damageStruct)
 {
+	if (!SaxtonHale_IsValidAttack(iClient))
+		return Plugin_Continue;
+	
 	g_damageStruct = damageStruct;
 	g_bTagsDamageCall = true;
 	
 	TagsCore_CallSlot(iClient, nCall, iSlot);
 	
 	Action action = Plugin_Continue;
-	ArrayList aArray = g_aTagsClient[iClient][nCall][iSlot];
-	if (aArray == null)
-	{
-		g_bTagsDamageCall = false;
-		return Plugin_Continue;	//No values to change
-	}
 	
-	int iLength = aArray.Length;
-	for (int i = 0; i < iLength; i++)
+	int iPos = -1;
+	Tags tagsStruct;
+	while (TagsCore_GetStruct(iPos, iClient, nCall, iSlot, tagsStruct))	//Loop though every active structs
 	{
-		int iCoreId = aArray.Get(i);
-		Tags tagsStruct;
-		g_aTags.GetArray(iCoreId, tagsStruct);
-		
-		//Check if allowed to change from filters
-		if (!tagsStruct.tFilters.IsAllowed(iClient))
-			continue;
-		
 		if (tagsStruct.flSet >= 0.0)
 		{
 			damageStruct.flDamage = tagsStruct.flSet;

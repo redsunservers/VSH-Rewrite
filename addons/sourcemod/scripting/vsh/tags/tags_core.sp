@@ -23,8 +23,8 @@ enum struct Tags	//Mental
 	float flMax;
 	int iKnockback;
 	
-	//Values only used for "attack", -1 of undefined
-	int iCrit;
+	//Values only used for "attack", -1 if undefined
+	int iAttackCrit;
 	
 	//Values only used for "heal", -1 if undefined
 	int iHealBuilding;
@@ -80,7 +80,7 @@ enum struct Tags	//Mental
 		this.flMin = kv.GetFloat("min", -1.0);
 		this.flMax = kv.GetFloat("max", -1.0);
 		this.iKnockback = kv.GetNum("knockback", -1);
-		this.iCrit = kv.GetNum("crit", -1);
+		this.iAttackCrit = kv.GetNum("attackcrit", -1);
 		this.iHealBuilding = kv.GetNum("healbuilding", -1);
 		
 		//Push this into array
@@ -180,9 +180,7 @@ void TagsCore_CallAll(int iClient, TagsCall nCall)
 void TagsCore_CallSlot(int iClient, TagsCall nCall, int iSlot)
 {
 	ArrayList aArray = g_aTagsClient[iClient][nCall][iSlot];
-	
-	if (aArray == null)
-		return;	//No tags to call
+	if (aArray == null) return;	//No tags to call
 	
 	int iLength = aArray.Length;
 	for (int i = 0; i < iLength; i++)
@@ -208,6 +206,64 @@ void TagsCore_CallSlot(int iClient, TagsCall nCall, int iSlot)
 			g_tFunctions.Call(iFunctionId, iClient);
 		}
 	}
+}
+
+stock bool TagsCore_IsAttackCrit(int iClient, TagsCall nCall, int iSlot)
+{
+	int iPos = -1;
+	Tags tagsStruct;
+	while (TagsCore_GetStruct(iPos, iClient, nCall, iSlot, tagsStruct))	//Loop though every active structs
+	{
+		if (tagsStruct.iAttackCrit == 1)
+			return true;
+		else if (tagsStruct.iAttackCrit == 0)
+			return false;
+	}
+	
+	return false;
+}
+
+stock bool TagsCore_CanHealBuilding(int iClient, TagsCall nCall, int iSlot)
+{
+	int iPos = -1;
+	Tags tagsStruct;
+	while (TagsCore_GetStruct(iPos, iClient, nCall, iSlot, tagsStruct))	//Loop though every active structs
+	{
+		if (tagsStruct.iHealBuilding == 1)
+			return true;
+		else if (tagsStruct.iHealBuilding == 0)
+			return false;
+	}
+	
+	return false;
+}
+
+//Stock to get every valid structs, returns false if no more structs to search
+stock bool TagsCore_GetStruct(int &iPos, int iClient, TagsCall nCall, int iSlot, Tags tagsStruct)
+{
+	ArrayList aArray = g_aTagsClient[iClient][nCall][iSlot];
+	if (aArray == null) return false;
+	
+	iPos++;
+	int iLength = aArray.Length;
+	while (iPos < iLength)
+	{
+		int iCoreId = aArray.Get(iPos);
+		Tags bufferStruct;
+		g_aTags.GetArray(iCoreId, bufferStruct);
+		
+		//Filter check
+		if (!bufferStruct.tFilters.IsAllowed(iClient))
+		{
+			iPos++;
+			continue;
+		}
+		
+		tagsStruct = bufferStruct;
+		return true;
+	}
+	
+	return false;
 }
 
 stock bool TagsCore_IsAllowed(int iClient, int iId)

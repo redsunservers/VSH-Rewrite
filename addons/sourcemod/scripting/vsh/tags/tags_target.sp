@@ -37,6 +37,21 @@ int TagsTarget_GetTarget(int iClient, TagsTarget nTarget)
 	return -1;
 }
 
+int TagsTarget_GetWeaponSlot(TagsTarget nTarget)
+{
+	switch (nTarget)
+	{
+		case TagsTarget_Primary: return WeaponSlot_Primary;
+		case TagsTarget_Secondary: return WeaponSlot_Secondary;
+		case TagsTarget_Melee: return WeaponSlot_Melee;
+		case TagsTarget_PDA1: return WeaponSlot_PDABuild;
+		case TagsTarget_PDA2: return WeaponSlot_PDADestroy;
+		case TagsTarget_Building: return WeaponSlot_BuilderEngie;
+	}
+	
+	return -1;
+}
+
 TagsTarget TagsTarget_GetType(const char[] sTarget)
 {
 	static StringMap mTarget;

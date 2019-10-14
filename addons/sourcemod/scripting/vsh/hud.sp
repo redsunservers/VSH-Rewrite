@@ -1,19 +1,25 @@
 static char g_sHudText[TF_MAXPLAYERS+1][256];
 static int g_iHudColor[TF_MAXPLAYERS+1][4];
+static bool g_bHudRage[TF_MAXPLAYERS+1] = true;
 
-public void Hud_AddText(int iClient, char[] sText)
+void Hud_SetRageView(int iClient, bool bEnable)
+{
+	g_bHudRage[iClient] = bEnable;
+}
+
+void Hud_AddText(int iClient, char[] sText)
 {
 	if (!StrEmpty(g_sHudText[iClient])) StrCat(g_sHudText[iClient], sizeof(g_sHudText[]), "\n");
 	StrCat(g_sHudText[iClient], sizeof(g_sHudText[]), sText);
 }
 
-public void Hud_SetColor(int iClient, int iColor[4])
+void Hud_SetColor(int iClient, int iColor[4])
 {
 	for (int i = 0; i < sizeof(iColor); i++)
 		g_iHudColor[iClient][i] = iColor[i];
 }
 
-public void Hud_Think(int iClient)
+void Hud_Think(int iClient)
 {
 	if (!g_bRoundStarted) return;
 	
@@ -24,7 +30,20 @@ public void Hud_Think(int iClient)
 		//Display Boss's health
 		Format(sMessage, sizeof(sMessage), "Boss Health: %i/%i", g_iHealthBarHealth, g_iHealthBarMaxHealth);
 		
-		//TODO Boss rage
+		//Display boss's rage
+		if (g_bHudRage[iClient])
+		{
+			for (int iBoss = 1; iBoss <= MaxClients; iBoss++)
+			{
+				SaxtonHaleBase boss = SaxtonHaleBase(iBoss);
+				if (IsClientInGame(iBoss) && IsPlayerAlive(iBoss) && boss.bValid && !boss.bMinion)
+				{
+					int iRage = RoundToFloor(float(boss.iRageDamage) / float(boss.iMaxRageDamage) * 100.0);
+					Format(sMessage, sizeof(sMessage), "%s | Boss Rage: %i%%%%", sMessage, iRage);
+					break;
+				}
+			}
+		}
 		
 		Hud_AddText(iClient, sMessage);
 

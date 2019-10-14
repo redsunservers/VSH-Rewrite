@@ -1,4 +1,4 @@
-
+static int g_iBackstabCount[TF_MAXPLAYERS+1][TF_MAXPLAYERS+1];
 static int g_iClimbAmount[TF_MAXPLAYERS+1];
 static int g_iZombieUsed[TF_MAXPLAYERS+1];
 
@@ -19,11 +19,11 @@ void Tags_RoundStart()
 	
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
-		for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
-		{
-			g_iClimbAmount[iClient] = 0;
-			g_iZombieUsed[iClient] = 0;
-		}
+		g_iClimbAmount[iClient] = 0;
+		g_iZombieUsed[iClient] = 0;
+		
+		for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
+			g_iBackstabCount[iClient][iVictim] = 0;
 	}
 }
 
@@ -81,54 +81,43 @@ public void Tags_SetEntProp(int iClient, int iTarget, TagsParams tParams)
 	if (iTarget <= 0 || !IsValidEdict(iTarget))
 		return;
 	
-	char sType[8], sProp[32];
+	//Get stuffs
+	char sType[8], sProp[32], sMath[32];
 	tParams.GetString("type", sType, sizeof(sType));
 	tParams.GetString("prop", sProp, sizeof(sProp));
+	tParams.GetString("math", sMath, sizeof(sMath));
 	
 	if (StrEqual(sType, "int"))
 	{
-		int iValue = tParams.GetInt("value", 0);
-		SetEntProp(iTarget, Prop_Send, sProp, iValue);
-	}
-	else if (StrEqual(sType, "float"))
-	{
-		float flValue = tParams.GetFloat("value", 0.0);
-		SetEntPropFloat(iTarget, Prop_Send, sProp, flValue);
-	}
-}
-
-public void Tags_AddEntProp(int iClient, int iTarget, TagsParams tParams)
-{
-	if (iTarget <= 0 || !IsValidEdict(iTarget))
-		return;
-	
-	char sType[8], sProp[32];
-	tParams.GetString("type", sType, sizeof(sType));
-	tParams.GetString("prop", sProp, sizeof(sProp));
-	
-	if (StrEqual(sType, "int"))
-	{
-		int iValue = GetEntProp(iTarget, Prop_Send, sProp) + tParams.GetInt("value");
+		int iValue = tParams.GetInt("value");
+		
+		if (StrEqual(sMath, "add"))
+			iValue += GetEntProp(iTarget, Prop_Send, sProp);
+		else if (StrEqual(sMath, "multiply"))
+			iValue *= GetEntProp(iTarget, Prop_Send, sProp);
+		else if (StrEqual(sMath, "damage"))
+			iValue = RoundToFloor(float(g_iPlayerDamage[iClient]) / float(iValue));
+		
 		int iMin, iMax;
-		
-		if (tParams.GetIntEx("min", iMin) && iValue < iMin)
-			iValue = iMin;
-		
-		if (tParams.GetIntEx("max", iMax) && iValue > iMax)
-			iValue = iMax;
+		if (tParams.GetIntEx("min", iMin) && iValue < iMin) iValue = iMin;
+		if (tParams.GetIntEx("max", iMax) && iValue > iMax) iValue = iMax;
 		
 		SetEntProp(iTarget, Prop_Send, sProp, iValue);
 	}
 	else if (StrEqual(sType, "float"))
 	{
-		float flValue = GetEntPropFloat(iTarget, Prop_Send, sProp) + tParams.GetFloat("value");
+		float flValue = tParams.GetFloat("value");
+		
+		if (StrEqual(sMath, "add"))
+			flValue += GetEntPropFloat(iTarget, Prop_Send, sProp);
+		else if (StrEqual(sMath, "multiply"))
+			flValue *= GetEntPropFloat(iTarget, Prop_Send, sProp);
+		else if (StrEqual(sMath, "damage"))
+			flValue = float(g_iPlayerDamage[iClient]) / flValue;
+		
 		float flMin, flMax;
-		
-		if (tParams.GetFloatEx("min", flMin) && flValue < flMin)
-			flValue = flMin;
-		
-		if (tParams.GetFloatEx("max", flMax) && flValue > flMax)
-			flValue = flMax;
+		if (tParams.GetFloatEx("min", flMin) && flValue < flMin) flValue = flMin;
+		if (tParams.GetFloatEx("max", flMax) && flValue > flMax) flValue = flMax;
 		
 		SetEntPropFloat(iTarget, Prop_Send, sProp, flValue);
 	}
@@ -196,20 +185,19 @@ public void Tags_AreaOfRange(int iClient, int iTarget, TagsParams tParams)
 
 public void Tags_Glow(int iClient, int iTarget, TagsParams tParams)
 {
-	/*
 	if (!SaxtonHale_IsValidBoss(iTarget))
 		return;
 	
-	float flGlowTime = flVal;
-	if (HasEntProp(weapon, Prop_Send, "m_flChargedDamage"))
-		flGlowTime *= GetEntPropFloat(weapon, Prop_Send, "m_flChargedDamage") / 100.0;
+	float flGlowTime = tParams.GetFloat("duration");
+	int iWeapon = TagsDamage_GetWeapon();
+	if (iWeapon > MaxClients && HasEntProp(iWeapon, Prop_Send, "m_flChargedDamage"))
+		flGlowTime *= GetEntPropFloat(iWeapon, Prop_Send, "m_flChargedDamage") / 100.0;
 	
 	flGlowTime += GetGameTime();
 	
 	SaxtonHaleBase boss = SaxtonHaleBase(iTarget);
 	if (boss.flGlowTime < flGlowTime)
 		boss.flGlowTime = flGlowTime;
-	*/
 }
 
 public void Tags_Climb(int iClient, int iTarget, TagsParams tParams)
@@ -296,12 +284,12 @@ public void Tags_OnBackstab(int iClient, int iTarget, TagsParams tParams)
 	
 	SDK_SendWeaponAnim(iWeapon, 0x648);
 	
-	g_iPlayerTotalBackstab[iClient][iTarget]++;
+	g_iBackstabCount[iClient][iTarget]++;
 }
 
 public void Tags_OnBackstabChain(int iClient, int iTarget, TagsParams tParams)
 {
-	int iTotalBackstab = g_iPlayerTotalBackstab[iClient][iTarget];
+	int iTotalBackstab = g_iBackstabCount[iClient][iTarget];
 	int iRequiredBackstab = tParams.GetInt("requirement");
 	
 	//Special backstab sound, right now we only have 4 for it
@@ -378,6 +366,14 @@ public void Tags_RemoveRage(int iClient, int iTarget, TagsParams tParams)
 	int iAmount = tParams.GetInt("amount");
 	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 	boss.CallFunction("AddRage", -iAmount);
+}
+
+public void Tags_ViewRage(int iClient, int iTarget, TagsParams tParams)
+{
+	if (iTarget <= 0 || iTarget > MaxClients || !IsClientInGame(iTarget) || !IsPlayerAlive(iTarget))
+		return;
+	
+	Hud_SetRageView(iTarget, true);
 }
 
 public void Tags_AddClip(int iClient, int iTarget, TagsParams tParams)
@@ -628,4 +624,9 @@ public Action Timer_ResetAttrib(Handle hTimer, DataPack data)
 			return;
 		}
 	}
+}
+
+stock int Tags_GetBackstabCount(int iClient, int iVictim)
+{
+	return g_iBackstabCount[iClient][iVictim];
 }

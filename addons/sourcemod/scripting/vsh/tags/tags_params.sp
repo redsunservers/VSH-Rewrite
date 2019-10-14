@@ -122,9 +122,9 @@ methodmap TagsParams < StringMap
 			if (this == null)
 				return -1.0;
 			
-			float flDuration;
-			if (this.GetValue("delay", flDuration))
-				return flDuration;
+			char sBuffer[8];
+			if (this.GetString("delay", sBuffer, sizeof(sBuffer)))
+				return StringToFloat(sBuffer);
 			
 			return -1.0;
 		}
@@ -137,9 +137,9 @@ methodmap TagsParams < StringMap
 			if (this == null)
 				return 1;
 			
-			int iCall;
-			if (this.GetValue("call", iCall))
-				return iCall;
+			char sBuffer[8];
+			if (this.GetString("call", sBuffer, sizeof(sBuffer)))
+				return StringToInt(sBuffer);
 			
 			return 1;
 		}
@@ -152,9 +152,9 @@ methodmap TagsParams < StringMap
 			if (this == null)
 				return 0.0;
 			
-			float flRate;
-			if (this.GetValue("rate", flRate))
-				return flRate;
+			char sBuffer[8];
+			if (this.GetString("rate", sBuffer, sizeof(sBuffer)))
+				return StringToFloat(sBuffer);
 			
 			return 0.0;
 		}
