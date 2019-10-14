@@ -20,10 +20,6 @@ methodmap CZombie < SaxtonHaleBase
 	
 	public void OnSpawn()
 	{
-		//Because zombie have property IsBoss false
-		for (int iSlot = WeaponSlot_Primary; iSlot <= WeaponSlot_InvisWatch; iSlot++)
-			TF2_RemoveItemInSlot(this.iClient, iSlot);
-		
 		int iWeapon = this.CallFunction("CreateWeapon", 0, "tf_weapon_bat", 0, TFQual_Normal, "");
 		if (iWeapon > MaxClients)
 			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
