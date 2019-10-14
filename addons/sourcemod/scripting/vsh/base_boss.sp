@@ -181,7 +181,7 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 					AcceptEntityInput(iEntity, "Kill");
 		}
 		
-		for (int iSlot = WeaponSlot_Primary; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
+		for (int iSlot = WeaponSlot_Primary; iSlot <= WeaponSlot_InvisWatch; iSlot++)	//Don't remove toolbox weapon
 			TF2_RemoveItemInSlot(this.iClient, iSlot);
 		
 		int iHealth = this.CallFunction("CalculateMaxHealth");
