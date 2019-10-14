@@ -11,6 +11,49 @@ enum struct TagsDamage	//Stuffs to pass around tags
 	int iDamageCustom;
 }
 
+static TagsDamage g_damageStruct;
+static bool g_bTagsDamageCall;
+
+int TagsDamage_GetVictim()
+{
+	if (!g_bTagsDamageCall)
+		PluginStop(true, "[VSH] ATTEMPTING TO GET VICTIM WHILE OUTSIDE OF DAMAGE CALL!!!!");
+	
+	return g_damageStruct.iVictim;
+}
+
+int TagsDamage_GetAttacker()
+{
+	if (!g_bTagsDamageCall)
+		PluginStop(true, "[VSH] ATTEMPTING TO GET ATTACKER WHILE OUTSIDE OF DAMAGE CALL!!!!");
+	
+	return g_damageStruct.iAttacker;
+}
+
+bool TagsDamage_HasDamageType(int iDamageType)
+{
+	if (!g_bTagsDamageCall)
+		PluginStop(true, "[VSH] ATTEMPTING TO GET DAMAGE TYPE WHILE OUTSIDE OF DAMAGE CALL!!!!");
+	
+	//We use negative number as reverse of yes/no
+	if (iDamageType >= 0)
+		return !!(g_damageStruct.iDamageType & iDamageType);
+	else
+		return !(g_damageStruct.iDamageType & iDamageType);
+}
+
+bool TagsDamage_HasDamageCustom(int iDamageCustom)
+{
+	if (!g_bTagsDamageCall)
+		PluginStop(true, "[VSH] ATTEMPTING TO GET DAMAGE CUSTOM WHILE OUTSIDE OF DAMAGE CALL!!!!");
+	
+	//We use negative number as reverse of yes/no
+	if (iDamageCustom >= 0)
+		return !!(g_damageStruct.iDamageType == iDamageCustom);
+	else
+		return !(g_damageStruct.iDamageType == iDamageCustom);
+}
+
 public Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	//Get values to pass around
@@ -66,12 +109,18 @@ public Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor,
 
 Action Tags_CallSlotDamage(int iClient, TagsCall nCall, int iSlot, TagsDamage damageStruct)
 {
+	g_damageStruct = damageStruct;
+	g_bTagsDamageCall = true;
+	
 	TagsCore_CallSlot(iClient, nCall, iSlot);
 	
 	Action action = Plugin_Continue;
 	ArrayList aArray = g_aTagsClient[iClient][nCall][iSlot];
 	if (aArray == null)
+	{
+		g_bTagsDamageCall = false;
 		return Plugin_Continue;	//No values to change
+	}
 	
 	int iLength = aArray.Length;
 	for (int i = 0; i < iLength; i++)
@@ -125,6 +174,8 @@ Action Tags_CallSlotDamage(int iClient, TagsCall nCall, int iSlot, TagsDamage da
 			action = Plugin_Changed;
 		}
 	}
+	
+	g_bTagsDamageCall = false;
 	
 	return action;
 }

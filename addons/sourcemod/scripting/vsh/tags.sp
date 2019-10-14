@@ -2,8 +2,21 @@
 static int g_iClimbAmount[TF_MAXPLAYERS+1];
 static int g_iZombieUsed[TF_MAXPLAYERS+1];
 
+static ArrayList g_aAttrib;	//Arrays of active attribs to be removed later
+
+enum
+{
+	TagsAttrib_Ref,
+	TagsAttrib_Index,
+	TagsAttrib_Duration,
+	TagsAttrib_MAX,
+}
+
 void Tags_RoundStart()
 {
+	if (g_aAttrib == null)
+		g_aAttrib = new ArrayList(TagsAttrib_MAX);
+	
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
 		for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
@@ -119,6 +132,52 @@ public void Tags_AddEntProp(int iClient, int iTarget, TagsParams tParams)
 		
 		SetEntPropFloat(iTarget, Prop_Send, sProp, flValue);
 	}
+}
+
+public void Tags_AddAttrib(int iClient, int iTarget, TagsParams tParams)
+{
+	if (iTarget <= 0 || !IsValidEdict(iTarget))
+		return;
+	
+	int iRef = EntIndexToEntRef(iTarget);
+	int iIndex = tParams.GetInt("index");
+	float flValue = tParams.GetFloat("value");
+	float flDuration = tParams.GetFloat("duration");
+	
+	//Check if weapon already have same attrib
+	int iPos;
+	bool bFound = false;
+	int iLength = g_aAttrib.Length;
+	for (iPos = 0; iPos < iLength; iPos++)
+	{
+		if (g_aAttrib.Get(iPos, TagsAttrib_Ref) == iRef && g_aAttrib.Get(iPos, TagsAttrib_Index) == iIndex)
+		{
+			bFound = true;
+			break;
+		}
+	}
+	
+	if (!bFound)
+	{
+		//Add attrib
+		TF2Attrib_SetByDefIndex(iTarget, iIndex, flValue);
+		TF2Attrib_ClearCache(iTarget);
+	}
+	else if (g_aAttrib.Get(iPos, TagsAttrib_Duration) <= GetGameTime() + flDuration)
+	{
+		//Set new duration
+		g_aAttrib.Set(iPos, GetGameTime() + flDuration, TagsAttrib_Duration);
+	}
+	else
+	{
+		//Don't need to create timer to reset
+		return;
+	}
+	
+	DataPack data;
+	CreateDataTimer(flDuration, Timer_ResetAttrib, data);
+	data.WriteCell(iRef);
+	data.WriteCell(iIndex);
 }
 
 public void Tags_AreaOfRange(int iClient, int iTarget, TagsParams tParams)
@@ -541,5 +600,32 @@ public Action Timer_ResetClip(Handle hTimer, int iRef)
 			iCurrentClip = iMaxClip;
 		
 		SetEntProp(iEntity, Prop_Send, "m_iClip1", iCurrentClip);
+	}
+}
+
+public Action Timer_ResetAttrib(Handle hTimer, DataPack data)
+{
+	data.Reset();
+	int iRef = data.ReadCell();
+	int iIndex = data.ReadCell();
+	
+	int iEntity = EntRefToEntIndex(iRef);
+	if (iEntity <= 0 || !IsValidEdict(iEntity))
+		return;
+	
+	//Check if still exists and outside of time
+	int iLength = g_aAttrib.Length;
+	for (int iPos = 0; iPos < iLength; iPos++)
+	{
+		if (g_aAttrib.Get(iPos, TagsAttrib_Ref) == iRef
+			&& g_aAttrib.Get(iPos, TagsAttrib_Index) == iIndex
+			&& g_aAttrib.Get(iPos, TagsAttrib_Duration) <= GetGameTime())
+		{
+			//Found with same ref, attrib index and outside of time
+			TF2Attrib_RemoveByDefIndex(iEntity, iIndex);
+			TF2Attrib_ClearCache(iEntity);
+			g_aAttrib.Erase(iPos);
+			return;
+		}
 	}
 }

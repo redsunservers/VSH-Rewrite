@@ -53,7 +53,7 @@ enum struct Tags	//Mental
 				}
 				else if (StrContains(sKeyName, "Tags_") == 0)
 				{
-					if (g_tFunctions.AddFunction(kv, g_aTags.Length, this.tFilters))	//Returns true on success
+					if (g_tFunctions.AddFunction(kv, g_aTags.Length))	//Returns true on success
 					{
 						if (!g_tFunctions.IsOverride(g_tFunctions.Length-1))	//If not override, add to list
 						{
@@ -195,11 +195,16 @@ void TagsCore_CallSlot(int iClient, TagsCall nCall, int iSlot)
 		if (tagsStruct.aFunctions == null)
 			continue;
 		
+		//Filter check
+		if (!tagsStruct.tFilters.IsAllowed(iClient))
+			continue;
+		
 		//Call function
 		int iFunctionLength = tagsStruct.aFunctions.Length;
 		for (int iPos = 0; iPos < iFunctionLength; iPos++)
 		{
 			int iFunctionId = tagsStruct.aFunctions.Get(iPos);
+			
 			g_tFunctions.Call(iFunctionId, iClient);
 		}
 	}

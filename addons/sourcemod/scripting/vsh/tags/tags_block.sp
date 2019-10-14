@@ -13,8 +13,8 @@ methodmap TagsBlock < ArrayList
 		int iLength = this.Length;
 		for (int i = 0; i < iLength; i++)
 		{
-			int iId = this.Get(i);
-			if (TagsCore_IsAllowed(iClient, iId))	//Does client have id, and not filtered
+			int iCoreId = this.Get(i);
+			if (TagsCore_IsAllowed(iClient, iCoreId))	//Does client have id, and not filtered
 				return true;
 		}
 		

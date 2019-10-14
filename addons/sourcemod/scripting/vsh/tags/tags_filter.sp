@@ -89,11 +89,11 @@ enum struct TagsFilterStruct
 			}
 			case TagsFilterType_DamageType:
 			{
-				//TODO
+				return TagsDamage_HasDamageType(this.nValue);
 			}
 			case TagsFilterType_DamageCustom:
 			{
-				//TODO
+				return TagsDamage_HasDamageCustom(this.nValue);
 			}
 		}
 		

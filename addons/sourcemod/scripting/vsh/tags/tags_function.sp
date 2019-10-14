@@ -2,7 +2,6 @@ enum struct TagsFunctionStruct
 {
 	int iCoreId;			//Id pos in g_aTags
 	Function func;			//Function tag to call
-	TagsFilter tFilters;	//Filter to check before calling this function
 	TagsParams tParams;		//Params to pass tag function
 	TagsBlock tBlock;		//List of ids in g_aTags blocking this function
 	ArrayList aOverride;	//List of overrides from Id pos in g_tFunctions
@@ -15,11 +14,10 @@ methodmap TagsFunction < ArrayList
 		return view_as<TagsFunction>(new ArrayList(sizeof(TagsFunctionStruct)));
 	}
 	
-	public bool AddFunction(KeyValues kv, int iCoreId, TagsFilter tFilters)
+	public bool AddFunction(KeyValues kv, int iCoreId)
 	{
 		TagsFunctionStruct functionStruct;
 		functionStruct.iCoreId = iCoreId;
-		functionStruct.tFilters = tFilters;
 		
 		//Get and check if function exists
 		char sFunctionName[MAXLEN_CONFIG_VALUE];
@@ -61,7 +59,10 @@ methodmap TagsFunction < ArrayList
 		this.GetArray(iPos, functionStruct);
 		
 		if (functionStruct.tBlock == null)
+		{
 			functionStruct.tBlock = new TagsBlock();
+			this.SetArray(iPos, functionStruct);	//Set new handle to array
+		}
 		
 		functionStruct.tBlock.Push(iCoreId);
 	}
@@ -86,22 +87,25 @@ methodmap TagsFunction < ArrayList
 		this.GetArray(iPos, functionStruct);
 		
 		if (functionStruct.aOverride == null)
+		{
 			functionStruct.aOverride = new ArrayList();
+			this.SetArray(iPos, functionStruct);	//Set new handle to array
+		}
 		
 		functionStruct.aOverride.Push(iFunctionId);
 	}
 	
-	public void GetParams(int iPos, int iClient, TagsParams tParams, bool bCheck)
+	public void GetParams(int iPos, int iClient, TagsParams tParams)
 	{
 		TagsFunctionStruct functionStruct;
 		this.GetArray(iPos, functionStruct);
 		
-		//Block check
-		if (bCheck && functionStruct.tBlock.IsBlocked(iClient))
+		//Does client have this id, and not filtered
+		if (!TagsCore_IsAllowed(iClient, functionStruct.iCoreId))
 			return;
 		
-		//Filter check
-		if (bCheck && !functionStruct.tFilters.IsAllowed(iClient))
+		//Block check
+		if (functionStruct.tBlock.IsBlocked(iClient))
 			return;
 		
 		functionStruct.tParams.CopyData(tParams);
@@ -112,7 +116,7 @@ methodmap TagsFunction < ArrayList
 			int iLength = functionStruct.aOverride.Length;
 			for (int i = 0; i < iLength; i++)
 			{
-				int iFunctionId = functionStruct.aOverride.Get(0);
+				int iFunctionId = functionStruct.aOverride.Get(i);
 				TagsFunction_GetParams(this, iFunctionId, iClient, tParams);	//Recursion
 			}
 		}
@@ -127,12 +131,8 @@ methodmap TagsFunction < ArrayList
 		if (functionStruct.tBlock.IsBlocked(iClient))
 			return;
 		
-		//Filter check
-		if (!functionStruct.tFilters.IsAllowed(iClient))
-			return;
-		
 		TagsParams tParams = new TagsParams();	//Create new params
-		this.GetParams(iPos, iClient, tParams, false);	//Get params, including override params if possible (while skipping checks as thats already checked)
+		this.GetParams(iPos, iClient, tParams);	//Get params, including override params if possible
 		
 		float flDelay = tParams.flDelay;
 		if (flDelay >= 0.0)
@@ -164,5 +164,5 @@ methodmap TagsFunction < ArrayList
 
 void TagsFunction_GetParams(TagsFunction tFunctions, int iPos, int iClient, TagsParams tParams)
 {
-	tFunctions.GetParams(iPos, iClient, tParams, true);
+	tFunctions.GetParams(iPos, iClient, tParams);
 }

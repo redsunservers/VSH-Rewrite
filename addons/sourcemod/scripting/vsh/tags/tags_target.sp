@@ -22,8 +22,8 @@ int TagsTarget_GetTarget(int iClient, TagsTarget nTarget)
 	switch (nTarget)
 	{
 		case TagsTarget_Client: return iClient;
-		case TagsTarget_Victim:	{}		//TODO
-		case TagsTarget_Attacker: {}	//TODO
+		case TagsTarget_Victim:	return TagsDamage_GetVictim();
+		case TagsTarget_Attacker: return TagsDamage_GetAttacker();
 		case TagsTarget_Patient: return TF2_GetPatient(iClient);
 		
 		case TagsTarget_Primary: return TF2_GetItemInSlot(iClient, WeaponSlot_Primary);
