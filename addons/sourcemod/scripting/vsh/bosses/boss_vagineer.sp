@@ -87,13 +87,10 @@ methodmap CVagineer < SaxtonHaleBase
 	{
 		SetEntProp(this.iClient, Prop_Send, "m_iAmmo", 0, 4, 3);
 		this.CallFunction("CreateWeapon", 25, "tf_weapon_pda_engineer_build", 100, TFQual_Unusual, "");
-		int iWeapon = this.CallFunction("CreateWeapon", 28, "tf_weapon_builder", 100, TFQual_Unusual, "");
-		if (iWeapon > MaxClients)
-			SetEntProp(iWeapon, Prop_Send, "m_aBuildableObjectTypes", 1, _, view_as<int>(TFObject_Sentry));	//Allow sentry to actually be built
 		
 		char attribs[256];
 		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65 ; 93 ; 0.0 ; 95 ; 0.0 ; 343 ; 0.5 ; 353 ; 1.0 ; 436 ; 1.0 ; 464 ; 10.0 ; 2043 ; 0.0");
-		iWeapon = this.CallFunction("CreateWeapon", 7, "tf_weapon_wrench", 100, TFQual_Collectors, attribs);
+		int iWeapon = this.CallFunction("CreateWeapon", 7, "tf_weapon_wrench", 100, TFQual_Collectors, attribs);
 		if (iWeapon > MaxClients)
 			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
 		/*
