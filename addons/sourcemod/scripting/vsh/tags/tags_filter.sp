@@ -53,7 +53,7 @@ enum struct TagsFilterStruct
 		return false;
 	}
 	
-	bool IsAllowed(int iClient)
+	bool IsAllowed(int iClient, TagsParams tParams = null)
 	{
 		//Return true/false based on what type and value
 		switch (this.nType)
@@ -70,11 +70,11 @@ enum struct TagsFilterStruct
 			}
 			case TagsFilterType_AttackWeapon:
 			{
-				int iAttacker = TagsDamage_GetAttacker();
+				int iAttacker = tParams.GetInt("attacker", -1);
 				if (0 < iAttacker <= MaxClients)
 				{
 					int iSlot = TagsTarget_GetWeaponSlot(this.nValue);
-					return (TagsDamage_GetWeapon() == TF2_GetItemInSlot(iAttacker, iSlot));
+					return (tParams.GetInt("weapon", -1) == TF2_GetItemInSlot(iAttacker, iSlot));
 				}
 			}
 			case TagsFilterType_Aim:
@@ -93,11 +93,25 @@ enum struct TagsFilterStruct
 			}
 			case TagsFilterType_DamageType:
 			{
-				return TagsDamage_HasDamageType(this.nValue);
+				int iDamageType;
+				if (!tParams.GetIntEx("damagetype", iDamageType))
+					return false;
+				
+				if (this.nValue > 0)
+					return !!(iDamageType & this.nValue);
+				else if (this.nValue < 0)
+					return !(iDamageType & -this.nValue);
 			}
 			case TagsFilterType_DamageCustom:
 			{
-				return TagsDamage_HasDamageCustom(this.nValue);
+				int iDamageCustom;
+				if (!tParams.GetIntEx("damagecustom", iDamageCustom))
+					return false;
+				
+				if (this.nValue > 0)
+					return !!(iDamageCustom == this.nValue);
+				else if (this.nValue < 0)
+					return !(iDamageCustom == -this.nValue);
 			}
 			case TagsFilterType_BackstabCount:
 			{

@@ -1,83 +1,14 @@
-enum struct TagsDamage	//Stuffs to pass around tags
-{
-	int iVictim;
-	int iAttacker;
-	int iInflictor;
-	float flDamage;
-	int iDamageType;
-	int iWeapon;
-	float flDamageForce[3];
-	float flDamagePosition[3];
-	int iDamageCustom;
-}
-
-static TagsDamage g_damageStruct;
-static bool g_bTagsDamageCall;
-
-int TagsDamage_GetVictim()
-{
-	if (!g_bTagsDamageCall)
-		PluginStop(true, "[VSH] ATTEMPTING TO GET VICTIM WHILE OUTSIDE OF DAMAGE CALL!!!!");
-	
-	return g_damageStruct.iVictim;
-}
-
-int TagsDamage_GetAttacker()
-{
-	if (!g_bTagsDamageCall)
-		PluginStop(true, "[VSH] ATTEMPTING TO GET ATTACKER WHILE OUTSIDE OF DAMAGE CALL!!!!");
-	
-	return g_damageStruct.iAttacker;
-}
-
-int TagsDamage_GetWeapon()
-{
-	if (!g_bTagsDamageCall)
-		PluginStop(true, "[VSH] ATTEMPTING TO GET WEAPON WHILE OUTSIDE OF DAMAGE CALL!!!!");
-	
-	return g_damageStruct.iWeapon;
-}
-
-bool TagsDamage_HasDamageType(int iDamageType)
-{
-	if (!g_bTagsDamageCall)
-		PluginStop(true, "[VSH] ATTEMPTING TO GET DAMAGE TYPE WHILE OUTSIDE OF DAMAGE CALL!!!!");
-	
-	//We use negative number as reverse of yes/no
-	if (iDamageType >= 0)
-		return !!(g_damageStruct.iDamageType & iDamageType);
-	else
-		return !(g_damageStruct.iDamageType & -iDamageType);
-}
-
-bool TagsDamage_HasDamageCustom(int iDamageCustom)
-{
-	if (!g_bTagsDamageCall)
-		PluginStop(true, "[VSH] ATTEMPTING TO GET DAMAGE CUSTOM WHILE OUTSIDE OF DAMAGE CALL!!!!");
-	
-	//We use negative number as reverse of yes/no
-	if (iDamageCustom >= 0)
-		return !!(g_damageStruct.iDamageCustom == iDamageCustom);
-	else
-		return !(g_damageStruct.iDamageCustom == -iDamageCustom);
-}
-
-Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	//Get values to pass around
-	g_damageStruct.iVictim = victim;
-	g_damageStruct.iAttacker = attacker;
-	g_damageStruct.iInflictor = inflictor;
-	g_damageStruct.flDamage = damage;
-	g_damageStruct.iDamageType = damagetype;
-	g_damageStruct.iWeapon = weapon;
-	g_damageStruct.flDamageForce = damageForce;
-	g_damageStruct.flDamagePosition = damagePosition;
-	g_damageStruct.iDamageCustom = damagecustom;
-	
-	g_bTagsDamageCall = true;
-	
-	Action action = Plugin_Continue;
+	TagsParams tParams = new TagsParams();
+	tParams.SetInt("victim", victim);
+	tParams.SetInt("attacker", attacker);
+	tParams.SetInt("inflictor", inflictor);
+	tParams.SetFloat("damage", damage);
+	tParams.SetInt("damagetype", damagetype);
+	tParams.SetInt("weapon", weapon);
+	tParams.SetInt("damagecustom", damagecustom);
 	
 	//Call takedamage function
 	if (SaxtonHale_IsValidAttack(victim))
@@ -86,22 +17,17 @@ Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor, float 
 		{
 			int iPos = -1;
 			Tags tagsStruct;
-			while (TagsCore_GetStruct(iPos, victim, TagsCall_TakeDamage, iSlot, tagsStruct))	//Loop though every active structs
-			{
-				Action actionTemp = TagsDamage_CallStruct(tagsStruct);
-				if (action < actionTemp) action = actionTemp;
-				
-				TagsCore_CallStruct(victim, tagsStruct);
-			}
+			while (TagsCore_GetStruct(iPos, victim, TagsCall_TakeDamage, iSlot, tParams, tagsStruct))	//Loop though every active structs
+				TagsCore_CallStruct(victim, tagsStruct, tParams);
 		}
 	}
 	
 	//Get weapon slot
 	int iWeaponSlot = -1;
-	if (g_damageStruct.iWeapon > MaxClients && HasEntProp(g_damageStruct.iWeapon, Prop_Send, "m_iItemDefinitionIndex"))
+	if (weapon > MaxClients && HasEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"))
 	{
-		int iIndex = GetEntProp(g_damageStruct.iWeapon, Prop_Send, "m_iItemDefinitionIndex");
-		iWeaponSlot = TF2_GetSlotInItem(iIndex, TF2_GetPlayerClass(g_damageStruct.iAttacker));
+		int iIndex = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
+		iWeaponSlot = TF2_GetSlotInItem(iIndex, TF2_GetPlayerClass(attacker));
 	}
 	
 	//Call attackdamage function
@@ -111,83 +37,65 @@ Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor, float 
 		{
 			int iPos = -1;
 			Tags tagsStruct;
-			while (TagsCore_GetStruct(iPos, attacker, TagsCall_AttackDamage, iSlot, tagsStruct))	//Loop though every active structs
+			while (TagsCore_GetStruct(iPos, attacker, TagsCall_AttackDamage, iSlot, tParams, tagsStruct))	//Loop though every active structs
 			{
 				//Only call if either weapon used, or passive
-				if (iSlot != iWeaponSlot && !tagsStruct.bPassive)
+				if (iSlot != iWeaponSlot && tagsStruct.tParams.GetInt("passive") != 1)
 					continue;
 				
-				Action actionTemp = TagsDamage_CallStruct(tagsStruct);
-				if (action < actionTemp) action = actionTemp;
-				
-				TagsCore_CallStruct(attacker, tagsStruct);
+				TagsCore_CallStruct(attacker, tagsStruct, tParams);
 			}
 		}
 	}
 	
-	g_bTagsDamageCall = false;
-	
-	if (action == Plugin_Changed)
-	{
-		//Set values back
-		attacker = g_damageStruct.iAttacker;
-		inflictor = g_damageStruct.iInflictor;
-		damage = g_damageStruct.flDamage;
-		damagetype = g_damageStruct.iDamageType;
-		weapon = g_damageStruct.iWeapon;
-		damageForce = g_damageStruct.flDamageForce;
-		damagePosition = g_damageStruct.flDamagePosition;
-	}
-	
-	return action;
-}
-
-Action TagsDamage_CallStruct(Tags tagsStruct)
-{
+	//Change values from param
 	Action action = Plugin_Continue;
+	float flValue;
 	
-	if (tagsStruct.flSet >= 0.0)
+	if (tParams.GetFloatEx("set", flValue))
 	{
-		g_damageStruct.flDamage = tagsStruct.flSet;
+		damage = flValue;
 		action = Plugin_Changed;
 	}
 	
-	if (tagsStruct.flPerPlayer >= 0.0)
+	if (tParams.GetFloatEx("perplayer", flValue))
 	{
-		g_damageStruct.flDamage = tagsStruct.flPerPlayer * float(g_iTotalAttackCount);
+		damage = flValue * float(g_iTotalAttackCount);
 		action = Plugin_Changed;
 	}
 	
-	if (tagsStruct.flMultiply >= 0.0)
+	if (tParams.GetFloatEx("multiply", flValue))
 	{
-		g_damageStruct.flDamage *= tagsStruct.flMultiply;
+		damage *= flValue;
 		action = Plugin_Changed;
 	}
 	
-	if (tagsStruct.flMin > g_damageStruct.flDamage)
+	if (tParams.GetFloatEx("min", flValue) && damage < flValue)
 	{
-		g_damageStruct.flDamage = tagsStruct.flMin;
+		damage = flValue;
 		action = Plugin_Changed;
 	}
 	
-	if (tagsStruct.flMax >= 0.0 && tagsStruct.flMax < g_damageStruct.flDamage)
+	if (tParams.GetFloatEx("max", flValue) && damage > flValue)
 	{
-		g_damageStruct.flDamage = tagsStruct.flMax;
+		damage = flValue;
 		action = Plugin_Changed;
 	}
 	
-	if (tagsStruct.aDamageType != null)
+	ArrayList aDamageType = tParams.GetIntArray("damagetype");
+	if (aDamageType != null)
 	{
-		int iLength = tagsStruct.aDamageType.Length;
+		int iLength = aDamageType.Length;
 		for (int i = 0; i < iLength; i++)
 		{
-			int iDamageType = tagsStruct.aDamageType.Get(i);
+			int iDamageType = aDamageType.Get(i);
 			if (iDamageType > 0)
-				g_damageStruct.iDamageType |= iDamageType;
+				damagetype |= iDamageType;
 			else if (iDamageType < 0)
-				g_damageStruct.iDamageType &= ~iDamageType;
+				damagetype &= ~iDamageType;
 		}
 		
+		delete aDamageType;
 		action = Plugin_Changed;
 	}
 	

@@ -30,23 +30,7 @@ methodmap TagsFunction < ArrayList
 			return false;
 		}
 		
-		if (kv.GotoFirstSubKey(false))
-		{
-			functionStruct.tParams = new TagsParams();
-			
-			do	//Loop through every params
-			{
-				char sParamName[MAXLEN_CONFIG_VALUE], sParamValue[MAXLEN_CONFIG_VALUE];
-				kv.GetSectionName(sParamName, sizeof(sParamName));
-				kv.GetString(NULL_STRING, sParamValue, sizeof(sParamValue));
-				functionStruct.tParams.SetString(sParamName, sParamValue);
-				
-				if (StrEqual(sParamName, "name"))
-					TagsName_Add(sParamValue, this.Length);
-			}
-			while (kv.GotoNextKey(false));
-			kv.GoBack();
-		}
+		functionStruct.tParams = new TagsParams(kv, this.Length);
 		
 		//Push into array
 		this.PushArray(functionStruct);

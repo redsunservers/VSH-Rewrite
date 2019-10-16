@@ -1,4 +1,4 @@
-enum TagsCall	//List of possible ways on when to call tags
+enum TagsCall	//List of possible ways to call tags
 {
 	TagsCall_Invalid = -1,
 	

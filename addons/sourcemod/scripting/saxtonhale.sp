@@ -361,9 +361,9 @@ Handle g_hSDKEquipWearable = null;
 #include "vsh/modifiers/modifiers_electric.sp"
 #include "vsh/modifiers/modifiers_angry.sp"
 
+#include "vsh/tags/tags_params.sp"
 #include "vsh/tags/tags_target.sp"
 #include "vsh/tags/tags_filter.sp"
-#include "vsh/tags/tags_params.sp"
 #include "vsh/tags/tags_block.sp"
 #include "vsh/tags/tags_function.sp"
 #include "vsh/tags/tags_call.sp"

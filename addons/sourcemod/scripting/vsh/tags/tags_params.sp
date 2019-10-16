@@ -1,17 +1,93 @@
 methodmap TagsParams < StringMap
 {
-	public TagsParams()
+	public TagsParams(KeyValues kv = null, int iFunctionId = -1)
 	{
-		return view_as<TagsParams>(new StringMap());
+		if (kv == null)
+			return view_as<TagsParams>(new StringMap());
+		
+		if (!kv.GotoFirstSubKey(false))
+			return null;
+		
+		TagsParams tParams = view_as<TagsParams>(new StringMap());
+		
+		do	//Loop through every params
+		{
+			char sParamName[MAXLEN_CONFIG_VALUE], sParamValue[MAXLEN_CONFIG_VALUE], sBuffer[MAXLEN_CONFIG_VALUE];
+			kv.GetSectionName(sParamName, sizeof(sParamName));
+			kv.GetString(NULL_STRING, sParamValue, sizeof(sParamValue));
+			
+			//If same param name found, add to an "array"
+			if (tParams.GetString(sParamName, sBuffer, sizeof(sBuffer)))
+				Format(sParamValue, sizeof(sParamValue), "%s ; %s", sParamValue, sBuffer);
+			
+			tParams.SetString(sParamName, sParamValue);
+			
+			if (StrEqual(sParamName, "name") && iFunctionId >= 0)
+				TagsName_Add(sParamValue, iFunctionId);
+		}
+		while (kv.GotoNextKey(false));
+		kv.GoBack();
+		
+		return tParams;
+	}
+	
+	public void SetInt(const char[] sKey, any iValue)
+	{
+		char sValue[12];
+		IntToString(iValue, sValue, sizeof(sValue));
+		this.SetString(sKey, sValue);
+	}
+	
+	public void SetFloat(const char[] sKey, float flValue)
+	{
+		char sValue[12];
+		FloatToString(flValue, sValue, sizeof(sValue));
+		this.SetString(sKey, sValue);
+	}
+	
+	public bool GetStringSingle(const char[] sKey, char[] sBuffer, int iLength)
+	{
+		if (this == null) return false;
+		
+		char sValue[MAXLEN_CONFIG_VALUE];
+		if (!this.GetString(sKey, sValue, sizeof(sValue)))
+			return false;
+		
+		char sValues[32][32];
+		int iCount = ExplodeString(sValue, " ; ", sValues, sizeof(sValues), sizeof(sValues[]));
+		if (iCount == 0) return false;
+		
+		//Copy last value in array
+		Format(sBuffer, iLength, sValues[iCount-1]);
+		return true;
+	}
+	
+	public ArrayList GetStringArray(const char[] sKey)
+	{
+		if (this == null) return null;
+		
+		char sValue[MAXLEN_CONFIG_VALUE];
+		if (!this.GetString(sKey, sValue, sizeof(sValue)))
+			return null;
+		
+		char sValues[32][32];
+		int iCount = ExplodeString(sValue, " ; ", sValues, sizeof(sValues), sizeof(sValues[]));
+		if (iCount == 0) return null;
+		
+		//Push all into array
+		ArrayList aBuffer = new ArrayList(MAXLEN_CONFIG_VALUE);
+		for (int i = 0; i < iCount; i++)
+			aBuffer.PushString(sValues[i]);
+		
+		return aBuffer;
 	}
 	
 	public any GetInt(const char[] sKey, any iValue = 0)
 	{
-		if (this == null)
-			return iValue;
+		if (this == null) return iValue;
 		
 		char sValue[MAXLEN_CONFIG_VALUE];
-		if (!this.GetString(sKey, sValue, sizeof(sValue)))
+		if (!this.GetStringSingle(sKey, sValue, sizeof(sValue)))
 			return iValue;
 		
 		return StringToInt(sValue);
@@ -19,23 +95,41 @@ methodmap TagsParams < StringMap
 	
 	public bool GetIntEx(const char[] sKey, any &iValue)
 	{
-		if (this == null)
-			return false;
+		if (this == null) return false;
 		
 		char sValue[MAXLEN_CONFIG_VALUE];
-		if (!this.GetString(sKey, sValue, sizeof(sValue)))
+		if (!this.GetStringSingle(sKey, sValue, sizeof(sValue)))
 			return false;
 		
 		return !!StringToIntEx(sValue, iValue);
 	}
 	
-	public float GetFloat(const char[] sKey, float flValue = 0.0)
+	public ArrayList GetIntArray(const char[] sKey)
 	{
-		if (this == null)
-			return flValue;
+		if (this == null) return null;
 		
 		char sValue[MAXLEN_CONFIG_VALUE];
 		if (!this.GetString(sKey, sValue, sizeof(sValue)))
+			return null;
+		
+		char sValues[32][12];
+		int iCount = ExplodeString(sValue, " ; ", sValues, sizeof(sValues), sizeof(sValues[]));
+		if (iCount == 0) return null;
+		
+		//Push all into array
+		ArrayList aBuffer = new ArrayList();
+		for (int i = 0; i < iCount; i++)
+			aBuffer.Push(StringToInt(sValues[i]));
+		
+		return aBuffer;
+	}
+	
+	public float GetFloat(const char[] sKey, float flValue = 0.0)
+	{
+		if (this == null) return flValue;
+		
+		char sValue[MAXLEN_CONFIG_VALUE];
+		if (!this.GetStringSingle(sKey, sValue, sizeof(sValue)))
 			return flValue;
 		
 		return StringToFloat(sValue);
@@ -43,23 +137,41 @@ methodmap TagsParams < StringMap
 	
 	public bool GetFloatEx(const char[] sKey, float &flValue)
 	{
-		if (this == null)
-			return false;
+		if (this == null) return false;
 		
 		char sValue[MAXLEN_CONFIG_VALUE];
-		if (!this.GetString(sKey, sValue, sizeof(sValue)))
+		if (!this.GetStringSingle(sKey, sValue, sizeof(sValue)))
 			return false;
 		
 		return !!StringToFloatEx(sValue, flValue);
 	}
 	
+	public ArrayList GetFloatArray(const char[] sKey)
+	{
+		if (this == null) return null;
+		
+		char sValue[MAXLEN_CONFIG_VALUE];
+		if (!this.GetString(sKey, sValue, sizeof(sValue)))
+			return null;
+		
+		char sValues[32][12];
+		int iCount = ExplodeString(sValue, " ; ", sValues, sizeof(sValues), sizeof(sValues[]));
+		if (iCount == 0) return null;
+		
+		//Push all into array
+		ArrayList aBuffer = new ArrayList();
+		for (int i = 0; i < iCount; i++)
+			aBuffer.Push(StringToFloat(sValues[i]));
+		
+		return aBuffer;
+	}
+	
 	public int GetTarget(int iClient)
 	{
-		if (this == null)
-			return iClient;
+		if (this == null) return iClient;
 		
 		char sTarget[MAXLEN_CONFIG_VALUE];
-		if (!this.GetString("target", sTarget, sizeof(sTarget)))
+		if (!this.GetStringSingle("target", sTarget, sizeof(sTarget)))
 			return iClient;	//If not found, return client as default
 		
 		TagsTarget nTarget = TagsTarget_GetType(sTarget);
@@ -68,16 +180,14 @@ methodmap TagsParams < StringMap
 	
 	public bool GetOverride(char[] sName, int iLength)
 	{
-		if (this == null)
-			return false;
+		if (this == null) return false;
 		
-		return this.GetString("override", sName, iLength);
+		return this.GetStringSingle("override", sName, iLength);
 	}
 	
 	public bool CopyData(TagsParams tParams)
 	{
-		if (this == null)
-			return false;
+		if (this == null || tParams == null) return false;
 		
 		StringMapSnapshot snapshot = this.Snapshot();
 		int iLength = snapshot.Length;
@@ -91,6 +201,11 @@ methodmap TagsParams < StringMap
 			//Get key value
 			char sValue[MAXLEN_CONFIG_VALUE];
 			this.GetString(sKey, sValue, sizeof(sValue));
+			
+			//If already exists, add as an "array"
+			char sBuffer[MAXLEN_CONFIG_VALUE];
+			if (tParams.GetString(sKey, sBuffer, sizeof(sBuffer)))
+				Format(sValue, sizeof(sValue), "%s ; %s", sBuffer, sValue);
 			
 			//Add to StringMap
 			tParams.SetString(sKey, sValue);
@@ -122,8 +237,8 @@ methodmap TagsParams < StringMap
 			if (this == null)
 				return -1.0;
 			
-			char sBuffer[8];
-			if (this.GetString("delay", sBuffer, sizeof(sBuffer)))
+			char sBuffer[12];
+			if (this.GetStringSingle("delay", sBuffer, sizeof(sBuffer)))
 				return StringToFloat(sBuffer);
 			
 			return -1.0;
@@ -137,8 +252,8 @@ methodmap TagsParams < StringMap
 			if (this == null)
 				return 1;
 			
-			char sBuffer[8];
-			if (this.GetString("call", sBuffer, sizeof(sBuffer)))
+			char sBuffer[12];
+			if (this.GetStringSingle("call", sBuffer, sizeof(sBuffer)))
 				return StringToInt(sBuffer);
 			
 			return 1;
@@ -152,8 +267,8 @@ methodmap TagsParams < StringMap
 			if (this == null)
 				return 0.0;
 			
-			char sBuffer[8];
-			if (this.GetString("rate", sBuffer, sizeof(sBuffer)))
+			char sBuffer[12];
+			if (this.GetStringSingle("rate", sBuffer, sizeof(sBuffer)))
 				return StringToFloat(sBuffer);
 			
 			return 0.0;

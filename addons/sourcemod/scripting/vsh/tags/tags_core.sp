@@ -11,24 +11,10 @@ enum struct Tags	//Mental
 	TagsCall nCall;				//Type of call on when to call this tag
 	
 	TagsFilter tFilters;		//Filters to check before doing anything below
+	TagsParams tParams;			//Params to use on non-functions
 	ArrayList aFunctions;		//Arrays of function id in g_tFunctions to call
 	
 	ArrayStack aBlockBuffer;	//Buffer list of blocked function name
-	
-	//Values only used for "takedamage" and "attackdamage", -1 if undefined
-	bool bPassive;
-	float flSet;
-	float flPerPlayer;
-	float flMultiply;
-	float flMin;
-	float flMax;
-	ArrayList aDamageType;
-	
-	//Values only used for "attack", -1 if undefined
-	int iAttackCrit;
-	
-	//Values only used for "heal", -1 if undefined
-	int iHealBuilding;
 	
 	void Load(KeyValues kv)
 	{
@@ -52,16 +38,9 @@ enum struct Tags	//Mental
 					
 					this.aBlockBuffer.PushString(sValue);
 				}
-				else if (StrEqual(sKeyName, "damagetype"))
+				else if (StrEqual(sKeyName, "params") && this.tParams == null)
 				{
-					char sValue[MAXLEN_CONFIG_VALUE];
-					kv.GetString(NULL_STRING, sValue, sizeof(sValue));
-					
-					if (this.aDamageType == null)
-						this.aDamageType = new ArrayList();
-					
-					//Push damagetype to array
-					this.aDamageType.Push(TagsDamage_GetType(sValue));
+					this.tParams = new TagsParams(kv);
 				}
 				else if (StrContains(sKeyName, "Tags_") == 0)
 				{
@@ -82,16 +61,6 @@ enum struct Tags	//Mental
 			kv.GoBack();
 		}
 		
-		//Load whatever other values
-		this.bPassive = !!kv.GetNum("passive", 0);
-		this.flSet = kv.GetFloat("set", -1.0);
-		this.flPerPlayer = kv.GetFloat("perplayer", -1.0);
-		this.flMultiply = kv.GetFloat("multiply", -1.0);
-		this.flMin = kv.GetFloat("min", -1.0);
-		this.flMax = kv.GetFloat("max", -1.0);
-		this.iAttackCrit = kv.GetNum("attackcrit", -1);
-		this.iHealBuilding = kv.GetNum("healbuilding", -1);
-		
 		//Push this into array
 		g_aTags.PushArray(this);
 	}
@@ -111,8 +80,8 @@ void TagsCore_Clear()
 		Tags tagsStruct;
 		g_aTags.GetArray(iCoreId, tagsStruct);
 		delete tagsStruct.tFilters;
+		delete tagsStruct.tParams;
 		delete tagsStruct.aFunctions;
-		delete tagsStruct.aDamageType;
 		//aBlockBuffer is deleted in tags_name.sp
 	}
 	
@@ -181,22 +150,25 @@ void TagsCore_RefreshClient(int iClient)
 	}
 }
 
-void TagsCore_CallAll(int iClient, TagsCall nCall)
+void TagsCore_CallAll(int iClient, TagsCall nCall, TagsParams tParams = null)
 {
 	for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
-		TagsCore_CallSlot(iClient, nCall, iSlot);
+		TagsCore_CallSlot(iClient, nCall, iSlot, tParams);
 }
 
-void TagsCore_CallSlot(int iClient, TagsCall nCall, int iSlot)
+void TagsCore_CallSlot(int iClient, TagsCall nCall, int iSlot, TagsParams tParams = null)
 {
 	int iPos = -1;
 	Tags tagsStruct;
-	while (TagsCore_GetStruct(iPos, iClient, nCall, iSlot, tagsStruct))	//Loop though every active structs
-		TagsCore_CallStruct(iClient, tagsStruct);
+	while (TagsCore_GetStruct(iPos, iClient, nCall, iSlot, tParams, tagsStruct))	//Loop though every active structs
+		TagsCore_CallStruct(iClient, tagsStruct, tParams);
 }
 
-void TagsCore_CallStruct(int iClient, Tags tagsStruct)
+void TagsCore_CallStruct(int iClient, Tags tagsStruct, TagsParams tParams = null)
 {
+	//Copy params data
+	tagsStruct.tParams.CopyData(tParams);
+	
 	//Check if there any functions to call
 	if (tagsStruct.aFunctions == null)
 		return;
@@ -210,38 +182,8 @@ void TagsCore_CallStruct(int iClient, Tags tagsStruct)
 	}
 }
 
-stock int TagsCore_IsAttackCrit(int iClient, TagsCall nCall, int iSlot)
-{
-	int iPos = -1;
-	Tags tagsStruct;
-	while (TagsCore_GetStruct(iPos, iClient, nCall, iSlot, tagsStruct))	//Loop though every active structs
-	{
-		if (tagsStruct.iAttackCrit == 1)
-			return 1;
-		else if (tagsStruct.iAttackCrit == 0)
-			return 0;
-	}
-	
-	return -1;
-}
-
-stock bool TagsCore_CanHealBuilding(int iClient, TagsCall nCall, int iSlot)
-{
-	int iPos = -1;
-	Tags tagsStruct;
-	while (TagsCore_GetStruct(iPos, iClient, nCall, iSlot, tagsStruct))	//Loop though every active structs
-	{
-		if (tagsStruct.iHealBuilding == 1)
-			return true;
-		else if (tagsStruct.iHealBuilding == 0)
-			return false;
-	}
-	
-	return false;
-}
-
 //Stock to get every valid structs, returns false if no more structs to search
-stock bool TagsCore_GetStruct(int &iPos, int iClient, TagsCall nCall, int iSlot, Tags tagsStruct)
+stock bool TagsCore_GetStruct(int &iPos, int iClient, TagsCall nCall, int iSlot, TagsParams tParams, Tags tagsStruct)
 {
 	ArrayList aArray = g_aTagsClient[iClient][nCall][iSlot];
 	if (aArray == null) return false;
@@ -255,7 +197,7 @@ stock bool TagsCore_GetStruct(int &iPos, int iClient, TagsCall nCall, int iSlot,
 		g_aTags.GetArray(iCoreId, bufferStruct);
 		
 		//Filter check
-		if (!bufferStruct.tFilters.IsAllowed(iClient))
+		if (!bufferStruct.tFilters.IsAllowed(iClient, tParams))
 		{
 			iPos++;
 			continue;
@@ -268,7 +210,7 @@ stock bool TagsCore_GetStruct(int &iPos, int iClient, TagsCall nCall, int iSlot,
 	return false;
 }
 
-stock bool TagsCore_IsAllowed(int iClient, int iId)
+stock bool TagsCore_IsAllowed(int iClient, int iId, TagsParams tParams = null)
 {
 	//Check if client have given id first
 	for (TagsCall nCall; nCall < TagsCall; nCall++)
@@ -282,7 +224,7 @@ stock bool TagsCore_IsAllowed(int iClient, int iId)
 					//Found, check filters
 					Tags tagsStruct;
 					g_aTags.GetArray(iId, tagsStruct);
-					return tagsStruct.tFilters.IsAllowed(iClient);
+					return tagsStruct.tFilters.IsAllowed(iClient, tParams);
 				}
 			}
 		}
