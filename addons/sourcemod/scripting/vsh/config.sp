@@ -191,6 +191,22 @@ methodmap ConfigIndex < ArrayList
 		return false;
 	}
 	
+	//Return index's prefab. Returns same index if not found
+	public int GetPrefab(int iIndex)
+	{
+		int iValue = this.FindValue(iIndex, 0);
+		if (iValue >= 0)
+		{
+			StringMap sMap = this.Get(iValue, 1);
+			
+			char sValue[MAXLEN_CONFIG_VALUE];
+			if (sMap.GetString("prefab", sValue, sizeof(sValue)))
+				return Config_GetPrefab(StringToInt(sValue));	//Recursion
+		}
+		
+		return iIndex;
+	}
+	
 	//Return true if weapon index should be banned, false otherwise
 	public bool IsRestricted(int iIndex)
 	{
@@ -457,6 +473,11 @@ KeyValues Config_LoadFile(const char[] configFile)
 stock StringMap Config_GetStringMap(int iIndex)
 {
 	return g_ConfigIndex.GetStringMap(iIndex);
+}
+
+stock int Config_GetPrefab(int iIndex)
+{
+	return g_ConfigIndex.GetPrefab(iIndex);
 }
 
 public void Config_ConvarChanged(ConVar convar, const char[] oldValue, const char[] newValue)

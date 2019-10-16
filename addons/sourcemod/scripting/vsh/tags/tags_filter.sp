@@ -40,12 +40,12 @@ enum struct TagsFilterStruct
 			}
 			case TagsFilterType_DamageType:
 			{
-				this.nValue = TagsFilter_GetDamageType(sValue);
+				this.nValue = TagsDamage_GetType(sValue);
 				return this.nValue != 0;
 			}
 			case TagsFilterType_DamageCustom:
 			{
-				this.nValue = TagsFilter_GetDamageCustom(sValue);
+				this.nValue = TagsDamage_GetCustom(sValue);
 				return this.nValue != 0;
 			}
 		}
@@ -70,8 +70,12 @@ enum struct TagsFilterStruct
 			}
 			case TagsFilterType_AttackWeapon:
 			{
-				int iSlot = TagsTarget_GetWeaponSlot(this.nValue);
-				return (TagsDamage_GetWeapon() == TF2_GetItemInSlot(TagsDamage_GetAttacker(), iSlot));
+				int iAttacker = TagsDamage_GetAttacker();
+				if (0 < iAttacker <= MaxClients)
+				{
+					int iSlot = TagsTarget_GetWeaponSlot(this.nValue);
+					return (TagsDamage_GetWeapon() == TF2_GetItemInSlot(iAttacker, iSlot));
+				}
 			}
 			case TagsFilterType_Aim:
 			{
@@ -181,41 +185,4 @@ TagsFilterType TagsFilter_GetType(const char[] sTarget)
 	TagsFilterType nFilterType = TagsFilterType_Invalid;
 	mFilterType.GetValue(sTarget, nFilterType);
 	return nFilterType;
-}
-
-int TagsFilter_GetDamageType(const char[] sDamageType)
-{
-	static StringMap mDamageType;
-	
-	if (mDamageType == null)
-	{
-		mDamageType = new StringMap();
-		mDamageType.SetValue("crit", DMG_CRIT);
-		mDamageType.SetValue("notcrit", -DMG_CRIT); //Negative number to indicate we don't want this instead
-		mDamageType.SetValue("fall", DMG_FALL);
-		mDamageType.SetValue("blast", DMG_BLAST);
-		mDamageType.SetValue("shock", DMG_SHOCK);
-	}
-	
-	int iDamageType = 0;
-	mDamageType.GetValue(sDamageType, iDamageType);
-	return iDamageType;
-}
-
-int TagsFilter_GetDamageCustom(const char[] sDamageCustom)
-{
-	static StringMap mDamageCustom;
-	
-	if (mDamageCustom == null)
-	{
-		mDamageCustom = new StringMap();
-		mDamageCustom.SetValue("headshot", TF_CUSTOM_HEADSHOT);
-		mDamageCustom.SetValue("notheadshot", -TF_CUSTOM_HEADSHOT); //Negative number to indicate we don't want this instead
-		mDamageCustom.SetValue("backstab", TF_CUSTOM_BACKSTAB);
-		mDamageCustom.SetValue("stomp", TF_CUSTOM_BOOTS_STOMP);
-	}
-	
-	int iDamageCustom = 0;
-	mDamageCustom.GetValue(sDamageCustom, iDamageCustom);
-	return iDamageCustom;
 }

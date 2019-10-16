@@ -42,23 +42,13 @@ public Action TagsCall_TimerDelay(Handle hTimer, DataPack data)
 	Function func = data.ReadFunction();
 	int iClient = EntRefToEntIndex(data.ReadCell());
 	TagsParams tParams = data.ReadCell();
+	int iCall = data.ReadCell();
 	
 	if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient) || !IsPlayerAlive(iClient))
 	{
 		delete tParams;
 		return;
 	}
-	
-	TagsCall_Call(func, iClient, tParams, tParams.iCall);
-}
-
-public Action TagsCall_TimerRate(Handle hTimer, DataPack data)
-{
-	data.Reset();
-	Function func = data.ReadFunction();
-	int iClient = EntRefToEntIndex(data.ReadCell());
-	TagsParams tParams = data.ReadCell();
-	int iCall = data.ReadCell();
 	
 	TagsCall_Call(func, iClient, tParams, iCall);
 }

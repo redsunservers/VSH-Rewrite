@@ -143,6 +143,7 @@ methodmap TagsFunction < ArrayList
 			data.WriteFunction(functionStruct.func);
 			data.WriteCell(EntIndexToEntRef(iClient));
 			data.WriteCell(tParams);
+			data.WriteCell(tParams.iCall);
 		}
 		else
 		{

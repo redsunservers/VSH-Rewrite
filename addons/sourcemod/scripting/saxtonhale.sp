@@ -2369,10 +2369,15 @@ public Action TF2_CalcIsAttackCritical(int iClient, int iWeapon, char[] sWepClas
 		TagsCore_CallSlot(iClient, TagsCall_Attack, iSlot);
 		
 		//Override crit result
-		bool bNewResult = TagsCore_IsAttackCrit(iClient, TagsCall_Attack, iSlot);
-		if (bResult != bNewResult)
+		int iResult = TagsCore_IsAttackCrit(iClient, TagsCall_Attack, iSlot);
+		if (iResult == 1)
 		{
-			bResult = bNewResult;
+			bResult = true;
+			return Plugin_Changed;
+		}
+		else if (iResult == 0)
+		{
+			bResult = false;
 			return Plugin_Changed;
 		}
 		

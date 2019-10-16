@@ -58,9 +58,9 @@ public void Tags_AddCondVaccinator(int iClient, int iTarget, TagsParams tParams)
 	TFCond nCond = TFCond_Invalid;
 	switch (iType)
 	{
-		case 0: nCond = tParams.GetInt("bullet");
-		case 1: nCond = tParams.GetInt("blast");
-		case 2: nCond = tParams.GetInt("fire");
+		case 0: nCond = tParams.GetInt("bullet", TFCond_Invalid);
+		case 1: nCond = tParams.GetInt("blast", TFCond_Invalid);
+		case 2: nCond = tParams.GetInt("fire", TFCond_Invalid);
 	}
 	
 	if (nCond > TFCond_Invalid)
@@ -151,6 +151,12 @@ public void Tags_AddAttrib(int iClient, int iTarget, TagsParams tParams)
 		//Add attrib
 		TF2Attrib_SetByDefIndex(iTarget, iIndex, flValue);
 		TF2Attrib_ClearCache(iTarget);
+		
+		int iSize = g_aAttrib.Length;
+		g_aAttrib.Resize(iSize+1);
+		g_aAttrib.Set(iSize, iRef, TagsAttrib_Ref);
+		g_aAttrib.Set(iSize, iIndex, TagsAttrib_Index);
+		g_aAttrib.Set(iSize, GetGameTime() + flDuration, TagsAttrib_Duration);
 	}
 	else if (g_aAttrib.Get(iPos, TagsAttrib_Duration) <= GetGameTime() + flDuration)
 	{
@@ -532,6 +538,9 @@ public void Tags_KillWeapon(int iClient, int iTarget, TagsParams tParams)
 		{
 			//Kill em
 			TF2_RemoveItemInSlot(iClient, iSlot);
+			
+			//Refresh tags stuff now that weapon is crabbed
+			TagsCore_RefreshClient(iClient);
 			return;
 		}
 	}
@@ -615,7 +624,7 @@ public Action Timer_ResetAttrib(Handle hTimer, DataPack data)
 	{
 		if (g_aAttrib.Get(iPos, TagsAttrib_Ref) == iRef
 			&& g_aAttrib.Get(iPos, TagsAttrib_Index) == iIndex
-			&& g_aAttrib.Get(iPos, TagsAttrib_Duration) <= GetGameTime())
+			&& g_aAttrib.Get(iPos, TagsAttrib_Duration) <= GetGameTime() + 0.1)
 		{
 			//Found with same ref, attrib index and outside of time
 			TF2Attrib_RemoveByDefIndex(iEntity, iIndex);

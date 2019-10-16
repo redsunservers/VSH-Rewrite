@@ -16,12 +16,13 @@ enum struct Tags	//Mental
 	ArrayStack aBlockBuffer;	//Buffer list of blocked function name
 	
 	//Values only used for "takedamage" and "attackdamage", -1 if undefined
+	bool bPassive;
 	float flSet;
 	float flPerPlayer;
 	float flMultiply;
 	float flMin;
 	float flMax;
-	int iKnockback;
+	ArrayList aDamageType;
 	
 	//Values only used for "attack", -1 if undefined
 	int iAttackCrit;
@@ -51,6 +52,17 @@ enum struct Tags	//Mental
 					
 					this.aBlockBuffer.PushString(sValue);
 				}
+				else if (StrEqual(sKeyName, "damagetype"))
+				{
+					char sValue[MAXLEN_CONFIG_VALUE];
+					kv.GetString(NULL_STRING, sValue, sizeof(sValue));
+					
+					if (this.aDamageType == null)
+						this.aDamageType = new ArrayList();
+					
+					//Push damagetype to array
+					this.aDamageType.Push(TagsDamage_GetType(sValue));
+				}
 				else if (StrContains(sKeyName, "Tags_") == 0)
 				{
 					if (g_tFunctions.AddFunction(kv, g_aTags.Length))	//Returns true on success
@@ -70,16 +82,13 @@ enum struct Tags	//Mental
 			kv.GoBack();
 		}
 		
-		//Load slot to force set if given
-		this.iSlot = kv.GetNum("slot", this.iSlot);	//TODO do we still need this?
-		
 		//Load whatever other values
+		this.bPassive = !!kv.GetNum("passive", 0);
 		this.flSet = kv.GetFloat("set", -1.0);
 		this.flPerPlayer = kv.GetFloat("perplayer", -1.0);
 		this.flMultiply = kv.GetFloat("multiply", -1.0);
 		this.flMin = kv.GetFloat("min", -1.0);
 		this.flMax = kv.GetFloat("max", -1.0);
-		this.iKnockback = kv.GetNum("knockback", -1);
 		this.iAttackCrit = kv.GetNum("attackcrit", -1);
 		this.iHealBuilding = kv.GetNum("healbuilding", -1);
 		
@@ -103,6 +112,7 @@ void TagsCore_Clear()
 		g_aTags.GetArray(iCoreId, tagsStruct);
 		delete tagsStruct.tFilters;
 		delete tagsStruct.aFunctions;
+		delete tagsStruct.aDamageType;
 		//aBlockBuffer is deleted in tags_name.sp
 	}
 	
@@ -133,7 +143,7 @@ void TagsCore_RefreshClient(int iClient)
 	{
 		int iWeapon = TF2_GetItemInSlot(iClient, iSlot);
 		if (IsValidEdict(iWeapon))
-			iIndex[iSlot] = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
+			iIndex[iSlot] = Config_GetPrefab(GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex"));
 		else
 			iIndex[iSlot] = -1;
 	}
@@ -179,48 +189,40 @@ void TagsCore_CallAll(int iClient, TagsCall nCall)
 
 void TagsCore_CallSlot(int iClient, TagsCall nCall, int iSlot)
 {
-	ArrayList aArray = g_aTagsClient[iClient][nCall][iSlot];
-	if (aArray == null) return;	//No tags to call
+	int iPos = -1;
+	Tags tagsStruct;
+	while (TagsCore_GetStruct(iPos, iClient, nCall, iSlot, tagsStruct))	//Loop though every active structs
+		TagsCore_CallStruct(iClient, tagsStruct);
+}
+
+void TagsCore_CallStruct(int iClient, Tags tagsStruct)
+{
+	//Check if there any functions to call
+	if (tagsStruct.aFunctions == null)
+		return;
 	
-	int iLength = aArray.Length;
-	for (int i = 0; i < iLength; i++)
+	//Call functions
+	int iFunctionLength = tagsStruct.aFunctions.Length;
+	for (int iPos = 0; iPos < iFunctionLength; iPos++)
 	{
-		int iCoreId = aArray.Get(i);
-		Tags tagsStruct;
-		g_aTags.GetArray(iCoreId, tagsStruct);
-		
-		//Check if there any functions to call
-		if (tagsStruct.aFunctions == null)
-			continue;
-		
-		//Filter check
-		if (!tagsStruct.tFilters.IsAllowed(iClient))
-			continue;
-		
-		//Call function
-		int iFunctionLength = tagsStruct.aFunctions.Length;
-		for (int iPos = 0; iPos < iFunctionLength; iPos++)
-		{
-			int iFunctionId = tagsStruct.aFunctions.Get(iPos);
-			
-			g_tFunctions.Call(iFunctionId, iClient);
-		}
+		int iFunctionId = tagsStruct.aFunctions.Get(iPos);
+		g_tFunctions.Call(iFunctionId, iClient);
 	}
 }
 
-stock bool TagsCore_IsAttackCrit(int iClient, TagsCall nCall, int iSlot)
+stock int TagsCore_IsAttackCrit(int iClient, TagsCall nCall, int iSlot)
 {
 	int iPos = -1;
 	Tags tagsStruct;
 	while (TagsCore_GetStruct(iPos, iClient, nCall, iSlot, tagsStruct))	//Loop though every active structs
 	{
 		if (tagsStruct.iAttackCrit == 1)
-			return true;
+			return 1;
 		else if (tagsStruct.iAttackCrit == 0)
-			return false;
+			return 0;
 	}
 	
-	return false;
+	return -1;
 }
 
 stock bool TagsCore_CanHealBuilding(int iClient, TagsCall nCall, int iSlot)
