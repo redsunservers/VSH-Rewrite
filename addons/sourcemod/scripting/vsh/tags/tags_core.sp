@@ -167,7 +167,7 @@ void TagsCore_CallSlot(int iClient, TagsCall nCall, int iSlot, TagsParams tParam
 void TagsCore_CallStruct(int iClient, Tags tagsStruct, TagsParams tParams = null)
 {
 	//Copy params data
-	tagsStruct.tParams.CopyData(tParams, iClient);
+	tagsStruct.tParams.CopyData(tParams);
 	
 	//Check if there any functions to call
 	if (tagsStruct.aFunctions == null)

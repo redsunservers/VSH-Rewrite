@@ -185,7 +185,7 @@ methodmap TagsParams < StringMap
 		return this.GetStringSingle("override", sName, iLength);
 	}
 	
-	public bool CopyData(TagsParams tParams, int iClient)
+	public bool CopyData(TagsParams tParams)
 	{
 		if (this == null || tParams == null) return false;
 		

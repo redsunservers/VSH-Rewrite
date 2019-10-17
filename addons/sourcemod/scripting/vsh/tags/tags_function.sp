@@ -92,7 +92,7 @@ methodmap TagsFunction < ArrayList
 		if (functionStruct.tBlock.IsBlocked(iClient))
 			return;
 		
-		functionStruct.tParams.CopyData(tParams, iClient);
+		functionStruct.tParams.CopyData(tParams);
 		
 		//Check for overrides to copy data
 		if (functionStruct.aOverride != null)
@@ -116,7 +116,7 @@ methodmap TagsFunction < ArrayList
 			return;
 		
 		TagsParams tParams = new TagsParams();	//Create new params
-		tCoreParams.CopyData(tParams, iClient);	//Copy any entered params from core
+		tCoreParams.CopyData(tParams);			//Copy any entered params from core
 		this.GetParams(iPos, iClient, tParams);	//Get params, including override params if possible
 		
 		float flDelay = tParams.flDelay;
