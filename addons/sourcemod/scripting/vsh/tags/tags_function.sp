@@ -85,7 +85,7 @@ methodmap TagsFunction < ArrayList
 		this.GetArray(iPos, functionStruct);
 		
 		//Does client have this id, and not filtered
-		if (!TagsCore_IsAllowed(iClient, functionStruct.iCoreId))
+		if (!TagsCore_IsAllowed(iClient, functionStruct.iCoreId, tParams))
 			return;
 		
 		//Block check

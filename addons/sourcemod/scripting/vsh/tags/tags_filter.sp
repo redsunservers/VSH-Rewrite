@@ -64,7 +64,7 @@ enum struct TagsFilterStruct
 			}
 			case TagsFilterType_ActiveWeapon:
 			{
-				int iTargetWeapon = TagsTarget_GetTarget(iClient, this.nValue);
+				int iTargetWeapon = TagsTarget_GetTarget(iClient, this.nValue, tParams);
 				int iActiveWeapon = GetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon");
 				return (iTargetWeapon > MaxClients && iTargetWeapon == iActiveWeapon);
 			}
