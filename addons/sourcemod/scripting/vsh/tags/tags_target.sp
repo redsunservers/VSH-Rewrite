@@ -17,13 +17,13 @@ enum TagsTarget	//List of possible targets
 	TagsTarget_Building,
 };
 
-int TagsTarget_GetTarget(int iClient, TagsTarget nTarget)
+int TagsTarget_GetTarget(int iClient, TagsTarget nTarget, TagsParams tParams = null)
 {
 	switch (nTarget)
 	{
 		case TagsTarget_Client: return iClient;
-		case TagsTarget_Victim:	return TagsDamage_GetVictim();
-		case TagsTarget_Attacker: return TagsDamage_GetAttacker();
+		case TagsTarget_Victim:	return tParams.GetInt("victim");
+		case TagsTarget_Attacker: return tParams.GetInt("attacker");
 		case TagsTarget_Patient: return TF2_GetPatient(iClient);
 		
 		case TagsTarget_Primary: return TF2_GetItemInSlot(iClient, WeaponSlot_Primary);

@@ -115,7 +115,7 @@ enum struct TagsFilterStruct
 			}
 			case TagsFilterType_BackstabCount:
 			{
-				return Tags_GetBackstabCount(iClient, TagsDamage_GetVictim()) >= this.nValue;
+				return Tags_GetBackstabCount(iClient, tParams.GetInt("victim")) >= this.nValue;
 			}
 		}
 		
@@ -159,7 +159,7 @@ methodmap TagsFilter < ArrayList
 		return filter;
 	}
 	
-	public bool IsAllowed(int iClient)
+	public bool IsAllowed(int iClient, TagsParams tParams = null)
 	{
 		if (this == null)	//No filters made/exist, allow
 			return true;
@@ -170,7 +170,7 @@ methodmap TagsFilter < ArrayList
 			TagsFilterStruct filterStruct;
 			this.GetArray(i, filterStruct);
 			
-			if (!filterStruct.IsAllowed(iClient))
+			if (!filterStruct.IsAllowed(iClient, tParams))
 				return false;
 		}
 		

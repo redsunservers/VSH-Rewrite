@@ -1705,19 +1705,31 @@ public Action Event_Jarated(UserMsg msg_id, Handle msg, const int[] players, int
 	
 	SaxtonHaleBase bossVictim = SaxtonHaleBase(iVictim);
 	if (GetClientTeam(iVictim) <= 1 || !bossVictim.bValid) return;
-
+	
+	TagsParams tParams = new TagsParams();
+	tParams.SetInt("victim", iVictim);
+	
 	//Possible crash if called in same frame
-	RequestFrame(Frame_CallJarate, EntIndexToEntRef(iVictim));
+	DataPack data = new DataPack();
+	data.WriteCell(GetClientUserId(iThrower));
+	data.WriteCell(tParams);
+	RequestFrame(Frame_CallJarate, data);
 }
 
-public void Frame_CallJarate(int iRef)
+public void Frame_CallJarate(DataPack data)
 {
-	int iClient = EntRefToEntIndex(iRef);
+	data.Reset();
+	int iClient = GetClientOfUserId(data.ReadCell());
+	TagsParams tParams = data.ReadCell();
 	
 	if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient) || !IsPlayerAlive(iClient))
+	{
+		delete tParams;
 		return;
-		
-	TagsCore_CallAll(iClient, TagsCall_Jarate);
+	}
+	
+	TagsCore_CallAll(iClient, TagsCall_Jarate, tParams);
+	delete tParams;
 }
 
 public void TF2_OnConditionAdded(int iClient, TFCond nCond)
@@ -2366,21 +2378,19 @@ public Action TF2_CalcIsAttackCritical(int iClient, int iWeapon, char[] sWepClas
 		int iIndex = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
 		int iSlot = TF2_GetSlotInItem(iIndex, TF2_GetPlayerClass(iClient));
 		
-		TagsCore_CallSlot(iClient, TagsCall_Attack, iSlot);
+		TagsParams tParams = new TagsParams();
+		TagsCore_CallSlot(iClient, TagsCall_Attack, iSlot, tParams);
 		
 		//Override crit result
-		int iResult = TagsCore_IsAttackCrit(iClient, TagsCall_Attack, iSlot);
-		if (iResult == 1)
+		int iResult;
+		if (tParams.GetIntEx("attackcrit", iResult))
 		{
-			bResult = true;
-			return Plugin_Changed;
-		}
-		else if (iResult == 0)
-		{
-			bResult = false;
+			bResult = !!iResult;
+			delete tParams;
 			return Plugin_Changed;
 		}
 		
+		delete tParams;
 		return Plugin_Continue;
 	}
 }
@@ -2562,12 +2572,20 @@ public MRESReturn Hook_AllowedToHealTarget(int iMedigun, Handle hReturn, Handle 
 			return MRES_Supercede;
 		}
 		
-		TagsCore_CallSlot(iClient, TagsCall_Heal, WeaponSlot_Secondary);
-		if (TagsCore_CanHealBuilding(iClient, TagsCall_Heal, WeaponSlot_Secondary))
+		TagsParams tParams = new TagsParams();
+		TagsCore_CallSlot(iClient, TagsCall_Heal, WeaponSlot_Secondary, tParams);
+		
+		//Override heal result
+		int iResult;
+		if (tParams.GetIntEx("healbuilding", iResult))
 		{
-			DHookSetReturn(hReturn, true);
+			bool bResult = !!iResult;
+			DHookSetReturn(hReturn, bResult);
+			delete tParams;
 			return MRES_Supercede;
 		}
+		
+		delete tParams;
 	}
 	
 	return MRES_Ignored;
@@ -3114,6 +3132,13 @@ stock void BroadcastSoundToTeam(int team, const char[] strSound)
 stock bool StrEmpty(char[] sBuffer)
 {
 	return sBuffer[0] == '\0';
+}
+
+stock void StrToLower(char[] sBuffer)
+{
+	int iLength = strlen(sBuffer);
+	for (int i = 0; i < iLength; i++)
+		sBuffer[i] = CharToLower(sBuffer[i]);
 }
 
 stock void PrepareSound(const char[] sSoundPath)

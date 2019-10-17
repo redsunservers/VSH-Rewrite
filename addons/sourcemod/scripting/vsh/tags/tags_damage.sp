@@ -82,7 +82,7 @@ public Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor,
 		action = Plugin_Changed;
 	}
 	
-	ArrayList aDamageType = tParams.GetIntArray("damagetype");
+	ArrayList aDamageType = tParams.GetIntArray("damagetype");	//TODO 2 damagetype used?
 	if (aDamageType != null)
 	{
 		int iLength = aDamageType.Length;
@@ -99,6 +99,7 @@ public Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor,
 		action = Plugin_Changed;
 	}
 	
+	delete tParams;
 	return action;
 }
 

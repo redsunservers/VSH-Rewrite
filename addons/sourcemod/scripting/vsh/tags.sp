@@ -27,7 +27,7 @@ void Tags_RoundStart()
 	}
 }
 
-public void Tags_OnThink(int iClient)
+void Tags_OnThink(int iClient)
 {
 	if (GetEntityFlags(iClient) & FL_ONGROUND)
 		g_iClimbAmount[iClient] = 0;
@@ -195,7 +195,8 @@ public void Tags_Glow(int iClient, int iTarget, TagsParams tParams)
 		return;
 	
 	float flGlowTime = tParams.GetFloat("duration");
-	int iWeapon = TagsDamage_GetWeapon();
+	
+	int iWeapon = tParams.GetInt("weapon", -1);
 	if (iWeapon > MaxClients && HasEntProp(iWeapon, Prop_Send, "m_flChargedDamage"))
 		flGlowTime *= GetEntPropFloat(iWeapon, Prop_Send, "m_flChargedDamage") / 100.0;
 	

@@ -175,7 +175,7 @@ methodmap TagsParams < StringMap
 			return iClient;	//If not found, return client as default
 		
 		TagsTarget nTarget = TagsTarget_GetType(sTarget);
-		return TagsTarget_GetTarget(iClient, nTarget);
+		return TagsTarget_GetTarget(iClient, nTarget, this);
 	}
 	
 	public bool GetOverride(char[] sName, int iLength)

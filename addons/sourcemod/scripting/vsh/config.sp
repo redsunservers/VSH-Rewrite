@@ -22,6 +22,7 @@ methodmap ConfigClass < StringMap
 						{
 							char sSubkey[MAXLEN_CONFIG_VALUE];
 							kv.GetSectionName(sSubkey, sizeof(sSubkey));	//Subkey (attrib, desp etc)
+							StrToLower(sSubkey);	//Convert string to lowercase, KeyValues rarely read 1st letter as uppercase...
 							
 							TagsCall nCall = TagsCall_GetType(sSubkey);
 							if (nCall != TagsCall_Invalid)
@@ -121,6 +122,7 @@ methodmap ConfigIndex < ArrayList
 						{
 							char sSubkey[MAXLEN_CONFIG_VALUE];
 							kv.GetSectionName(sSubkey, sizeof(sSubkey));	//Subkey (attrib, desp etc)
+							StrToLower(sSubkey);	//Convert string to lowercase, KeyValues rarely read 1st letter as uppercase...
 							
 							TagsCall nCall = TagsCall_GetType(sSubkey);
 							if (nCall != TagsCall_Invalid)
