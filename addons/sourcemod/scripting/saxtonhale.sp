@@ -1,4 +1,7 @@
-/* !!! YOU MUST USE CUSTOM COMPILER IN VSH-REWRITE REPO TO COMPILE THIS PLUGIN CORRECTLY !!! */
+/* !!! YOU MUST USE SOURCEPAWN PUBLIC METHODMAP COMPILER TO COMPILE THIS PLUGIN CORRECTLY !!! */
+#if !defined __sourcepawn_methodmap__
+	#warning This plugin should be compiled with SourcePawn Public Methodmap to be compiled correctly!
+#endif
 
 #define SAXTONHALE_MAIN_PLUGIN
 
