@@ -34,6 +34,7 @@ You can find some code examples for [modifiers](https://github.com/redsunservers
 
 ## Useful links
 - [VSH-Rewrite megathread discussion in redsun.tf forum](https://forum.redsun.tf/threads/2864/)
-- [List of all TF2 weapon indexs in alliedmods wiki](https://wiki.alliedmods.net/Team_Fortress_2_Item_Definition_Indexes#Weapons)
-- [List of all TF2 attributes in tf2b.com](https://tf2b.com/attriblist.php)
-- [List of all TF2 conditions in teamfortress wiki](https://wiki.teamfortress.com/wiki/Cheats#addcond)
+- [TF2 weapon indexs in alliedmods wiki](https://wiki.alliedmods.net/Team_Fortress_2_Item_Definition_Indexes#Weapons)
+- [TF2 attributes in tf2b.com](https://tf2b.com/attriblist.php)
+- [TF2 conditions in teamfortress wiki](https://wiki.teamfortress.com/wiki/Cheats#addcond)
+- [TF2 netprops in tf2-data](https://raw.githubusercontent.com/powerlord/tf2-data/master/netprops.txt)
