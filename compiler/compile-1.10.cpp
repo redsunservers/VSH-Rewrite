@@ -1139,7 +1139,7 @@ setconstants(void) {
 
     add_constant("__Pawn", VERSION_INT, sGLOBAL, 0);
     add_constant("__LINE__", 0, sGLOBAL, 0);
-	add_constant("__sourcepawn_methodmap__", 1, sGLOBAL, 0); //Public methodmap: Add new constant
+    add_constant("__sourcepawn_methodmap__", 1, sGLOBAL, 0); //Public methodmap: Add new constant
 
     debug = 0;
     if ((sc_debug & (sCHKBOUNDS | sSYMBOLIC)) == (sCHKBOUNDS | sSYMBOLIC))
