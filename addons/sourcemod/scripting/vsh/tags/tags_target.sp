@@ -15,6 +15,8 @@ enum TagsTarget	//List of possible targets
 	TagsTarget_PDA1,
 	TagsTarget_PDA2,
 	TagsTarget_Building,
+	
+	TagsTarget_Projectile,
 };
 
 int TagsTarget_GetTarget(int iClient, TagsTarget nTarget, TagsParams tParams = null)
@@ -32,6 +34,8 @@ int TagsTarget_GetTarget(int iClient, TagsTarget nTarget, TagsParams tParams = n
 		case TagsTarget_PDA1: return TF2_GetItemInSlot(iClient, WeaponSlot_PDABuild);
 		case TagsTarget_PDA2: return TF2_GetItemInSlot(iClient, WeaponSlot_PDADestroy);
 		case TagsTarget_Building: return TF2_GetItemInSlot(iClient, WeaponSlot_BuilderEngie);
+		
+		case TagsTarget_Projectile: return tParams.GetInt("projectile");
 	}
 	
 	return -1;
@@ -63,12 +67,15 @@ TagsTarget TagsTarget_GetType(const char[] sTarget)
 		mTarget.SetValue("victim", TagsTarget_Victim);
 		mTarget.SetValue("attacker", TagsTarget_Attacker);
 		mTarget.SetValue("patient", TagsTarget_Patient);
+		
 		mTarget.SetValue("primary", TagsTarget_Primary);
 		mTarget.SetValue("secondary", TagsTarget_Secondary);
 		mTarget.SetValue("melee", TagsTarget_Melee);
 		mTarget.SetValue("pda1", TagsTarget_PDA1);
 		mTarget.SetValue("pda2", TagsTarget_PDA2);
 		mTarget.SetValue("building", TagsTarget_Building);
+		
+		mTarget.SetValue("projectile", TagsTarget_Projectile);
 	}
 	
 	TagsTarget nTarget = TagsTarget_Invalid;

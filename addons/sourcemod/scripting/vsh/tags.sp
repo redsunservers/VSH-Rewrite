@@ -2,6 +2,8 @@ static int g_iBackstabCount[TF_MAXPLAYERS+1][TF_MAXPLAYERS+1];
 static int g_iClimbAmount[TF_MAXPLAYERS+1];
 static int g_iZombieUsed[TF_MAXPLAYERS+1];
 
+static bool g_bTagsLunchbox[TF_MAXPLAYERS+1];
+
 static ArrayList g_aAttrib;	//Arrays of active attribs to be removed later
 
 enum
@@ -29,8 +31,58 @@ void Tags_RoundStart()
 
 void Tags_OnThink(int iClient)
 {
+	TagsCore_CallAll(iClient, TagsCall_Think);
+	
 	if (GetEntityFlags(iClient) & FL_ONGROUND)
 		g_iClimbAmount[iClient] = 0;
+	
+	int iSecondary = TF2_GetItemInSlot(iClient, WeaponSlot_Secondary);
+	if (iSecondary > MaxClients)
+	{
+		char sClassname[256];
+		GetEntityClassname(iSecondary, sClassname, sizeof(sClassname));
+		if (StrContains(sClassname, "tf_weapon_lunchbox") == 0)
+		{
+			int iAmmoType = GetEntProp(iSecondary, Prop_Send, "m_iPrimaryAmmoType");
+			if (iAmmoType > -1)
+			{
+				int iAmmo = GetEntProp(iClient, Prop_Send, "m_iAmmo", 4, iAmmoType);
+				
+				if (iAmmo == 1)
+				{
+					g_bTagsLunchbox[iClient] = false;
+				}
+				if (iAmmo == 0 && !g_bTagsLunchbox[iClient])
+				{
+					g_bTagsLunchbox[iClient] = true;
+					TagsCore_CallAll(iClient, TagsCall_Lunchbox);
+				}
+			}
+		}
+	}
+}
+
+public Action Tags_OnProjectileTouch(int iProjectile, int iToucher)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
+	
+	int iClient = GetEntPropEnt(iProjectile, Prop_Send, "m_hOwnerEntity");
+	if (SaxtonHale_IsValidAttack(iClient))
+	{
+		int iWeapon = GetEntPropEnt(iProjectile, Prop_Send, "m_hOriginalLauncher");	//There also similar m_hLauncher
+		int iSlot = TF2_GetSlotFromWeapon(iWeapon);
+		
+		if (iSlot > -1)
+		{
+			TagsParams tParams = new TagsParams();
+			tParams.SetInt("projectile", iProjectile);
+			TagsCore_CallSlot(iClient, TagsCall_Projectile, iSlot, tParams);
+			delete tParams;
+		}
+	}
+	
+	return Plugin_Continue;
 }
 
 //---------------------------
@@ -477,9 +529,9 @@ public void Tags_AddAmmo(int iClient, int iTarget, TagsParams tParams)
 		{
 			//Slot found
 			int iAmmo = tParams.GetInt("amount") + GetEntProp(iClient, Prop_Send, "m_iAmmo", 4, iAmmoType);	//Primary weapon ammo
-			int iMaxAmmo = SDK_GetMaxAmmo(iClient, iSlot);
 			
-			if (iAmmo > iMaxAmmo)
+			int iMaxAmmo;
+			if (tParams.GetIntEx("max", iMaxAmmo) && iAmmo > iMaxAmmo)
 				iAmmo = iMaxAmmo;
 			
 			SetEntProp(iClient, Prop_Send, "m_iAmmo", iAmmo, 4, iAmmoType);
@@ -528,6 +580,21 @@ public void Tags_AddHealersUber(int iClient, int iTarget, TagsParams tParams)
 		if (flNewUber > 1.0) flNewUber = 1.0;
 		SetEntPropFloat(iMedigun, Prop_Send, "m_flChargeLevel", flNewUber);
 	}
+}
+
+public void Tags_Explode(int iClient, int iTarget, TagsParams tParams)
+{
+	if (iTarget <= 0 || !IsValidEdict(iTarget))
+		return;
+	
+	float flDamage = tParams.GetFloat("damage");
+	float flRadius = tParams.GetFloat("radius");
+	
+	float vecPos[3];
+	GetEntPropVector(iTarget, Prop_Send, "m_vecOrigin", vecPos);
+	char sSound[255];
+	Format(sSound, sizeof(sSound), "weapons/airstrike_small_explosion_0%i.wav", GetRandomInt(1,3));
+	TF2_Explode(iClient, vecPos, flDamage, flRadius, "ExplosionCore_MidAir", sSound);
 }
 
 public void Tags_KillWeapon(int iClient, int iTarget, TagsParams tParams)

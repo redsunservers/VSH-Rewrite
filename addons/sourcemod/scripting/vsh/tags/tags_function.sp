@@ -141,7 +141,6 @@ methodmap TagsFunction < ArrayList
 		TagsFunctionStruct functionStruct;
 		this.GetArray(iPos, functionStruct);
 		
-		//tFilters get deleted in core, as it uses same handle
 		delete functionStruct.tParams;
 		delete functionStruct.tBlock;
 		delete functionStruct.aOverride;

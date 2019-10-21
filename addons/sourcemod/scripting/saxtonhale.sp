@@ -762,6 +762,11 @@ public void OnEntityCreated(int iEntity, const char[] sClassname)
 
 	if (0 < iEntity < 2049) Network_ResetEntity(iEntity);
 	
+	if (StrContains(sClassname, "tf_projectile_") == 0)
+	{
+		SDKHook(iEntity, SDKHook_StartTouchPost, Tags_OnProjectileTouch);
+	}
+	
 	if (strcmp(sClassname, "tf_projectile_healing_bolt") == 0)
 	{
 		SDKHook(iEntity, SDKHook_StartTouch, Crossbow_OnTouch);
@@ -1882,7 +1887,6 @@ public void Client_OnThink(int iClient)
 	else
 	{
 		Tags_OnThink(iClient);
-		TagsCore_CallAll(iClient, TagsCall_Think);
 		
 		TFClassType nClass = TF2_GetPlayerClass(iClient);
 		
@@ -2808,6 +2812,18 @@ stock TFClassType TF2_GetClassType(const char[] sClass)
 	}
 	
 	return TFClass_Unknown;
+}
+
+stock int TF2_GetSlotFromWeapon(int iWeapon)
+{
+	if (iWeapon <= MaxClients) return -1;
+	
+	int iClient = GetEntPropEnt(iWeapon, Prop_Send, "m_hOwnerEntity");
+	for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
+		if (TF2_GetItemInSlot(iClient, iSlot) == iWeapon)
+			return iSlot;
+	
+	return -1;
 }
 
 stock int TF2_GetSlotInItem(int iIndex, TFClassType nClass)

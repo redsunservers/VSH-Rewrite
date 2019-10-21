@@ -6,6 +6,8 @@ enum TagsCall	//List of possible ways to call tags
 	TagsCall_Uber,
 	TagsCall_Jarate,
 	TagsCall_Spawn,
+	TagsCall_Lunchbox,
+	TagsCall_Projectile,
 	TagsCall_Think,
 	TagsCall_AttackDamage,
 	TagsCall_TakeDamage,
@@ -24,6 +26,8 @@ TagsCall TagsCall_GetType(const char[] sCall)
 		mCall.SetValue("uber", TagsCall_Uber);
 		mCall.SetValue("jarate", TagsCall_Jarate);
 		mCall.SetValue("spawn", TagsCall_Spawn);
+		mCall.SetValue("lunchbox", TagsCall_Lunchbox);
+		mCall.SetValue("projectile", TagsCall_Projectile);
 		mCall.SetValue("think", TagsCall_Think);
 		mCall.SetValue("attackdamage", TagsCall_AttackDamage);
 		mCall.SetValue("takedamage", TagsCall_TakeDamage);
