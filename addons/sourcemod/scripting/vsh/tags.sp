@@ -227,7 +227,7 @@ public void Tags_AddAttrib(int iClient, int iTarget, TagsParams tParams)
 	data.WriteCell(iIndex);
 }
 
-public void Tags_AreaOfRange(int iClient, int iTarget, TagsParams tParams)
+public void Tags_AreaOfEffect(int iClient, int iTarget, TagsParams tParams)
 {
 	if (iTarget <= 0 || iTarget > MaxClients || !IsClientInGame(iTarget) || !IsPlayerAlive(iTarget))
 		return;
