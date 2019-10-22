@@ -1,19 +1,25 @@
 static char g_sHudText[TF_MAXPLAYERS+1][256];
 static int g_iHudColor[TF_MAXPLAYERS+1][4];
+static bool g_bHudRage[TF_MAXPLAYERS+1] = true;
 
-public void Hud_AddText(int iClient, char[] sText)
+void Hud_SetRageView(int iClient, bool bEnable)
+{
+	g_bHudRage[iClient] = bEnable;
+}
+
+void Hud_AddText(int iClient, char[] sText)
 {
 	if (!StrEmpty(g_sHudText[iClient])) StrCat(g_sHudText[iClient], sizeof(g_sHudText[]), "\n");
 	StrCat(g_sHudText[iClient], sizeof(g_sHudText[]), sText);
 }
 
-public void Hud_SetColor(int iClient, int iColor[4])
+void Hud_SetColor(int iClient, int iColor[4])
 {
 	for (int i = 0; i < sizeof(iColor); i++)
 		g_iHudColor[iClient][i] = iColor[i];
 }
 
-public void Hud_Think(int iClient)
+void Hud_Think(int iClient)
 {
 	if (!g_bRoundStarted) return;
 	
@@ -24,9 +30,8 @@ public void Hud_Think(int iClient)
 		//Display Boss's health
 		Format(sMessage, sizeof(sMessage), "Boss Health: %i/%i", g_iHealthBarHealth, g_iHealthBarMaxHealth);
 		
-		//Boss rage
-		int iVal;
-		if (Tags_GetInt(iClient, WeaponSlot_Melee, "rage_view", iVal) && iVal == 1)
+		//Display boss's rage
+		if (g_bHudRage[iClient])
 		{
 			for (int iBoss = 1; iBoss <= MaxClients; iBoss++)
 			{
