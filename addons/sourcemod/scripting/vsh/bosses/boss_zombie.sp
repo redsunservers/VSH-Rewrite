@@ -8,6 +8,7 @@ methodmap CZombie < SaxtonHaleBase
 		boss.flSpeed = -1.0;
 		boss.iMaxRageDamage = -1;
 		boss.bMinion = true;
+		boss.bModel = false;
 		
 		SetEntityRenderColor(boss.iClient, 206, 100, 100, _);
 		EmitSoundToClient(boss.iClient, SOUND_ALERT);	//Alert player as he spawned

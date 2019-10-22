@@ -251,6 +251,7 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 		boss.iMaxRageDamage = -1;
 		boss.bMinion = true;
 		boss.bCanBeHealed = true;
+		boss.bModel = false;
 		
 		g_iAnnouncerMinionTimeLeft[boss.iClient] = 6;	//6 seconds before swapping to boss team
 		g_hAnnouncerMinionTimer[boss.iClient] = CreateTimer(0.0, Timer_AnnouncerChangeTeam, boss.iClient);
