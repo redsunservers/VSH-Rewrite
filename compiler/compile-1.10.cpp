@@ -3312,7 +3312,7 @@ parse_inline_function(methodmap_t* map, const typeinfo_t* type, const char* name
         target = funcstub(tMETHODMAP, &decl, thistag);
     } else {
         ke::SaveAndSet<int> require_newdecls(&sc_require_newdecls, TRUE);
-        int ok = newfunc(&decl, thistag, FALSE, FALSE, TRUE, &target); // Public methodmap: Always compile methodmaps as public
+        int ok = newfunc(&decl, thistag, TRUE, FALSE, FALSE, &target); // Public methodmap: Always compile methodmaps as public
 
         if (!ok)
             return NULL;
