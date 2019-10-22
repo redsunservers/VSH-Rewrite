@@ -19,7 +19,7 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.1.0"
+#define PLUGIN_VERSION "1.1.1"
 
 #define MAX_BUTTONS 		26
 #define MAX_TYPE_CHAR		32	//Max char size of methodmaps name
