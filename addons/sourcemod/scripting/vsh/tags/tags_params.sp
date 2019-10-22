@@ -15,6 +15,7 @@ methodmap TagsParams < StringMap
 			char sParamName[MAXLEN_CONFIG_VALUE], sParamValue[MAXLEN_CONFIG_VALUE], sBuffer[MAXLEN_CONFIG_VALUE];
 			kv.GetSectionName(sParamName, sizeof(sParamName));
 			kv.GetString(NULL_STRING, sParamValue, sizeof(sParamValue));
+			StrToLower(sParamName);	//Convert string to lowercase, KeyValues rarely read 1st letter as uppercase...
 			
 			//If same param name found, add to an "array"
 			if (tParams.GetString(sParamName, sBuffer, sizeof(sBuffer)))
@@ -219,8 +220,7 @@ methodmap TagsParams < StringMap
 	{
 		public get()
 		{
-			if (this == null)
-				return false;
+			if (this == null) return false;
 			
 			char sBuffer[1];
 			if (this.GetString("override", sBuffer, sizeof(sBuffer)))
@@ -234,8 +234,7 @@ methodmap TagsParams < StringMap
 	{
 		public get()
 		{
-			if (this == null)
-				return -1.0;
+			if (this == null) return -1.0;
 			
 			char sBuffer[12];
 			if (this.GetStringSingle("delay", sBuffer, sizeof(sBuffer)))
@@ -249,8 +248,7 @@ methodmap TagsParams < StringMap
 	{
 		public get()
 		{
-			if (this == null)
-				return 1;
+			if (this == null) return 1;
 			
 			char sBuffer[12];
 			if (this.GetStringSingle("call", sBuffer, sizeof(sBuffer)))
@@ -264,8 +262,7 @@ methodmap TagsParams < StringMap
 	{
 		public get()
 		{
-			if (this == null)
-				return 0.0;
+			if (this == null) return 0.0;
 			
 			char sBuffer[12];
 			if (this.GetStringSingle("rate", sBuffer, sizeof(sBuffer)))

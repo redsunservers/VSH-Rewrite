@@ -393,7 +393,7 @@ public void Tags_AddHealthBase(int iClient, int iTarget, TagsParams tParams)
 	float flAmount = tParams.GetFloat("amount");
 	int iMaxHealth = SDK_GetMaxHealth(iTarget);
 	
-	Client_AddHealth(iTarget, RoundToNearest(float(iMaxHealth) * flAmount / 100.0), RoundToNearest(float(iMaxHealth) * 0.5));
+	Client_AddHealth(iTarget, RoundToNearest(float(iMaxHealth) * flAmount), RoundToNearest(float(iMaxHealth) * 0.5));
 }
 
 public void Tags_DropHealth(int iClient, int iTarget, TagsParams tParams)

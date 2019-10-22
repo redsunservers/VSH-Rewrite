@@ -9,6 +9,7 @@ enum TagsFilterType			//List of possible filters
 	TagsFilterType_DamageType,
 	TagsFilterType_DamageCustom,
 	TagsFilterType_BackstabCount,
+	TagsFilterType_FeignDeath,
 }
 
 enum struct TagsFilterStruct
@@ -33,9 +34,9 @@ enum struct TagsFilterStruct
 				this.nValue = TagsTarget_GetType(sValue);
 				return !(this.nValue == TagsTarget_Invalid);
 			}
-			case TagsFilterType_Aim, TagsFilterType_SentryTarget:
+			case TagsFilterType_Aim, TagsFilterType_SentryTarget, TagsFilterType_FeignDeath:
 			{
-				this.nValue = 1;
+				this.nValue = !!StringToInt(sValue);	//Turn into boolean
 				return true;
 			}
 			case TagsFilterType_DamageType:
@@ -94,7 +95,7 @@ enum struct TagsFilterStruct
 			case TagsFilterType_DamageType:
 			{
 				int iDamageType;
-				if (!tParams.GetIntEx("damagetype", iDamageType))
+				if (!tParams.GetIntEx("filter_damagetype", iDamageType))
 					return false;
 				
 				if (this.nValue > 0)
@@ -105,7 +106,7 @@ enum struct TagsFilterStruct
 			case TagsFilterType_DamageCustom:
 			{
 				int iDamageCustom;
-				if (!tParams.GetIntEx("damagecustom", iDamageCustom))
+				if (!tParams.GetIntEx("filter_damagecustom", iDamageCustom))
 					return false;
 				
 				if (this.nValue > 0)
@@ -116,6 +117,11 @@ enum struct TagsFilterStruct
 			case TagsFilterType_BackstabCount:
 			{
 				return Tags_GetBackstabCount(iClient, tParams.GetInt("victim")) >= this.nValue;
+			}
+			case TagsFilterType_FeignDeath:
+			{
+				bool bFegin = !!GetEntProp(iClient, Prop_Send, "m_bFeignDeathReady");
+				return (this.nValue ? bFegin : !bFegin);
 			}
 		}
 		
@@ -194,6 +200,7 @@ TagsFilterType TagsFilter_GetType(const char[] sTarget)
 		mFilterType.SetValue("damagetype", TagsFilterType_DamageType);
 		mFilterType.SetValue("damagecustom", TagsFilterType_DamageCustom);
 		mFilterType.SetValue("backstabcount", TagsFilterType_BackstabCount);
+		mFilterType.SetValue("feigndeath", TagsFilterType_FeignDeath);
 	}
 	
 	TagsFilterType nFilterType = TagsFilterType_Invalid;

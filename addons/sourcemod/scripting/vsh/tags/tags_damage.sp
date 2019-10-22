@@ -6,9 +6,9 @@ public Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor,
 	tParams.SetInt("attacker", attacker);
 	tParams.SetInt("inflictor", inflictor);
 	tParams.SetFloat("damage", damage);
-	tParams.SetInt("damagetype", damagetype);
+	tParams.SetInt("filter_damagetype", damagetype);	//Because 'damagetype' is already used from config to set
 	tParams.SetInt("weapon", weapon);
-	tParams.SetInt("damagecustom", damagecustom);
+	tParams.SetInt("filter_damagecustom", damagecustom);
 	
 	//Call takedamage function
 	if (SaxtonHale_IsValidAttack(victim))
@@ -82,13 +82,18 @@ public Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor,
 		action = Plugin_Changed;
 	}
 	
-	ArrayList aDamageType = tParams.GetIntArray("damagetype");	//TODO 2 damagetype used?
+	ArrayList aDamageType = tParams.GetStringArray("damagetype");
 	if (aDamageType != null)
 	{
 		int iLength = aDamageType.Length;
+		int iBlockSize = aDamageType.BlockSize;
 		for (int i = 0; i < iLength; i++)
 		{
-			int iDamageType = aDamageType.Get(i);
+			//Get damagetype string name, then convert to int
+			char[] sBuffer = new char[iBlockSize];
+			aDamageType.GetString(i, sBuffer, iBlockSize);
+			int iDamageType = TagsDamage_GetType(sBuffer);
+			
 			if (iDamageType > 0)
 				damagetype |= iDamageType;
 			else if (iDamageType < 0)
