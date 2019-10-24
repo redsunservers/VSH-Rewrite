@@ -133,7 +133,10 @@ public int MenuWeapon_SelectMain(Menu hMenu, MenuAction action, int iClient, int
 	hMenu.GetItem(iSelect, sSelect, sizeof(sSelect));
 	
 	if (StrEqual(sSelect, "back"))
+	{
 		Menu_DisplayMain(iClient);
+		return;
+	}
 	
 	TFClassType nClass = view_as<TFClassType>(StringToInt(sSelect));
 	MenuWeapon_DisplayClass(iClient, nClass);
