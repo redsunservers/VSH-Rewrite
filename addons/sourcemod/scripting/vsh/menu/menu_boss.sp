@@ -9,7 +9,7 @@ static ArrayList g_aMenuModifiersInfo;	//Menus of each modifiers info
 static Menu g_hMenuNextBoss;
 static Menu g_hMenuNextModifiers;
 
-static StringMap g_mMenuSelectBoss[TF_MAXPLAYERS+1];
+static NextBoss g_nextMenuSelectBoss[TF_MAXPLAYERS+1];
 
 void MenuBoss_Init()
 {
@@ -289,9 +289,13 @@ void MenuBoss_DisplayNextList(int iClient)
 	{
 		for (int iBossCount = 0; iBossCount < iLength; iBossCount++)
 		{
+			//Get struct
+			NextBoss nextStruct;
+			g_aNextBoss.GetArray(iBossCount, nextStruct);
+			
 			//Get boss name and add to list
 			char sNextBoss[256];
-			GetNextBossName(g_aNextBoss.Get(iBossCount), sNextBoss, sizeof(sNextBoss));
+			GetNextBossName(nextStruct, sNextBoss, sizeof(sNextBoss));
 			Format(sBuffer, sizeof(sBuffer), "%s\n%s", sBuffer, sNextBoss);
 		}
 	}
@@ -320,12 +324,11 @@ public int MenuBoss_SelectNextList(Menu hMenu, MenuAction action, int iClient, i
 	
 	if (StrEqual(sSelect, "add"))
 	{
-		delete g_mMenuSelectBoss[iClient];
 		MenuBoss_DisplayNextClient(iClient);
 	}
 	else if (StrEqual(sSelect, "clear"))
 	{
-		ClearAllNextBoss();
+		g_aNextBoss.Clear();
 		PrintToChatAll("%s%s %N cleared all next boss", VSH_TAG, VSH_TEXT_COLOR, iClient);
 		MenuBoss_DisplayNextList(iClient);
 	}
@@ -357,15 +360,12 @@ void MenuBoss_DisplayNextClient(int iClient)
 			int iLength = g_aNextBoss.Length;
 			for (int iBossCount = 0; iBossCount < iLength; iBossCount++)
 			{
-				StringMap mNextBoss = g_aNextBoss.Get(iBossCount);
-				int iBossId;
-				if (mNextBoss.GetValue("userid", iBossId))
+				NextBoss nextStruct;
+				g_aNextBoss.GetArray(iBossCount, nextStruct);
+				if (iUserId == nextStruct.iUserId)
 				{
-					if (iUserId == iBossId)
-					{
-						iUserId = -1;
-						break;
-					}
+					iUserId = -1;
+					break;
 				}
 			}
 			
@@ -405,12 +405,7 @@ public int MenuBoss_SelectNextClient(Menu hMenu, MenuAction action, int iClient,
 		int iUserId = StringToInt(sSelect);
 		int iPlayer = GetClientOfUserId(iUserId);
 		if (0 < iPlayer <= MaxClients && IsClientInGame(iPlayer))
-		{
-			if (g_mMenuSelectBoss[iClient] == null)
-				g_mMenuSelectBoss[iClient] = new StringMap();
-			
-			g_mMenuSelectBoss[iClient].SetValue("userid", iUserId);
-		}
+			g_nextMenuSelectBoss[iClient].iUserId = iUserId;
 		
 		MenuBoss_DisplayNextBoss(iClient);
 	}
@@ -435,10 +430,7 @@ public int MenuBoss_SelectNextBoss(Menu hMenu, MenuAction action, int iClient, i
 	}
 	else if (!StrEqual(sSelect, "random"))
 	{
-		if (g_mMenuSelectBoss[iClient] == null)
-			g_mMenuSelectBoss[iClient] = new StringMap();
-		
-		g_mMenuSelectBoss[iClient].SetString("boss", sSelect);
+		Format(g_nextMenuSelectBoss[iClient].sBoss, sizeof(g_nextMenuSelectBoss[].sBoss), sSelect);
 	}
 	
 	MenuBoss_DisplayNextModifiers(iClient);
@@ -463,24 +455,21 @@ public int MenuBoss_SelectNextModifiers(Menu hMenu, MenuAction action, int iClie
 	}
 	else if (!StrEqual(sSelect, "random"))
 	{
-		if (g_mMenuSelectBoss[iClient] == null)
-			g_mMenuSelectBoss[iClient] = new StringMap();
-		
-		g_mMenuSelectBoss[iClient].SetString("modifiers", sSelect);
+		Format(g_nextMenuSelectBoss[iClient].sModifiers, sizeof(g_nextMenuSelectBoss[].sModifiers), sSelect);
 	}
 	
-	if (g_mMenuSelectBoss[iClient] != null)
-	{
-		//Push StringMap to ArrayList
-		g_aNextBoss.Push(g_mMenuSelectBoss[iClient]);
-		
-		//Print chat boss been set
-		char sBuffer[256];
-		GetNextBossName(g_mMenuSelectBoss[iClient], sBuffer, sizeof(sBuffer));
-		PrintToChatAll("%s%s %N added next boss %s", VSH_TAG, VSH_TEXT_COLOR, iClient, sBuffer);
-		
-		g_mMenuSelectBoss[iClient] = null;	//We dont want to delete it, handle in ArrayList
-	}
+	//Push NextBoss to ArrayList
+	g_aNextBoss.PushArray(g_nextMenuSelectBoss[iClient]);
+	
+	//Print chat boss been set
+	char sBuffer[256];
+	GetNextBossName(g_nextMenuSelectBoss[iClient], sBuffer, sizeof(sBuffer));
+	PrintToChatAll("%s%s %N added next boss %s", VSH_TAG, VSH_TEXT_COLOR, iClient, sBuffer);
+	
+	//Clear stuffs
+	g_nextMenuSelectBoss[iClient].iUserId = 0;
+	g_nextMenuSelectBoss[iClient].sBoss = "";
+	g_nextMenuSelectBoss[iClient].sModifiers = "";
 	
 	MenuBoss_DisplayNextList(iClient);
 }

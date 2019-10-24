@@ -1,20 +1,20 @@
-static Handle g_hForwardBossWin;
-static Handle g_hForwardBossLose;
-static Handle g_hForwardTeleportDamage;
-static Handle g_hForwardChainStabs;
-static Handle g_hForwardUpdatePreferences;
-static Handle g_hForwardUpdateQueue;
-static Handle g_hForwardUpdateWinstreak;
+static GlobalForward g_hForwardBossWin;
+static GlobalForward g_hForwardBossLose;
+static GlobalForward g_hForwardTeleportDamage;
+static GlobalForward g_hForwardChainStabs;
+static GlobalForward g_hForwardUpdatePreferences;
+static GlobalForward g_hForwardUpdateQueue;
+static GlobalForward g_hForwardUpdateWinstreak;
 
 void Forward_AskLoad()
 {
-	g_hForwardBossWin = CreateGlobalForward("SaxtonHale_OnBossWin", ET_Ignore, Param_Cell);
-	g_hForwardBossLose = CreateGlobalForward("SaxtonHale_OnBossLose", ET_Ignore, Param_Cell);
-	g_hForwardTeleportDamage = CreateGlobalForward("SaxtonHale_OnTeleportDamage", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
-	g_hForwardChainStabs = CreateGlobalForward("SaxtonHale_OnChainStabs", ET_Ignore, Param_Cell, Param_Cell);
-	g_hForwardUpdatePreferences = CreateGlobalForward("SaxtonHale_OnUpdatePreferences", ET_Ignore, Param_Cell, Param_Cell);
-	g_hForwardUpdateQueue = CreateGlobalForward("SaxtonHale_OnUpdateQueue", ET_Ignore, Param_Cell, Param_Cell);
-	g_hForwardUpdateWinstreak = CreateGlobalForward("SaxtonHale_OnUpdateWinstreak", ET_Ignore, Param_Cell, Param_Cell);
+	g_hForwardBossWin = new GlobalForward("SaxtonHale_OnBossWin", ET_Ignore, Param_Cell);
+	g_hForwardBossLose = new GlobalForward("SaxtonHale_OnBossLose", ET_Ignore, Param_Cell);
+	g_hForwardTeleportDamage = new GlobalForward("SaxtonHale_OnTeleportDamage", ET_Ignore, Param_Cell, Param_Cell, Param_Cell);
+	g_hForwardChainStabs = new GlobalForward("SaxtonHale_OnChainStabs", ET_Ignore, Param_Cell, Param_Cell);
+	g_hForwardUpdatePreferences = new GlobalForward("SaxtonHale_OnUpdatePreferences", ET_Ignore, Param_Cell, Param_Cell);
+	g_hForwardUpdateQueue = new GlobalForward("SaxtonHale_OnUpdateQueue", ET_Ignore, Param_Cell, Param_Cell);
+	g_hForwardUpdateWinstreak = new GlobalForward("SaxtonHale_OnUpdateWinstreak", ET_Ignore, Param_Cell, Param_Cell);
 }
 
 void Forward_BossWin(int iTeam)

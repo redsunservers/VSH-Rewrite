@@ -288,7 +288,15 @@ int g_iSpritesLaserbeam;
 int g_iSpritesGlow;
 
 //Main boss data
-ArrayList g_aNextBoss;			//ArrayList of Next boss
+enum struct NextBoss
+{
+	int iUserId;
+	char sBoss[MAX_TYPE_CHAR];
+	char sModifiers[MAX_TYPE_CHAR];
+}
+
+ArrayList g_aNextBoss;			//ArrayList of NextBoss struct
+
 ArrayList g_aBossesType;		//ArrayList of string bosses type
 ArrayList g_aMiscBossesType;	//ArrayList of ArrayList string bosses type
 ArrayList g_aAllBossesType; 	//ArrayList of all bosses
@@ -472,7 +480,7 @@ public void OnPluginStart()
 	SaxtonHaleBase boss = SaxtonHaleBase(0);
 	boss.bModifiers = true;
 	
-	g_aNextBoss = new ArrayList();
+	g_aNextBoss = new ArrayList(sizeof(NextBoss));
 	g_aBossesType = new ArrayList(MAX_TYPE_CHAR);
 	g_aMiscBossesType = new ArrayList();
 	g_aAllBossesType = new ArrayList(MAX_TYPE_CHAR);
@@ -2190,20 +2198,20 @@ public Action Client_BuildCommand(int iClient, const char[] sCommand, int iArgs)
 	return boss.CallFunction("OnBuild", nType, nMode);
 }
 
-public bool BossTargetFilter(char[] sPattern, Handle hClients)
+public bool BossTargetFilter(char[] sPattern, ArrayList aClients)
 {
 	bool bTargetBoss = StrContains(sPattern, "@!") == -1;
 	
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
-		if (IsClientInGame(iClient) && FindValueInArray(hClients, iClient) == -1)
+		if (IsClientInGame(iClient) && aClients.FindValue(iClient) == -1)
 		{
 			bool bIsBoss = SaxtonHale_IsValidBoss(iClient, false);
 			
 			if (bTargetBoss && bIsBoss)
-				PushArrayCell(hClients, iClient);
+				aClients.Push(iClient);
 			else if (!bTargetBoss && !bIsBoss)
-				PushArrayCell(hClients, iClient);
+				aClients.Push(iClient);
 		}
 	}
 	
@@ -2415,11 +2423,11 @@ public Action NormalSoundHook(int clients[MAXPLAYERS], int &numClients, char sam
 
 void SDK_Init()
 {
-	Handle hGameData = LoadGameConfigFile("sdkhooks.games");
+	GameData hGameData = new GameData("sdkhooks.games");
 	if (hGameData == null) SetFailState("Could not find sdkhooks.games gamedata!");
 
 	//This function is used to control player's max health
-	int iOffset = GameConfGetOffset(hGameData, "GetMaxHealth");
+	int iOffset = hGameData.GetOffset("GetMaxHealth");
 	g_hHookGetMaxHealth = DHookCreate(iOffset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity, Hook_GetMaxHealth);
 	if (g_hHookGetMaxHealth == null) LogMessage("Failed to create hook: CTFPlayer::GetMaxHealth!");
 
@@ -2433,10 +2441,10 @@ void SDK_Init()
 
 	delete hGameData;
 
-	hGameData = LoadGameConfigFile("sm-tf2.games");
+	hGameData = new GameData("sm-tf2.games");
 	if (hGameData == null) SetFailState("Could not find sm-tf2.games gamedata!");
 
-	int iRemoveWearableOffset = GameConfGetOffset(hGameData, "RemoveWearable");
+	int iRemoveWearableOffset = hGameData.GetOffset("RemoveWearable");
 
 	StartPrepSDKCall(SDKCall_Player);
 	PrepSDKCall_SetVirtual(iRemoveWearableOffset);
@@ -2456,7 +2464,7 @@ void SDK_Init()
 
 	delete hGameData;
 
-	hGameData = LoadGameConfigFile("vsh");
+	hGameData = new GameData("vsh");
 	if (hGameData == null) SetFailState("Could not find vsh gamedata!");
 
 	// This call gets the weapon max ammo
@@ -2495,7 +2503,7 @@ void SDK_Init()
 		LogMessage("Failed to create call: CTFWeaponBase::GetMaxClip1!");
 
 	// This hook allows entity to always transmit
-	iOffset = GameConfGetOffset(hGameData, "CBaseEntity::ShouldTransmit");
+	iOffset = hGameData.GetOffset("CBaseEntity::ShouldTransmit");
 	g_hHookShouldTransmit = DHookCreate(iOffset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity, Hook_EntityShouldTransmit);
 	if (g_hHookShouldTransmit == null)
 		LogMessage("Failed to create hook: CBaseEntity::ShouldTransmit!");
