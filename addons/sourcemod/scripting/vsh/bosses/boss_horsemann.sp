@@ -95,7 +95,7 @@ methodmap CHorsemann < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- Teleport Swap");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- Becomes ghost to fly, immute to damage, and unable to attack for 8 seconds");
+		StrCat(sInfo, length, "\n- Becomes ghost to fly, immune to damage, and unable to attack for 8 seconds");
 		StrCat(sInfo, length, "\n- Steals health from nearby players with random spooky effects");
 		StrCat(sInfo, length, "\n- 200%% Rage: Extends duration to 16 seconds");
 	}
@@ -109,7 +109,7 @@ methodmap CHorsemann < SaxtonHaleBase
 		if (iWeapon > MaxClients)
 		{
 			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
-			SetEntProp(iWeapon, Prop_Send, "m_nRenderMode", 0); //The boss model already has a Headtaker, so it doesn't need the original one
+			SetEntPropFloat(iWeapon, Prop_Send, "m_flModelScale", 0.0); //The boss model already has a Headtaker, so it doesn't need the original one. There's like no other way that doesn't also disable the viewmodel
 		}
 		/*
 		Horseless Headless Horsemann's Headtaker attributes:
@@ -159,14 +159,14 @@ methodmap CHorsemann < SaxtonHaleBase
 	{
 		if (strncmp(sample, "vo/", 3) == 0)
 		{
-			if (StrContains(sample, "vo/halloween_boss/", false) != -1)
+			if (StrContains(sample, "vo/halloween_boss/", false) == 0)
 				return Plugin_Continue;
 			
-			EmitSoundToAll(g_strHorsemannVoice[GetRandomInt(0, sizeof(g_strHorsemannVoice) - 1)], this.iClient, SNDCHAN_VOICE);
-			return Plugin_Handled;
+			ReplaceString(sample, sizeof(sample), sample, g_strHorsemannVoice[GetRandomInt(0, sizeof(g_strHorsemannVoice) - 1)], false);
+			return Plugin_Changed;
 		}
 			
-		if (StrContains(sample, "player/footsteps/", false) != -1)
+		if (StrContains(sample, "player/footsteps/", false) == 0)
 		{
 			EmitSoundToAll(g_strHorsemannFootsteps[GetRandomInt(0, sizeof(g_strHorsemannFootsteps) - 1)], this.iClient, _, _, _, 0.4, GetRandomInt(90, 100));
 			return Plugin_Handled;
