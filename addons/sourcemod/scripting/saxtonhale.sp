@@ -1473,7 +1473,7 @@ public Action Event_PlayerDeath(Event event, const char[] sName, bool bDontBroad
 			{
 				char sSound[255];
 				bossAttacker.CallFunction("GetSoundKill", sSound, sizeof(sSound), TF2_GetPlayerClass(iVictim));
-				if (StrEmpty(sSound))
+				if (!StrEmpty(sSound))
 					EmitSoundToAll(sSound, iAttacker, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
 			}
 		}
