@@ -162,7 +162,7 @@ methodmap CHorsemann < SaxtonHaleBase
 			if (StrContains(sample, "vo/halloween_boss/", false) == 0)
 				return Plugin_Continue;
 			
-			ReplaceString(sample, sizeof(sample), sample, g_strHorsemannVoice[GetRandomInt(0, sizeof(g_strHorsemannVoice) - 1)], false);
+			Format(sample, sizeof(sample), "%s", g_strHorsemannVoice[GetRandomInt(0, sizeof(g_strHorsemannVoice) - 1)]);
 			return Plugin_Changed;
 		}
 			
