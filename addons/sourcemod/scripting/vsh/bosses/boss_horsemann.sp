@@ -109,7 +109,7 @@ methodmap CHorsemann < SaxtonHaleBase
 		if (iWeapon > MaxClients)
 		{
 			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
-			SetEntPropEnt(iWeapon, Prop_Send, "m_nRenderMode", 0); //The boss model already has a Headtaker, so it doesn't need the original one
+			SetEntProp(iWeapon, Prop_Send, "m_nRenderMode", 0); //The boss model already has a Headtaker, so it doesn't need the original one
 		}
 		/*
 		Horseless Headless Horsemann's Headtaker attributes:
