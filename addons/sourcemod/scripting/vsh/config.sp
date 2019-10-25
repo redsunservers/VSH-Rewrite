@@ -440,7 +440,7 @@ void Config_Refresh()
 	delete kv;
 	
 	TagsName_Load();
-	for (int iClient = 0; iClient <= MaxClients; iClient++)
+	for (int iClient = 1; iClient <= MaxClients; iClient++)
 		TagsCore_RefreshClient(iClient);
 	
 	ClassLimit_Refresh();

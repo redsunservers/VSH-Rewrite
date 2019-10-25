@@ -40,6 +40,33 @@ TagsCall TagsCall_GetType(const char[] sCall)
 	return nCall;
 }
 
+static ArrayList g_aTagsCallTimer[TF_MAXPLAYERS+1];	//Arrays of pending function timers to be called
+
+void TagsCall_Init()
+{
+	for (int iClient = 1; iClient <= MaxClients; iClient++)
+		g_aTagsCallTimer[iClient] = new ArrayList();
+}
+
+void TagsCall_ClearTimer(int iClient)
+{
+	g_aTagsCallTimer[iClient].Clear();
+}
+
+void TagsCall_CallDelay(Function func, int iClient, TagsParams tParams, int iCall, float flDuration)
+{
+	//Create delay timer
+	DataPack data;
+	Handle hTimer = CreateDataTimer(flDuration, TagsCall_TimerDelay, data);
+	data.WriteFunction(func);
+	data.WriteCell(EntIndexToEntRef(iClient));
+	data.WriteCell(tParams);
+	data.WriteCell(iCall);
+	
+	//Push timer to array
+	g_aTagsCallTimer[iClient].Push(hTimer);
+}
+
 public Action TagsCall_TimerDelay(Handle hTimer, DataPack data)
 {
 	data.Reset();
@@ -48,12 +75,32 @@ public Action TagsCall_TimerDelay(Handle hTimer, DataPack data)
 	TagsParams tParams = data.ReadCell();
 	int iCall = data.ReadCell();
 	
-	if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient) || !IsPlayerAlive(iClient))
+	//Valid client check
+	if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient))
 	{
 		delete tParams;
 		return;
 	}
 	
+	//Check if timer still valid to be called
+	int iIndex = g_aTagsCallTimer[iClient].FindValue(hTimer);
+	if (iIndex == -1)
+	{
+		delete tParams;
+		return;
+	}
+	
+	//Remove pending timer from array as it done.
+	g_aTagsCallTimer[iClient].Erase(iIndex);
+	
+	//Player alive check
+	if (!IsPlayerAlive(iClient))
+	{
+		delete tParams;
+		return;
+	}
+	
+	//Call function
 	TagsCall_Call(func, iClient, tParams, iCall);
 }
 
@@ -74,19 +121,9 @@ void TagsCall_Call(Function func, int iClient, TagsParams tParams, int iCall)
 	if (iCall > 0)
 	{
 		if (tParams.flRate > 0.0)
-		{
-			DataPack data;
-			CreateDataTimer(tParams.flRate, TagsCall_TimerDelay, data);
-			data.WriteFunction(func);
-			data.WriteCell(EntIndexToEntRef(iClient));
-			data.WriteCell(tParams);
-			data.WriteCell(iCall);
-		}
-		else
-		{
-			//0.0 delay, no need to create timer
+			TagsCall_CallDelay(func, iClient, tParams, iCall, tParams.flRate);
+		else	//0.0 delay, no need to create delay timer
 			TagsCall_Call(func, iClient, tParams, iCall);
-		}
 	}
 	else
 	{

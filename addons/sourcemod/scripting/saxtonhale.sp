@@ -496,6 +496,7 @@ public void OnPluginStart()
 	Function_Init();
 	Menu_Init();
 	NextBoss_Init();
+	TagsCall_Init();
 	TagsCore_Init();
 	TagsName_Init();
 	Winstreak_Init();

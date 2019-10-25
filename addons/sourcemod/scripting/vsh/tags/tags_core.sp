@@ -93,12 +93,16 @@ void TagsCore_Clear()
 	g_tFunctions.Clear();
 }
 
-void TagsCore_RefreshClient(int iClient)
+void TagsCore_RefreshClient(int iClient, bool bClearTimer = true)
 {
 	//Delet existing arrays before creating new ones
 	for (TagsCall nCall; nCall < TagsCall; nCall++)
 		for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
 			delete g_aTagsClient[iClient][nCall][iSlot];
+	
+	//Clear any pending function timers
+	if (bClearTimer)
+		TagsCall_ClearTimer(iClient);
 	
 	if (!SaxtonHale_IsValidAttack(iClient))
 		return;
