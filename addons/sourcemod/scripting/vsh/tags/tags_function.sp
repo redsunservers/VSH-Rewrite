@@ -121,19 +121,9 @@ methodmap TagsFunction < ArrayList
 		
 		float flDelay = tParams.flDelay;
 		if (flDelay >= 0.0)
-		{
-			//Create delay timer
-			DataPack data;
-			CreateDataTimer(flDelay, TagsCall_TimerDelay, data);
-			data.WriteFunction(functionStruct.func);
-			data.WriteCell(EntIndexToEntRef(iClient));
-			data.WriteCell(tParams);
-			data.WriteCell(tParams.iCall);
-		}
+			TagsCall_CallDelay(functionStruct.func, iClient, tParams, tParams.iCall, flDelay);
 		else
-		{
 			TagsCall_Call(functionStruct.func, iClient, tParams, tParams.iCall);
-		}
 	}
 	
 	public void Delete(int iPos)

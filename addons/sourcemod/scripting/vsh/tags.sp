@@ -607,8 +607,8 @@ public void Tags_KillWeapon(int iClient, int iTarget, TagsParams tParams)
 			//Kill em
 			TF2_RemoveItemInSlot(iClient, iSlot);
 			
-			//Refresh tags stuff now that weapon is crabbed
-			TagsCore_RefreshClient(iClient);
+			//Refresh tags stuff now that weapon is crabbed, without clearing any pending function timers
+			TagsCore_RefreshClient(iClient, false);
 			return;
 		}
 	}
