@@ -161,14 +161,12 @@ methodmap CDemoRobot < SaxtonHaleBase
 			
 			char file[PLATFORM_MAX_PATH];
 			strcopy(file, PLATFORM_MAX_PATH, sample);
-			ReplaceString(file, sizeof(file), "vo/", "vo/mvm/norm/", false);
-			ReplaceString(file, sizeof(file), "demoman_", "demoman_mvm_", false);
+			ReplaceString(file, sizeof(file), "vo/demoman_", "vo/mvm/norm/demoman_mvm_", false);
 			Format(file, sizeof(file), "sound/%s", file);
 			
 			if (FileExists(file, true))
 			{
-				ReplaceString(sample, sizeof(sample), "vo/", "vo/mvm/norm/", false);
-				ReplaceString(sample, sizeof(sample), "demoman_", "demoman_mvm_", false);
+				ReplaceString(sample, sizeof(sample), "vo/demoman_", "vo/mvm/norm/demoman_mvm_", false);
 				PrecacheSound(sample);
 				return Plugin_Changed;
 			}
