@@ -14,7 +14,7 @@ void PickNextBoss()
 			aClients.Push(iClient);
 	
 	//Randomize incase we have to pick random player
-	SortADTArray(aClients, Sort_Random, Sort_Integer);
+	aClients.Sort(Sort_Random, Sort_Integer);
 	
 	//Find main boss
 	int iMainBoss = 0;
@@ -22,10 +22,9 @@ void PickNextBoss()
 	while (g_aNextBoss.Length > iArray && iMainBoss == 0)
 	{
 		//Get "main" boss
-		int iUserId = 0;
-		StringMap mNextBoss = g_aNextBoss.Get(iArray);
-		if (mNextBoss.GetValue("userid", iUserId))
-			iMainBoss = GetClientOfUserId(iUserId);	//Should return 0 if invalid userid
+		NextBoss nextStruct;
+		g_aNextBoss.GetArray(iArray, nextStruct);
+		iMainBoss = GetClientOfUserId(nextStruct.iUserId);	//Should return 0 if invalid userid
 		
 		iArray++;
 	}
@@ -52,10 +51,10 @@ void PickNextBoss()
 		int iCount = ExplodeString(sBosses, " ; ", sBoss, 32, 32);
 		for (int i = 0; i < iCount; i++)
 		{
-			//Create StringMap to set boss
-			StringMap mNextBoss = new StringMap();
-			mNextBoss.SetString("boss", sBoss[i]);
-			g_aNextBoss.Push(mNextBoss);
+			//Create struct to set boss
+			NextBoss nextStruct;
+			Format(nextStruct.sBoss, sizeof(nextStruct.sBoss), sBoss[i]);
+			g_aNextBoss.PushArray(nextStruct);
 		}
 	}
 	
@@ -71,20 +70,14 @@ void PickNextBoss()
 	//Loop though and check if all client, boss and modifiers has been set
 	for (int i = 0; i < iBossCount; i++)
 	{
-		StringMap mNextBoss = g_aNextBoss.Get(i);
+		NextBoss nextStruct;
+		g_aNextBoss.GetArray(i, nextStruct);
 		
 		//Check if client has been selected yet, and still in game
-		int iUserId = -1;
-		if (mNextBoss.GetValue("userid", iUserId))
+		int iClient = GetClientOfUserId(nextStruct.iUserId);
+		if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient))
 		{
-			int iClient = GetClientOfUserId(iUserId);
-			if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient))
-				iUserId = -1;
-		}
-		
-		if (iUserId == -1)
-		{
-			int iClient = -1;
+			iClient = -1;
 			while (iClient == -1 && aClients.Length > 0)
 			{
 				iClient = Queue_GetPlayerFromRank(iRank);
@@ -99,8 +92,7 @@ void PickNextBoss()
 				
 				if (0 < iClient <= MaxClients && IsClientInGame(iClient))
 				{
-					iUserId = GetClientUserId(iClient);
-					mNextBoss.SetValue("userid", iUserId);
+					nextStruct.iUserId = GetClientUserId(iClient);
 					
 					//Erase client in list
 					int iIndex = aClients.FindValue(iClient);
@@ -111,45 +103,34 @@ void PickNextBoss()
 			}
 		}
 		
-		char sBuffer[256];
+		//Get random non-duo boss
+		if (StrEmpty(nextStruct.sBoss))
+			GetRandomBosses(nextStruct.sBoss, sizeof(nextStruct.sBoss), false);
 		
-		if (!mNextBoss.GetString("boss", sBuffer, sizeof(sBuffer)))
-		{
-			//Get random non-duo boss
-			GetRandomBosses(sBuffer, sizeof(sBuffer), false);
-			mNextBoss.SetString("boss", sBuffer);
-		}
+		//Get random modifiers
+		if (StrEmpty(nextStruct.sModifiers))
+			GetRandomModifiers(nextStruct.sModifiers, sizeof(nextStruct.sModifiers));
 		
-		if (!mNextBoss.GetString("modifiers", sBuffer, sizeof(sBuffer)))
-		{
-			//Get random modifiers
-			GetRandomModifiers(sBuffer, sizeof(sBuffer));
-			mNextBoss.SetString("modifiers", sBuffer);
-		}
+		g_aNextBoss.SetArray(i, nextStruct);
 	}
 	
 	//Loop again to actually set boss
 	for (int i = 0; i < iBossCount; i++)
 	{
-		StringMap mNextBoss = g_aNextBoss.Get(i);
+		NextBoss nextStruct;
+		g_aNextBoss.GetArray(i, nextStruct);
 		
-		int iUserId = -1;
-		mNextBoss.GetValue("userid", iUserId);
-		int iClient = GetClientOfUserId(iUserId);
+		int iClient = GetClientOfUserId(nextStruct.iUserId);
 		if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient))
 		{
 			char sError[256];
-			Format(sError, sizeof(sError), "[VSH] INVALID NEXT BOSS CLIENT %d, USERID %d", iClient, iUserId);
+			Format(sError, sizeof(sError), "[VSH] INVALID NEXT BOSS CLIENT %d, USERID %d", iClient, nextStruct.iUserId);
 			PluginStop(true, sError);
 			return;
 		}
 		
-		char sBossType[256], sModifiersType[256];
-		mNextBoss.GetString("boss", sBossType, sizeof(sBossType));
-		mNextBoss.GetString("modifiers", sModifiersType, sizeof(sModifiersType));
-		
 		//Set boss
-		SetBoss(iClient, sBossType, sModifiersType);
+		SetBoss(iClient, nextStruct.sBoss, nextStruct.sModifiers);
 		
 		// Reset their points
 		Queue_ResetPlayer(iClient);
@@ -162,8 +143,8 @@ void PickNextBoss()
 		}
 	}
 	
-	//Whipe all next boss & modifiers data
-	ClearAllNextBoss();
+	//Whipe all next boss data
+	g_aNextBoss.Clear();
 	delete aClients;
 	
 	//Get amount of valid bosses after set
@@ -381,46 +362,35 @@ stock int GetRandomModifiers(char[] sModifiers, int iLength, bool bForce = false
 	}
 }
 
-stock void GetNextBossName(StringMap mNextBoss, char[] sBuffer, int iLength)
+stock void GetNextBossName(NextBoss nextStruct, char[] sBuffer, int iLength)
 {
-	if (mNextBoss == null) return;
+	char sBossName[256], sModifiersName[256];
 	
-	int iUserId;
-	char sBoss[256], sModifiers[256];
-	
-	if (mNextBoss.GetValue("userid", iUserId))
-		Format(sBuffer, iLength, "%s%N as ", sBuffer, GetClientOfUserId(iUserId));
+	int iClient = GetClientOfUserId(nextStruct.iUserId);
+	if (0 < iClient <= MaxClients && IsClientInGame(iClient))
+		Format(sBuffer, iLength, "%s%N as ", sBuffer, iClient);
 	
 	//If boss not set, display as "random (modifiers) boss"
-	if (!mNextBoss.GetString("boss", sBoss, sizeof(sBoss)))
+	if (StrEmpty(nextStruct.sBoss))
 	{
 		Format(sBuffer, iLength, "%sRandom ", sBuffer);
-		Format(sBoss, sizeof(sBoss), "Boss", sBoss);
+		Format(sBossName, sizeof(sBossName), "Boss");
 	}
 	else
 	{
 		SaxtonHaleBase boss = SaxtonHaleBase(0);
-		boss.CallFunction("SetBossType", sBoss);
-		boss.CallFunction("GetBossName", sBoss, sizeof(sBoss));
+		boss.CallFunction("SetBossType", nextStruct.sBoss);
+		boss.CallFunction("GetBossName", sBossName, sizeof(sBossName));
 	}
 	
-	if (mNextBoss.GetString("modifiers", sModifiers, sizeof(sModifiers)) && !StrEqual(sModifiers, "CModifiersNone"))
+	if (!StrEmpty(nextStruct.sModifiers) && !StrEqual(nextStruct.sModifiers, "CModifiersNone"))
 	{
 		SaxtonHaleBase boss = SaxtonHaleBase(0);
-		boss.CallFunction("SetModifiersType", sModifiers);
-		boss.CallFunction("GetModifiersName", sModifiers, sizeof(sModifiers));
+		boss.CallFunction("SetModifiersType", nextStruct.sModifiers);
+		boss.CallFunction("GetModifiersName", sModifiersName, sizeof(sModifiersName));
 		
-		Format(sBuffer, iLength, "%s%s ", sBuffer, sModifiers);
+		Format(sBuffer, iLength, "%s%s ", sBuffer, sModifiersName);
 	}
 	
-	Format(sBuffer, iLength, "%s%s", sBuffer, sBoss);
-}
-
-stock void ClearAllNextBoss()
-{
-	int iLength = g_aNextBoss.Length;
-	for (int i = 0; i < iLength; i++)
-		delete view_as<StringMap>(g_aNextBoss.Get(i));	//Delete all StringMap in ArrayList
-	
-	g_aNextBoss.Clear();
+	Format(sBuffer, iLength, "%s%s", sBuffer, sBossName);
 }

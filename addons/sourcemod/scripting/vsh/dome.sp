@@ -188,7 +188,7 @@ void Dome_PlayerDeath(int iPlayerCount)
 	}
 }
 
-void Dome_Frame_Start(int i = 0)
+public void Dome_Frame_Start()
 {
 	if (!g_ConfigConvar.LookupBool("vsh_dome_enable") || g_flDomeEnableTime == 0.0 || g_flDomeStart != 0.0) return;
 

@@ -122,14 +122,14 @@ any Function_Start(SaxtonHaleBase boss)
 {
 	Action action = Plugin_Continue;
 	any returnValue = 0;
-	Handle hPrivateForward;
+	PrivateForward hPrivateForward;
 	char sBuffer[64];
 	
 	//Start pre hooks
 	int hookType = view_as<int>(VSHHookMode_Pre);	//I hate this
 	if (g_mFunctionHook[hookType].GetValue(g_sFunctionStackName[g_iFunctionStack], hPrivateForward))
 	{
-		if (GetForwardFunctionCount(hPrivateForward) == 0)
+		if (hPrivateForward.FunctionCount == 0)
 		{
 			//One of plugin unloaded, caused function count 0. Don't need to keep handle now
 			delete hPrivateForward;
@@ -173,7 +173,7 @@ any Function_Start(SaxtonHaleBase boss)
 	hookType = view_as<int>(VSHHookMode_Post);
 	if (g_mFunctionHook[hookType].GetValue(g_sFunctionStackName[g_iFunctionStack], hPrivateForward))
 	{
-		if (GetForwardFunctionCount(hPrivateForward) == 0)
+		if (hPrivateForward.FunctionCount == 0)
 		{
 			//One of plugin unloaded, caused function count 0. Don't need to keep handle now
 			delete hPrivateForward;
@@ -293,26 +293,26 @@ bool Function_Call(SaxtonHaleBase boss, const char[] sClass, Action action, any 
 
 void Function_Hook(const char[] sName, Handle hPlugin, SaxtonHaleHookCallback callback, SaxtonHaleHookMode hookType)
 {
-	Handle hPrivateForward;
+	PrivateForward hPrivateForward;
 	if (!g_mFunctionHook[hookType].GetValue(sName, hPrivateForward))	//Get existing private forward
 	{
 		//If does not exist, create new private forward
-		hPrivateForward = CreateForward(ET_Hook, Param_Cell, Param_CellByRef);
+		hPrivateForward = new PrivateForward(ET_Hook, Param_Cell, Param_CellByRef);
 		g_mFunctionHook[hookType].SetValue(sName, hPrivateForward);
 	}
 	
-	AddToForward(hPrivateForward, hPlugin, callback);
+	hPrivateForward.AddFunction(hPlugin, callback);
 }
 
 void Function_Unhook(const char[] sName, Handle hPlugin, SaxtonHaleHookCallback callback, SaxtonHaleHookMode hookType)
 {
-	Handle hPrivateForward;
+	PrivateForward hPrivateForward;
 	if (!g_mFunctionHook[hookType].GetValue(sName, hPrivateForward))	//Get private forward to remove
 		return;	//No hook functions to unhook
 	
-	RemoveFromForward(hPrivateForward, hPlugin, callback);
+	hPrivateForward.RemoveFunction(hPlugin, callback);
 	
-	if (GetForwardFunctionCount(hPrivateForward) == 0)
+	if (hPrivateForward.FunctionCount == 0)
 	{
 		//No more hooks in forward
 		delete hPrivateForward;
@@ -320,7 +320,7 @@ void Function_Unhook(const char[] sName, Handle hPlugin, SaxtonHaleHookCallback 
 	}
 }
 
-bool Function_CallHook(SaxtonHaleBase boss, Handle hPrivateForward, Action &action, any &returnValue)
+bool Function_CallHook(SaxtonHaleBase boss, PrivateForward hPrivateForward, Action &action, any &returnValue)
 {
 	//Copy final to temps for hook to use temp params
 	int iSize = g_FunctionStackFinal[g_iFunctionStack][0][0];

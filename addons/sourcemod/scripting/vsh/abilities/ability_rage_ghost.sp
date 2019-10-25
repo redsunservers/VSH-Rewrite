@@ -269,7 +269,7 @@ methodmap CRageGhost < SaxtonHaleBase
 						if (aWeapons.Length > 0)
 						{
 							//Get random weapon/slot to change
-							SortADTArray(aWeapons, Sort_Random, Sort_Integer);
+							aWeapons.Sort(Sort_Random, Sort_Integer);
 							char sClassname[256];
 							GetEntityClassname(aWeapons.Get(0), sClassname, sizeof(sClassname));
 							FakeClientCommand(iSpooked[i], "use %s", sClassname);

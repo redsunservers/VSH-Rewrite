@@ -147,7 +147,7 @@ methodmap CTeleportSwap < SaxtonHaleBase
 					return;
 				}
 				
-				SortADTArray(aClients, Sort_Random, Sort_Integer);
+				aClients.Sort(Sort_Random, Sort_Integer);
 				
 				int iClient[2];
 				
