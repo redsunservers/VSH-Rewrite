@@ -406,6 +406,8 @@ public int MenuBoss_SelectNextClient(Menu hMenu, MenuAction action, int iClient,
 		int iPlayer = GetClientOfUserId(iUserId);
 		if (0 < iPlayer <= MaxClients && IsClientInGame(iPlayer))
 			g_nextMenuSelectBoss[iClient].iUserId = iUserId;
+		else
+			g_nextMenuSelectBoss[iClient].iUserId = 0;
 		
 		MenuBoss_DisplayNextBoss(iClient);
 	}
@@ -428,7 +430,11 @@ public int MenuBoss_SelectNextBoss(Menu hMenu, MenuAction action, int iClient, i
 		MenuBoss_DisplayNextClient(iClient);
 		return;
 	}
-	else if (!StrEqual(sSelect, "random"))
+	else if (StrEqual(sSelect, "random"))
+	{
+		Format(g_nextMenuSelectBoss[iClient].sBoss, sizeof(g_nextMenuSelectBoss[].sBoss), "");
+	}
+	else
 	{
 		Format(g_nextMenuSelectBoss[iClient].sBoss, sizeof(g_nextMenuSelectBoss[].sBoss), sSelect);
 	}
@@ -453,7 +459,11 @@ public int MenuBoss_SelectNextModifiers(Menu hMenu, MenuAction action, int iClie
 		MenuBoss_DisplayNextBoss(iClient);
 		return;
 	}
-	else if (!StrEqual(sSelect, "random"))
+	else if (StrEqual(sSelect, "random"))
+	{
+		Format(g_nextMenuSelectBoss[iClient].sModifiers, sizeof(g_nextMenuSelectBoss[].sModifiers), "");
+	}
+	else
 	{
 		Format(g_nextMenuSelectBoss[iClient].sModifiers, sizeof(g_nextMenuSelectBoss[].sModifiers), sSelect);
 	}
