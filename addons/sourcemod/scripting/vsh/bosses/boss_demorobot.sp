@@ -104,8 +104,8 @@ methodmap CDemoRobot < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- Brave Jump");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- Becomes Giant for 8 seconds");
-		StrCat(sInfo, length, "\n- Grenade Launcher with fast firing speed, unlimited ammo and clip size");
+		StrCat(sInfo, length, "\n- Gets an upgraded Grenade Launcher for 8 seconds");
+		StrCat(sInfo, length, "\n- It has faster firing speed, unlimited ammo and clip size");
 		StrCat(sInfo, length, "\n- 200%% Rage: Grenade Launcher faster firing speed is doubled");
 	}
 	
