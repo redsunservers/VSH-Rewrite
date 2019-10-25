@@ -82,7 +82,7 @@ methodmap CSeeldier < SaxtonHaleBase
 			}
 		}
 		
-		SortADTArray(aValidMinions, Sort_Random, Sort_Integer);
+		aValidMinions.Sort(Sort_Random, Sort_Integer);
 		int iLength = aValidMinions.Length;
 		if (iLength < iTotalMinions)
 			iTotalMinions = iLength;

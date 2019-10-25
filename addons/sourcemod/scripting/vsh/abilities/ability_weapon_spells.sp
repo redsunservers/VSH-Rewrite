@@ -167,7 +167,7 @@ methodmap CWeaponSpells < SaxtonHaleBase
 				
 				//Play ability sound if boss have one
 				char sSound[PLATFORM_MAX_PATH];
-				this.CallFunction("GetSoundAbility", "CWeaponSpells", sSound, sizeof(sSound));
+				this.CallFunction("GetSoundAbility", sSound, sizeof(sSound), "CWeaponSpells");
 				if (!StrEmpty(sSound))
 					EmitSoundToAll(sSound, this.iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
 				

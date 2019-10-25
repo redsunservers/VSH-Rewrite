@@ -104,8 +104,8 @@ methodmap CDemoRobot < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- Brave Jump");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- Becomes Giant for 8 seconds");
-		StrCat(sInfo, length, "\n- Grenade Launcher with fast firing speed, unlimited ammo and clip size");
+		StrCat(sInfo, length, "\n- Gets an upgraded Grenade Launcher for 8 seconds");
+		StrCat(sInfo, length, "\n- It has faster firing speed, unlimited ammo and clip size");
 		StrCat(sInfo, length, "\n- 200%% Rage: Grenade Launcher faster firing speed is doubled");
 	}
 	
@@ -146,7 +146,7 @@ methodmap CDemoRobot < SaxtonHaleBase
 		}
 	}
 	
-	public void GetAbilitySound(char[] sSound, int length, const char[] sType)
+	public void GetSoundAbility(char[] sSound, int length, const char[] sType)
 	{
 		if (strcmp(sType, "CBraveJump") == 0)
 			strcopy(sSound, length, g_strDemoRobotJump[GetRandomInt(0,sizeof(g_strDemoRobotJump)-1)]);
@@ -156,18 +156,23 @@ methodmap CDemoRobot < SaxtonHaleBase
 	{
 		if (strncmp(sample, "vo/", 3) == 0)
 		{
+			if (StrContains(sample, "vo/mvm/", false) == 0)
+				return Plugin_Continue;
+			
 			char file[PLATFORM_MAX_PATH];
 			strcopy(file, PLATFORM_MAX_PATH, sample);
-			ReplaceString(file, sizeof(file), "vo/", "vo/mvm/norm/", false);
+			ReplaceString(file, sizeof(file), "vo/demoman_", "vo/mvm/norm/demoman_mvm_", false);
 			Format(file, sizeof(file), "sound/%s", file);
 			
 			if (FileExists(file, true))
 			{
-				ReplaceString(sample, sizeof(sample), "vo/", "vo/mvm/norm/", false);
+				ReplaceString(sample, sizeof(sample), "vo/demoman_", "vo/mvm/norm/demoman_mvm_", false);
+				PrecacheSound(sample);
 				return Plugin_Changed;
 			}
 			return Plugin_Handled;
 		}
+		
 		if (StrContains(sample, "player/footsteps/", false) != -1)
 		{
 			EmitSoundToAll(g_strSoundRobotFootsteps[GetRandomInt(0, sizeof(g_strSoundRobotFootsteps)-1)], this.iClient, _, _, _, 0.13, GetRandomInt(95, 100));
@@ -255,6 +260,7 @@ methodmap CDemoRobot < SaxtonHaleBase
 		for (int i = 0; i < sizeof(g_strDemoRobotSpawn); i++) PrecacheSound(g_strDemoRobotSpawn[i]);
 		for (int i = 0; i < sizeof(g_strDemoRobotBackStab); i++) PrecacheSound(g_strDemoRobotBackStab[i]);
 		for (int i = 0; i < sizeof(g_strDemoRobotLastMan); i++) PrecacheSound(g_strDemoRobotLastMan[i]);
+		for (int i = 0; i < sizeof(g_strDemoRobotJump); i++) PrecacheSound(g_strDemoRobotJump[i]);
 		
 		PrecacheSound(DEMO_ROBOT_TURN_INTO_GIANT);
 		PrecacheSound(DEMO_ROBOT_DEATH);

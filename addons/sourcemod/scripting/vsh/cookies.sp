@@ -1,6 +1,6 @@
-static Handle g_hCookiesPreferences;
-static Handle g_hCookiesQueue;
-static Handle g_hCookiesWinstreak;
+static Cookie g_hCookiesPreferences;
+static Cookie g_hCookiesQueue;
+static Cookie g_hCookiesWinstreak;
 
 void Cookies_Init()
 {
@@ -8,9 +8,9 @@ void Cookies_Init()
 	g_ConfigConvar.Create("vsh_cookies_queue", "1", "Should queue use cookies to store? (Disable if you want to store queue somewhere else)", _, true, 0.0, true, 1.0);
 	g_ConfigConvar.Create("vsh_cookies_winstreak", "1", "Should winstreak use cookies to store? (Disable if you want to store winstreak somewhere else)", _, true, 0.0, true, 1.0);
 	
-	g_hCookiesPreferences = RegClientCookie("vsh_preferences", "VSH Player preferences", CookieAccess_Protected);
-	g_hCookiesQueue = RegClientCookie("vsh_queue", "Amount of VSH Queue points player has", CookieAccess_Protected);
-	g_hCookiesWinstreak = RegClientCookie("vsh_winstreak", "Amount of VSH Winstreaks player has", CookieAccess_Protected);
+	g_hCookiesPreferences = new Cookie("vsh_preferences", "VSH Player preferences", CookieAccess_Protected);
+	g_hCookiesQueue = new Cookie("vsh_queue", "Amount of VSH Queue points player has", CookieAccess_Protected);
+	g_hCookiesWinstreak = new Cookie("vsh_winstreak", "Amount of VSH Winstreaks player has", CookieAccess_Protected);
 }
 
 void Cookies_Refresh()
@@ -33,6 +33,7 @@ void Cookies_OnClientJoin(int iClient)
 {
 	if (IsFakeClient(iClient))
 	{
+		//Bots dont use cookies
 		Preferences_SetAll(iClient, 0);
 		Queue_SetPlayerPoints(iClient, 0);
 		Winstreak_SetCurrent(iClient, 0);
@@ -41,25 +42,19 @@ void Cookies_OnClientJoin(int iClient)
 	
 	if (g_ConfigConvar.LookupBool("vsh_cookies_preferences"))
 		Cookies_RefreshPreferences(iClient);
-	else
-		Preferences_SetAll(iClient, -1);
 	
 	if (g_ConfigConvar.LookupBool("vsh_cookies_queue"))
 		Cookies_RefreshQueue(iClient);
-	else
-		Queue_SetPlayerPoints(iClient, -1);
 	
 	if (g_ConfigConvar.LookupBool("vsh_cookies_winstreak"))
 		Cookies_RefreshWinstreak(iClient);
-	else
-		Winstreak_SetCurrent(iClient, -1);
 }
 
 void Cookies_RefreshPreferences(int iClient)
 {
 	int iVal;
 	char sVal[16];
-	GetClientCookie(iClient, g_hCookiesPreferences, sVal, sizeof(sVal));
+	g_hCookiesPreferences.Get(iClient, sVal, sizeof(sVal));
 	
 	if (StringToIntEx(sVal, iVal) > 0)
 		Preferences_SetAll(iClient, iVal);
@@ -71,7 +66,7 @@ void Cookies_RefreshQueue(int iClient)
 {
 	int iVal;
 	char sVal[16];
-	GetClientCookie(iClient, g_hCookiesQueue, sVal, sizeof(sVal));
+	g_hCookiesQueue.Get(iClient, sVal, sizeof(sVal));
 	
 	if (StringToIntEx(sVal, iVal) > 0)
 		Queue_SetPlayerPoints(iClient, iVal);
@@ -83,7 +78,7 @@ void Cookies_RefreshWinstreak(int iClient)
 {
 	int iVal;
 	char sVal[16];
-	GetClientCookie(iClient, g_hCookiesWinstreak, sVal, sizeof(sVal));
+	g_hCookiesWinstreak.Get(iClient, sVal, sizeof(sVal));
 	
 	if (StringToIntEx(sVal, iVal) > 0)
 		Winstreak_SetCurrent(iClient, iVal);
@@ -100,7 +95,7 @@ void Cookies_SavePreferences(int iClient, int iValue)
 	{
 		char sVal[16];
 		IntToString(iValue, sVal, sizeof(sVal));
-		SetClientCookie(iClient, g_hCookiesPreferences, sVal);
+		g_hCookiesPreferences.Set(iClient, sVal);
 	}
 	
 	Forward_UpdatePreferences(iClient, iValue);
@@ -115,7 +110,7 @@ void Cookies_SaveQueue(int iClient, int iValue)
 	{
 		char sVal[16];
 		IntToString(iValue, sVal, sizeof(sVal));
-		SetClientCookie(iClient, g_hCookiesQueue, sVal);
+		g_hCookiesQueue.Set(iClient, sVal);
 	}
 	
 	Forward_UpdateQueue(iClient, iValue);
@@ -130,7 +125,7 @@ void Cookies_SaveWinstreak(int iClient, int iValue)
 	{
 		char sVal[16];
 		IntToString(iValue, sVal, sizeof(sVal));
-		SetClientCookie(iClient, g_hCookiesWinstreak, sVal);
+		g_hCookiesWinstreak.Set(iClient, sVal);
 	}
 	
 	Forward_UpdateWinstreak(iClient, iValue);

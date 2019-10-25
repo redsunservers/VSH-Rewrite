@@ -65,7 +65,7 @@ void Native_AskLoad()
 }
 
 //any SaxtonHaleBase.CallFunction(const char[] sName, any...);
-public int Native_CallFunction(Handle hPlugin, int iNumParams)
+public any Native_CallFunction(Handle hPlugin, int iNumParams)
 {
 	SaxtonHaleBase boss = view_as<SaxtonHaleBase>(GetNativeCell(1));
 	
@@ -144,7 +144,7 @@ public int Native_CallFunction(Handle hPlugin, int iNumParams)
 }
 
 //void SaxtonHale_InitFunction(const char[] sName, ExecType type, ParamType ...);
-public int Native_InitFunction(Handle hPlugin, int iNumParams)
+public any Native_InitFunction(Handle hPlugin, int iNumParams)
 {
 	iNumParams -= 2;
 	
@@ -184,7 +184,7 @@ public int Native_InitFunction(Handle hPlugin, int iNumParams)
 }
 
 //void SaxtonHale_HookFunction(const char[] sName, SaxtonHaleHookCallback callback, SaxtonHaleHookType = VSHHookType_Post);
-public int Native_HookFunction(Handle hPlugin, int iNumParams)
+public any Native_HookFunction(Handle hPlugin, int iNumParams)
 {
 	char sName[FUNCTION_ARRAY_MAX];
 	GetNativeString(1, sName, sizeof(sName));
@@ -195,7 +195,7 @@ public int Native_HookFunction(Handle hPlugin, int iNumParams)
 }
 
 //void SaxtonHale_UnhookFunction(const char[] sName, SaxtonHaleHookCallback callback, SaxtonHaleHookType = VSHHookType_Post);
-public int Native_UnhookFunction(Handle hPlugin, int iNumParams)
+public any Native_UnhookFunction(Handle hPlugin, int iNumParams)
 {
 	char sName[FUNCTION_ARRAY_MAX];
 	GetNativeString(1, sName, sizeof(sName));
@@ -226,7 +226,7 @@ int Native_GetParamEx(char[] sName, int iLength, ParamType &buffer)
 }
 
 //any SaxtonHale_GetParam(int iParam);
-public int Native_GetParam(Handle hPlugin, int iNumParams)
+public any Native_GetParam(Handle hPlugin, int iNumParams)
 {
 	//Get param + checks
 	char sName[FUNCTION_ARRAY_MAX];
@@ -251,7 +251,7 @@ public int Native_GetParam(Handle hPlugin, int iNumParams)
 }
 
 //void SaxtonHale_SetParam(int iParam, any value);
-public int Native_SetParam(Handle hPlugin, int iNumParams)
+public any Native_SetParam(Handle hPlugin, int iNumParams)
 {
 	//Get param + checks
 	char sName[FUNCTION_ARRAY_MAX];
@@ -273,7 +273,7 @@ public int Native_SetParam(Handle hPlugin, int iNumParams)
 }
 
 //void SaxtonHale_GetParamArray(int iParam, any[] value);
-public int Native_GetParamArray(Handle hPlugin, int iNumParams)
+public any Native_GetParamArray(Handle hPlugin, int iNumParams)
 {
 	//Get param + checks
 	char sName[FUNCTION_ARRAY_MAX];
@@ -295,7 +295,7 @@ public int Native_GetParamArray(Handle hPlugin, int iNumParams)
 }
 
 //void SaxtonHale_SetParamArray(int iParam, any[] value);
-public int Native_SetParamArray(Handle hPlugin, int iNumParams)
+public any Native_SetParamArray(Handle hPlugin, int iNumParams)
 {
 	//Get param + checks
 	char sName[FUNCTION_ARRAY_MAX];
@@ -317,7 +317,7 @@ public int Native_SetParamArray(Handle hPlugin, int iNumParams)
 }
 
 //void SaxtonHale_GetParamString(int iParam, char[] value);
-public int Native_GetParamString(Handle hPlugin, int iNumParams)
+public any Native_GetParamString(Handle hPlugin, int iNumParams)
 {
 	//Get param + checks
 	char sName[FUNCTION_ARRAY_MAX];
@@ -340,7 +340,7 @@ public int Native_GetParamString(Handle hPlugin, int iNumParams)
 }
 
 //void SaxtonHale_SetParamString(int iParam, char[] value);
-public int Native_SetParamString(Handle hPlugin, int iNumParams)
+public any Native_SetParamString(Handle hPlugin, int iNumParams)
 {
 	//Get param + checks
 	char sName[FUNCTION_ARRAY_MAX];
@@ -362,7 +362,7 @@ public int Native_SetParamString(Handle hPlugin, int iNumParams)
 }
 
 //void SaxtonHale_RegisterBoss(const char[] ...);
-public int Native_RegisterBoss(Handle hPlugin, int iNumParams)
+public any Native_RegisterBoss(Handle hPlugin, int iNumParams)
 {
 	if (iNumParams == 0)
 		ThrowNativeError(SP_ERROR_NATIVE, "No params passed");
@@ -396,7 +396,7 @@ public int Native_RegisterBoss(Handle hPlugin, int iNumParams)
 }
 
 //void SaxtonHale_UnregisterBoss(const char[] sBossType);
-public int Native_UnregisterBoss(Handle hPlugin, int iNumParams)
+public any Native_UnregisterBoss(Handle hPlugin, int iNumParams)
 {
 	char sBossType[MAX_TYPE_CHAR];
 	GetNativeString(1, sBossType, sizeof(sBossType));
@@ -435,7 +435,7 @@ public int Native_UnregisterBoss(Handle hPlugin, int iNumParams)
 }
 
 //void SaxtonHale_RegisterModifiers(const char[] sModifiersType);
-public int Native_RegisterModifiers(Handle hPlugin, int iNumParams)
+public any Native_RegisterModifiers(Handle hPlugin, int iNumParams)
 {
 	char sModifiersType[MAX_TYPE_CHAR];
 	GetNativeString(1, sModifiersType, sizeof(sModifiersType));
@@ -448,7 +448,7 @@ public int Native_RegisterModifiers(Handle hPlugin, int iNumParams)
 }
 
 //void SaxtonHale_UnregisterModifiers(const char[] sModifiersType);
-public int Native_UnregisterModifiers(Handle hPlugin, int iNumParams)
+public any Native_UnregisterModifiers(Handle hPlugin, int iNumParams)
 {
 	char sModifiersType[MAX_TYPE_CHAR];
 	GetNativeString(1, sModifiersType, sizeof(sModifiersType));
@@ -464,7 +464,7 @@ public int Native_UnregisterModifiers(Handle hPlugin, int iNumParams)
 }
 
 //void SaxtonHale_RegisterAbility(const char[] sAbilityType);
-public int Native_RegisterAbility(Handle hPlugin, int iNumParams)
+public any Native_RegisterAbility(Handle hPlugin, int iNumParams)
 {
 	char sAbilityType[MAX_TYPE_CHAR];
 	GetNativeString(1, sAbilityType, sizeof(sAbilityType));
@@ -474,7 +474,7 @@ public int Native_RegisterAbility(Handle hPlugin, int iNumParams)
 }
 
 //void SaxtonHale_UnregisterAbility(const char[] sAbilityType);
-public int Native_UnregisterAbility(Handle hPlugin, int iNumParams)
+public any Native_UnregisterAbility(Handle hPlugin, int iNumParams)
 {
 	char sAbilityType[MAX_TYPE_CHAR];
 	GetNativeString(1, sAbilityType, sizeof(sAbilityType));
@@ -483,19 +483,19 @@ public int Native_UnregisterAbility(Handle hPlugin, int iNumParams)
 }
 
 //TFTeam SaxtonHale_GetBossTeam();
-public int Native_GetBossTeam(Handle hPlugin, int iNumParams)
+public any Native_GetBossTeam(Handle hPlugin, int iNumParams)
 {
 	return BOSS_TEAM;
 }
 
 //TFTeam SaxtonHale_GetAttackTeam();
-public int Native_GetAttackTeam(Handle hPlugin, int iNumParams)
+public any Native_GetAttackTeam(Handle hPlugin, int iNumParams)
 {
 	return ATTACK_TEAM;
 }
 
 //TFClassType SaxtonHale_GetMainClass(int iClient);
-public int Native_GetMainClass(Handle hPlugin, int iNumParams)
+public any Native_GetMainClass(Handle hPlugin, int iNumParams)
 {
 	int iClient = GetNativeCell(1);
 	if (iClient <= 0 || iClient > MaxClients)
@@ -503,11 +503,11 @@ public int Native_GetMainClass(Handle hPlugin, int iNumParams)
 	if (!IsClientInGame(iClient))
 		ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not in game", iClient);
 	
-	return view_as<int>(ClassLimit_GetMainClass(iClient));
+	return ClassLimit_GetMainClass(iClient);
 }
 
 //int SaxtonHale_GetDamage(int iClient);
-public int Native_GetDamage(Handle hPlugin, int iNumParams)
+public any Native_GetDamage(Handle hPlugin, int iNumParams)
 {
 	int iClient = GetNativeCell(1);
 	if (iClient <= 0 || iClient > MaxClients)
@@ -519,7 +519,7 @@ public int Native_GetDamage(Handle hPlugin, int iNumParams)
 }
 
 //int SaxtonHale_GetAssistDamage(int iClient);
-public int Native_GetAssistDamage(Handle hPlugin, int iNumParams)
+public any Native_GetAssistDamage(Handle hPlugin, int iNumParams)
 {
 	int iClient = GetNativeCell(1);
 	if (iClient <= 0 || iClient > MaxClients)
@@ -531,7 +531,7 @@ public int Native_GetAssistDamage(Handle hPlugin, int iNumParams)
 }
 
 //bool SaxtonHale_ForceSpecialRound(int iClient=0, TFClassType nClass=TFClass_Unknown);
-public int Native_ForceSpecialRound(Handle hPlugin, int iNumParams)
+public any Native_ForceSpecialRound(Handle hPlugin, int iNumParams)
 {
 	int iClient = GetNativeCell(1);
 	TFClassType nClass = GetNativeCell(2);
@@ -554,63 +554,63 @@ public int Native_ForceSpecialRound(Handle hPlugin, int iNumParams)
 }
 
 //void SaxtonHale_SetPreferences(int iClient, int iPreferences);
-public int Native_SetPreferences(Handle hPlugin, int iNumParams)
+public any Native_SetPreferences(Handle hPlugin, int iNumParams)
 {
 	int iClient = GetNativeCell(1);
 	int iPreferences = GetNativeCell(2);
 	
 	if (iClient <= 0 || iClient > MaxClients)
 		ThrowNativeError(SP_ERROR_NATIVE, "Client index %d is invalid", iClient);
-	if (!IsClientInGame(iClient))
-		ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not in game", iClient);
+	if (!IsClientConnected(iClient))
+		ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not connected", iClient);
 
 	Preferences_SetAll(iClient, iPreferences);
 }
 
 //SaxtonHale_SetQueue(int iClient, int iQueue);
-public int Native_SetQueue(Handle hPlugin, int iNumParams)
+public any Native_SetQueue(Handle hPlugin, int iNumParams)
 {
 	int iClient = GetNativeCell(1);
 	int iQueue = GetNativeCell(2);
 	
 	if (iClient <= 0 || iClient > MaxClients)
 		ThrowNativeError(SP_ERROR_NATIVE, "Client index %d is invalid", iClient);
-	if (!IsClientInGame(iClient))
-		ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not in game", iClient);
+	if (!IsClientConnected(iClient))
+		ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not connected", iClient);
 
 	Queue_SetPlayerPoints(iClient, iQueue);
 }
 
 //SaxtonHale_SetWinstreak(int iClient, int iWinstreak);
-public int Native_SetWinstreak(Handle hPlugin, int iNumParams)
+public any Native_SetWinstreak(Handle hPlugin, int iNumParams)
 {
 	int iClient = GetNativeCell(1);
 	int iWinstreak = GetNativeCell(2);
 	
 	if (iClient <= 0 || iClient > MaxClients)
 		ThrowNativeError(SP_ERROR_NATIVE, "Client index %d is invalid", iClient);
-	if (!IsClientInGame(iClient))
-		ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not in game", iClient);
+	if (!IsClientConnected(iClient))
+		ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not connected", iClient);
 
 	Winstreak_SetCurrent(iClient, iWinstreak);
 }
 
 //bool SaxtonHale_IsWinstreakEnable();
-public int Native_IsWinstreakEnable(Handle hPlugin, int iNumParams)
+public any Native_IsWinstreakEnable(Handle hPlugin, int iNumParams)
 {
 	return Winstreak_IsEnabled();
 }
 
 //SaxtonHale_SetAdmin(int iClient, bool bEnable);
-public int Native_SetAdmin(Handle hPlugin, int iNumParams)
+public any Native_SetAdmin(Handle hPlugin, int iNumParams)
 {
 	int iClient = GetNativeCell(1);
 	bool bEnable = GetNativeCell(2);
 	
 	if (iClient <= 0 || iClient > MaxClients)
 		ThrowNativeError(SP_ERROR_NATIVE, "Client index %d is invalid", iClient);
-	if (!IsClientInGame(iClient))
-		ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not in game", iClient);
+	if (!IsClientConnected(iClient))
+		ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not connected", iClient);
 
 	if (bEnable)
 		Client_AddFlag(iClient, haleClientFlags_Admin);
@@ -619,15 +619,15 @@ public int Native_SetAdmin(Handle hPlugin, int iNumParams)
 }
 
 //SaxtonHale_SetPunishment(int iClient, bool bEnable);
-public int Native_SetPunishment(Handle hPlugin, int iNumParams)
+public any Native_SetPunishment(Handle hPlugin, int iNumParams)
 {
 	int iClient = GetNativeCell(1);
 	bool bEnable = GetNativeCell(2);
 	
 	if (iClient <= 0 || iClient > MaxClients)
 		ThrowNativeError(SP_ERROR_NATIVE, "Client index %d is invalid", iClient);
-	if (!IsClientInGame(iClient))
-		ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not in game", iClient);
+	if (!IsClientConnected(iClient))
+		ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not connected", iClient);
 
 	if (bEnable)
 		Client_AddFlag(iClient, haleClientFlags_Punishment);
@@ -638,13 +638,13 @@ public int Native_SetPunishment(Handle hPlugin, int iNumParams)
 //Macro to setup natives for every properties
 #define NATIVE_PROPERTY(%1,%2) \
 static %2 g_clientBoss%1[TF_MAXPLAYERS+1]; \
-public int Native_Property_%1_Set(Handle hPlugin, int iNumParams) \
+public any Native_Property_%1_Set(Handle hPlugin, int iNumParams) \
 { \
 	g_clientBoss%1[GetNativeCell(1)] = GetNativeCell(2); \
 } \
-public int Native_Property_%1_Get(Handle hPlugin, int iNumParams) \
+public any Native_Property_%1_Get(Handle hPlugin, int iNumParams) \
 { \
-	return view_as<int>(g_clientBoss%1[GetNativeCell(1)]); \
+	return g_clientBoss%1[GetNativeCell(1)]; \
 }
 
 NATIVE_PROPERTY(bValid, bool)

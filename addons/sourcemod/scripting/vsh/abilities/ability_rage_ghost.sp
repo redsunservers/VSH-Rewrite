@@ -1,12 +1,23 @@
 #define GHOST_MODEL	"models/props_halloween/ghost.mdl"
-#define GHOST_BEAM_BLU	"medicgun_beam_blue_muzzle"
-#define GHOST_BEAM_RED	"medicgun_beam_red_muzzle"
+
+#define PARTICLE_BEAM_BLU	"medicgun_beam_blue"
+#define PARTICLE_BEAM_RED	"medicgun_beam_red"
 
 static float g_flGhostRadius[TF_MAXPLAYERS+1];
 static float g_flGhostDuration[TF_MAXPLAYERS+1];
+static float g_flGhostHealSteal[TF_MAXPLAYERS+1];
+static float g_flGhostHealGain[TF_MAXPLAYERS+1];
+
+static float g_flGhostHealStartTime[TF_MAXPLAYERS+1][TF_MAXPLAYERS+1];
+static int g_iGhostHealStealCount[TF_MAXPLAYERS+1][TF_MAXPLAYERS+1];
+static int g_iGhostHealGainCount[TF_MAXPLAYERS+1][TF_MAXPLAYERS+1];
+
 static float g_flGhostLastSpookTime[TF_MAXPLAYERS+1];
+
 static bool g_bGhostEnable[TF_MAXPLAYERS+1];
-static int g_iGhostBeamEffect[TF_MAXPLAYERS+1][TF_MAXPLAYERS+1];
+
+static int g_iGhostParticleBeam[TF_MAXPLAYERS+1][TF_MAXPLAYERS+1];
+static int g_iGhostParticleCentre[TF_MAXPLAYERS+1];
 
 methodmap CRageGhost < SaxtonHaleBase
 {
@@ -34,6 +45,30 @@ methodmap CRageGhost < SaxtonHaleBase
 		}
 	}
 	
+	property float flHealSteal
+	{
+		public get()
+		{
+			return g_flGhostHealSteal[this.iClient];
+		}
+		public set(float val)
+		{
+			g_flGhostHealSteal[this.iClient] = val;
+		}
+	}
+	
+	property float flHealGain
+	{
+		public get()
+		{
+			return g_flGhostHealGain[this.iClient];
+		}
+		public set(float val)
+		{
+			g_flGhostHealGain[this.iClient] = val;
+		}
+	}
+	
 	public void GetModel(char[] sModel, int iLength)
 	{
 		//Override boss's model during GetModel function
@@ -45,18 +80,20 @@ methodmap CRageGhost < SaxtonHaleBase
 	{
 		//Default values, these can be changed if needed
 		ability.flRadius = 400.0;
-		ability.flDuration = 5.0;
+		ability.flDuration = 8.0;
+		ability.flHealSteal = 20.0;	//Steals hp per second
+		ability.flHealGain = 40.0;	//Gains hp per second
 		
 		g_bGhostEnable[ability.iClient] = false;
 		g_flGhostLastSpookTime[ability.iClient] = 0.0;
 		
 		for (int iVictim = 1; iVictim <= TF_MAXPLAYERS; iVictim++)
-			g_iGhostBeamEffect[ability.iClient][iVictim] = 0;
+			g_iGhostParticleBeam[ability.iClient][iVictim] = 0;
 		
 		//TODO precache on map start instead of when boss spawns
 		PrecacheModel(GHOST_MODEL);
-		PrecacheParticleSystem(GHOST_BEAM_BLU);
-		PrecacheParticleSystem(GHOST_BEAM_RED);
+		PrecacheParticleSystem(PARTICLE_BEAM_RED);
+		PrecacheParticleSystem(PARTICLE_BEAM_BLU);
 	}
 	
 	public void OnRage()
@@ -67,22 +104,37 @@ methodmap CRageGhost < SaxtonHaleBase
 		SetEntProp(iClient, Prop_Data, "m_takedamage", DAMAGE_NO);
 		
 		//Update model
-		ApplyBossModel(this.iClient);
+		ApplyBossModel(iClient);
 		
-		//Create particle
-		int iParticle = TF2_SpawnParticle(iClient, PARTICLE_GHOST);
-		CreateTimer(3.0, Timer_EntityCleanup, EntIndexToEntRef(iParticle));
+		float vecOrigin[3], vecAngles[3];
+		GetClientAbsOrigin(iClient, vecOrigin);
+		GetClientEyeAngles(iClient, vecAngles);
 		
-		//Stun
+		//Create poof particle
+		CreateTimer(3.0, Timer_EntityCleanup, TF2_SpawnParticle(PARTICLE_GHOST, vecOrigin, vecAngles));
+		
+		//Create "centre" particle dummy for beams to connect it
+		vecOrigin[2] += 42.0;
+		g_iGhostParticleCentre[iClient] = TF2_SpawnParticle("", vecOrigin, vecAngles, false, iClient);
+		
+		//Stun and Fly
 		float flDuration = this.flDuration * (this.bSuperRage ? 2 : 1);
-		TF2_StunPlayer(iClient, flDuration, 0.0, TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT, 0);
-		/*
+		TF2_StunPlayer(iClient, flDuration, 0.0, TF_STUNFLAG_GHOSTEFFECT|TF_STUNFLAG_NOSOUNDOREFFECT, 0);
+		TF2_AddCondition(iClient, TFCond_SwimmingNoEffects, flDuration);
+		
+		//Get active weapon and dont render
+		int iWeapon = GetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon");
+		if (IsValidEdict(iWeapon))
+		{
+			SetEntityRenderMode(iWeapon, RENDER_TRANSCOLOR);
+			SetEntityRenderColor(iWeapon, _, _, _, 0);
+		}
+		
 		//Thirdperson
 		int iFlags = GetCommandFlags("thirdperson");
 		SetCommandFlags("thirdperson", iFlags & (~FCVAR_CHEAT));
 		ClientCommand(this.iClient, "thirdperson");
 		SetCommandFlags("thirdperson", iFlags);
-		*/
 	}
 	
 	public void OnThink()
@@ -93,26 +145,74 @@ methodmap CRageGhost < SaxtonHaleBase
 		float flDuration = this.flDuration * (this.bSuperRage ? 2 : 1);
 		if (flDuration > GetGameTime() - this.flRageLastTime)
 		{
-			float vecPos[3], vecTargetPos[3];
-			GetClientAbsOrigin(iClient, vecPos);
+			float vecOrigin[3];
+			GetClientAbsOrigin(iClient, vecOrigin);
+			
 			int iTeam = GetClientTeam(iClient);
+			static char sParticle[][] = {
+				"",
+				"",
+				PARTICLE_BEAM_RED,
+				PARTICLE_BEAM_BLU,
+			};
+			
+			//Arrays of spooked clients
+			int[] iSpooked = new int[MaxClients];
+			int iLength = 0;
 			
 			for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
 			{
+				bool bSpook = false;
+				
 				if (SaxtonHale_IsValidAttack(iVictim) && IsPlayerAlive(iVictim))
 				{
-					GetClientAbsOrigin(iVictim, vecTargetPos);
-					if (GetVectorDistance(vecPos, vecTargetPos) <= this.flRadius)
+					float vecTargetOrigin[3];
+					GetClientAbsOrigin(iVictim, vecTargetOrigin);
+					if (GetVectorDistance(vecOrigin, vecTargetOrigin) <= this.flRadius)
 					{
-						int iParticle = EntRefToEntIndex(g_iGhostBeamEffect[iClient][iVictim]);
+						//Victim got spooked
+						bSpook = true;
+						iSpooked[iLength] = iVictim;
+						iLength++;
 						
-						if (!IsValidEdict(iParticle))
+						//Set time when victim entered
+						if (g_flGhostHealStartTime[iClient][iVictim] == 0.0)
 						{
-							//Victim just got spooked
-							iParticle = TF2_SpawnParticle(iVictim, (iTeam == TFTeam_Blue) ? GHOST_BEAM_BLU : GHOST_BEAM_RED);
-							g_iGhostBeamEffect[iClient][iVictim] = EntIndexToEntRef(iParticle);
+							g_flGhostHealStartTime[iClient][iVictim] = GetGameTime();
+							
+							vecTargetOrigin[2] += 42.0;
+							float vecTargetAngles[3];
+							GetClientAbsAngles(iClient, vecTargetAngles);
+							g_iGhostParticleBeam[iClient][iVictim] = TF2_SpawnParticle(sParticle[iTeam], vecTargetOrigin, vecTargetAngles, true, iVictim, EntRefToEntIndex(g_iGhostParticleCentre[iClient]));
+						}
+						
+						//Calculate on heal steal
+						float flTimeGap = GetGameTime() - g_flGhostHealStartTime[iClient][iVictim];
+						
+						int iExpectedSteal = RoundToCeil(flTimeGap * this.flHealSteal);
+						if (iExpectedSteal > g_iGhostHealStealCount[iClient][iVictim])
+						{
+							float flDamage = float(iExpectedSteal - g_iGhostHealStealCount[iClient][iVictim]);
+							SDKHooks_TakeDamage(iVictim, iClient, iClient, flDamage, DMG_PREVENT_PHYSICS_FORCE);
+							g_iGhostHealStealCount[iClient][iVictim] = iExpectedSteal;
+						}
+						
+						int iExpectedGain = RoundToCeil(flTimeGap * this.flHealGain);
+						if (iExpectedGain > g_iGhostHealGainCount[iClient][iVictim])
+						{
+							Client_AddHealth(iClient, iExpectedGain - g_iGhostHealGainCount[iClient][iVictim]);
+							g_iGhostHealGainCount[iClient][iVictim] = iExpectedGain;
 						}
 					}
+				}
+				
+				//Check if beam ent need to be killed, from out of range or client death/disconnect
+				if (!bSpook && g_flGhostHealStartTime[iClient][iVictim] != 0.0)
+				{
+					g_flGhostHealStartTime[iClient][iVictim] = 0.0;
+					g_iGhostHealStealCount[iClient][iVictim] = 0;
+					g_iGhostHealGainCount[iClient][iVictim] = 0;
+					Timer_EntityCleanup(null, g_iGhostParticleBeam[iClient][iVictim]);
 				}
 			}
 			
@@ -121,72 +221,47 @@ methodmap CRageGhost < SaxtonHaleBase
 			{
 				g_flGhostLastSpookTime[iClient] = GetGameTime();
 				
-				ArrayList aVictims = new ArrayList();
-				
-				for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
-				{
-					if (SaxtonHale_IsValidAttack(iVictim) && IsPlayerAlive(iVictim))
-					{
-						GetClientAbsOrigin(iVictim, vecTargetPos);
-						if (GetVectorDistance(vecPos, vecTargetPos) <= this.flRadius)
-							aVictims.Push(iVictim);
-					}
-				}
-				
-				if (aVictims.Length == 0)
-				{
-					delete aVictims;
+				if (iLength == 0)
 					return;
-				}
 				
-				SortADTArray(aVictims, Sort_Random, Sort_Integer);
+				SortIntegers(iSpooked, iLength, Sort_Random);
 				
 				//Visual/Sound effects
-				for (int i = 0; i < aVictims.Length; i++)
+				for (int i = 0; i < iLength; i++)
 				{
-					Handle hFade = StartMessageOne("Fade", aVictims.Get(i));
-					BfWriteShort(hFade, 2000);	//Fade duration
-					BfWriteShort(hFade, 0);
-					BfWriteShort(hFade, 0x0001);
-					BfWriteByte(hFade, 255);	//Red
-					BfWriteByte(hFade, 0);		//Green
-					BfWriteByte(hFade, 255);	//Blue
-					BfWriteByte(hFade, 160);	//Alpha
-					EndMessage();
+					CreateFade(iSpooked[i], 1000, 160, 56, 204, 160);
 					
 					char sSound[PLATFORM_MAX_PATH];
-					this.CallFunction("GetSoundAbility", "CRageGhost", sSound, sizeof(sSound));
+					this.CallFunction("GetSoundAbility", sSound, sizeof(sSound), "CRageGhost");
 					if (!StrEmpty(sSound))
-						EmitSoundToClient(iClient, sSound, _, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
+						EmitSoundToClient(iSpooked[i], sSound);
 				}
 				
 				//Random teleports
-				if (aVictims.Length >= 2 && !GetRandomInt(0, 2))
+				if (iLength >= 2 && !GetRandomInt(0, 2))
 				{
 					int iTeleport[2];
-					iTeleport[0] = aVictims.Get(0);
-					iTeleport[1] = aVictims.Get(1);
+					iTeleport[0] = iSpooked[iLength-2];
+					iTeleport[1] = iSpooked[iLength-1];
 					TF2_TeleportSwap(iTeleport);
-					aVictims.Erase(1);
-					aVictims.Erase(0);
+					iLength -= 2;
 				}
 				
 				//Other random effects
-				for (int i = 0; i < aVictims.Length; i++)
+				for (int i = 0; i < iLength; i++)
 				{
-					int iVictim = aVictims.Get(i);
 					bool bEffectDone = false;
 					
 					//Attempt use random slot
 					if (GetRandomInt(0, 1))
 					{
 						ArrayList aWeapons = new ArrayList();
-						int iActiveWepon = GetEntPropEnt(iVictim, Prop_Send, "m_hActiveWeapon");
+						int iActiveWepon = GetEntPropEnt(iSpooked[i], Prop_Send, "m_hActiveWeapon");
 						
 						//We don't want to count PDA2 due to invis watch
 						for (int iSlot = 0; iSlot <= WeaponSlot_PDADisguise; iSlot++)
 						{
-							int iWeapon = GetPlayerWeaponSlot(iVictim, iSlot);
+							int iWeapon = GetPlayerWeaponSlot(iSpooked[i], iSlot);
 							if (IsValidEdict(iWeapon) && iWeapon != iActiveWepon)
 								aWeapons.Push(iWeapon);
 						}
@@ -194,10 +269,10 @@ methodmap CRageGhost < SaxtonHaleBase
 						if (aWeapons.Length > 0)
 						{
 							//Get random weapon/slot to change
-							SortADTArray(aWeapons, Sort_Random, Sort_Integer);
+							aWeapons.Sort(Sort_Random, Sort_Integer);
 							char sClassname[256];
 							GetEntityClassname(aWeapons.Get(0), sClassname, sizeof(sClassname));
-							FakeClientCommand(iVictim, "use %s", sClassname);
+							FakeClientCommand(iSpooked[i], "use %s", sClassname);
 							bEffectDone = true;
 						}
 						
@@ -211,11 +286,9 @@ methodmap CRageGhost < SaxtonHaleBase
 						vecAngles[0] = GetRandomFloat(-90.0, 90.0);
 						vecAngles[1] = GetRandomFloat(0.0, 360.0);
 						
-						TeleportEntity(iVictim, NULL_VECTOR, vecAngles, NULL_VECTOR);
+						TeleportEntity(iSpooked[i], NULL_VECTOR, vecAngles, NULL_VECTOR);
 					}
 				}
-				
-				delete aVictims;
 			}
 		}
 		else
@@ -224,29 +297,44 @@ methodmap CRageGhost < SaxtonHaleBase
 			g_bGhostEnable[iClient] = false;
 			SetEntProp(iClient, Prop_Data, "m_takedamage", DAMAGE_YES);
 			
+			Timer_EntityCleanup(null, g_iGhostParticleCentre[iClient]);
 			for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
 			{
-				int iParticle = EntRefToEntIndex(g_iGhostBeamEffect[iClient][iVictim]);
-				if (IsValidEdict(iParticle))
-					CreateTimer(0.0, Timer_EntityCleanup, g_iGhostBeamEffect[iClient][iVictim]);
-				
-				g_iGhostBeamEffect[iClient][iVictim] = 0;
+				g_flGhostHealStartTime[iClient][iVictim] = 0.0;
+				g_iGhostHealStealCount[iClient][iVictim] = 0;
+				g_iGhostHealGainCount[iClient][iVictim] = 0;
+				Timer_EntityCleanup(null, g_iGhostParticleBeam[iClient][iVictim]);
 			}
 			
 			//Update model
 			ApplyBossModel(this.iClient);
 			
-			//Create particle
-			int iParticle = TF2_SpawnParticle(iClient, PARTICLE_GHOST);
-			CreateTimer(3.0, Timer_EntityCleanup, EntIndexToEntRef(iParticle));
-			/*
+			//Create poof particle
+			float vecOrigin[3];
+			GetClientAbsOrigin(iClient, vecOrigin);
+			CreateTimer(3.0, Timer_EntityCleanup, TF2_SpawnParticle(PARTICLE_GHOST, vecOrigin));
+			
+			//Get active weapon and make it visible again
+			int iWeapon = GetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon");
+			if (IsValidEdict(iWeapon))
+			{
+				SetEntityRenderMode(iWeapon, RENDER_NORMAL);
+				SetEntityRenderColor(iWeapon, _, _, _, 255);
+			}
+			
 			//Firstperson
 			int iFlags = GetCommandFlags("firstperson");
 			SetCommandFlags("firstperson", iFlags & (~FCVAR_CHEAT));
 			ClientCommand(iClient, "firstperson");
 			SetCommandFlags("firstperson", iFlags);
-			*/
 		}
+	}
+	
+	public void OnButton(int &buttons)
+	{
+		//Don't allow him to attack during rage
+		if (g_bGhostEnable[this.iClient] && buttons & IN_ATTACK)
+			buttons &= ~IN_ATTACK;
 	}
 	
 	public void Destroy()

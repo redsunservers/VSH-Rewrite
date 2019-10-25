@@ -19,7 +19,7 @@ int Queue_GetPlayerFromRank(int iRank)
 		return 0;
 	
 	aQueue.Resize(iLength);
-	SortADTArray(aQueue, Sort_Descending, Sort_Integer);
+	aQueue.Sort(Sort_Descending, Sort_Integer);
 	int iClient = aQueue.Get(iRank-1, 1);
 	delete aQueue;
 	

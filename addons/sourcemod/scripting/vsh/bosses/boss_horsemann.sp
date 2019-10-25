@@ -53,38 +53,51 @@ static char g_strHorsemannBackStabbed[][] = {
 	"vo/halloween_boss/knight_pain03.mp3",
 };
 
+static char g_strHorsemannTeleport[][] = {
+	"vo/halloween_boss/knight_alert.mp3",
+};
+
+static char g_strHorsemannVoice[][] = {
+	"vo/halloween_boss/knight_alert01.mp3",
+	"vo/halloween_boss/knight_alert02.mp3",
+	"vo/halloween_boss/knight_attack02.mp3",
+};
+
+static char g_strHorsemannFootsteps[][] = {
+	"player/footsteps/giant2.wav",
+};
+
 methodmap CHorsemann < SaxtonHaleBase
 {
 	public CHorsemann(CHorsemann boss)
 	{
 		boss.CallFunction("CreateAbility", "CWallClimb");
 		boss.CallFunction("CreateAbility", "CTeleportSwap");
-		CScareRage scareAbility = boss.CallFunction("CreateAbility", "CScareRage");
-		scareAbility.flRadius = 800.0;
-		//boss.CallFunction("CreateAbility", "CRageGhost");
+		boss.CallFunction("CreateAbility", "CRageGhost");
 		
-		boss.iBaseHealth = 800;
-		boss.iHealthPerPlayer = 800;
+		boss.iBaseHealth = 700;
+		boss.iHealthPerPlayer = 650;
 		boss.nClass = TFClass_DemoMan;
-		boss.iMaxRageDamage = 2500;
+		boss.iMaxRageDamage = 3000;
 	}
 	
 	public void GetBossName(char[] sName, int length)
 	{
-		strcopy(sName, length, "Horseless Headless Horsemann Jr");
+		strcopy(sName, length, "Horseless Headless Horsemann Jr.");
 	}
 	
 	public void GetBossInfo(char[] sInfo, int length)
 	{
-		StrCat(sInfo, length, "\nHealth: Medium");
+		StrCat(sInfo, length, "\nHealth: Low");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nAbilities");
 		StrCat(sInfo, length, "\n- Wall Climb");
 		StrCat(sInfo, length, "\n- Teleport Swap");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- Scares players at medium range for 5 seconds");
-		StrCat(sInfo, length, "\n- 200%% Rage: Larger range and extends duration to 7.5 seconds");
+		StrCat(sInfo, length, "\n- Becomes ghost to fly, immune to damage, and unable to attack for 8 seconds");
+		StrCat(sInfo, length, "\n- Steals health from nearby players with random spooky effects");
+		StrCat(sInfo, length, "\n- 200%% Rage: Extends duration to 16 seconds");
 	}
 	
 	public void OnSpawn()
@@ -92,8 +105,12 @@ methodmap CHorsemann < SaxtonHaleBase
 		char attribs[128];
 		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65 ; 264 ; 0.73 ; 551 ; 1");
 		int iWeapon = this.CallFunction("CreateWeapon", 266, "tf_weapon_sword", 100, TFQual_Unusual, attribs);
+
 		if (iWeapon > MaxClients)
+		{
 			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
+			SetEntPropFloat(iWeapon, Prop_Send, "m_flModelScale", 0.0); //The boss model already has a Headtaker, so it doesn't need the original one. There's like no other way that doesn't also disable the viewmodel
+		}
 		/*
 		Horseless Headless Horsemann's Headtaker attributes:
 		
@@ -124,10 +141,13 @@ methodmap CHorsemann < SaxtonHaleBase
 		}
 	}
 	
-	public void GetAbilitySound(char[] sSound, int length, const char[] sType)
+	public void GetSoundAbility(char[] sSound, int length, const char[] sType)
 	{
 		if (strcmp(sType, "CRageGhost") == 0)
 			strcopy(sSound, length, g_strHorsemannGhost[GetRandomInt(0,sizeof(g_strHorsemannGhost)-1)]);
+			
+		if (strcmp(sType, "CTeleportSwap") == 0)
+			strcopy(sSound, length, g_strHorsemannTeleport[GetRandomInt(0,sizeof(g_strHorsemannTeleport)-1)]);
 	}
 	
 	public void GetSoundKill(char[] sSound, int length, TFClassType nClass)
@@ -137,8 +157,21 @@ methodmap CHorsemann < SaxtonHaleBase
 	
 	public Action OnSoundPlayed(int clients[MAXPLAYERS], int &numClients, char sample[PLATFORM_MAX_PATH], int &channel, float &volume, int &level, int &pitch, int &flags, char soundEntry[PLATFORM_MAX_PATH], int &seed)
 	{
-		if (strncmp(sample, "vo/", 3) == 0)//possibly look replacing into one of HHH sound?
+		if (strncmp(sample, "vo/", 3) == 0)
+		{
+			if (StrContains(sample, "vo/halloween_boss/", false) == 0)
+				return Plugin_Continue;
+			
+			Format(sample, sizeof(sample), g_strHorsemannVoice[GetRandomInt(0, sizeof(g_strHorsemannVoice) - 1)]);
+			return Plugin_Changed;
+		}
+			
+		if (StrContains(sample, "player/footsteps/", false) == 0)
+		{
+			EmitSoundToAll(g_strHorsemannFootsteps[GetRandomInt(0, sizeof(g_strHorsemannFootsteps) - 1)], this.iClient, _, _, _, 0.4, GetRandomInt(90, 100));
 			return Plugin_Handled;
+		}
+		
 		return Plugin_Continue;
 	}
 	
@@ -161,6 +194,9 @@ methodmap CHorsemann < SaxtonHaleBase
 		for (int i = 0; i < sizeof(g_strHorsemannKill); i++) PrecacheSound(g_strHorsemannKill[i]);
 		for (int i = 0; i < sizeof(g_strHorsemannLastMan); i++) PrecacheSound(g_strHorsemannLastMan[i]);
 		for (int i = 0; i < sizeof(g_strHorsemannBackStabbed); i++) PrecacheSound(g_strHorsemannBackStabbed[i]);
+		for (int i = 0; i < sizeof(g_strHorsemannTeleport); i++) PrecacheSound(g_strHorsemannTeleport[i]);
+		for (int i = 0; i < sizeof(g_strHorsemannVoice); i++) PrecacheSound(g_strHorsemannVoice[i]);
+		for (int i = 0; i < sizeof(g_strHorsemannFootsteps); i++) PrecacheSound(g_strHorsemannFootsteps[i]);
 		
 		AddFileToDownloadsTable("models/player/saxton_hale/hhh_jr_mk3.mdl");
 		AddFileToDownloadsTable("models/player/saxton_hale/hhh_jr_mk3.sw.vtx");

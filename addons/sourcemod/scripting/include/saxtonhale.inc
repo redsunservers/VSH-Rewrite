@@ -274,8 +274,6 @@ typeset SaxtonHaleHookCallback
 /**
  * Hook a boss function to use when function get called. Also allows to override return and params before returning real value
  *
- * @note Make sure plugin unhooks a function once unloaded
- *
  * @param sName             Name of function to hook.
  * @param callback          Callback when function get called.
  * @param hookType          Type of hook, pre to call before functions get called, or post to call after functions get called. Overriding return and params work on both pre and post.
@@ -285,6 +283,8 @@ native void SaxtonHale_HookFunction(const char[] sName, SaxtonHaleHookCallback c
 
 /**
  * Unhook a boss function
+ *
+ * @note It is not necessary to unhook a function on plugin end
  *
  * @param sName             Name of function to unhook.
  * @param callback          Callback when function get called.
@@ -519,7 +519,7 @@ native bool SaxtonHale_ForceSpecialRound(int iClient = 0, TFClassType nClass = T
  * @param iClient	    	Client to set new preferences
  * @param preferences	    New preferences to set
  * @noreturn
- * @error                   Invalid client index or client not in game
+ * @error                   Invalid client index or client not connected
  */
 native void SaxtonHale_SetPreferences(int iClient, int iPreferences);
 
@@ -529,7 +529,7 @@ native void SaxtonHale_SetPreferences(int iClient, int iPreferences);
  * @param iClient        	Client to set new preferences
  * @param iQueue        	Queue points to set
  * @noreturn
- * @error                   Invalid client index or client not in game
+ * @error                   Invalid client index or client not connected
  */
 native void SaxtonHale_SetQueue(int iClient, int iQueue);
 
@@ -539,7 +539,7 @@ native void SaxtonHale_SetQueue(int iClient, int iQueue);
  * @param iClient           Client to set new winstreak
  * @param iWinstreak    	Winstreak amount to set
  * @noreturn
- * @error                   Invalid client index or client not in game
+ * @error                   Invalid client index or client not connected
  */
 native void SaxtonHale_SetWinstreak(int iClient, int iWinstreak);
 
@@ -556,7 +556,7 @@ native bool SaxtonHale_IsWinstreakEnable();
  * @param iClient        	Client to set admin status
  * @param bEnable        	True if allow to give admin command, false otherwise
  * @noreturn
- * @error                   Invalid client index or client not in game
+ * @error                   Invalid client index or client not connected
  */
 native void SaxtonHale_SetAdmin(int iClient, bool bEnable);
 
@@ -566,7 +566,7 @@ native void SaxtonHale_SetAdmin(int iClient, bool bEnable);
  * @param iClient        	Client to set punishment status
  * @param bEnable        	True if give punishment, false otherwise
  * @noreturn
- * @error                   Invalid client index or client not in game
+ * @error                   Invalid client index or client not connected
  */
 native void SaxtonHale_SetPunishment(int iClient, bool bEnable);
 
