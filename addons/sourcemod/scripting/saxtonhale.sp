@@ -338,6 +338,7 @@ Handle g_hSDKEquipWearable = null;
 
 #include "vsh/abilities/ability_body_eat.sp"
 #include "vsh/abilities/ability_brave_jump.sp"
+#include "vsh/abilities/ability_dash_jump.sp"
 #include "vsh/abilities/ability_drop_model.sp"
 #include "vsh/abilities/ability_rage_bomb.sp"
 #include "vsh/abilities/ability_rage_conditions.sp"
@@ -534,6 +535,7 @@ public void OnPluginStart()
 	//Register ability
 	SaxtonHale_RegisterAbility("CBodyEat");
 	SaxtonHale_RegisterAbility("CBraveJump");
+	SaxtonHale_RegisterAbility("CDashJump");
 	SaxtonHale_RegisterAbility("CDropModel");
 	SaxtonHale_RegisterAbility("CBomb");
 	SaxtonHale_RegisterAbility("CRageAddCond");

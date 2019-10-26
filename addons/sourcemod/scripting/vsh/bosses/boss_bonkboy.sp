@@ -74,12 +74,14 @@ methodmap CBonkBoy < SaxtonHaleBase
 {
 	public CBonkBoy(CBonkBoy boss)
 	{
+		boss.CallFunction("CreateAbility", "CDashJump");
+		
 		boss.iBaseHealth = 700;
 		boss.iHealthPerPlayer = 650;
 		boss.nClass = TFClass_Scout;
 		boss.iMaxRageDamage = 2000;
 		
-		boss.flSpeed = 420.0;
+		boss.flSpeed = 370.0;
 	}
 	
 	public void GetBossName(char[] sName, int length)
