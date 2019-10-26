@@ -6,6 +6,7 @@ static bool g_bTagsLunchbox[TF_MAXPLAYERS+1];
 
 static int g_iTagsAirblastRequirement[TF_MAXPLAYERS+1];
 static int g_iTagsAirblastDamage[TF_MAXPLAYERS+1];
+static FlamethrowerState g_nTagsAirblastState[TF_MAXPLAYERS+1];
 
 static ArrayList g_aAttrib;	//Arrays of active attribs to be removed later
 
@@ -40,17 +41,20 @@ void Tags_OnThink(int iClient)
 	if (GetEntityFlags(iClient) & FL_ONGROUND)
 		g_iClimbAmount[iClient] = 0;
 	
-	if (g_iTagsAirblastRequirement[iClient] >= 0)
+	if (g_iTagsAirblastRequirement[iClient] >= 0 && g_iTagsAirblastDamage[iClient] >= g_iTagsAirblastRequirement[iClient])
 	{
-		//Detect if airblast is used
+		//Detect if airblast is used, and reset if so
 		int iPrimary = TF2_GetItemInSlot(iClient, WeaponSlot_Primary);
 		if (iPrimary > MaxClients)
 		{
-			if (g_iTagsAirblastDamage[iClient] >= g_iTagsAirblastRequirement[iClient] && GetEntPropFloat(iPrimary, Prop_Send, "m_flNextSecondaryAttack") > GetGameTime())
+			FlamethrowerState nState = view_as<FlamethrowerState>(GetEntProp(iPrimary, Prop_Send, "m_iWeaponState"));
+			if (nState != g_nTagsAirblastState[iClient] && nState == FlamethrowerState_Airblast)
 			{
 				g_iTagsAirblastDamage[iClient] = 0;	//Reset damage
 				SetEntPropFloat(iPrimary, Prop_Send, "m_flNextSecondaryAttack", 31536000.0+GetGameTime());	//3 years
 			}
+			
+			g_nTagsAirblastState[iClient] = nState;
 		}
 	}
 	

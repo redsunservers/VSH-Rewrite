@@ -113,6 +113,14 @@ enum
 	LifeState_Dead = 2
 };
 
+enum FlamethrowerState
+{
+	FlamethrowerState_Idle = 0,
+	FlamethrowerState_StartFiring,
+	FlamethrowerState_Firing,
+	FlamethrowerState_Airblast,
+};
+
 enum MinigunState
 {
 	MinigunState_Idle = 0,
