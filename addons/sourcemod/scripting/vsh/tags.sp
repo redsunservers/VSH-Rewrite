@@ -633,7 +633,12 @@ public void Tags_AddHealersUber(int iClient, int iTarget, TagsParams tParams)
 public void Tags_Airblast(int iClient, int iTarget, TagsParams tParams)
 {
 	g_iTagsAirblastRequirement[iClient] = tParams.GetInt("damage", -1);
-	SetEntPropFloat(iTarget, Prop_Send, "m_flNextSecondaryAttack", 31536000.0+GetGameTime());	//3 years
+	g_iTagsAirblastDamage[iClient] = tParams.GetInt("start", 0);
+	
+	if (g_iTagsAirblastRequirement[iClient] > g_iTagsAirblastDamage[iClient])
+		SetEntPropFloat(iTarget, Prop_Send, "m_flNextSecondaryAttack", 31536000.0+GetGameTime());	//3 years
+	else
+		SetEntPropFloat(iTarget, Prop_Send, "m_flNextSecondaryAttack", 0.0);
 }
 
 public void Tags_Explode(int iClient, int iTarget, TagsParams tParams)
