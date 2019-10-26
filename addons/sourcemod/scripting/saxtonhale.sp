@@ -50,6 +50,7 @@
 #define ITEM_ROCK_PAPER_SCISSORS	1110
 
 #define SOUND_ALERT			"ui/system_message_alert.wav"
+#define SOUND_METERFULL		"player/recharged.wav"
 #define SOUND_BACKSTAB		"player/spy_shield_break.wav"
 #define SOUND_DOUBLEDONK	"player/doubledonk.wav"
 
@@ -726,6 +727,7 @@ public void OnMapStart()
 		PrecacheParticleSystem(PARTICLE_GHOST);
 
 		PrecacheSound(SOUND_ALERT);
+		PrecacheSound(SOUND_METERFULL);
 		PrecacheSound(SOUND_BACKSTAB);
 		PrecacheSound(SOUND_DOUBLEDONK);
 		

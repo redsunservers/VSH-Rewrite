@@ -90,15 +90,21 @@ void Tags_OnPlayerHurt(int iVictim, int iAttacker, int iDamage)
 	{
 		if (g_iTagsAirblastRequirement[iAttacker] >= 0)
 		{
+			bool bFull = (g_iTagsAirblastDamage[iAttacker] >= g_iTagsAirblastRequirement[iAttacker]);
 			g_iTagsAirblastDamage[iAttacker] += iDamage;
 			
 			if (g_iTagsAirblastDamage[iAttacker] >= g_iTagsAirblastRequirement[iAttacker])
 			{
 				g_iTagsAirblastDamage[iAttacker] = g_iTagsAirblastRequirement[iAttacker];
 				
-				int iPrimary = TF2_GetItemInSlot(iAttacker, WeaponSlot_Primary);
-				if (iPrimary > MaxClients)
-					SetEntPropFloat(iPrimary, Prop_Send, "m_flNextSecondaryAttack", 0.0);	//Allow airblast to be used
+				if (!bFull)
+				{
+					EmitSoundToClient(iAttacker, SOUND_METERFULL);	//Alert player meter is fully
+					
+					int iPrimary = TF2_GetItemInSlot(iAttacker, WeaponSlot_Primary);
+					if (iPrimary > MaxClients)
+						SetEntPropFloat(iPrimary, Prop_Send, "m_flNextSecondaryAttack", 0.0);	//Allow airblast to be used
+				}
 			}
 		}
 	}
