@@ -921,7 +921,6 @@ public Action Event_RoundStart(Event event, const char[] sName, bool bDontBroadc
 
 	g_iTotalAttackCount = SaxtonHale_GetAliveAttackPlayers();	//Update amount of attack players
 
-	Tags_RoundStart();
 	Winstreak_RoundStart();
 
 	RequestFrame(Frame_InitVshPreRoundTimer, tf_arena_preround_time.IntValue);
@@ -1617,9 +1616,8 @@ public Action Event_PlayerInventoryUpdate(Event event, const char[] sName, bool 
 
 	if (g_iTotalRoundPlayed <= 0) return;
 	
+	Tags_ResetClient(iClient);
 	TagsCore_RefreshClient(iClient);
-	
-	Hud_SetRageView(iClient, false);
 	
 	if (SaxtonHale_IsValidAttack(iClient))
 		TagsCore_CallAll(iClient, TagsCall_Spawn);
@@ -1640,6 +1638,7 @@ public Action Event_PlayerHurt(Event event, const char[] sName, bool bDontBroadc
 	{
 		int iAttacker = GetClientOfUserId(event.GetInt("attacker"));
 		int iDamageAmount = event.GetInt("damageamount");
+		Tags_OnPlayerHurt(iClient, iAttacker, iDamageAmount);
 		
 		if (0 < iAttacker <= MaxClients && IsClientInGame(iAttacker) && iClient != iAttacker)
 		{
