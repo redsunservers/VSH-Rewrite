@@ -104,10 +104,19 @@ methodmap CBonkBoy < SaxtonHaleBase
 	public void OnSpawn()
 	{
 		char attribs[128];
-		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65");
+		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65");	// ; 278 ; 0.0
 		int iWeapon = this.CallFunction("CreateWeapon", 44, "tf_weapon_bat_wood", 1, TFQual_Collectors, attribs);
 		if (iWeapon > MaxClients)
+		{
+			SetEntPropFloat(iWeapon, Prop_Send, "m_flEffectBarRegenTime", 0.0);	//Set meter to 0
 			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
+			
+			//Set ball count to 0
+			int iAmmoType = GetEntProp(iWeapon, Prop_Send, "m_iPrimaryAmmoType");
+			if (iAmmoType > -1)
+				SetEntProp(this.iClient, Prop_Send, "m_iAmmo", 0, 4, iAmmoType);
+		}
+
 		/*
 		Sandman attributes:
 		
@@ -115,6 +124,8 @@ methodmap CBonkBoy < SaxtonHaleBase
 		252: reduction in push force taken from damage
 		259: Deals 3x falling damage to the player you land on
 		329: reduction in airblast vulnerability
+		
+		278: increase in recharge rate
 		*/
 		
 		int iWearable = -1;
@@ -130,6 +141,29 @@ methodmap CBonkBoy < SaxtonHaleBase
 		iWearable = this.CallFunction("CreateWeapon", 30751, "tf_wearable", 1, TFQual_Collectors, "");	//Bonk Batter's Backup
 		if (iWearable > MaxClients)
 			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iBonkBoyModelBag);
+	}
+	
+	public void OnThink()
+	{
+		//Set sandman meter to 0
+		int iWeapon = TF2_GetItemInSlot(this.iClient, WeaponSlot_Melee);
+		if (iWeapon > MaxClients)
+			SetEntPropFloat(iWeapon, Prop_Send, "m_flEffectBarRegenTime", 0.0);
+	}
+	
+	public void OnRage()
+	{
+		//Add 10 balls
+		int iWeapon = TF2_GetItemInSlot(this.iClient, WeaponSlot_Melee);
+		if (iWeapon > MaxClients)
+		{
+			int iAmmoType = GetEntProp(iWeapon, Prop_Send, "m_iPrimaryAmmoType");
+			if (iAmmoType > -1)
+			{
+				int iAmmo = GetEntProp(this.iClient, Prop_Send, "m_iAmmo", 4, iAmmoType);
+				SetEntProp(this.iClient, Prop_Send, "m_iAmmo", iAmmo+10, 4, iAmmoType);
+			}
+		}
 	}
 	/*
 	public void GetSound(char[] sSound, int length, SaxtonHaleSound iSoundType)
