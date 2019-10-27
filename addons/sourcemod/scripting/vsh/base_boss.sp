@@ -327,7 +327,7 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 							float vecNoVel[3];
 							TeleportEntity(this.iClient, vecPos, NULL_VECTOR, vecNoVel);
 							damage = (damagetype & DMG_ACID) ? this.flEnvDamageCap/3.0 : this.flEnvDamageCap;
-							TF2_StunPlayer(this.iClient, 2.0, 1.0, 257, 0);
+							TF2_StunPlayer(this.iClient, 2.0, _, TF_STUNFLAGS_NORMALBONK, 0);
 							bTeleported = true;
 							action = Plugin_Changed;
 						}
