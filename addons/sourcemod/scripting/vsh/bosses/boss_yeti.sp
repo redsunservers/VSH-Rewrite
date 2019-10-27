@@ -1,4 +1,4 @@
-#define YETI_MODEL "models/player/items/taunts/yeti/yeti.mdl"
+#define YETI_MODEL "models/player/kirillian/boss/yeti_modded.mdl"
 #define YETI_THEME "ui/gamestartup27.mp3"
 
 static char g_strYetiRoundStart[][] =  {
