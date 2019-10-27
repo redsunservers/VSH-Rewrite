@@ -316,22 +316,25 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 				{
 					int iBossSpawn = MaxClients+1;
 					int iTeam = GetClientTeam(this.iClient);
-					bool bTeleported = false;
+					ArrayList aSpawnPoints = new ArrayList();
 					
-					while((iBossSpawn = FindEntityByClassname(iBossSpawn, "info_player_teamspawn")) > MaxClients && !bTeleported)
-					{
+					while ((iBossSpawn = FindEntityByClassname(iBossSpawn, "info_player_teamspawn")) > MaxClients)
 						if (GetEntProp(iBossSpawn, Prop_Send, "m_iTeamNum") == iTeam)
-						{
-							float vecPos[3];
-							GetEntPropVector(iBossSpawn, Prop_Data, "m_vecAbsOrigin", vecPos);
-							float vecNoVel[3];
-							TeleportEntity(this.iClient, vecPos, NULL_VECTOR, vecNoVel);
-							damage = (damagetype & DMG_ACID) ? this.flEnvDamageCap/3.0 : this.flEnvDamageCap;
-							TF2_StunPlayer(this.iClient, 2.0, _, TF_STUNFLAGS_NORMALBONK, 0);
-							bTeleported = true;
-							action = Plugin_Changed;
-						}
+							aSpawnPoints.Push(iBossSpawn);
+					
+					if (aSpawnPoints.Length > 0)
+					{
+						aSpawnPoints.Sort(Sort_Random, Sort_Integer);
+						float vecPos[3];
+						GetEntPropVector(aSpawnPoints.Get(0), Prop_Data, "m_vecAbsOrigin", vecPos);
+						float vecNoVel[3];
+						TeleportEntity(this.iClient, vecPos, NULL_VECTOR, vecNoVel);
+						TF2_StunPlayer(this.iClient, 2.0, _, TF_STUNFLAGS_NORMALBONK, 0);
 					}
+					
+					delete aSpawnPoints;
+					damage = (damagetype & DMG_ACID) ? this.flEnvDamageCap/3.0 : this.flEnvDamageCap;
+					action = Plugin_Changed;
 				}
 			}
 		}
