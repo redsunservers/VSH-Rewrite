@@ -316,7 +316,9 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 				{
 					int iBossSpawn = MaxClients+1;
 					int iTeam = GetClientTeam(this.iClient);
-					while((iBossSpawn = FindEntityByClassname(iBossSpawn, "info_player_teamspawn")) > MaxClients)
+					bool bTeleported = false;
+					
+					while((iBossSpawn = FindEntityByClassname(iBossSpawn, "info_player_teamspawn")) > MaxClients && !bTeleported)
 					{
 						if (GetEntProp(iBossSpawn, Prop_Send, "m_iTeamNum") == iTeam)
 						{
@@ -326,6 +328,7 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 							TeleportEntity(this.iClient, vecPos, NULL_VECTOR, vecNoVel);
 							damage = (damagetype & DMG_ACID) ? this.flEnvDamageCap/3.0 : this.flEnvDamageCap;
 							TF2_StunPlayer(this.iClient, 2.0, 1.0, 257, 0);
+							bTeleported = true;
 							action = Plugin_Changed;
 						}
 					}
