@@ -41,7 +41,7 @@ void Tags_OnThink(int iClient)
 	if (GetEntityFlags(iClient) & FL_ONGROUND)
 		g_iClimbAmount[iClient] = 0;
 	
-	if (g_iTagsAirblastRequirement[iClient] >= 0 && g_iTagsAirblastDamage[iClient] >= g_iTagsAirblastRequirement[iClient])
+	if (g_iTagsAirblastRequirement[iClient] > 0 && g_iTagsAirblastDamage[iClient] >= g_iTagsAirblastRequirement[iClient])
 	{
 		//Detect if airblast is used, and reset if so
 		int iPrimary = TF2_GetItemInSlot(iClient, WeaponSlot_Primary);
@@ -88,7 +88,7 @@ void Tags_OnPlayerHurt(int iVictim, int iAttacker, int iDamage)
 {
 	if (SaxtonHale_IsValidBoss(iVictim) && SaxtonHale_IsValidAttack(iAttacker))
 	{
-		if (g_iTagsAirblastRequirement[iAttacker] >= 0)
+		if (g_iTagsAirblastRequirement[iAttacker] > 0)
 		{
 			bool bFull = (g_iTagsAirblastDamage[iAttacker] >= g_iTagsAirblastRequirement[iAttacker]);
 			g_iTagsAirblastDamage[iAttacker] += iDamage;
@@ -769,7 +769,7 @@ stock int Tags_GetBackstabCount(int iClient, int iVictim)
 
 stock float Tags_GetAirblastPercentage(int iClient)
 {
-	if (g_iTagsAirblastRequirement[iClient] < 0)
+	if (g_iTagsAirblastRequirement[iClient] <= 0)
 		return -1.0;
 	
 	return float(g_iTagsAirblastDamage[iClient]) / float(g_iTagsAirblastRequirement[iClient]);
