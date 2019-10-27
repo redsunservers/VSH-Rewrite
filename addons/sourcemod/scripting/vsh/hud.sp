@@ -55,9 +55,9 @@ void Hud_Think(int iClient)
 
 		Hud_AddText(iClient, sMessage);
 
-		//If dead, display whoever client is spectating and damage
 		if (!IsPlayerAlive(iClient))
 		{
+			//If dead, display whoever client is spectating and damage
 			int iOberserTarget = GetEntPropEnt(iClient, Prop_Send, "m_hObserverTarget");
 			if (iOberserTarget != iClient && 0 < iOberserTarget <= MaxClients && IsClientInGame(iOberserTarget) && !SaxtonHaleBase(iOberserTarget).bValid)
 			{
@@ -66,6 +66,16 @@ void Hud_Think(int iClient)
 				else
 					Format(sMessage, sizeof(sMessage), "%N's Damage: %i Assist: %i", iOberserTarget, g_iPlayerDamage[iOberserTarget], g_iPlayerAssistDamage[iOberserTarget]);
 				
+				Hud_AddText(iClient, sMessage);
+			}
+		}
+		else
+		{
+			//Display airblast percentage
+			float flPercentage = Tags_GetAirblastPercentage(iClient);
+			if (flPercentage >= 0.0)
+			{
+				Format(sMessage, sizeof(sMessage), "Airblast: %i%%", RoundToFloor(flPercentage * 100.0));
 				Hud_AddText(iClient, sMessage);
 			}
 		}

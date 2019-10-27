@@ -89,7 +89,7 @@ methodmap CVagineer < SaxtonHaleBase
 		this.CallFunction("CreateWeapon", 25, "tf_weapon_pda_engineer_build", 100, TFQual_Unusual, "");
 		
 		char attribs[256];
-		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65 ; 93 ; 0.0 ; 95 ; 0.0 ; 343 ; 0.5 ; 353 ; 1.0 ; 436 ; 1.0 ; 464 ; 10.0 ; 2043 ; 0.0");
+		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 93 ; 0.0 ; 95 ; 0.0 ; 343 ; 0.5 ; 353 ; 1.0 ; 436 ; 1.0 ; 464 ; 10.0 ; 2043 ; 0.0");
 		int iWeapon = this.CallFunction("CreateWeapon", 7, "tf_weapon_wrench", 100, TFQual_Collectors, attribs);
 		if (iWeapon > MaxClients)
 			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
@@ -99,7 +99,6 @@ methodmap CVagineer < SaxtonHaleBase
 		2: damage bonus
 		252: reduction in push force taken from damage
 		259: Deals 3x falling damage to the player you land on
-		329: reduction in airblast vulnerability
 		
 		93: Construction hit speed boost decreased
 		95: Slower repair speed

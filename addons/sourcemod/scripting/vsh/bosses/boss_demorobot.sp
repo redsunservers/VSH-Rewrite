@@ -112,7 +112,7 @@ methodmap CDemoRobot < SaxtonHaleBase
 	public void OnSpawn()
 	{
 		char attribs[128];
-		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65 ; 436 ; 1.0 ; 264 ; 0.73");
+		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 436 ; 1.0 ; 264 ; 0.73");
 		int iWeapon = this.CallFunction("CreateWeapon", 132, "tf_weapon_sword", 100, TFQual_Collectors, attribs);
 		if (iWeapon > MaxClients)
 			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
@@ -122,7 +122,7 @@ methodmap CDemoRobot < SaxtonHaleBase
 		2: damage bonus
 		252: reduction in push force taken from damage
 		259: Deals 3x falling damage to the player you land on
-		329: reduction in airblast vulnerability
+		
 		436: ragdolls_plasma_effect
 		264: melee range multiplier (tf_weapon_sword have 37% extra range)
 		*/

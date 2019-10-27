@@ -62,7 +62,7 @@ methodmap CSeeMan < SaxtonHaleBase
 	public void OnSpawn()
 	{
 		char attribs[128];
-		Format(attribs, sizeof(attribs), "2 ; 1.9 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65");
+		Format(attribs, sizeof(attribs), "2 ; 1.9 ; 252 ; 0.5 ; 259 ; 1.0");
 		int iWeapon = this.CallFunction("CreateWeapon", 195, "tf_weapon_bottle", 100, TFQual_Collectors, attribs);
 		if (iWeapon > MaxClients)
 			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
@@ -72,7 +72,6 @@ methodmap CSeeMan < SaxtonHaleBase
 		2: damage bonus
 		252: reduction in push force taken from damage
 		259: Deals 3x falling damage to the player you land on
-		329: reduction in airblast vulnerability
 		*/
 	}
 	

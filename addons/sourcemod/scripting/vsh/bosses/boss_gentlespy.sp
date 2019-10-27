@@ -132,7 +132,7 @@ methodmap CGentleSpy < SaxtonHaleBase
 		221: Attrib_DecloakRate
 		*/
 		
-		Format(attribs, sizeof(attribs), "2 ; 4.55 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65");
+		Format(attribs, sizeof(attribs), "2 ; 4.55 ; 252 ; 0.5 ; 259 ; 1.0");
 		iWeapon = this.CallFunction("CreateWeapon", 194, "tf_weapon_knife", 100, TFQual_Collectors, attribs);
 		if (iWeapon > MaxClients)
 			SetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
@@ -142,7 +142,6 @@ methodmap CGentleSpy < SaxtonHaleBase
 		2: damage bonus
 		252: reduction in push force taken from damage
 		259: Deals 3x falling damage to the player you land on
-		329: reduction in airblast vulnerability
 		*/
 	}
 	

@@ -50,6 +50,7 @@
 #define ITEM_ROCK_PAPER_SCISSORS	1110
 
 #define SOUND_ALERT			"ui/system_message_alert.wav"
+#define SOUND_METERFULL		"player/recharged.wav"
 #define SOUND_BACKSTAB		"player/spy_shield_break.wav"
 #define SOUND_DOUBLEDONK	"player/doubledonk.wav"
 
@@ -111,6 +112,14 @@ enum
 {
 	LifeState_Alive = 0,
 	LifeState_Dead = 2
+};
+
+enum FlamethrowerState
+{
+	FlamethrowerState_Idle = 0,
+	FlamethrowerState_StartFiring,
+	FlamethrowerState_Firing,
+	FlamethrowerState_Airblast,
 };
 
 enum MinigunState
@@ -718,6 +727,7 @@ public void OnMapStart()
 		PrecacheParticleSystem(PARTICLE_GHOST);
 
 		PrecacheSound(SOUND_ALERT);
+		PrecacheSound(SOUND_METERFULL);
 		PrecacheSound(SOUND_BACKSTAB);
 		PrecacheSound(SOUND_DOUBLEDONK);
 		
@@ -921,7 +931,6 @@ public Action Event_RoundStart(Event event, const char[] sName, bool bDontBroadc
 
 	g_iTotalAttackCount = SaxtonHale_GetAliveAttackPlayers();	//Update amount of attack players
 
-	Tags_RoundStart();
 	Winstreak_RoundStart();
 
 	RequestFrame(Frame_InitVshPreRoundTimer, tf_arena_preround_time.IntValue);
@@ -1617,9 +1626,8 @@ public Action Event_PlayerInventoryUpdate(Event event, const char[] sName, bool 
 
 	if (g_iTotalRoundPlayed <= 0) return;
 	
+	Tags_ResetClient(iClient);
 	TagsCore_RefreshClient(iClient);
-	
-	Hud_SetRageView(iClient, false);
 	
 	if (SaxtonHale_IsValidAttack(iClient))
 		TagsCore_CallAll(iClient, TagsCall_Spawn);
@@ -1640,6 +1648,7 @@ public Action Event_PlayerHurt(Event event, const char[] sName, bool bDontBroadc
 	{
 		int iAttacker = GetClientOfUserId(event.GetInt("attacker"));
 		int iDamageAmount = event.GetInt("damageamount");
+		Tags_OnPlayerHurt(iClient, iAttacker, iDamageAmount);
 		
 		if (0 < iAttacker <= MaxClients && IsClientInGame(iAttacker) && iClient != iAttacker)
 		{
