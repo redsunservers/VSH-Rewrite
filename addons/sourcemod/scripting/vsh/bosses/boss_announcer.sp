@@ -1,5 +1,5 @@
 #define ANNOUNCER_MODEL "models/player/kirillian/boss/sedisocks_administrator.mdl"
-#define ANNOUNCER_THEME "freak_fortress_2/admin/admin_music.mp3"
+#define ANNOUNCER_THEME "vsh_rewrite/administrator/admin_music.mp3"
 
 static char g_strAnnouncerRoundStart[][] = {
 	"vo/announcer_dec_missionbegins60s01.mp3",

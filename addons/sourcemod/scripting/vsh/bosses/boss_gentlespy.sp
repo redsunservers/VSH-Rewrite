@@ -1,5 +1,5 @@
 #define GENTLE_SPY_MODEL "models/freak_fortress_2/gentlespy/the_gentlespy_v1.mdl"
-#define GENTLE_SPY_THEME "freak_fortress_2/gentlespy/gentle_music.mp3"
+#define GENTLE_SPY_THEME "vsh_rewrite/gentlespy/gentle_music.mp3"
 
 static bool g_bFirstCloak[TF_MAXPLAYERS+1];
 static bool g_bIsCloaked[TF_MAXPLAYERS+1];
