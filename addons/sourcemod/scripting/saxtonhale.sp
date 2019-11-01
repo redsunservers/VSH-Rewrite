@@ -605,8 +605,12 @@ void Plugin_Cvars(bool toggle)
 	static float flFeignDeathDuration;
 	static float flFeignDeathSpeed;
 
-	if (toggle)
+	static bool toggled = false; // Used to avoid a overwrite of default value if toggled twice
+
+	if (toggle && !toggled)
 	{
+		toggled = true;
+
 		bArenaUseQueue = tf_arena_use_queue.BoolValue;
 		tf_arena_use_queue.BoolValue = false;
 
@@ -643,8 +647,10 @@ void Plugin_Cvars(bool toggle)
 		flFeignDeathSpeed = tf_feign_death_speed_duration.FloatValue;
 		tf_feign_death_speed_duration.FloatValue = 0.0;
 	}
-	else
+	else if (!toggle && toggled)
 	{
+		toggled = false;
+
 		tf_arena_use_queue.BoolValue = bArenaUseQueue;
 		tf_arena_first_blood.BoolValue = bArenaFirstBlood;
 		mp_forcecamera.BoolValue = bForceCamera;
