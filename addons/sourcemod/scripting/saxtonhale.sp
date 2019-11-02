@@ -521,7 +521,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterBoss("CBrutalSniper");
 	SaxtonHale_RegisterBoss("CAnnouncer");
 	SaxtonHale_RegisterBoss("CHorsemann");
-	SaxtonHale_Registerboss("CMerasmus");
+	SaxtonHale_RegisterBoss("CMerasmus");
 	
 	//Register misc bosses
 	SaxtonHale_RegisterBoss("CSeeMan", "CSeeldier");
