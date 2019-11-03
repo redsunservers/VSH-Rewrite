@@ -53,7 +53,13 @@ methodmap CSeeMan < SaxtonHaleBase
 		char sWeaponClassName[32];
 		if (weapon >= 0) GetEdictClassname(inflictor, sWeaponClassName, sizeof(sWeaponClassName));
 		
-		if (this.iClient == attacker && strcmp(sWeaponClassName, "tf_generic_bomb") == 0) return Plugin_Stop; // Don't let the bombs from the bomb ability damages us!
+		//Disable self-damage and knockback from bomb rage ability
+		if (this.iClient == attacker && strcmp(sWeaponClassName, "tf_generic_bomb") == 0)
+		{
+			damage = 0.0;
+			damagetype = DMG_PREVENT_PHYSICS_FORCE;
+			return Plugin_Changed;
+		}		
 
 		EmitSoundToAll(SEEMAN_SEE_SND, this.iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
 		return Plugin_Continue;
