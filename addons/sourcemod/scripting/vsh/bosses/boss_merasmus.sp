@@ -9,7 +9,7 @@ static char g_strMerasmusRoundStart[][] = {
 
 static char g_strMerasmusWin[][] = {
 	"vo/halloween_merasmus/sf14_merasmus_stalemate_01.mp3",
-	"vo/halloween_merasmus/sf12_leaving09"
+	"vo/halloween_merasmus/sf12_leaving09.mp3"
 };
 
 static char g_strMerasmusLose[][] = {
@@ -83,9 +83,11 @@ methodmap CMerasmus < SaxtonHaleBase
 {
 	public CMerasmus(CMerasmus boss)
 	{
-		boss.CallFunction("CreateAbility", "CBraveJump");
-		CScareRage scareAbility = boss.CallFunction("CreateAbility", "CScareRage");
-		scareAbility.flRadius = 800.0;
+		CWeaponSpells weaponSpells = boss.CallFunction("CreateAbility", "CWeaponSpells");
+		weaponSpells.AddSpells(haleSpells_Jump);
+		weaponSpells.flRageRequirement = 0.0;
+		weaponspells.flCooldown = 5.0;
+		
 		
 		boss.iBaseHealth = 800;
 		boss.iHealthPerPlayer = 800;
