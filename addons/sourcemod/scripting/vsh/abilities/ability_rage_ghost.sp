@@ -131,10 +131,8 @@ methodmap CRageGhost < SaxtonHaleBase
 		}
 		
 		//Thirdperson
-		int iFlags = GetCommandFlags("thirdperson");
-		SetCommandFlags("thirdperson", iFlags & (~FCVAR_CHEAT));
-		ClientCommand(this.iClient, "thirdperson");
-		SetCommandFlags("thirdperson", iFlags);
+		SetVariantInt(1);
+		AcceptEntityInput(this.iClient, "SetForcedTauntCam");
 	}
 	
 	public void OnThink()
@@ -323,10 +321,8 @@ methodmap CRageGhost < SaxtonHaleBase
 			}
 			
 			//Firstperson
-			int iFlags = GetCommandFlags("firstperson");
-			SetCommandFlags("firstperson", iFlags & (~FCVAR_CHEAT));
-			ClientCommand(iClient, "firstperson");
-			SetCommandFlags("firstperson", iFlags);
+			SetVariantInt(0);
+			AcceptEntityInput(this.iClient, "SetForcedTauntCam");
 		}
 	}
 	
