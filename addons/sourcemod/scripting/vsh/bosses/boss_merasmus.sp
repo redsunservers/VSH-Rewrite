@@ -86,7 +86,7 @@ methodmap CMerasmus < SaxtonHaleBase
 		CWeaponSpells weaponSpells = boss.CallFunction("CreateAbility", "CWeaponSpells");
 		weaponSpells.AddSpells(haleSpells_Jump);
 		weaponSpells.flRageRequirement = 0.0;
-		weaponspells.flCooldown = 5.0;
+		weaponSpells.flCooldown = 5.0;
 		
 		
 		boss.iBaseHealth = 800;
