@@ -3,7 +3,7 @@ static haleSpells g_rageSpells[TF_MAXPLAYERS+1];
 static float g_flRageRequirement[TF_MAXPLAYERS+1];
 static bool g_bSpellsRage[TF_MAXPLAYERS+1];
 static float g_flSpellsCooldown[TF_MAXPLAYERS+1];
-static float g_flSpellsLastUsed{TF_MAXPLAYERS+1];
+static float g_flSpellsLastUsed[TF_MAXPLAYERS+1];
 
 enum haleSpells
 {
@@ -68,7 +68,7 @@ methodmap CWeaponSpells < SaxtonHaleBase
 	{
 		ability.flRageRequirement = 0.25;
 		ability.flCooldown = 0.0;
-		g_rageSpells[this.iClient] = haleSpells_Invalid;
+		g_rageSpells[ability.iClient] = haleSpells_Invalid;
 		
 		g_bSpellsRage[ability.iClient] = false;
 		
@@ -134,7 +134,7 @@ methodmap CWeaponSpells < SaxtonHaleBase
 	
 	public void OnRage()
 	{
-		if (g_rageSpells[this.iClient] == haleSpells_Invalid)
+		if (g_rageSpells[this.iClient] == view_as<int>(haleSpells_Invalid))
 			return;
 		
 		int iClient = this.iClient;
@@ -180,14 +180,14 @@ methodmap CWeaponSpells < SaxtonHaleBase
 			}
 			
 			float flRagePercentage = float(this.iRageDamage) / float(this.iMaxRageDamage);
-			if (flRagePercentage >= this.flRageRequirement && flSpellsLastUsed <= GetGameTime()+this.flCooldown)
+			if (flRagePercentage >= this.flRageRequirement && g_flSpellsLastUsed[this.iClient] <= GetGameTime()+this.flCooldown)
 			{
 				//Normal spell, remove rage on use
 				this.iRageDamage -= RoundToFloor(this.flRageRequirement * float(this.iMaxRageDamage));
 				
 				//spell cooldowns, set timer after used
-				 g_flSpellsLastUsed[this.iClient] = GetGameTime();
-				 
+				g_flSpellsLastUsed[this.iClient] = GetGameTime();
+				
 				
 				//Play ability sound if boss have one
 				char sSound[PLATFORM_MAX_PATH];
