@@ -303,6 +303,13 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 				EmitSoundToAll(sSound, this.iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
 		}
 
+		int iBossFlags = GetEntityFlags(this.iClient);
+		if (iBossFlags & (FL_ONGROUND|FL_DUCKING))
+		{
+			damagetype |= DMG_PREVENT_PHYSICS_FORCE;
+			action = Plugin_Changed;
+		}
+
 		if (MaxClients < attacker)
 		{
 			char strAttacker[32];
