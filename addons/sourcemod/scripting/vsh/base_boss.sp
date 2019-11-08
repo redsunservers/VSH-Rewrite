@@ -304,7 +304,7 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 		}
 
 		int iBossFlags = GetEntityFlags(this.iClient);
-		if (iBossFlags & (FL_ONGROUND|FL_DUCKING))
+		if (iBossFlags & FL_ONGROUND)
 		{
 			damagetype |= DMG_PREVENT_PHYSICS_FORCE;
 			action = Plugin_Changed;
