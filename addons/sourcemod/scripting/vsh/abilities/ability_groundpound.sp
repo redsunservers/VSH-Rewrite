@@ -21,9 +21,9 @@ methodmap CGroundPound < SaxtonHaleBase
 	
 	property float flImpactDamage
 	{
-		public set(float iVal)
+		public set(float flVal)
 		{
-			g_flImpactDamage[this.iClient] = iVal;
+			g_flImpactDamage[this.iClient] = flVal;
 		}
 		public get()
 		{
