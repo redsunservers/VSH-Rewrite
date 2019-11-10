@@ -3020,6 +3020,7 @@ stock void TF2_Shake(float flOrigin[3], float flAmplitude, float flRadius, float
 		
 		DispatchSpawn(iShake);
 		AcceptEntityInput(iShake, "StartShake");
+		RemoveEntity(iShake);
 	}
 }
 
