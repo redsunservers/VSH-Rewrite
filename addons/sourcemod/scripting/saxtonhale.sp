@@ -3007,6 +3007,22 @@ stock void TF2_Explode(int iAttacker = -1, float flPos[3], float flDamage, float
 		SDKHooks_TakeDamage(iBomb, 0, iAttacker, 9999.0);
 }
 
+stock void TF2_Shake(float flOrigin[3], float flAmplitude, float flRadius, float flDuration, float flFrequency)
+{
+	int iShake = CreateEntityByName("env_shake");
+	if (iShake != -1)
+	{
+		DispatchKeyValueVector(iShake, "origin", flOrigin);
+		DispatchKeyValueFloat(iShake, "amplitude", flAmplitude);
+		DispatchKeyValueFloat(iShake, "radius", flRadius);
+		DispatchKeyValueFloat(iShake, "duration", flDuration);
+		DispatchKeyValueFloat(iShake, "frequency", flFrequency);
+		
+		DispatchSpawn(iShake);
+		AcceptEntityInput(iShake, "StartShake");
+	}
+}
+
 stock int TF2_SpawnParticle(char[] sParticle, float vecOrigin[3] = NULL_VECTOR, float flAngles[3] = NULL_VECTOR, bool bActivate = true, int iEntity = 0, int iControlPoint = 0)
 {
 	int iParticle = CreateEntityByName("info_particle_system");
@@ -3222,4 +3238,18 @@ stock int FindStringIndex2(int tableidx, const char[] str)
 	}
 
 	return INVALID_STRING_INDEX;
+}
+
+stock bool IsClientInRange(int iClient, float flOrigin[3], float flRadius)
+{
+	float flClientOrigin[3];
+	GetClientAbsOrigin(iClient, flClientOrigin);
+	
+	float flDistance;
+	for (int i = 0; i < sizeof(flOrigin); i++)
+	{
+		flDistance += FloatAbs(flOrigin[i] - flClientOrigin[i]);
+	}
+	
+	return flDistance <= flRadius;
 }

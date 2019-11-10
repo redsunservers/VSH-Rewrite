@@ -1,8 +1,9 @@
-#define IMPACT_SOUND	"player/taunt_yeti_land.wav"
-#define IMPACT_PARTICLE	"hammer_impact_button"
+#define IMPACT_SOUND "player/taunt_yeti_land.wav"
+#define IMPACT_PARTICLE "hammer_impact_button"
 
 static float g_flImpactRadius[TF_MAXPLAYERS + 1];
-static int g_iImpactDamage[TF_MAXPLAYERS + 1];
+static float g_iImpactDamage[TF_MAXPLAYERS + 1];
+static float flImpactLaunchVelocity[TF_MAXPLAYERS + 1];
 
 methodmap CGroundPound < SaxtonHaleBase
 {
@@ -18,9 +19,9 @@ methodmap CGroundPound < SaxtonHaleBase
 		}
 	}
 	
-	property int iImpactDamage
+	property float iImpactDamage
 	{
-		public set(int iVal)
+		public set(float iVal)
 		{
 			g_iImpactDamage[this.iClient] = iVal;
 		}
@@ -30,10 +31,23 @@ methodmap CGroundPound < SaxtonHaleBase
 		}
 	}
 	
+	property float flImpactLaunchVelocity
+	{
+		public set(float flVal)
+		{
+			flImpactLaunchVelocity[this.iClient] = flVal;
+		}
+		public get()
+		{
+			return flImpactLaunchVelocity[this.iClient];
+		}
+	}
+	
 	public CGroundPound(CGroundPound ability)
 	{
-		ability.flImpactRadius = 100.0;
-		ability.iImpactDamage = 100;
+		ability.flImpactRadius = 500.0;
+		ability.iImpactDamage = 50.0;
+		ability.flImpactLaunchVelocity = 500.0;
 	}
 	
 	public Action OnTakeDamage(int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
@@ -41,94 +55,31 @@ methodmap CGroundPound < SaxtonHaleBase
 		if (!(damagetype & DMG_FALL))
 			return Plugin_Continue;
 		
-		float flOrigin[3];
-		GetEntPropVector(this.iClient, Prop_Data, "m_vecOrigin", flOrigin);
-		EmitAmbientSound(IMPACT_SOUND, flOrigin, _, SNDLEVEL_SCREAMING);
-		TF2_Shake(flOrigin, 10.0, 100.0, 1.0, 0.5);
-		CreateParticle(IMPACT_PARTICLE, flOrigin);
+		float flBossOrigin[3];
+		GetClientAbsOrigin(this.iClient, flBossOrigin);
 		
-		// TODO: This does not work yet
-		float flImpulseDir[3] =  { -90.0, 0.0, 0.0 }; // launch player upwards
-		float flRadius[3] =  { 200.0, 200.0, 200.0 };
-		TF2_Impulse(flOrigin, flRadius, flImpulseDir, 200.0);
+		EmitAmbientSound(IMPACT_SOUND, flBossOrigin, _, SNDLEVEL_SCREAMING);
+		TF2_Shake(flBossOrigin, 10.0, 100.0, 1.0, 0.5);
+		TF2_SpawnParticle(IMPACT_PARTICLE, flBossOrigin);
+		
+		for (int iClient = 1; iClient < MaxClients; iClient++)
+		{
+			if (IsClientInGame(iClient) && iClient != this.iClient && IsClientInRange(iClient, flBossOrigin, this.flImpactRadius) && GetEntityFlags(iClient) & FL_ONGROUND)
+			{
+				float flClientVelocity[3];
+				GetEntPropVector(iClient, Prop_Data, "m_vecVelocity", flClientVelocity);
+				flClientVelocity[2] += this.flImpactLaunchVelocity;
+				
+				TeleportEntity(iClient, NULL_VECTOR, NULL_VECTOR, flClientVelocity);
+				SDKHooks_TakeDamage(iClient, this.iClient, this.iClient, this.iImpactDamage, DMG_FALL);
+			}
+		}
 		
 		return Plugin_Continue;
 	}
 	
-	public static void Precache()
+	public void Precache()
 	{
 		PrecacheSound(IMPACT_SOUND);
 	}
 };
-
-stock void CreateParticle(char[] particle, float pos[3])
-{
-	int tblidx = FindStringTable("ParticleEffectNames");
-	char tmp[256];
-	int count = GetStringTableNumStrings(tblidx);
-	int stridx = INVALID_STRING_INDEX;
-	for (int i = 0; i < count; i++)
-	{
-		ReadStringTable(tblidx, i, tmp, sizeof(tmp));
-		if (StrEqual(tmp, particle, false))
-		{
-			stridx = i;
-			break;
-		}
-	}
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		if (!IsValidEntity(i))continue;
-		if (!IsClientInGame(i))continue;
-		TE_Start("TFParticleEffect");
-		TE_WriteFloat("m_vecOrigin[0]", pos[0]);
-		TE_WriteFloat("m_vecOrigin[1]", pos[1]);
-		TE_WriteFloat("m_vecOrigin[2]", pos[2]);
-		TE_WriteNum("m_iParticleSystemIndex", stridx);
-		TE_WriteNum("entindex", -1);
-		TE_WriteNum("m_iAttachType", 2);
-		TE_SendToClient(i, 0.0);
-	}
-}
-
-stock void TF2_Shake(float flOrigin[3], float flAmplitude, float flRadius, float flDuration, float flFrequency)
-{
-	int iShake = CreateEntityByName("env_shake");
-	if (iShake != -1)
-	{
-		DispatchKeyValueVector(iShake, "origin", flOrigin);
-		DispatchKeyValueFloat(iShake, "amplitude", flAmplitude);
-		DispatchKeyValueFloat(iShake, "radius", flRadius);
-		DispatchKeyValueFloat(iShake, "duration", flDuration);
-		DispatchKeyValueFloat(iShake, "frequency", flFrequency);
-		
-		DispatchSpawn(iShake);
-		AcceptEntityInput(iShake, "StartShake");
-	}
-}
-
-stock void TF2_Impulse(const float flOrigin[3], const float flRadius[3], const float flImpulseDir[3], const float flForce)
-{
-	int iImpulse = CreateEntityByName("trigger_apply_impulse");
-	if (iImpulse != -1)
-	{
-		DispatchKeyValueVector(iImpulse, "impulse_dir", flImpulseDir);
-		DispatchSpawn(iImpulse);
-		
-		SetEntPropFloat(iImpulse, Prop_Data, "m_flForce", flForce);
-		TeleportEntity(iImpulse, flOrigin, NULL_VECTOR, NULL_VECTOR);
-		
-		float flMinBounds[3];
-		float flMaxBounds[3];
-		for (int i = 0; i < sizeof(flRadius); i++)
-		{
-			flMinBounds[i] = i != sizeof(flRadius) - 1 ? flRadius[i] / 2 : 0.0;
-			flMinBounds[i] = i != sizeof(flRadius) - 1 ? flRadius[i] / 2 : flRadius[i];
-		}
-		SetEntPropVector(iImpulse, Prop_Send, "m_vecMins", flMinBounds);
-		SetEntPropVector(iImpulse, Prop_Send, "m_vecMaxs", flMaxBounds);
-		SetEntProp(iImpulse, Prop_Send, "m_nSolidType", 2);
-		ActivateEntity(iImpulse);
-		AcceptEntityInput(iImpulse, "ApplyImpulse");
-	}
-} 
