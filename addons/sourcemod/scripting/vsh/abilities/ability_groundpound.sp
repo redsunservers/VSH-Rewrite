@@ -2,7 +2,7 @@
 #define IMPACT_PARTICLE "hammer_impact_button"
 
 static float g_flImpactRadius[TF_MAXPLAYERS + 1];
-static float g_iImpactDamage[TF_MAXPLAYERS + 1];
+static float g_flImpactDamage[TF_MAXPLAYERS + 1];
 static float flImpactLaunchVelocity[TF_MAXPLAYERS + 1];
 
 methodmap CGroundPound < SaxtonHaleBase
@@ -19,15 +19,15 @@ methodmap CGroundPound < SaxtonHaleBase
 		}
 	}
 	
-	property float iImpactDamage
+	property float flImpactDamage
 	{
 		public set(float iVal)
 		{
-			g_iImpactDamage[this.iClient] = iVal;
+			g_flImpactDamage[this.iClient] = iVal;
 		}
 		public get()
 		{
-			return g_iImpactDamage[this.iClient];
+			return g_flImpactDamage[this.iClient];
 		}
 	}
 	
@@ -46,7 +46,7 @@ methodmap CGroundPound < SaxtonHaleBase
 	public CGroundPound(CGroundPound ability)
 	{
 		ability.flImpactRadius = 500.0;
-		ability.iImpactDamage = 50.0;
+		ability.flImpactDamage = 50.0;
 		ability.flImpactLaunchVelocity = 500.0;
 	}
 	
@@ -71,7 +71,7 @@ methodmap CGroundPound < SaxtonHaleBase
 				flClientVelocity[2] += this.flImpactLaunchVelocity;
 				
 				TeleportEntity(iClient, NULL_VECTOR, NULL_VECTOR, flClientVelocity);
-				SDKHooks_TakeDamage(iClient, this.iClient, this.iClient, this.iImpactDamage, DMG_FALL);
+				SDKHooks_TakeDamage(iClient, this.iClient, this.iClient, this.flImpactDamage, DMG_FALL);
 			}
 		}
 		
