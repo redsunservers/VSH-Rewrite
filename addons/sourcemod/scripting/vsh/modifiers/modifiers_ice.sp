@@ -9,6 +9,11 @@ methodmap CModifiersIce < SaxtonHaleBase
 	{
 	}
 	
+	public bool IsModifiersHidden()
+	{
+		return true;
+	}
+	
 	public void GetModifiersName(char[] sName, int length)
 	{
 		strcopy(sName, length, "Ice");
@@ -78,7 +83,7 @@ methodmap CModifiersIce < SaxtonHaleBase
 					g_flPlayerSpeedMultiplier[i] *= ICE_SLOWDOWN;
 					
 					//Recalculate player's speed
-					TF2_AddCondition(this.iClient, TFCond_SpeedBuffAlly, 0.01);
+					TF2_AddCondition(i, TFCond_SpeedBuffAlly, 0.01);
 					
 					CreateTimer(ICE_DURATION, Timer_ResetSpeed, EntIndexToEntRef(i));
 				}
