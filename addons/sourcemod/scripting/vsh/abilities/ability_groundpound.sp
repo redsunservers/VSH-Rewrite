@@ -62,7 +62,7 @@ methodmap CGroundPound < SaxtonHaleBase
 		TF2_Shake(flBossOrigin, 10.0, 100.0, 1.0, 0.5);
 		TF2_SpawnParticle(IMPACT_PARTICLE, flBossOrigin);
 		
-		for (int iClient = 1; iClient < MaxClients; iClient++)
+		for (int iClient = 1; iClient <= MaxClients; iClient++)
 		{
 			if (IsClientInGame(iClient) && iClient != this.iClient && IsClientInRange(iClient, flBossOrigin, this.flImpactRadius) && GetEntityFlags(iClient) & FL_ONGROUND)
 			{
