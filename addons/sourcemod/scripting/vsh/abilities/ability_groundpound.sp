@@ -71,7 +71,7 @@ methodmap CGroundPound < SaxtonHaleBase
 				flClientVelocity[2] += this.flImpactLaunchVelocity;
 				
 				TeleportEntity(iClient, NULL_VECTOR, NULL_VECTOR, flClientVelocity);
-				SDKHooks_TakeDamage(iClient, this.iClient, this.iClient, this.flImpactDamage, DMG_FALL);
+				SDKHooks_TakeDamage(iClient, this.iClient, this.iClient, this.flImpactDamage);
 			}
 		}
 		
