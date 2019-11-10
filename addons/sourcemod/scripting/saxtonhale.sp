@@ -339,6 +339,7 @@ Handle g_hSDKEquipWearable = null;
 #include "vsh/abilities/ability_body_eat.sp"
 #include "vsh/abilities/ability_brave_jump.sp"
 #include "vsh/abilities/ability_drop_model.sp"
+#include "vsh/abilities/ability_groundpound.sp"
 #include "vsh/abilities/ability_rage_bomb.sp"
 #include "vsh/abilities/ability_rage_conditions.sp"
 #include "vsh/abilities/ability_rage_ghost.sp"
@@ -349,7 +350,6 @@ Handle g_hSDKEquipWearable = null;
 #include "vsh/abilities/ability_weapon_charge.sp"
 #include "vsh/abilities/ability_weapon_fists.sp"
 #include "vsh/abilities/ability_weapon_spells.sp"
-#include "vsh/abilities/ability_groundpound.sp"
 
 #include "vsh/bosses/boss_hale.sp"
 #include "vsh/bosses/boss_painiscupcakes.sp"
@@ -364,8 +364,8 @@ Handle g_hSDKEquipWearable = null;
 #include "vsh/bosses/boss_seeldier.sp"
 #include "vsh/bosses/boss_blutarch.sp"
 #include "vsh/bosses/boss_redmond.sp"
-#include "vsh/bosses/boss_zombie.sp"
 #include "vsh/bosses/boss_yeti.sp"
+#include "vsh/bosses/boss_zombie.sp"
 
 #include "vsh/modifiers/modifiers_speed.sp"
 #include "vsh/modifiers/modifiers_jump.sp"
@@ -537,6 +537,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterAbility("CBraveJump");
 	SaxtonHale_RegisterAbility("CDropModel");
 	SaxtonHale_RegisterAbility("CBomb");
+	SaxtonHale_RegisterAbility("CGroundPound");
 	SaxtonHale_RegisterAbility("CRageAddCond");
 	SaxtonHale_RegisterAbility("CRageGhost");
 	SaxtonHale_RegisterAbility("CLightRage");
@@ -546,7 +547,6 @@ public void OnPluginStart()
 	SaxtonHale_RegisterAbility("CWeaponCharge");
 	SaxtonHale_RegisterAbility("CWeaponFists");
 	SaxtonHale_RegisterAbility("CWeaponSpells");
-	SaxtonHale_RegisterAbility("CGroundPound");
 	
 	//Init our convars
 	g_ConfigConvar.Create("vsh_force_load", "-1", "Force enable VSH on map start? (-1 for default, 0 for force disable, 1 for force enable)", _, true, -1.0, true, 1.0);
