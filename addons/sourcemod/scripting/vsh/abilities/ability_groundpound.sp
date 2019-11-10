@@ -59,7 +59,7 @@ methodmap CGroundPound < SaxtonHaleBase
 		GetClientAbsOrigin(this.iClient, flBossOrigin);
 		
 		EmitAmbientSound(IMPACT_SOUND, flBossOrigin, _, SNDLEVEL_SCREAMING);
-		TF2_Shake(flBossOrigin, 10.0, 100.0, 1.0, 0.5);
+		TF2_Shake(flBossOrigin, 10.0, this.flImpactRadius, 1.0, 0.5);
 		TF2_SpawnParticle(IMPACT_PARTICLE, flBossOrigin);
 		
 		for (int iClient = 1; iClient <= MaxClients; iClient++)
