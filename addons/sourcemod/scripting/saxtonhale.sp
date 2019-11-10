@@ -349,6 +349,7 @@ Handle g_hSDKEquipWearable = null;
 #include "vsh/abilities/ability_weapon_charge.sp"
 #include "vsh/abilities/ability_weapon_fists.sp"
 #include "vsh/abilities/ability_weapon_spells.sp"
+#include "vsh/abilities/ability_groundpound.sp"
 
 #include "vsh/bosses/boss_hale.sp"
 #include "vsh/bosses/boss_painiscupcakes.sp"
@@ -545,6 +546,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterAbility("CWeaponCharge");
 	SaxtonHale_RegisterAbility("CWeaponFists");
 	SaxtonHale_RegisterAbility("CWeaponSpells");
+	SaxtonHale_RegisterAbility("CGroundPound");
 	
 	//Init our convars
 	g_ConfigConvar.Create("vsh_force_load", "-1", "Force enable VSH on map start? (-1 for default, 0 for force disable, 1 for force enable)", _, true, -1.0, true, 1.0);
