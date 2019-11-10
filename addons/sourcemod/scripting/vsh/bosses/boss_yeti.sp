@@ -87,7 +87,7 @@ methodmap CYeti < SaxtonHaleBase
 	public void OnSpawn()
 	{
 		char attribs[128];
-		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65 ; 214 ; %d", GetRandomInt(9999, 99999));
+		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 214 ; %d", GetRandomInt(9999, 99999));
 		int iWeapon = this.CallFunction("CreateWeapon", 195, NULL_STRING, 100, TFQual_Strange, attribs);
 		if (iWeapon > MaxClients)
 		{
@@ -101,7 +101,6 @@ methodmap CYeti < SaxtonHaleBase
 		2: damage bonus
 		252: reduction in push force taken from damage
 		259: Deals 3x falling damage to the player you land on
-		329: reduction in airblast vulnerability
 		214: kill_eater
 		*/
 	}
