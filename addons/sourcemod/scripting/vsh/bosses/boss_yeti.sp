@@ -1,5 +1,5 @@
 #define YETI_MODEL "models/player/kirillian/boss/yeti_modded.mdl"
-#define YETI_THEME "ui/gamestartup27.mp3"
+#define YETI_THEME "ui/gamestartup29.mp3"
 
 static char g_strYetiRoundStart[][] =  {
 	"ambient_mp3/lair/animal_call_yeti1.mp3", 
@@ -156,7 +156,7 @@ methodmap CYeti < SaxtonHaleBase
 	public void GetMusicInfo(char[] sSound, int length, float &time)
 	{
 		strcopy(sSound, length, YETI_THEME);
-		time = 180.0;
+		time = 105.0;
 	}
 	
 	public void Precache()
