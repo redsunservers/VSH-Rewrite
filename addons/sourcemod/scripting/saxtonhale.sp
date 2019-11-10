@@ -3245,12 +3245,5 @@ stock bool IsClientInRange(int iClient, float flOrigin[3], float flRadius)
 {
 	float flClientOrigin[3];
 	GetClientAbsOrigin(iClient, flClientOrigin);
-	
-	float flDistance;
-	for (int i = 0; i < sizeof(flOrigin); i++)
-	{
-		flDistance += FloatAbs(flOrigin[i] - flClientOrigin[i]);
-	}
-	
-	return flDistance <= flRadius;
+	return GetVectorDistance(flOrigin, flClientOrigin) <= flRadius;
 }
