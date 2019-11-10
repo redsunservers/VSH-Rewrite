@@ -64,7 +64,7 @@ methodmap CGroundPound < SaxtonHaleBase
 		
 		for (int iClient = 1; iClient <= MaxClients; iClient++)
 		{
-			if (IsClientInGame(iClient) && iClient != this.iClient && IsClientInRange(iClient, flBossOrigin, this.flImpactRadius) && GetEntityFlags(iClient) & FL_ONGROUND)
+			if (IsClientInGame(iClient) && GetClientTeam(iClient) != GetClientTeam(this.iClient) && IsClientInRange(iClient, flBossOrigin, this.flImpactRadius) && GetEntityFlags(iClient) & FL_ONGROUND)
 			{
 				float flClientVelocity[3];
 				GetEntPropVector(iClient, Prop_Data, "m_vecVelocity", flClientVelocity);
