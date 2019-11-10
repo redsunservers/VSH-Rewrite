@@ -75,10 +75,7 @@ methodmap CModifiersIce < SaxtonHaleBase
 				if (GetVectorDistance(vecClientPos, vecTargetPos) < 250.0)
 				{
 					g_flClientIceSlowdown[i] = GetGameTime() + ICE_DURATION;
-					g_flPlayerSpeedMultiplier[i] *= ICE_SLOWDOWN;
-					
-					//Recalculate player's speed
-					TF2_AddCondition(this.iClient, TFCond_SpeedBuffAlly, 0.01);
+					TF2_StunPlayer(i, ICE_DURATION, ICE_SLOWDOWN, TF_STUNFLAG_SLOWDOWN);
 					
 					CreateTimer(ICE_DURATION, Timer_ResetSpeed, EntIndexToEntRef(i));
 				}
@@ -124,8 +121,5 @@ public Action Timer_ResetSpeed(Handle hTimer, int iRef)
 	if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient))
 		return;
 	
-	g_flPlayerSpeedMultiplier[iClient] /= ICE_SLOWDOWN;
-	
-	//Recalculate player's speed
-	TF2_AddCondition(iClient, TFCond_SpeedBuffAlly, 0.01);
+	TF2_StunPlayer(iClient, 0.0, 0.0, TF_STUNFLAG_SLOWDOWN);
 }
