@@ -54,10 +54,9 @@ methodmap CYeti < SaxtonHaleBase
 {
 	public CYeti(CYeti boss)
 	{
-		// TODO: Abilities
 		boss.CallFunction("CreateAbility", "CBraveJump");
 		boss.CallFunction("CreateAbility", "CGroundPound");
-		//boss.CallFunction("CreateAbility", "CRageFreeze");
+		boss.CallFunction("CreateAbility", "CRageFreeze");
 		
 		boss.iBaseHealth = 800;
 		boss.iHealthPerPlayer = 850;

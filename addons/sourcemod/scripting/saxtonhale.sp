@@ -342,6 +342,7 @@ Handle g_hSDKEquipWearable = null;
 #include "vsh/abilities/ability_groundpound.sp"
 #include "vsh/abilities/ability_rage_bomb.sp"
 #include "vsh/abilities/ability_rage_conditions.sp"
+#include "vsh/abilities/ability_rage_freeze.sp"
 #include "vsh/abilities/ability_rage_ghost.sp"
 #include "vsh/abilities/ability_rage_light.sp"
 #include "vsh/abilities/ability_rage_scare.sp"
@@ -539,6 +540,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterAbility("CBomb");
 	SaxtonHale_RegisterAbility("CGroundPound");
 	SaxtonHale_RegisterAbility("CRageAddCond");
+	SaxtonHale_RegisterAbility("CRageFreeze");
 	SaxtonHale_RegisterAbility("CRageGhost");
 	SaxtonHale_RegisterAbility("CLightRage");
 	SaxtonHale_RegisterAbility("CScareRage");
