@@ -331,15 +331,19 @@ int g_iTotalRoundPlayed;
 int g_iTotalAttackCount;
 
 //SDK functions
-Handle g_hHookGetMaxHealth = null;
-Handle g_hHookShouldTransmit = null;
-Handle g_hSDKGetMaxHealth = null;
-Handle g_hSDKGetMaxAmmo = null;
-Handle g_hSDKSendWeaponAnim = null;
-Handle g_hSDKGetMaxClip = null;
-Handle g_hSDKRemoveWearable = null;
-Handle g_hSDKGetEquippedWearable = null;
-Handle g_hSDKEquipWearable = null;
+Handle g_hHookGetMaxHealth;
+Handle g_hHookShouldTransmit;
+Handle g_hSDKGetMaxHealth;
+Handle g_hSDKGetMaxAmmo;
+Handle g_hSDKSendWeaponAnim;
+Handle g_hSDKGetMaxClip;
+Handle g_hSDKAddVelocity;
+Handle g_hSDKRemoveWearable;
+Handle g_hSDKGetEquippedWearable;
+Handle g_hSDKEquipWearable;
+
+// Hidden properties offset
+int g_iOffsetFuseTime = -1;
 
 #include "vsh/base_ability.sp"
 #include "vsh/base_modifiers.sp"
@@ -349,6 +353,7 @@ Handle g_hSDKEquipWearable = null;
 #include "vsh/abilities/ability_brave_jump.sp"
 #include "vsh/abilities/ability_drop_model.sp"
 #include "vsh/abilities/ability_rage_bomb.sp"
+#include "vsh/abilities/ability_rage_bomb_projectile.sp"
 #include "vsh/abilities/ability_rage_conditions.sp"
 #include "vsh/abilities/ability_rage_ghost.sp"
 #include "vsh/abilities/ability_rage_light.sp"
@@ -545,6 +550,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterAbility("CBraveJump");
 	SaxtonHale_RegisterAbility("CDropModel");
 	SaxtonHale_RegisterAbility("CBomb");
+	SaxtonHale_RegisterAbility("CBombProjectile");
 	SaxtonHale_RegisterAbility("CRageAddCond");
 	SaxtonHale_RegisterAbility("CRageGhost");
 	SaxtonHale_RegisterAbility("CLightRage");
@@ -2520,6 +2526,15 @@ void SDK_Init()
 	if (g_hSDKGetMaxClip == null)
 		LogMessage("Failed to create call: CTFWeaponBase::GetMaxClip1!");
 
+	// This function is used to control entity velocity
+	StartPrepSDKCall(SDKCall_Raw);
+	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "IPhysicsObject::AddVelocity");
+	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_Pointer, VDECODE_FLAG_ALLOWNULL);
+	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_Pointer, VDECODE_FLAG_ALLOWNULL);
+	g_hSDKAddVelocity = EndPrepSDKCall();
+	if (g_hSDKAddVelocity == null)
+		LogMessage("Failed to create call: IPhysicsObject::AddVelocity!");
+
 	// This hook allows entity to always transmit
 	iOffset = hGameData.GetOffset("CBaseEntity::ShouldTransmit");
 	g_hHookShouldTransmit = DHookCreate(iOffset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity, Hook_EntityShouldTransmit);
@@ -2555,6 +2570,20 @@ void SDK_Init()
 	
 	delete hHook;
 	delete hGameData;
+	
+	if (LookupOffset(g_iOffsetFuseTime, "CTFWeaponBaseMerasmusGrenade", "m_hThrower"))
+		g_iOffsetFuseTime += 48;
+}
+
+stock bool LookupOffset(int &iOffset, const char[] sClass, const char[] sProp)
+{
+	iOffset = FindSendPropInfo(sClass, sProp);
+	if (iOffset <= 0)
+	{
+		LogMessage("Could not locate offset for %s::%s!", sClass, sProp);
+		return false;
+	}
+	return true;
 }
 
 public MRESReturn Hook_GetMaxHealth(int iClient, Handle hReturn)
@@ -2660,6 +2689,23 @@ int SDK_GetMaxClip(int iWeapon)
 	if(g_hSDKGetMaxClip != null)
 		return SDKCall(g_hSDKGetMaxClip, iWeapon);
 	return -1;
+}
+
+void SDK_AddVelocity(int iEntity, float vecVelocity[3], float vecAngleVelocity[3])
+{
+	if (g_hSDKAddVelocity != null)
+	{
+		static int iOffset = -1;
+		if (iOffset == -1)
+			FindDataMapInfo(iEntity, "m_pPhysicsObject", _, _, iOffset);
+		
+		if (iOffset != -1)
+		{
+			Address pPhysicsObj = view_as<Address>(LoadFromAddress(GetEntityAddress(iEntity)+view_as<Address>(iOffset), NumberType_Int32));
+			if (pPhysicsObj != Address_Null)
+				SDKCall(g_hSDKAddVelocity, pPhysicsObj, vecVelocity, vecAngleVelocity);
+		}
+	}
 }
 
 int SDK_GetMaxHealth(int iClient)

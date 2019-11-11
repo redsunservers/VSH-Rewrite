@@ -83,6 +83,7 @@ methodmap CMerasmus < SaxtonHaleBase
 {
 	public CMerasmus(CMerasmus boss)
 	{
+		boss.CallFunction("CreateAbility", "CBombProjectile");
 		CWeaponSpells weaponSpells = boss.CallFunction("CreateAbility", "CWeaponSpells");
 		weaponSpells.AddSpells(haleSpells_Jump);
 		weaponSpells.flRageRequirement = 0.0;
