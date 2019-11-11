@@ -154,7 +154,7 @@ methodmap CBomb < SaxtonHaleBase
 		}
 	}
 	
-	public static void Precache()
+	public void Precache()
 	{
 		PrecacheSound(BOMB_NUKE_SOUND);
 		PrecacheParticleSystem(BOMB_NUKE_PARTICLE);

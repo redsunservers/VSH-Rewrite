@@ -236,7 +236,7 @@ methodmap CBodyEat < SaxtonHaleBase
 		}
 	}
 	
-	public static void Precache()
+	public void Precache()
 	{
 		PrecacheSound(BODY_EAT);
 	}

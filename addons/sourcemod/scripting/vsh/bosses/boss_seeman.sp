@@ -118,8 +118,6 @@ methodmap CSeeMan < SaxtonHaleBase
 	
 	public void Precache()
 	{
-		CBomb.Precache();
-		
 		PrepareSound(SEEMAN_SEE_SND);
 		PrepareSound(SEEMAN_RAGE_SND);
 		PrepareSound(SEE_BOSSES_INTRO_SND);

@@ -1,3 +1,5 @@
+//#define DEMOPAN_DROP_MODEL	"models/player/items/soldier/soldier_shako.mdl"
+
 static int g_iDemoPanModelBountyHat;
 static int g_iDemoPanModelDangeresqueToo;
 
@@ -66,7 +68,7 @@ methodmap CDemoPan < SaxtonHaleBase
 		boss.CallFunction("CreateAbility", "CWeaponCharge");
 		boss.CallFunction("CreateAbility", "CBraveJump");
 		//CDropModel dropmodel = boss.CallFunction("CreateAbility", "CDropModel");
-		//dropmodel.SetModel("models/player/items/soldier/soldier_shako.mdl");
+		//dropmodel.SetModel(DEMOPAN_DROP_MODEL);
 		
 		boss.iBaseHealth = 800;
 		boss.iHealthPerPlayer = 800;
@@ -166,6 +168,8 @@ methodmap CDemoPan < SaxtonHaleBase
 	
 	public void Precache()
 	{
+		//PrecacheModel(DEMOPAN_DROP_MODEL);
+		
 		g_iDemoPanModelBountyHat = PrecacheModel("models/player/items/all_class/treasure_hat_01_demo.mdl");
 		g_iDemoPanModelDangeresqueToo = PrecacheModel("models/player/items/demo/ttg_glasses.mdl");
 		
