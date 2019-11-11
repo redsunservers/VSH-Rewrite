@@ -567,7 +567,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterAbility("CDropModel");
 	SaxtonHale_RegisterAbility("CBomb");
 	SaxtonHale_RegisterAbility("CGroundPound");
-    SaxtonHale_RegisterAbility("CModelOverride");
+	SaxtonHale_RegisterAbility("CModelOverride");
 	SaxtonHale_RegisterAbility("CRageAddCond");
 	SaxtonHale_RegisterAbility("CRageFreeze");
 	SaxtonHale_RegisterAbility("CRageGhost");
