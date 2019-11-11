@@ -117,15 +117,6 @@ methodmap CYeti < SaxtonHaleBase
 		}
 	}
 	
-	public void GetSoundAbility(char[] sSound, int length, const char[] sType)
-	{
-		// TODO: Abilities
-		//if (strcmp(sType, "CRageFreeze") == 0)
-		//strcopy(sSound, length, g_strYetiFreeze[GetRandomInt(0,sizeof(g_strYetiFreeze)-1)]);
-		//if (strcmp(sType, "CGroundSlam") == 0)
-		//strcopy(sSound, length, g_strYetiGroundSlam[GetRandomInt(0,sizeof(g_strYetiGroundSlam)-1)]);
-	}
-	
 	public void GetSoundKill(char[] sSound, int length, TFClassType nClass)
 	{
 		strcopy(sSound, length, g_strYetiKill[GetRandomInt(0, sizeof(g_strYetiKill) - 1)]);
@@ -146,6 +137,17 @@ methodmap CYeti < SaxtonHaleBase
 		{
 			EmitSoundToAll(g_strYetiFootsteps[GetRandomInt(0, sizeof(g_strYetiFootsteps) - 1)], this.iClient, _, _, _, 0.4, GetRandomInt(90, 100));
 			return Plugin_Handled;
+		}
+		
+		return Plugin_Continue;
+	}
+	
+	public Action OnAttackDamage(int &victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+	{
+		if (victim != this.iClient && damagecustom == TF_CUSTOM_TAUNT_HIGH_NOON)
+		{
+			damage = 0.0;
+			return Plugin_Changed;
 		}
 		
 		return Plugin_Continue;
