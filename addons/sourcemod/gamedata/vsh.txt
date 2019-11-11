@@ -31,20 +31,6 @@
 		}
 		"Functions"
 		{
-			"CTFPlayer::TeamFortress_CalculateMaxSpeed"
-			{
-				"signature"	"CTFPlayer::TeamFortress_CalculateMaxSpeed"
-				"callconv"	"thiscall"
-				"return"	"float"
-				"this"		"entity"
-				"arguments"
-				{
-					"ignoreCharging"
-					{
-						"type"	"bool"
-					}
-				}
-			}
 			"CWeaponMedigun::AllowedToHealTarget"
 			{
 				"signature"	"CWeaponMedigun::AllowedToHealTarget"
