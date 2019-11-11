@@ -57,10 +57,10 @@ methodmap CModifiersIce < SaxtonHaleBase
 		{
 			TeleportEntity(iLight, vecClientPos, view_as<float>({ 90.0, 0.0, 0.0 }), NULL_VECTOR);
 			
-			Handle iData = CreateDataPack();
-			WritePackCell(iData, EntIndexToEntRef(iLight));
-			WritePackCell(iData, 6);
-			CreateTimer(1.0, Timer_IceLight, iData);
+			DataPack data;
+			CreateDataTimer(1.0, Timer_IceLight, data);
+			data.WriteCell(EntIndexToEntRef(iLight));
+			data.WriteCell(6);
 			
 			CreateTimer(6.0, Timer_DestroyLight, EntIndexToEntRef(iLight));
 		}
@@ -97,23 +97,22 @@ public void Ice_RagdollSpawn(int iRef)
 	SetEntProp(iEntity, Prop_Send, "m_bIceRagdoll", 1);
 }
 
-public Action Timer_IceLight(Handle hTimer, DataPack iData)
+public Action Timer_IceLight(Handle hTimer, DataPack data)
 {
-	ResetPack(iData);
-	int iLight = EntRefToEntIndex(ReadPackCell(iData));
-	int iBrightness = ReadPackCell(iData);
-	delete iData;
+	data.Reset();
+	int iRef = data.ReadCell();
+	int iBrightness = data.ReadCell();
 	
+	int iLight = EntRefToEntIndex(iRef);
 	if (iLight > MaxClients)
 	{
 		iBrightness--;
 		SetVariantInt(iBrightness);
 		AcceptEntityInput(iLight, "brightness");
 		
-		iData = CreateDataPack();
-		WritePackCell(iData, EntIndexToEntRef(iLight));
-		WritePackCell(iData, iBrightness);
-		CreateTimer(1.0, Timer_IceLight, iData);
+		CreateDataTimer(1.0, Timer_IceLight, data);
+		data.WriteCell(iRef);
+		data.WriteCell(iBrightness);
 	}
 }
 
