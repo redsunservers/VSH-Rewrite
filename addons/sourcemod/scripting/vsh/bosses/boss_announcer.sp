@@ -1,5 +1,5 @@
 #define ANNOUNCER_MODEL "models/player/kirillian/boss/sedisocks_administrator.mdl"
-#define ANNOUNCER_THEME "freak_fortress_2/admin/admin_music.mp3"
+#define ANNOUNCER_THEME "vsh_rewrite/administrator/admin_music.mp3"
 
 static char g_strAnnouncerRoundStart[][] = {
 	"vo/announcer_dec_missionbegins60s01.mp3",
@@ -101,7 +101,7 @@ methodmap CAnnouncer < SaxtonHaleBase
 		117: Attrib_Dmg_Falloff_Increased	//Doesnt even work thanks valve
 		*/
 		
-		Format(attribs, sizeof(attribs), "2 ; 4.55 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65");
+		Format(attribs, sizeof(attribs), "2 ; 4.55 ; 252 ; 0.5 ; 259 ; 1.0");
 		iWeapon = this.CallFunction("CreateWeapon", 194, "tf_weapon_knife", 100, TFQual_Collectors, attribs);
 		if (iWeapon > MaxClients)
 			SetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
@@ -111,7 +111,6 @@ methodmap CAnnouncer < SaxtonHaleBase
 		2: Damage bonus
 		252: reduction in push force taken from damage
 		259: Deals 3x falling damage to the player you land on
-		329: reduction in airblast vulnerability
 		*/
 	}
 	

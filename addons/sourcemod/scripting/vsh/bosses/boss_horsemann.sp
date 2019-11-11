@@ -103,7 +103,7 @@ methodmap CHorsemann < SaxtonHaleBase
 	public void OnSpawn()
 	{
 		char attribs[128];
-		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65 ; 264 ; 0.73 ; 551 ; 1");
+		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 264 ; 0.73 ; 551 ; 1");
 		int iWeapon = this.CallFunction("CreateWeapon", 266, "tf_weapon_sword", 100, TFQual_Unusual, attribs);
 
 		if (iWeapon > MaxClients)
@@ -117,7 +117,6 @@ methodmap CHorsemann < SaxtonHaleBase
 		2: damage bonus
 		252: reduction in push force taken from damage
 		259: Deals 3x falling damage to the player you land on
-		329: reduction in airblast vulnerability
 		436: ragdolls_plasma_effect
 		264: melee range multiplier (tf_weapon_sword have 37% extra range)
 		551: special taunt

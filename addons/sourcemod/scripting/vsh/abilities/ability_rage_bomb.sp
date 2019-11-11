@@ -103,10 +103,9 @@ methodmap CBomb < SaxtonHaleBase
 		FakeClientCommand(this.iClient, "taunt");
 		SetEntityMoveType(this.iClient, MOVETYPE_NONE);
 		
-		int iFlags = GetCommandFlags("thirdperson");
-		SetCommandFlags("thirdperson", iFlags & (~FCVAR_CHEAT));
-		ClientCommand(this.iClient, "thirdperson");
-		SetCommandFlags("thirdperson", iFlags);
+		//Force thirdperson view
+		SetVariantInt(1);
+		AcceptEntityInput(this.iClient, "SetForcedTauntCam");
 	}
 	
 	public void OnThink()
@@ -149,14 +148,13 @@ methodmap CBomb < SaxtonHaleBase
 			TF2_RemoveCondition(this.iClient, TFCond_Taunting);
 			SetEntityMoveType(this.iClient, MOVETYPE_WALK);
 			
-			int iFlags = GetCommandFlags("firstperson");
-			SetCommandFlags("firstperson", iFlags & (~FCVAR_CHEAT));
-			ClientCommand(this.iClient, "firstperson");
-			SetCommandFlags("firstperson", iFlags);
+			//Set view back to first person
+			SetVariantInt(0);
+			AcceptEntityInput(this.iClient, "SetForcedTauntCam");
 		}
 	}
 	
-	public static void Precache()
+	public void Precache()
 	{
 		PrecacheSound(BOMB_NUKE_SOUND);
 		PrecacheParticleSystem(BOMB_NUKE_PARTICLE);

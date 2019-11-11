@@ -19,7 +19,7 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.1.2"
+#define PLUGIN_VERSION "1.1.4"
 
 #define MAX_BUTTONS 		26
 #define MAX_TYPE_CHAR		32	//Max char size of methodmaps name
@@ -50,6 +50,7 @@
 #define ITEM_ROCK_PAPER_SCISSORS	1110
 
 #define SOUND_ALERT			"ui/system_message_alert.wav"
+#define SOUND_METERFULL		"player/recharged.wav"
 #define SOUND_BACKSTAB		"player/spy_shield_break.wav"
 #define SOUND_DOUBLEDONK	"player/doubledonk.wav"
 
@@ -111,6 +112,14 @@ enum
 {
 	LifeState_Alive = 0,
 	LifeState_Dead = 2
+};
+
+enum FlamethrowerState
+{
+	FlamethrowerState_Idle = 0,
+	FlamethrowerState_StartFiring,
+	FlamethrowerState_Firing,
+	FlamethrowerState_Airblast,
 };
 
 enum MinigunState
@@ -308,7 +317,6 @@ int g_iHealthBarHealth;
 int g_iHealthBarMaxHealth;
 
 //Player data
-float g_flPlayerSpeedMultiplier[TF_MAXPLAYERS+1];
 int g_iPlayerLastButtons[TF_MAXPLAYERS+1];
 int g_iPlayerDamage[TF_MAXPLAYERS+1];
 int g_iPlayerAssistDamage[TF_MAXPLAYERS+1];
@@ -602,8 +610,12 @@ void Plugin_Cvars(bool toggle)
 	static float flFeignDeathDuration;
 	static float flFeignDeathSpeed;
 
-	if (toggle)
+	static bool toggled = false; // Used to avoid a overwrite of default value if toggled twice
+
+	if (toggle && !toggled)
 	{
+		toggled = true;
+
 		bArenaUseQueue = tf_arena_use_queue.BoolValue;
 		tf_arena_use_queue.BoolValue = false;
 
@@ -640,8 +652,10 @@ void Plugin_Cvars(bool toggle)
 		flFeignDeathSpeed = tf_feign_death_speed_duration.FloatValue;
 		tf_feign_death_speed_duration.FloatValue = 0.0;
 	}
-	else
+	else if (!toggle && toggled)
 	{
+		toggled = false;
+
 		tf_arena_use_queue.BoolValue = bArenaUseQueue;
 		tf_arena_first_blood.BoolValue = bArenaFirstBlood;
 		mp_forcecamera.BoolValue = bForceCamera;
@@ -701,17 +715,26 @@ public void OnMapStart()
 
 		Config_Refresh();
 
-		//Precache every bosses
-		int iLength = g_aAllBossesType.Length;
+		//Precache every bosses/abilities/modifiers registered
+		StringMapSnapshot snapshot = Function_GetPluginSnapshot();
+		int iLength = snapshot.Length;
 		for (int i = 0; i < iLength; i++)
 		{
-			char sBossType[MAX_TYPE_CHAR];
-			g_aAllBossesType.GetString(i, sBossType, sizeof(sBossType));
+			char sFunction[256];
+			snapshot.GetKey(i, sFunction, sizeof(sFunction));
+			StrCat(sFunction, sizeof(sFunction), ".Precache");	// CSaxtonHale.Precache
 			
-			SaxtonHaleBase boss = SaxtonHaleBase(0);
-			boss.CallFunction("SetBossType", sBossType);
-			boss.CallFunction("Precache");
+			Handle hPlugin = Function_GetPlugin(sFunction);
+			Function func = GetFunctionByName(hPlugin, sFunction);
+			if (func != INVALID_FUNCTION)
+			{
+				Call_StartFunction(hPlugin, func);
+				Call_PushCell(0);	//Client index, but doesn't matter when we want to just precache stuffs
+				Call_Finish();
+			}
 		}
+
+		delete snapshot;
 
 		for (int i = 1; i <= 4; i++)
 		{
@@ -724,6 +747,7 @@ public void OnMapStart()
 		PrecacheParticleSystem(PARTICLE_GHOST);
 
 		PrecacheSound(SOUND_ALERT);
+		PrecacheSound(SOUND_METERFULL);
 		PrecacheSound(SOUND_BACKSTAB);
 		PrecacheSound(SOUND_DOUBLEDONK);
 		
@@ -927,7 +951,6 @@ public Action Event_RoundStart(Event event, const char[] sName, bool bDontBroadc
 
 	g_iTotalAttackCount = SaxtonHale_GetAliveAttackPlayers();	//Update amount of attack players
 
-	Tags_RoundStart();
 	Winstreak_RoundStart();
 
 	RequestFrame(Frame_InitVshPreRoundTimer, tf_arena_preround_time.IntValue);
@@ -1623,9 +1646,8 @@ public Action Event_PlayerInventoryUpdate(Event event, const char[] sName, bool 
 
 	if (g_iTotalRoundPlayed <= 0) return;
 	
+	Tags_ResetClient(iClient);
 	TagsCore_RefreshClient(iClient);
-	
-	Hud_SetRageView(iClient, false);
 	
 	if (SaxtonHale_IsValidAttack(iClient))
 		TagsCore_CallAll(iClient, TagsCall_Spawn);
@@ -1646,6 +1668,7 @@ public Action Event_PlayerHurt(Event event, const char[] sName, bool bDontBroadc
 	{
 		int iAttacker = GetClientOfUserId(event.GetInt("attacker"));
 		int iDamageAmount = event.GetInt("damageamount");
+		Tags_OnPlayerHurt(iClient, iAttacker, iDamageAmount);
 		
 		if (0 < iAttacker <= MaxClients && IsClientInGame(iAttacker) && iClient != iAttacker)
 		{
@@ -1831,7 +1854,6 @@ public void OnClientConnected(int iClient)
 {
 	Network_ResetClient(iClient);
 
-	g_flPlayerSpeedMultiplier[iClient] = 1.0;
 	g_iPlayerDamage[iClient] = 0;
 	g_iPlayerAssistDamage[iClient] = 0;
 	g_iClientFlags[iClient] = 0;
@@ -2516,18 +2538,9 @@ void SDK_Init()
 		LogMessage("Failed to create hook: CBaseEntity::ShouldTransmit!");
 	else
 		DHookAddParam(g_hHookShouldTransmit, HookParamType_ObjectPtr);
-
-	// This hook allows to change max speed
-	Handle hHook = DHookCreateFromConf(hGameData, "CTFPlayer::TeamFortress_CalculateMaxSpeed");
-	if (hHook == null)
-		LogMessage("Failed to create hook: CTFPlayer::TeamFortress_CalculateMaxSpeed!");
-	else
-		DHookEnableDetour(hHook, false, Hook_CalculateMaxSpeed);
-	
-	delete hHook;
 	
 	// This hook allows to allow/block medigun heals
-	hHook = DHookCreateFromConf(hGameData, "CWeaponMedigun::AllowedToHealTarget");
+	Handle hHook = DHookCreateFromConf(hGameData, "CWeaponMedigun::AllowedToHealTarget");
 	if (hHook == null)
 		LogMessage("Failed to create hook: CWeaponMedigun::AllowedToHealTarget!");
 	else
@@ -2561,19 +2574,6 @@ public MRESReturn Hook_EntityShouldTransmit(int iEntity, Handle hReturn, Handle 
 {
 	DHookSetReturn(hReturn, FL_EDICT_ALWAYS);
 	return MRES_Supercede;
-}
-
-public MRESReturn Hook_CalculateMaxSpeed(int iClient, Handle hReturn, Handle hParams)
-{
-	if (g_flPlayerSpeedMultiplier[iClient] != 1.0)
-	{
-		float flSpeed = DHookGetReturn(hReturn);
-		flSpeed *= g_flPlayerSpeedMultiplier[iClient];
-		DHookSetReturn(hReturn, flSpeed);
-		return MRES_Supercede;
-	}
-	
-	return MRES_Ignored;
 }
 
 public MRESReturn Hook_AllowedToHealTarget(int iMedigun, Handle hReturn, Handle hParams)

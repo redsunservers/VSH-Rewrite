@@ -4,6 +4,10 @@ static int g_iZombieUsed[TF_MAXPLAYERS+1];
 
 static bool g_bTagsLunchbox[TF_MAXPLAYERS+1];
 
+static int g_iTagsAirblastRequirement[TF_MAXPLAYERS+1];
+static int g_iTagsAirblastDamage[TF_MAXPLAYERS+1];
+static FlamethrowerState g_nTagsAirblastState[TF_MAXPLAYERS+1];
+
 static ArrayList g_aAttrib;	//Arrays of active attribs to be removed later
 
 enum
@@ -14,19 +18,20 @@ enum
 	TagsAttrib_MAX,
 }
 
-void Tags_RoundStart()
+void Tags_ResetClient(int iClient)
 {
 	if (g_aAttrib == null)
 		g_aAttrib = new ArrayList(TagsAttrib_MAX);
 	
-	for (int iClient = 1; iClient <= MaxClients; iClient++)
-	{
-		g_iClimbAmount[iClient] = 0;
-		g_iZombieUsed[iClient] = 0;
-		
-		for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
-			g_iBackstabCount[iClient][iVictim] = 0;
-	}
+	g_iClimbAmount[iClient] = 0;
+	g_iZombieUsed[iClient] = 0;
+	g_iTagsAirblastRequirement[iClient] = -1;
+	g_iTagsAirblastDamage[iClient] = 0;
+	
+	for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
+		g_iBackstabCount[iClient][iVictim] = 0;
+	
+	Hud_SetRageView(iClient, false);
 }
 
 void Tags_OnThink(int iClient)
@@ -35,6 +40,23 @@ void Tags_OnThink(int iClient)
 	
 	if (GetEntityFlags(iClient) & FL_ONGROUND)
 		g_iClimbAmount[iClient] = 0;
+	
+	if (g_iTagsAirblastRequirement[iClient] > 0 && g_iTagsAirblastDamage[iClient] >= g_iTagsAirblastRequirement[iClient])
+	{
+		//Detect if airblast is used, and reset if so
+		int iPrimary = TF2_GetItemInSlot(iClient, WeaponSlot_Primary);
+		if (iPrimary > MaxClients)
+		{
+			FlamethrowerState nState = view_as<FlamethrowerState>(GetEntProp(iPrimary, Prop_Send, "m_iWeaponState"));
+			if (nState != g_nTagsAirblastState[iClient] && nState == FlamethrowerState_Airblast)
+			{
+				g_iTagsAirblastDamage[iClient] = 0;	//Reset damage
+				SetEntPropFloat(iPrimary, Prop_Send, "m_flNextSecondaryAttack", 31536000.0+GetGameTime());	//3 years
+			}
+			
+			g_nTagsAirblastState[iClient] = nState;
+		}
+	}
 	
 	int iSecondary = TF2_GetItemInSlot(iClient, WeaponSlot_Secondary);
 	if (iSecondary > MaxClients)
@@ -56,6 +78,32 @@ void Tags_OnThink(int iClient)
 				{
 					g_bTagsLunchbox[iClient] = true;
 					TagsCore_CallAll(iClient, TagsCall_Lunchbox);
+				}
+			}
+		}
+	}
+}
+
+void Tags_OnPlayerHurt(int iVictim, int iAttacker, int iDamage)
+{
+	if (SaxtonHale_IsValidBoss(iVictim) && SaxtonHale_IsValidAttack(iAttacker))
+	{
+		if (g_iTagsAirblastRequirement[iAttacker] > 0)
+		{
+			bool bFull = (g_iTagsAirblastDamage[iAttacker] >= g_iTagsAirblastRequirement[iAttacker]);
+			g_iTagsAirblastDamage[iAttacker] += iDamage;
+			
+			if (g_iTagsAirblastDamage[iAttacker] >= g_iTagsAirblastRequirement[iAttacker])
+			{
+				g_iTagsAirblastDamage[iAttacker] = g_iTagsAirblastRequirement[iAttacker];
+				
+				if (!bFull)
+				{
+					EmitSoundToClient(iAttacker, SOUND_METERFULL);	//Alert player meter is fully
+					
+					int iPrimary = TF2_GetItemInSlot(iAttacker, WeaponSlot_Primary);
+					if (iPrimary > MaxClients)
+						SetEntPropFloat(iPrimary, Prop_Send, "m_flNextSecondaryAttack", 0.0);	//Allow airblast to be used
 				}
 			}
 		}
@@ -582,6 +630,17 @@ public void Tags_AddHealersUber(int iClient, int iTarget, TagsParams tParams)
 	}
 }
 
+public void Tags_Airblast(int iClient, int iTarget, TagsParams tParams)
+{
+	g_iTagsAirblastRequirement[iClient] = tParams.GetInt("damage", -1);
+	g_iTagsAirblastDamage[iClient] = tParams.GetInt("start", 0);
+	
+	if (g_iTagsAirblastRequirement[iClient] > g_iTagsAirblastDamage[iClient])
+		SetEntPropFloat(iTarget, Prop_Send, "m_flNextSecondaryAttack", 31536000.0+GetGameTime());	//3 years
+	else
+		SetEntPropFloat(iTarget, Prop_Send, "m_flNextSecondaryAttack", 0.0);
+}
+
 public void Tags_Explode(int iClient, int iTarget, TagsParams tParams)
 {
 	if (iTarget <= 0 || !IsValidEdict(iTarget))
@@ -706,4 +765,12 @@ public Action Timer_ResetAttrib(Handle hTimer, DataPack data)
 stock int Tags_GetBackstabCount(int iClient, int iVictim)
 {
 	return g_iBackstabCount[iClient][iVictim];
+}
+
+stock float Tags_GetAirblastPercentage(int iClient)
+{
+	if (g_iTagsAirblastRequirement[iClient] <= 0)
+		return -1.0;
+	
+	return float(g_iTagsAirblastDamage[iClient]) / float(g_iTagsAirblastRequirement[iClient]);
 }

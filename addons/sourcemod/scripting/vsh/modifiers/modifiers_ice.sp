@@ -1,5 +1,6 @@
 #define ICE_SLOWDOWN 0.7
 #define ICE_DURATION 2.0
+#define ICE_RANGE 250.0
 
 static float g_flClientIceSlowdown[TF_MAXPLAYERS+1];
 
@@ -37,7 +38,7 @@ methodmap CModifiersIce < SaxtonHaleBase
 	}
 	
 	public Action OnTakeDamage(int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
-	{		
+	{
 		if (!(damagetype & DMG_FALL))
 			return Plugin_Continue;
 		
@@ -47,20 +48,17 @@ methodmap CModifiersIce < SaxtonHaleBase
 		GetClientAbsOrigin(this.iClient, vecClientPos);
 		
 		int iColor[4];
-		iColor[0] = 128;
-		iColor[1] = 176;
-		iColor[2] = 255;
-		iColor[3] = 255;
+		this.GetRenderColor(iColor);
 		
 		int iLight = TF2_CreateLightEntity(250.0, iColor, 6);
 		if (iLight != -1)
 		{
 			TeleportEntity(iLight, vecClientPos, view_as<float>({ 90.0, 0.0, 0.0 }), NULL_VECTOR);
 			
-			Handle iData = CreateDataPack();
-			WritePackCell(iData, EntIndexToEntRef(iLight));
-			WritePackCell(iData, 6);
-			CreateTimer(1.0, Timer_IceLight, iData);
+			DataPack data;
+			CreateDataTimer(1.0, Timer_IceLight, data);
+			data.WriteCell(EntIndexToEntRef(iLight));
+			data.WriteCell(6);
 			
 			CreateTimer(6.0, Timer_DestroyLight, EntIndexToEntRef(iLight));
 		}
@@ -72,15 +70,10 @@ methodmap CModifiersIce < SaxtonHaleBase
 				float vecTargetPos[3];
 				GetClientAbsOrigin(i, vecTargetPos);
 				
-				if (GetVectorDistance(vecClientPos, vecTargetPos) < 250.0)
+				if (GetVectorDistance(vecClientPos, vecTargetPos) < ICE_RANGE)
 				{
 					g_flClientIceSlowdown[i] = GetGameTime() + ICE_DURATION;
-					g_flPlayerSpeedMultiplier[i] *= ICE_SLOWDOWN;
-					
-					//Recalculate player's speed
-					TF2_AddCondition(this.iClient, TFCond_SpeedBuffAlly, 0.01);
-					
-					CreateTimer(ICE_DURATION, Timer_ResetSpeed, EntIndexToEntRef(i));
+					TF2_StunPlayer(i, ICE_DURATION, ICE_SLOWDOWN, TF_STUNFLAG_SLOWDOWN);
 				}
 			}
 		}
@@ -97,35 +90,21 @@ public void Ice_RagdollSpawn(int iRef)
 	SetEntProp(iEntity, Prop_Send, "m_bIceRagdoll", 1);
 }
 
-public Action Timer_IceLight(Handle hTimer, DataPack iData)
+public Action Timer_IceLight(Handle hTimer, DataPack data)
 {
-	ResetPack(iData);
-	int iLight = EntRefToEntIndex(ReadPackCell(iData));
-	int iBrightness = ReadPackCell(iData);
-	delete iData;
+	data.Reset();
+	int iRef = data.ReadCell();
+	int iBrightness = data.ReadCell();
 	
+	int iLight = EntRefToEntIndex(iRef);
 	if (iLight > MaxClients)
 	{
 		iBrightness--;
 		SetVariantInt(iBrightness);
 		AcceptEntityInput(iLight, "brightness");
 		
-		iData = CreateDataPack();
-		WritePackCell(iData, EntIndexToEntRef(iLight));
-		WritePackCell(iData, iBrightness);
-		CreateTimer(1.0, Timer_IceLight, iData);
+		CreateDataTimer(1.0, Timer_IceLight, data);
+		data.WriteCell(iRef);
+		data.WriteCell(iBrightness);
 	}
-}
-
-public Action Timer_ResetSpeed(Handle hTimer, int iRef)
-{
-	int iClient = EntRefToEntIndex(iRef);
-	
-	if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient))
-		return;
-	
-	g_flPlayerSpeedMultiplier[iClient] /= ICE_SLOWDOWN;
-	
-	//Recalculate player's speed
-	TF2_AddCondition(iClient, TFCond_SpeedBuffAlly, 0.01);
 }
