@@ -1,4 +1,4 @@
-#define YETI_MODEL "models/player/kirillian/boss/yeti_modded.mdl"
+#define YETI_MODEL "models/player/items/taunts/yeti/yeti.mdl"
 #define YETI_THEME "ui/gamestartup29.mp3"
 
 static char g_strYetiRoundStart[][] =  {
@@ -48,6 +48,8 @@ methodmap CYeti < SaxtonHaleBase
 		boss.CallFunction("CreateAbility", "CBraveJump");
 		boss.CallFunction("CreateAbility", "CGroundPound");
 		boss.CallFunction("CreateAbility", "CRageFreeze");
+		CModelOverride modelOverride = boss.CallFunction("CreateAbility", "CModelOverride");
+		modelOverride.SetModel(YETI_MODEL);
 		
 		boss.iBaseHealth = 800;
 		boss.iHealthPerPlayer = 850;
@@ -96,11 +98,6 @@ methodmap CYeti < SaxtonHaleBase
 		FakeClientCommand(this.iClient, "voicemenu %d %d", 2, 1);
 	}
 	
-	public void GetModel(char[] sModel, int length)
-	{
-		strcopy(sModel, length, YETI_MODEL);
-	}
-	
 	public void GetSound(char[] sSound, int length, SaxtonHaleSound iSoundType)
 	{
 		switch (iSoundType)
@@ -122,9 +119,6 @@ methodmap CYeti < SaxtonHaleBase
 	{
 		if (strncmp(sample, "vo/", 3) == 0)
 		{
-			if (strcmp(sample, "vo/heavy_NiceShot02.mp3") == 0 || strcmp(sample, "vo/puff.mp3") == 0)
-				return Plugin_Stop;
-			
 			Format(sample, sizeof(sample), g_strYetiVoice[GetRandomInt(0, sizeof(g_strYetiVoice) - 1)]);
 			return Plugin_Changed;
 		}
@@ -133,17 +127,6 @@ methodmap CYeti < SaxtonHaleBase
 		{
 			EmitSoundToAll(g_strYetiFootsteps[GetRandomInt(0, sizeof(g_strYetiFootsteps) - 1)], this.iClient, _, _, _, 0.4, GetRandomInt(90, 100));
 			return Plugin_Handled;
-		}
-		
-		return Plugin_Continue;
-	}
-	
-	public Action OnAttackDamage(int &victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
-	{
-		if (victim != this.iClient && damagecustom == TF_CUSTOM_TAUNT_HIGH_NOON)
-		{
-			damage = 0.0;
-			return Plugin_Changed;
 		}
 		
 		return Plugin_Continue;
