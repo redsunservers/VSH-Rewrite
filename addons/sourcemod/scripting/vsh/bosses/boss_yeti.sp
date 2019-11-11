@@ -104,6 +104,11 @@ methodmap CYeti < SaxtonHaleBase
 		*/
 	}
 	
+	public void OnRage()
+	{
+		FakeClientCommand(this.iClient, "voicemenu %d %d", 2, 1);
+	}
+	
 	public void GetModel(char[] sModel, int length)
 	{
 		strcopy(sModel, length, YETI_MODEL);

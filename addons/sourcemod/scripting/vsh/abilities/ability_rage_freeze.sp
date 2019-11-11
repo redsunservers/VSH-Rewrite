@@ -7,6 +7,7 @@
 
 static float g_flAbilityRadius[TF_MAXPLAYERS + 1];
 static float g_flSlowDuration[TF_MAXPLAYERS + 1];
+static float g_flSlowPercentage[TF_MAXPLAYERS + 1];
 static float g_flFreezeDuration[TF_MAXPLAYERS + 1];
 
 methodmap CRageFreeze < SaxtonHaleBase
@@ -35,6 +36,18 @@ methodmap CRageFreeze < SaxtonHaleBase
 		}
 	}
 	
+	property float flSlowPercentage
+	{
+		public get()
+		{
+			return g_flSlowPercentage[this.iClient];
+		}
+		public set(float flVal)
+		{
+			g_flSlowPercentage[this.iClient] = flVal;
+		}
+	}
+	
 	property float flFreezeDuration
 	{
 		public get()
@@ -51,7 +64,8 @@ methodmap CRageFreeze < SaxtonHaleBase
 	{
 		ability.flRadius = 800.0;
 		ability.flSlowDuration = 3.0;
-		ability.flFreezeDuration = 5.0;
+		ability.flSlowPercentage = 0.5;
+		ability.flFreezeDuration = 4.0;
 	}
 	
 	public void OnRage()
@@ -59,26 +73,27 @@ methodmap CRageFreeze < SaxtonHaleBase
 		float flBossOrigin[3];
 		GetClientAbsOrigin(this.iClient, flBossOrigin);
 		
-		FakeClientCommand(this.iClient, "voicemenu %d %d", 2, 1);
+		float flRadius = this.flRadius;
+		if (this.bSuperRage)flRadius *= 1.5;
+		float flFreezeDuration = this.flFreezeDuration;
+		if (this.bSuperRage)flFreezeDuration *= 1.5;
 		
 		for (int iClient = 1; iClient <= MaxClients; iClient++)
 		{
-			if (IsClientInGame(iClient) && GetClientTeam(iClient) != GetClientTeam(this.iClient) && IsClientInRange(iClient, flBossOrigin, this.flRadius))
+			if (IsClientInGame(iClient) && GetClientTeam(iClient) != GetClientTeam(this.iClient) && IsClientInRange(iClient, flBossOrigin, flRadius) && !TF2_IsUbercharged(iClient))
 			{
 				float flClientOrigin[3];
 				GetClientAbsOrigin(iClient, flClientOrigin);
-				float flClientAngles[3];
-				GetClientAbsAngles(iClient, flClientAngles);
 				
-				TF2_SpawnParticle(FREEZE_PARTICLE_01, flClientOrigin, flClientAngles, _, iClient);
-				TF2_SpawnParticle(FREEZE_PARTICLE_02, flClientOrigin, flClientAngles, _, iClient);
-				TF2_SpawnParticle(FREEZE_PARTICLE_03, flClientOrigin, flClientAngles, _, iClient);
+				TF2_SpawnParticle(FREEZE_PARTICLE_01, flClientOrigin);
+				TF2_SpawnParticle(FREEZE_PARTICLE_02, flClientOrigin);
+				TF2_SpawnParticle(FREEZE_PARTICLE_03, flClientOrigin);
 				EmitAmbientSound(FREEZE_BEGIN_SOUND, flClientOrigin);
 				TF2_Shake(flBossOrigin, 10.0, this.flRadius, 1.0, 0.5);
-				TF2_StunPlayer(iClient, this.flSlowDuration, 0.75, TF_STUNFLAG_SLOWDOWN, this.iClient);
+				TF2_StunPlayer(iClient, this.flSlowDuration, this.flSlowPercentage, TF_STUNFLAG_SLOWDOWN, this.iClient);
 				
 				CreateTimer(this.flSlowDuration, FreezeClient, GetClientUserId(iClient));
-				CreateTimer(this.flSlowDuration + this.flFreezeDuration, UnfreezeClient, GetClientUserId(iClient));
+				CreateTimer(this.flSlowDuration + flFreezeDuration, UnfreezeClient, GetClientUserId(iClient));
 			}
 		}
 	}
@@ -98,6 +113,7 @@ public Action FreezeClient(Handle hTimer, int iUserId)
 {
 	int iClient = GetClientOfUserId(iUserId);
 	SetEntityMoveType(iClient, MOVETYPE_NONE);
+	SetEntityRenderColor(iClient, 128, 255, 255, 255);
 	float flOrigin[3];
 	GetClientAbsOrigin(iClient, flOrigin);
 	EmitAmbientSound(FREEZE_SOUND, flOrigin);
@@ -107,6 +123,7 @@ public Action UnfreezeClient(Handle hTimer, int iUserId)
 {
 	int iClient = GetClientOfUserId(iUserId);
 	SetEntityMoveType(iClient, MOVETYPE_WALK);
+	SetEntityRenderColor(iClient, 255, 255, 255, 255);
 	float flOrigin[3];
 	GetClientAbsOrigin(iClient, flOrigin);
 	EmitAmbientSound(UNFREEZE_SOUND, flOrigin);

@@ -81,5 +81,6 @@ methodmap CGroundPound < SaxtonHaleBase
 	public void Precache()
 	{
 		PrecacheSound(IMPACT_SOUND);
+		PrecacheParticleSystem(IMPACT_PARTICLE);
 	}
 };
