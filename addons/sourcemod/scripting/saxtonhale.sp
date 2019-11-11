@@ -317,7 +317,6 @@ int g_iHealthBarHealth;
 int g_iHealthBarMaxHealth;
 
 //Player data
-float g_flPlayerSpeedMultiplier[TF_MAXPLAYERS+1];
 int g_iPlayerLastButtons[TF_MAXPLAYERS+1];
 int g_iPlayerDamage[TF_MAXPLAYERS+1];
 int g_iPlayerAssistDamage[TF_MAXPLAYERS+1];
@@ -1840,7 +1839,6 @@ public void OnClientConnected(int iClient)
 {
 	Network_ResetClient(iClient);
 
-	g_flPlayerSpeedMultiplier[iClient] = 1.0;
 	g_iPlayerDamage[iClient] = 0;
 	g_iPlayerAssistDamage[iClient] = 0;
 	g_iClientFlags[iClient] = 0;
@@ -2525,18 +2523,9 @@ void SDK_Init()
 		LogMessage("Failed to create hook: CBaseEntity::ShouldTransmit!");
 	else
 		DHookAddParam(g_hHookShouldTransmit, HookParamType_ObjectPtr);
-
-	// This hook allows to change max speed
-	Handle hHook = DHookCreateFromConf(hGameData, "CTFPlayer::TeamFortress_CalculateMaxSpeed");
-	if (hHook == null)
-		LogMessage("Failed to create hook: CTFPlayer::TeamFortress_CalculateMaxSpeed!");
-	else
-		DHookEnableDetour(hHook, false, Hook_CalculateMaxSpeed);
-	
-	delete hHook;
 	
 	// This hook allows to allow/block medigun heals
-	hHook = DHookCreateFromConf(hGameData, "CWeaponMedigun::AllowedToHealTarget");
+	Handle hHook = DHookCreateFromConf(hGameData, "CWeaponMedigun::AllowedToHealTarget");
 	if (hHook == null)
 		LogMessage("Failed to create hook: CWeaponMedigun::AllowedToHealTarget!");
 	else
@@ -2570,19 +2559,6 @@ public MRESReturn Hook_EntityShouldTransmit(int iEntity, Handle hReturn, Handle 
 {
 	DHookSetReturn(hReturn, FL_EDICT_ALWAYS);
 	return MRES_Supercede;
-}
-
-public MRESReturn Hook_CalculateMaxSpeed(int iClient, Handle hReturn, Handle hParams)
-{
-	if (g_flPlayerSpeedMultiplier[iClient] != 1.0)
-	{
-		float flSpeed = DHookGetReturn(hReturn);
-		flSpeed *= g_flPlayerSpeedMultiplier[iClient];
-		DHookSetReturn(hReturn, flSpeed);
-		return MRES_Supercede;
-	}
-	
-	return MRES_Ignored;
 }
 
 public MRESReturn Hook_AllowedToHealTarget(int iMedigun, Handle hReturn, Handle hParams)
