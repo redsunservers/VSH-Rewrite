@@ -180,7 +180,7 @@ methodmap CWeaponSpells < SaxtonHaleBase
 			}
 			
 			float flRagePercentage = float(this.iRageDamage) / float(this.iMaxRageDamage);
-			if (flRagePercentage >= this.flRageRequirement && g_flSpellsLastUsed[this.iClient] <= GetGameTime()+this.flCooldown)
+			if (flRagePercentage >= this.flRageRequirement && g_flSpellsLastUsed[this.iClient] <= GetGameTime()-this.flCooldown)
 			{
 				//Normal spell, remove rage on use
 				this.iRageDamage -= RoundToFloor(this.flRageRequirement * float(this.iMaxRageDamage));
