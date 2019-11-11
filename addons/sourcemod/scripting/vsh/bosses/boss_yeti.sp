@@ -19,15 +19,6 @@ static char g_strYetiLose[][] =  {
 	"player/taunt_yeti_roar_second.wav"
 };
 
-static char g_strYetiFreeze[][] =  {
-	"player/taunt_yeti_appear_snow.wav", 
-	"weapons/icicle_freeze_victim_01.wav"
-};
-
-static char g_strYetiGroundSlam[][] =  {
-	"player/taunt_yeti_land.wav"
-};
-
 static char g_strYetiKill[][] =  {
 	"player/taunt_yeti_roar_beginning.wav"
 };
@@ -75,12 +66,12 @@ methodmap CYeti < SaxtonHaleBase
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nAbilities");
 		StrCat(sInfo, length, "\n- Brave Jump");
-		StrCat(sInfo, length, "\n- Ground Slam");
+		StrCat(sInfo, length, "\n- Ground Pound (Passive)");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- Slows every player around the yeti for 3 seconds with a freezing aura");
-		StrCat(sInfo, length, "\n- Then completely freezes everyone affected by the aura for 5 seconds");
-		StrCat(sInfo, length, "\n- 200%% Rage: Extends duration to 10 seconds");
+		StrCat(sInfo, length, "\n- Slows players at medium range for 3 seconds");
+		StrCat(sInfo, length, "\n- Affected players get frozen for 4 seconds");
+		StrCat(sInfo, length, "\n- 200%% Rage: Extended range and freeze duration increased to 6 seconds");
 	}
 	
 	public void OnSpawn()
@@ -144,11 +135,14 @@ methodmap CYeti < SaxtonHaleBase
 	{
 		if (strncmp(sample, "vo/", 3) == 0)
 		{
+			if (strcmp(sample, "vo/heavy_NiceShot02.mp3") == 0 || strcmp(sample, "vo/puff.mp3") == 0)
+				return Plugin_Stop;
+			
 			Format(sample, sizeof(sample), g_strYetiVoice[GetRandomInt(0, sizeof(g_strYetiVoice) - 1)]);
 			return Plugin_Changed;
 		}
 		
-		if (StrContains(sample, "player/footsteps/", false) == 0)
+		if (strncmp(sample, "player/footsteps/", 17) == 0)
 		{
 			EmitSoundToAll(g_strYetiFootsteps[GetRandomInt(0, sizeof(g_strYetiFootsteps) - 1)], this.iClient, _, _, _, 0.4, GetRandomInt(90, 100));
 			return Plugin_Handled;
@@ -172,8 +166,6 @@ methodmap CYeti < SaxtonHaleBase
 		for (int i = 0; i < sizeof(g_strYetiRoundStart); i++)PrecacheSound(g_strYetiRoundStart[i]);
 		for (int i = 0; i < sizeof(g_strYetiWin); i++)PrecacheSound(g_strYetiWin[i]);
 		for (int i = 0; i < sizeof(g_strYetiLose); i++)PrecacheSound(g_strYetiLose[i]);
-		for (int i = 0; i < sizeof(g_strYetiFreeze); i++)PrecacheSound(g_strYetiFreeze[i]);
-		for (int i = 0; i < sizeof(g_strYetiGroundSlam); i++)PrecacheSound(g_strYetiGroundSlam[i]);
 		for (int i = 0; i < sizeof(g_strYetiKill); i++)PrecacheSound(g_strYetiKill[i]);
 		for (int i = 0; i < sizeof(g_strYetiLastMan); i++)PrecacheSound(g_strYetiLastMan[i]);
 		for (int i = 0; i < sizeof(g_strYetiBackStabbed); i++)PrecacheSound(g_strYetiBackStabbed[i]);
