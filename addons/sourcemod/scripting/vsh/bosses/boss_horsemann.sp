@@ -75,6 +75,12 @@ methodmap CHorsemann < SaxtonHaleBase
 		boss.CallFunction("CreateAbility", "CTeleportSwap");
 		boss.CallFunction("CreateAbility", "CRageGhost");
 		
+		/*
+		CModelOverride modelOverride = boss.CallFunction("CreateAbility", "CModelOverride");
+		modelOverride.SetModel(HORSEMANN_MODEL);
+		modelOverride.flScale = 0.5;
+		*/
+		
 		boss.iBaseHealth = 700;
 		boss.iHealthPerPlayer = 650;
 		boss.nClass = TFClass_DemoMan;

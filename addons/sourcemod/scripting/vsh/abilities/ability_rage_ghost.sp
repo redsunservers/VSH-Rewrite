@@ -98,6 +98,11 @@ methodmap CRageGhost < SaxtonHaleBase
 		g_bGhostEnable[iClient] = true;
 		SetEntProp(iClient, Prop_Data, "m_takedamage", DAMAGE_NO);
 		
+		//Disable prop override if have one
+		CModelOverride modelOverride = this.CallFunction("FindAbility", "CModelOverride");
+		if (modelOverride != INVALID_ABILITY)
+			modelOverride.bEnable = false;
+		
 		//Update model
 		ApplyBossModel(iClient);
 		
@@ -298,6 +303,11 @@ methodmap CRageGhost < SaxtonHaleBase
 				g_iGhostHealGainCount[iClient][iVictim] = 0;
 				Timer_EntityCleanup(null, g_iGhostParticleBeam[iClient][iVictim]);
 			}
+			
+			//Re-enable prop override if have one
+			CModelOverride modelOverride = this.CallFunction("FindAbility", "CModelOverride");
+			if (modelOverride != INVALID_ABILITY)
+				modelOverride.bEnable = true;
 			
 			//Update model
 			ApplyBossModel(this.iClient);
