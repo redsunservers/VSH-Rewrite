@@ -441,3 +441,8 @@ void Function_RemovePlugin(const char[] sClass)
 {
 	g_mFunctionPlugin.Remove(sClass);
 }
+
+StringMapSnapshot Function_GetPluginSnapshot()
+{
+	return g_mFunctionPlugin.Snapshot();
+}

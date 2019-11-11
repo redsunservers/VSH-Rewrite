@@ -709,17 +709,26 @@ public void OnMapStart()
 
 		Config_Refresh();
 
-		//Precache every bosses
-		int iLength = g_aAllBossesType.Length;
+		//Precache every bosses/abilities/modifiers registered
+		StringMapSnapshot snapshot = Function_GetPluginSnapshot();
+		int iLength = snapshot.Length;
 		for (int i = 0; i < iLength; i++)
 		{
-			char sBossType[MAX_TYPE_CHAR];
-			g_aAllBossesType.GetString(i, sBossType, sizeof(sBossType));
+			char sFunction[256];
+			snapshot.GetKey(i, sFunction, sizeof(sFunction));
+			StrCat(sFunction, sizeof(sFunction), ".Precache");	// CSaxtonHale.Precache
 			
-			SaxtonHaleBase boss = SaxtonHaleBase(0);
-			boss.CallFunction("SetBossType", sBossType);
-			boss.CallFunction("Precache");
+			Handle hPlugin = Function_GetPlugin(sFunction);
+			Function func = GetFunctionByName(hPlugin, sFunction);
+			if (func != INVALID_FUNCTION)
+			{
+				Call_StartFunction(hPlugin, func);
+				Call_PushCell(0);	//Client index, but doesn't matter when we want to just precache stuffs
+				Call_Finish();
+			}
 		}
+
+		delete snapshot;
 
 		for (int i = 1; i <= 4; i++)
 		{

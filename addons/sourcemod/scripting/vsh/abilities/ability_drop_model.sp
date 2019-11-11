@@ -5,8 +5,6 @@ methodmap CDropModel < SaxtonHaleBase
 	public void SetModel(char[] sPath)
 	{
 		strcopy(g_sDropModelPath[this.iClient], sizeof(g_sDropModelPath[]), sPath);
-		
-		PrecacheModel(sPath);
 	}
 	
 	public CDropModel(CDropModel ability)

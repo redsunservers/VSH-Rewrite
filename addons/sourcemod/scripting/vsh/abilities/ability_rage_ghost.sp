@@ -89,11 +89,6 @@ methodmap CRageGhost < SaxtonHaleBase
 		
 		for (int iVictim = 1; iVictim <= TF_MAXPLAYERS; iVictim++)
 			g_iGhostParticleBeam[ability.iClient][iVictim] = 0;
-		
-		//TODO precache on map start instead of when boss spawns
-		PrecacheModel(GHOST_MODEL);
-		PrecacheParticleSystem(PARTICLE_BEAM_RED);
-		PrecacheParticleSystem(PARTICLE_BEAM_BLU);
 	}
 	
 	public void OnRage()
@@ -336,5 +331,12 @@ methodmap CRageGhost < SaxtonHaleBase
 	public void Destroy()
 	{
 		SetEntProp(this.iClient, Prop_Data, "m_takedamage", DAMAGE_YES);
+	}
+	
+	public void Precache()
+	{
+		PrecacheModel(GHOST_MODEL);
+		PrecacheParticleSystem(PARTICLE_BEAM_RED);
+		PrecacheParticleSystem(PARTICLE_BEAM_BLU);
 	}
 };
