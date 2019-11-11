@@ -74,8 +74,6 @@ methodmap CModifiersIce < SaxtonHaleBase
 				{
 					g_flClientIceSlowdown[i] = GetGameTime() + ICE_DURATION;
 					TF2_StunPlayer(i, ICE_DURATION, ICE_SLOWDOWN, TF_STUNFLAG_SLOWDOWN);
-					
-					CreateTimer(ICE_DURATION, Timer_ResetSpeed, EntIndexToEntRef(i));
 				}
 			}
 		}
@@ -110,14 +108,4 @@ public Action Timer_IceLight(Handle hTimer, DataPack iData)
 		WritePackCell(iData, iBrightness);
 		CreateTimer(1.0, Timer_IceLight, iData);
 	}
-}
-
-public Action Timer_ResetSpeed(Handle hTimer, int iRef)
-{
-	int iClient = EntRefToEntIndex(iRef);
-	
-	if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient))
-		return;
-	
-	TF2_StunPlayer(iClient, 0.0, 0.0, TF_STUNFLAG_SLOWDOWN);
 }
