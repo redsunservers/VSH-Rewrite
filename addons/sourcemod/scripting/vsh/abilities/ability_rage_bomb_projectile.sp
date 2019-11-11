@@ -6,6 +6,7 @@ static float g_flBombProjectileRate[TF_MAXPLAYERS+1];
 static float g_flBombProjectileDuration[TF_MAXPLAYERS+1];
 static float g_flBombProjectileRadius[TF_MAXPLAYERS+1];
 static float g_flBombProjectileDamage[TF_MAXPLAYERS+1];
+static float g_flBombProjectileAngle[TF_MAXPLAYERS+1];
 
 methodmap CBombProjectile < SaxtonHaleBase
 {
@@ -93,6 +94,18 @@ methodmap CBombProjectile < SaxtonHaleBase
 		}
 	}
 	
+	property float flMaxAngle
+	{
+		public set (float flVal)
+		{
+			g_flBombProjectileAngle[this.iClient] = flVal;
+		}
+		public get()
+		{
+			return g_flBombProjectileAngle[this.iClient];
+		}
+	}
+	
 	public CBombProjectile(CBombProjectile ability)
 	{
 		g_flBombProjectileNext[ability.iClient] = 0.0;
@@ -102,6 +115,10 @@ methodmap CBombProjectile < SaxtonHaleBase
 		ability.flDuration = 6.0;
 		ability.flRadius = 100.0;
 		ability.flDamage = 50.0;
+		ability.flMaxDistance = 600.0;
+		ability.flMinHeight = 500.0;
+		ability.flMaxHeight = 1000.0;
+		ability.flMaxAngle = 500.0;
 		
 		PrecacheModel(BOMBPROJECTILE_MODEL);
 	}
@@ -132,13 +149,13 @@ methodmap CBombProjectile < SaxtonHaleBase
 			{
 				//Create random velocity, but keep it upwards
 				for (int i = 0; i < 2; i++)
-					vecVelocity[i] = GetRandomFloat(-600.0, 600.0);
+					vecVelocity[i] = GetRandomFloat(-this.flMaxDistance, this.flMaxDistance);
 				
-				vecVelocity[2] = GetRandomFloat(500.0, 1000.0);
+				vecVelocity[2] = GetRandomFloat(this.flMinHeight, this.flMaxHeight);
 				
 				//Create random angle velocity
 				for (int i = 0; i < 3; i++)
-					vecAngleVelocity[i] = GetRandomFloat(-500.0, 500.0);
+					vecAngleVelocity[i] = GetRandomFloat(-this.flMaxAngle, this.flMaxAngle);
 				
 				DispatchKeyValueVector(iBomb, "origin", vecOrigin);
 				SetEntityModel(iBomb, BOMBPROJECTILE_MODEL);
