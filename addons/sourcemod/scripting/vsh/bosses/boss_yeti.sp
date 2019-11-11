@@ -80,11 +80,7 @@ methodmap CYeti < SaxtonHaleBase
 		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 214 ; %d", GetRandomInt(7500, 7615));
 		int iWeapon = this.CallFunction("CreateWeapon", 195, NULL_STRING, 100, TFQual_Strange, attribs);
 		if (iWeapon > MaxClients)
-		{
 			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
-			//Disable fists secondary attack
-			SetEntPropFloat(iWeapon, Prop_Send, "m_flNextSecondaryAttack", GetGameTime() + 3600.0);
-		}
 		/*
 		Fist attributes:
 		
