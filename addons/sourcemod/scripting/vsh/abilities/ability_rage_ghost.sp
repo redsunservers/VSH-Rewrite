@@ -7,16 +7,18 @@ static float g_flGhostRadius[TF_MAXPLAYERS+1];
 static float g_flGhostDuration[TF_MAXPLAYERS+1];
 static float g_flGhostHealSteal[TF_MAXPLAYERS+1];
 static float g_flGhostHealGain[TF_MAXPLAYERS+1];
+static float g_flGhostPullStrength[TF_MAXPLAYERS+1];
+static float g_flGhostBuildingDrain[TF_MAXPLAYERS+1];
 
-static float g_flGhostHealStartTime[TF_MAXPLAYERS+1][TF_MAXPLAYERS+1];
-static int g_iGhostHealStealCount[TF_MAXPLAYERS+1][TF_MAXPLAYERS+1];
+static float g_flGhostHealStartTime[TF_MAXPLAYERS+1][2048];
+static int g_iGhostHealStealCount[TF_MAXPLAYERS+1][2048];
 static int g_iGhostHealGainCount[TF_MAXPLAYERS+1][TF_MAXPLAYERS+1];
 
 static float g_flGhostLastSpookTime[TF_MAXPLAYERS+1];
 
 static bool g_bGhostEnable[TF_MAXPLAYERS+1];
 
-static int g_iGhostParticleBeam[TF_MAXPLAYERS+1][TF_MAXPLAYERS+1];
+static int g_iGhostParticleBeam[TF_MAXPLAYERS+1][2048];
 static int g_iGhostParticleCentre[TF_MAXPLAYERS+1];
 
 methodmap CRageGhost < SaxtonHaleBase
@@ -69,6 +71,30 @@ methodmap CRageGhost < SaxtonHaleBase
 		}
 	}
 	
+	property float flBuildingDrain
+	{
+		public get()
+		{
+			return g_flGhostBuildingDrain[this.iClient];
+		}
+		public set(float val)
+		{
+			g_flGhostBuildingDrain[this.iClient] = val;
+		}
+	}
+	
+	property float flPullStrength
+	{
+		public get()
+		{
+			return g_flGhostPullStrength[this.iClient];
+		}
+		public set(float val)
+		{
+			g_flGhostPullStrength[this.iClient] = val;
+		}
+	}
+	
 	public void GetModel(char[] sModel, int iLength)
 	{
 		//Override boss's model during GetModel function
@@ -83,6 +109,8 @@ methodmap CRageGhost < SaxtonHaleBase
 		ability.flDuration = 8.0;
 		ability.flHealSteal = 20.0;	//Steals hp per second
 		ability.flHealGain = 40.0;	//Gains hp per second
+		ability.flBuildingDrain = 1.0;	//Building health drain multiplier, 0.0 or lower disables it
+		ability.flPullStrength = 1.0;	//Pull strength multiplier, negative values push enemies away instead. Note that making it too weak will only pull players if they're airborne
 		
 		g_bGhostEnable[ability.iClient] = false;
 		g_flGhostLastSpookTime[ability.iClient] = 0.0;
@@ -113,9 +141,8 @@ methodmap CRageGhost < SaxtonHaleBase
 		g_iGhostParticleCentre[iClient] = TF2_SpawnParticle("", vecOrigin, vecAngles, false, iClient);
 		
 		//Stun and Fly
-		float flDuration = this.flDuration * (this.bSuperRage ? 2 : 1);
-		TF2_StunPlayer(iClient, flDuration, 0.0, TF_STUNFLAG_GHOSTEFFECT|TF_STUNFLAG_NOSOUNDOREFFECT, 0);
-		TF2_AddCondition(iClient, TFCond_SwimmingNoEffects, flDuration);
+		TF2_StunPlayer(iClient, this.flDuration, 0.0, TF_STUNFLAG_GHOSTEFFECT|TF_STUNFLAG_NOSOUNDOREFFECT, 0);
+		TF2_AddCondition(iClient, TFCond_SwimmingNoEffects, this.flDuration);
 		
 		//Get active weapon and dont render
 		int iWeapon = GetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon");
@@ -135,8 +162,7 @@ methodmap CRageGhost < SaxtonHaleBase
 		int iClient = this.iClient;
 		if (!g_bGhostEnable[iClient]) return;
 		
-		float flDuration = this.flDuration * (this.bSuperRage ? 2 : 1);
-		if (flDuration > GetGameTime() - this.flRageLastTime)
+		if (this.flDuration > GetGameTime() - this.flRageLastTime)
 		{
 			float vecOrigin[3];
 			GetClientAbsOrigin(iClient, vecOrigin);
@@ -153,6 +179,10 @@ methodmap CRageGhost < SaxtonHaleBase
 			int[] iSpooked = new int[MaxClients];
 			int iLength = 0;
 			
+			float flRadius = (this.bSuperRage) ? this.flRadius * 1.5 : this.flRadius;
+			float flHealSteal = (this.bSuperRage) ? this.flHealSteal * 2 : this.flHealSteal;
+			
+			//Player interaction
 			for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
 			{
 				bool bSpook = false;
@@ -161,13 +191,33 @@ methodmap CRageGhost < SaxtonHaleBase
 				{
 					float vecTargetOrigin[3];
 					GetClientAbsOrigin(iVictim, vecTargetOrigin);
-					if (GetVectorDistance(vecOrigin, vecTargetOrigin) <= this.flRadius)
+					if (GetVectorDistance(vecOrigin, vecTargetOrigin) <= flRadius)
 					{
 						//Victim got spooked
 						bSpook = true;
 						iSpooked[iLength] = iVictim;
 						iLength++;
-						
+							
+						//Pull victim towards boss
+						if (this.flPullStrength != 0.0)
+						{
+							float vecPullVelocity[3];
+							MakeVectorFromPoints(vecTargetOrigin, vecOrigin, vecPullVelocity);
+							
+							//We don't want players to helplessly hover slightly above ground if the boss is above them, so we don't modify their vertical velocity
+							vecPullVelocity[2] = 0.0;
+							
+							NormalizeVector(vecPullVelocity, vecPullVelocity);
+							ScaleVector(vecPullVelocity, (10.0 * this.flPullStrength));
+							
+							//Consider their current velocity
+							float vecTargetVelocity[3];
+							GetEntPropVector(iVictim, Prop_Data, "m_vecVelocity", vecTargetVelocity);
+							AddVectors(vecTargetVelocity, vecPullVelocity, vecPullVelocity);
+							
+							TeleportEntity(iVictim, NULL_VECTOR, NULL_VECTOR, vecPullVelocity);
+						}
+
 						//Set time when victim entered
 						if (g_flGhostHealStartTime[iClient][iVictim] == 0.0)
 						{
@@ -182,7 +232,7 @@ methodmap CRageGhost < SaxtonHaleBase
 						//Calculate on heal steal
 						float flTimeGap = GetGameTime() - g_flGhostHealStartTime[iClient][iVictim];
 						
-						int iExpectedSteal = RoundToCeil(flTimeGap * this.flHealSteal);
+						int iExpectedSteal = RoundToCeil(flTimeGap * flHealSteal);
 						if (iExpectedSteal > g_iGhostHealStealCount[iClient][iVictim])
 						{
 							float flDamage = float(iExpectedSteal - g_iGhostHealStealCount[iClient][iVictim]);
@@ -190,7 +240,8 @@ methodmap CRageGhost < SaxtonHaleBase
 							g_iGhostHealStealCount[iClient][iVictim] = iExpectedSteal;
 						}
 						
-						int iExpectedGain = RoundToCeil(flTimeGap * this.flHealGain);
+						float flHealGain = (this.bSuperRage) ? this.flHealGain * 2 : this.flHealGain; //Health gain is only applied from other players, so it's down here rather than with the other super rage checks
+						int iExpectedGain = RoundToCeil(flTimeGap * flHealGain);
 						if (iExpectedGain > g_iGhostHealGainCount[iClient][iVictim])
 						{
 							Client_AddHealth(iClient, iExpectedGain - g_iGhostHealGainCount[iClient][iVictim]);
@@ -206,6 +257,60 @@ methodmap CRageGhost < SaxtonHaleBase
 					g_iGhostHealStealCount[iClient][iVictim] = 0;
 					g_iGhostHealGainCount[iClient][iVictim] = 0;
 					Timer_EntityCleanup(null, g_iGhostParticleBeam[iClient][iVictim]);
+				}
+			}
+			
+			//Building interaction -- you basically just damage them
+			if (this.flBuildingDrain > 0.0)
+			{
+				int iBuilding = MaxClients+1;
+				
+				while ((iBuilding = FindEntityByClassname(iBuilding, "obj_*")) > MaxClients)
+				{
+					bool bLinked = false;
+					if (GetEntProp(iBuilding, Prop_Send, "m_iTeamNum") != iTeam)
+					{
+						float vecTargetOrigin[3];
+						GetEntPropVector(iBuilding, Prop_Send, "m_vecOrigin", vecTargetOrigin);
+						if (GetVectorDistance(vecOrigin, vecTargetOrigin) <= flRadius)
+						{
+							bLinked = true;
+							if (g_flGhostHealStartTime[iClient][iBuilding] == 0.0)
+							{
+								g_flGhostHealStartTime[iClient][iBuilding] = GetGameTime();
+								
+								char sClassname[32];
+								GetEntityClassname(iBuilding, sClassname, sizeof(sClassname));
+								
+								//Teleporters are tiny, so the beam must be down low
+								if (StrEqual(sClassname, "obj_teleporter"))
+									vecTargetOrigin[2] += 5.0;
+								else
+									vecTargetOrigin[2] += 42.0;
+									
+								float vecTargetAngles[3];
+								GetClientAbsAngles(iClient, vecTargetAngles);
+								g_iGhostParticleBeam[iClient][iBuilding] = TF2_SpawnParticle(sParticle[iTeam], vecTargetOrigin, vecTargetAngles, true, iBuilding, EntRefToEntIndex(g_iGhostParticleCentre[iClient]));
+							}
+								
+							float flTimeGap = GetGameTime() - g_flGhostHealStartTime[iClient][iBuilding];
+								
+							int iExpectedSteal = RoundToCeil(flTimeGap * flHealSteal);
+							if (iExpectedSteal > g_iGhostHealStealCount[iClient][iBuilding])
+							{
+								float flDamage = (float(iExpectedSteal - g_iGhostHealStealCount[iClient][iBuilding]) * this.flBuildingDrain);
+								SDKHooks_TakeDamage(iBuilding, iClient, iClient, flDamage);
+								g_iGhostHealStealCount[iClient][iBuilding] = iExpectedSteal;
+							}
+						}
+							
+						if (!bLinked && g_flGhostHealStartTime[iClient][iBuilding] != 0.0)
+						{
+							g_flGhostHealStartTime[iClient][iBuilding] = 0.0;
+							g_iGhostHealStealCount[iClient][iBuilding] = 0;
+							Timer_EntityCleanup(null, g_iGhostParticleBeam[iClient][iBuilding]);
+						}
+					}
 				}
 			}
 			
@@ -291,12 +396,17 @@ methodmap CRageGhost < SaxtonHaleBase
 			SetEntProp(iClient, Prop_Data, "m_takedamage", DAMAGE_YES);
 			
 			Timer_EntityCleanup(null, g_iGhostParticleCentre[iClient]);
-			for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
-			{
-				g_flGhostHealStartTime[iClient][iVictim] = 0.0;
-				g_iGhostHealStealCount[iClient][iVictim] = 0;
-				g_iGhostHealGainCount[iClient][iVictim] = 0;
-				Timer_EntityCleanup(null, g_iGhostParticleBeam[iClient][iVictim]);
+			for (int iEntity = 1; iEntity < 2048; iEntity++)
+			{	
+				if (g_flGhostHealStartTime[iClient][iEntity] > 0.0)
+				{
+					if (iEntity <= MaxClients)
+						g_iGhostHealGainCount[iClient][iEntity] = 0;
+						
+					g_iGhostHealStealCount[iClient][iEntity] = 0;
+					g_flGhostHealStartTime[iClient][iEntity] = 0.0;
+					Timer_EntityCleanup(null, g_iGhostParticleBeam[iClient][iEntity]);
+				}
 			}
 			
 			//Update model
@@ -326,6 +436,16 @@ methodmap CRageGhost < SaxtonHaleBase
 		//Don't allow him to attack during rage
 		if (g_bGhostEnable[this.iClient] && buttons & IN_ATTACK)
 			buttons &= ~IN_ATTACK;
+	}
+	
+	public void OnPlayerKilled(Event event)
+	{
+		//Purely cosmetic effect, but let's add a cool little icon for killing with the rage
+		if (g_bGhostEnable[this.iClient])
+		{
+			event.SetString("weapon_logclassname", "purgatory");
+			event.SetString("weapon", "purgatory");
+		}
 	}
 	
 	public void Destroy()
