@@ -96,8 +96,8 @@ methodmap CHorsemann < SaxtonHaleBase
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
 		StrCat(sInfo, length, "\n- Becomes ghost to fly, immune to damage, and unable to attack for 8 seconds");
-		StrCat(sInfo, length, "\n- Steals health from nearby players with random spooky effects");
-		StrCat(sInfo, length, "\n- 200%% Rage: Extends duration to 16 seconds");
+		StrCat(sInfo, length, "\n- Pulls and steals health from nearby players with random spooky effects");
+		StrCat(sInfo, length, "\n- 200%% Rage: Larger range and health steal is doubled");
 	}
 	
 	public void OnSpawn()
