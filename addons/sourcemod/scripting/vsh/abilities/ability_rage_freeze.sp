@@ -80,7 +80,7 @@ methodmap CRageFreeze < SaxtonHaleBase
 		
 		for (int iClient = 1; iClient <= MaxClients; iClient++)
 		{
-			if (IsClientInGame(iClient) && GetClientTeam(iClient) != GetClientTeam(this.iClient) && IsClientInRange(iClient, flBossOrigin, flRadius) && !TF2_IsUbercharged(iClient))
+			if (IsClientInGame(iClient) && IsPlayerAlive(iClient) && GetClientTeam(iClient) != GetClientTeam(this.iClient) && IsClientInRange(iClient, flBossOrigin, flRadius) && !TF2_IsUbercharged(iClient))
 			{
 				float flClientOrigin[3];
 				GetClientAbsOrigin(iClient, flClientOrigin);
