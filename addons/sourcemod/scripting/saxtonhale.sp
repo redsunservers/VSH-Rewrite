@@ -529,6 +529,12 @@ public void OnPluginStart()
 	TagsName_Init();
 	Winstreak_Init();
 	
+	//Add base constructor to list of plugins (dont register!)
+	Handle hPlugin = GetMyHandle();
+	Function_AddPlugin("SaxtonHaleBoss", hPlugin);
+	Function_AddPlugin("SaxtonHaleModifiers", hPlugin);
+	Function_AddPlugin("SaxtonHaleAbility", hPlugin);
+	
 	//Register normal bosses
 	SaxtonHale_RegisterBoss("CSaxtonHale");
 	SaxtonHale_RegisterBoss("CPainisCupcake");
@@ -731,22 +737,16 @@ public void OnMapStart()
 		Config_Refresh();
 
 		//Precache every bosses/abilities/modifiers registered
+		SaxtonHaleBase boss = SaxtonHaleBase(0); //client index doesn't matter
 		StringMapSnapshot snapshot = Function_GetPluginSnapshot();
+		
 		int iLength = snapshot.Length;
 		for (int i = 0; i < iLength; i++)
 		{
-			char sFunction[256];
-			snapshot.GetKey(i, sFunction, sizeof(sFunction));
-			StrCat(sFunction, sizeof(sFunction), ".Precache");	// CSaxtonHale.Precache
-			
-			Handle hPlugin = Function_GetPlugin(sFunction);
-			Function func = GetFunctionByName(hPlugin, sFunction);
-			if (func != INVALID_FUNCTION)
-			{
-				Call_StartFunction(hPlugin, func);
-				Call_PushCell(0);	//Client index, but doesn't matter when we want to just precache stuffs
+			char sType[256];
+			snapshot.GetKey(i, sType, sizeof(sType));
+			if (boss.StartFunction(sType, "Precache"))
 				Call_Finish();
-			}
 		}
 
 		delete snapshot;

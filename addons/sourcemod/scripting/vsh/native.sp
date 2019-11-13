@@ -7,6 +7,14 @@ CreateNative(sBuffer, Native_Property_%2_Get);
 
 void Native_AskLoad()
 {
+	CreateNative("SaxtonHale_RegisterBoss", Native_RegisterBoss);
+	CreateNative("SaxtonHale_UnregisterBoss", Native_UnregisterBoss);
+	CreateNative("SaxtonHale_RegisterModifiers", Native_RegisterModifiers);
+	CreateNative("SaxtonHale_UnregisterModifiers", Native_UnregisterModifiers);
+	CreateNative("SaxtonHale_RegisterAbility", Native_RegisterAbility);
+	CreateNative("SaxtonHale_UnregisterAbility", Native_UnregisterAbility);
+	CreateNative("SaxtonHale_GetPlugin", Native_GetPlugin);
+	
 	CreateNative("SaxtonHaleBase.CallFunction", Native_CallFunction);
 	
 	CreateNative("SaxtonHale_InitFunction", Native_InitFunction);
@@ -20,13 +28,6 @@ void Native_AskLoad()
 	CreateNative("SaxtonHale_SetParamArray", Native_SetParamArray);
 	CreateNative("SaxtonHale_GetParamString", Native_GetParamString);
 	CreateNative("SaxtonHale_SetParamString", Native_SetParamString);
-	
-	CreateNative("SaxtonHale_RegisterBoss", Native_RegisterBoss);
-	CreateNative("SaxtonHale_UnregisterBoss", Native_UnregisterBoss);
-	CreateNative("SaxtonHale_RegisterModifiers", Native_RegisterModifiers);
-	CreateNative("SaxtonHale_UnregisterModifiers", Native_UnregisterModifiers);
-	CreateNative("SaxtonHale_RegisterAbility", Native_RegisterAbility);
-	CreateNative("SaxtonHale_UnregisterAbility", Native_UnregisterAbility);
 	
 	CreateNative("SaxtonHale_GetBossTeam", Native_GetBossTeam);
 	CreateNative("SaxtonHale_GetAttackTeam", Native_GetAttackTeam);
@@ -52,6 +53,8 @@ void Native_AskLoad()
 	NATIVE_PROPERTY_REGISTER("flSpeed",flSpeed)
 	NATIVE_PROPERTY_REGISTER("flSpeedMult",flSpeedMult)
 	NATIVE_PROPERTY_REGISTER("flEnvDamageCap",flEnvDamageCap)
+	NATIVE_PROPERTY_REGISTER("flWeighDownTimer",flWeighDownTimer)
+	NATIVE_PROPERTY_REGISTER("flWeighDownForce",flWeighDownForce)
 	NATIVE_PROPERTY_REGISTER("flGlowTime",flGlowTime)
 	NATIVE_PROPERTY_REGISTER("flRageLastTime",flRageLastTime)
 	NATIVE_PROPERTY_REGISTER("flMaxRagePercentage",flMaxRagePercentage)
@@ -62,6 +65,136 @@ void Native_AskLoad()
 	NATIVE_PROPERTY_REGISTER("iRageDamage",iRageDamage)
 	NATIVE_PROPERTY_REGISTER("iMaxRageDamage",iMaxRageDamage)
 	NATIVE_PROPERTY_REGISTER("nClass",nClass)
+}
+
+//void SaxtonHale_RegisterBoss(const char[] ...);
+public any Native_RegisterBoss(Handle hPlugin, int iNumParams)
+{
+	if (iNumParams == 0)
+		ThrowNativeError(SP_ERROR_NATIVE, "No params passed");
+	
+	ArrayList aArray;
+	if (iNumParams > 1)
+		aArray = new ArrayList(MAX_TYPE_CHAR);
+	
+	for (int i = 1; i <= iNumParams; i++)
+	{
+		char sBossType[MAX_TYPE_CHAR];
+		GetNativeString(i, sBossType, sizeof(sBossType));
+		
+		if (!Function_AddPlugin(sBossType, hPlugin))
+		{
+			delete aArray;
+			ThrowNativeError(SP_ERROR_NATIVE, "Constructor (%s) already registered", sBossType);
+		}
+		
+		if (iNumParams == 1)
+			g_aBossesType.PushString(sBossType);
+		else
+			aArray.PushString(sBossType);
+		
+		g_aAllBossesType.PushString(sBossType);
+		MenuBoss_AddBoss(sBossType);	//Add boss to menu
+	}
+	
+	if (iNumParams > 1)
+		g_aMiscBossesType.Push(aArray);
+}
+
+//void SaxtonHale_UnregisterBoss(const char[] sBossType);
+public any Native_UnregisterBoss(Handle hPlugin, int iNumParams)
+{
+	char sBossType[MAX_TYPE_CHAR];
+	GetNativeString(1, sBossType, sizeof(sBossType));
+	
+	Function_RemovePlugin(sBossType);
+	
+	//Remove from normal boss array
+	int iIndex = g_aBossesType.FindString(sBossType);
+	if (iIndex >= 0) g_aBossesType.Erase(iIndex);
+	
+	//Remove from all boss array
+	iIndex = g_aAllBossesType.FindString(sBossType);
+	if (iIndex >= 0) g_aAllBossesType.Erase(iIndex);
+	
+	//Remove from menu
+	MenuBoss_RemoveBoss(sBossType);
+	
+	//Remove from misc boss array
+	int iLength = g_aMiscBossesType.Length;
+	for (int i = 0; i < iLength; i++)
+	{
+		ArrayList aArray = g_aMiscBossesType.Get(i);
+		
+		iIndex = aArray.PushString(sBossType);
+		if (iIndex >= 0) aArray.Erase(iIndex);
+		
+		//If only 1 exists, move to normal pick
+		if (aArray.Length == 1)
+		{
+			aArray.GetString(0, sBossType, sizeof(sBossType));
+			g_aBossesType.PushString(sBossType);
+			delete aArray;
+			g_aMiscBossesType.Erase(i);
+		}
+	}
+}
+
+//void SaxtonHale_RegisterModifiers(const char[] sModifiersType);
+public any Native_RegisterModifiers(Handle hPlugin, int iNumParams)
+{
+	char sModifiersType[MAX_TYPE_CHAR];
+	GetNativeString(1, sModifiersType, sizeof(sModifiersType));
+	
+	if (!Function_AddPlugin(sModifiersType, hPlugin))
+		ThrowNativeError(SP_ERROR_NATIVE, "Constructor (%s) already registered", sModifiersType);
+	
+	g_aModifiersType.PushString(sModifiersType);
+	MenuBoss_AddModifiers(sModifiersType);	//Add modifiers to menu
+}
+
+//void SaxtonHale_UnregisterModifiers(const char[] sModifiersType);
+public any Native_UnregisterModifiers(Handle hPlugin, int iNumParams)
+{
+	char sModifiersType[MAX_TYPE_CHAR];
+	GetNativeString(1, sModifiersType, sizeof(sModifiersType));
+	
+	Function_RemovePlugin(sModifiersType);
+	
+	//Remove from modifiers array
+	int iIndex = g_aModifiersType.FindString(sModifiersType);
+	if (iIndex >= 0) g_aModifiersType.Erase(iIndex);
+	
+	//Remove from menu
+	MenuBoss_RemoveModifiers(sModifiersType);
+}
+
+//void SaxtonHale_RegisterAbility(const char[] sAbilityType);
+public any Native_RegisterAbility(Handle hPlugin, int iNumParams)
+{
+	char sAbilityType[MAX_TYPE_CHAR];
+	GetNativeString(1, sAbilityType, sizeof(sAbilityType));
+	
+	if (!Function_AddPlugin(sAbilityType, hPlugin))
+		ThrowNativeError(SP_ERROR_NATIVE, "Constructor (%s) already registered", sAbilityType);
+}
+
+//void SaxtonHale_UnregisterAbility(const char[] sAbilityType);
+public any Native_UnregisterAbility(Handle hPlugin, int iNumParams)
+{
+	char sAbilityType[MAX_TYPE_CHAR];
+	GetNativeString(1, sAbilityType, sizeof(sAbilityType));
+	
+	Function_RemovePlugin(sAbilityType);
+}
+
+//Handle SaxtonHale_GetPlugin(const char[] sType);
+public any Native_GetPlugin(Handle hPlugin, int iNumParams)
+{
+	char sType[MAX_TYPE_CHAR];
+	GetNativeString(1, sType, sizeof(sType));
+	
+	return Function_GetPlugin(sType);
 }
 
 //any SaxtonHaleBase.CallFunction(const char[] sName, any...);
@@ -361,127 +494,6 @@ public any Native_SetParamString(Handle hPlugin, int iNumParams)
 	Function_SetParamValue(iParam, view_as<any>(value));
 }
 
-//void SaxtonHale_RegisterBoss(const char[] ...);
-public any Native_RegisterBoss(Handle hPlugin, int iNumParams)
-{
-	if (iNumParams == 0)
-		ThrowNativeError(SP_ERROR_NATIVE, "No params passed");
-	
-	ArrayList aArray;
-	if (iNumParams > 1)
-		aArray = new ArrayList(MAX_TYPE_CHAR);
-	
-	for (int i = 1; i <= iNumParams; i++)
-	{
-		char sBossType[MAX_TYPE_CHAR];
-		GetNativeString(i, sBossType, sizeof(sBossType));
-		
-		if (!Function_AddPlugin(sBossType, hPlugin))
-		{
-			delete aArray;
-			ThrowNativeError(SP_ERROR_NATIVE, "Constructor (%s) already registered", sBossType);
-		}
-		
-		if (iNumParams == 1)
-			g_aBossesType.PushString(sBossType);
-		else
-			aArray.PushString(sBossType);
-		
-		g_aAllBossesType.PushString(sBossType);
-		MenuBoss_AddBoss(sBossType);	//Add boss to menu
-	}
-	
-	if (iNumParams > 1)
-		g_aMiscBossesType.Push(aArray);
-}
-
-//void SaxtonHale_UnregisterBoss(const char[] sBossType);
-public any Native_UnregisterBoss(Handle hPlugin, int iNumParams)
-{
-	char sBossType[MAX_TYPE_CHAR];
-	GetNativeString(1, sBossType, sizeof(sBossType));
-	
-	Function_RemovePlugin(sBossType);
-	
-	//Remove from normal boss array
-	int iIndex = g_aBossesType.FindString(sBossType);
-	if (iIndex >= 0) g_aBossesType.Erase(iIndex);
-	
-	//Remove from all boss array
-	iIndex = g_aAllBossesType.FindString(sBossType);
-	if (iIndex >= 0) g_aAllBossesType.Erase(iIndex);
-	
-	//Remove from menu
-	MenuBoss_RemoveBoss(sBossType);
-	
-	//Remove from misc boss array
-	int iLength = g_aMiscBossesType.Length;
-	for (int i = 0; i < iLength; i++)
-	{
-		ArrayList aArray = g_aMiscBossesType.Get(i);
-		
-		iIndex = aArray.PushString(sBossType);
-		if (iIndex >= 0) aArray.Erase(iIndex);
-		
-		//If only 1 exists, move to normal pick
-		if (aArray.Length == 1)
-		{
-			aArray.GetString(0, sBossType, sizeof(sBossType));
-			g_aBossesType.PushString(sBossType);
-			delete aArray;
-			g_aMiscBossesType.Erase(i);
-		}
-	}
-}
-
-//void SaxtonHale_RegisterModifiers(const char[] sModifiersType);
-public any Native_RegisterModifiers(Handle hPlugin, int iNumParams)
-{
-	char sModifiersType[MAX_TYPE_CHAR];
-	GetNativeString(1, sModifiersType, sizeof(sModifiersType));
-	
-	if (!Function_AddPlugin(sModifiersType, hPlugin))
-		ThrowNativeError(SP_ERROR_NATIVE, "Constructor (%s) already registered", sModifiersType);
-	
-	g_aModifiersType.PushString(sModifiersType);
-	MenuBoss_AddModifiers(sModifiersType);	//Add modifiers to menu
-}
-
-//void SaxtonHale_UnregisterModifiers(const char[] sModifiersType);
-public any Native_UnregisterModifiers(Handle hPlugin, int iNumParams)
-{
-	char sModifiersType[MAX_TYPE_CHAR];
-	GetNativeString(1, sModifiersType, sizeof(sModifiersType));
-	
-	Function_RemovePlugin(sModifiersType);
-	
-	//Remove from modifiers array
-	int iIndex = g_aModifiersType.FindString(sModifiersType);
-	if (iIndex >= 0) g_aModifiersType.Erase(iIndex);
-	
-	//Remove from menu
-	MenuBoss_RemoveModifiers(sModifiersType);
-}
-
-//void SaxtonHale_RegisterAbility(const char[] sAbilityType);
-public any Native_RegisterAbility(Handle hPlugin, int iNumParams)
-{
-	char sAbilityType[MAX_TYPE_CHAR];
-	GetNativeString(1, sAbilityType, sizeof(sAbilityType));
-	
-	if (!Function_AddPlugin(sAbilityType, hPlugin))
-		ThrowNativeError(SP_ERROR_NATIVE, "Constructor (%s) already registered", sAbilityType);
-}
-
-//void SaxtonHale_UnregisterAbility(const char[] sAbilityType);
-public any Native_UnregisterAbility(Handle hPlugin, int iNumParams)
-{
-	char sAbilityType[MAX_TYPE_CHAR];
-	GetNativeString(1, sAbilityType, sizeof(sAbilityType));
-	
-	Function_RemovePlugin(sAbilityType);
-}
-
 //TFTeam SaxtonHale_GetBossTeam();
 public any Native_GetBossTeam(Handle hPlugin, int iNumParams)
 {
@@ -656,6 +668,8 @@ NATIVE_PROPERTY(bCanBeHealed, bool)
 NATIVE_PROPERTY(flSpeed, float)
 NATIVE_PROPERTY(flSpeedMult, float)
 NATIVE_PROPERTY(flEnvDamageCap, float)
+NATIVE_PROPERTY(flWeighDownTimer, float)
+NATIVE_PROPERTY(flWeighDownForce, float)
 NATIVE_PROPERTY(flGlowTime, float)
 NATIVE_PROPERTY(flRageLastTime, float)
 NATIVE_PROPERTY(flMaxRagePercentage, float)
