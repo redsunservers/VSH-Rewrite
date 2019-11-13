@@ -41,15 +41,9 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 		g_flClientBossRageMusicVolume[this.iClient] = 0.0;
 		g_hClientBossRageMusicTime[this.iClient] = null;
 		
-		char sFunction[256];
-		Format(sFunction, sizeof(sFunction), "%s.%s", type, type);
-		
-		Handle hPlugin = Function_GetPlugin(type);
-		Function func = GetFunctionByName(hPlugin, sFunction);
-		if (func != INVALID_FUNCTION)
+		//Call boss's constructor function
+		if (this.StartFunction(type, type))
 		{
-			Call_StartFunction(hPlugin, func);
-			Call_PushCell(this);
 			Call_PushCell(this);
 			Call_Finish();
 		}
@@ -351,6 +345,12 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 
 	public void Destroy()
 	{
+		//Call destroy function now, since boss type get reset before called
+		if (this.StartFunction(g_sClientBossType[this.iClient], "Destroy"))
+			Call_Finish();
+		
+		Format(g_sClientBossType[this.iClient], sizeof(g_sClientBossType[]), "");
+		
 		this.bValid = false;
 		
 		SetVariantString("");
