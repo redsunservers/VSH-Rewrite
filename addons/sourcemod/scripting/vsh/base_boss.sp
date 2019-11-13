@@ -1,6 +1,9 @@
 static char g_sClientBossType[TF_MAXPLAYERS+1][64];
 static char g_sClientBossRageMusic[TF_MAXPLAYERS+1][255];
 
+static bool g_bClientBossWeighDownForce[TF_MAXPLAYERS+1];
+
+static float g_flClientBossWeighDownTimer[TF_MAXPLAYERS+1];
 static float g_flClientBossRageMusicVolume[TF_MAXPLAYERS+1];
 
 static Handle g_hClientBossModelTimer[TF_MAXPLAYERS+1];
@@ -24,6 +27,8 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 		this.flMaxRagePercentage = 2.0;
 		this.iRageDamage = 0;
 		this.flEnvDamageCap = 400.0;
+		this.flWeighDownTimer = 1.75;
+		this.flWeighDownForce = 3000.0;
 		this.flGlowTime = 0.0;
 		this.bMinion = false;
 		this.bModel = true;
@@ -38,6 +43,8 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 		g_hClientBossModelTimer[this.iClient] = CreateTimer(0.2, Timer_ApplyBossModel, this.iClient, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 
 		g_sClientBossRageMusic[this.iClient] = "";
+		g_bClientBossWeighDownForce[this.iClient] = false;
+		g_flClientBossWeighDownTimer[this.iClient] = 0.0;
 		g_flClientBossRageMusicVolume[this.iClient] = 0.0;
 		g_hClientBossRageMusicTime[this.iClient] = null;
 		
@@ -90,23 +97,41 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 
 		return RoundToNearest((this.iBaseHealth + this.iHealthPerPlayer*iEnemy) * this.flHealthMultiplier);
 	}
-
+	
+	public void GetBossName(char[] sName, int length)
+	{
+		Format(sName, length, "Unknown Boss Name");
+	}
+	
 	public void OnThink()
 	{
-		if (this.flGlowTime == -1.0 || this.flGlowTime >= GetGameTime())
-		{
-			SetEntProp(this.iClient, Prop_Send, "m_bGlowEnabled", true);
-		}
-		else
-		{
-			SetEntProp(this.iClient, Prop_Send, "m_bGlowEnabled", false);
-		}
-
+		bool bGlow = (this.flGlowTime == -1.0 || this.flGlowTime >= GetGameTime());
+		SetEntProp(this.iClient, Prop_Send, "m_bGlowEnabled", bGlow);
+		
 		//Dont modify his speed during setup time or when taunting
 		if (this.flSpeed >= 0.0 && GameRules_GetRoundState() != RoundState_Preround && !TF2_IsPlayerInCondition(this.iClient, TFCond_Taunting))
 		{
 			float flMaxSpeed = this.flSpeed + (this.flSpeed*this.flSpeedMult*(1.0-(float(this.iHealth)/float(this.iMaxHealth))));
 			SetEntPropFloat(this.iClient, Prop_Data, "m_flMaxspeed", flMaxSpeed);
+		}
+		
+		if (GetEntityFlags(this.iClient) & FL_ONGROUND)
+		{
+			//Reset weighdown timer
+			g_bClientBossWeighDownForce[this.iClient] = false;
+			g_flClientBossWeighDownTimer[this.iClient] = 0.0;
+		}
+		else if (g_bClientBossWeighDownForce[this.iClient])
+		{
+			//Set weighdown force
+			float flVelocity[3];
+			flVelocity[2] = -this.flWeighDownForce;
+			TeleportEntity(this.iClient, NULL_VECTOR, NULL_VECTOR, flVelocity);
+		}
+		else if (g_flClientBossWeighDownTimer[this.iClient] == 0.0 && !g_bClientBossWeighDownForce[this.iClient])
+		{
+			//Start weighdown timer
+			g_flClientBossWeighDownTimer[this.iClient] = GetGameTime();
 		}
 		
 		if (g_bRoundStarted && this.iMaxRageDamage != -1)
@@ -149,11 +174,26 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 		}
 	}
 
-	public void GetBossName(char[] sName, int length)
+	public void OnButtonHold(int iButton)
 	{
-		Format(sName, length, "Unknown Boss Name");
+		//Is boss crouching, allowed to use weighdown and passed timer
+		if (iButton == IN_DUCK
+			&& this.flWeighDownTimer >= 0.0
+			&& g_flClientBossWeighDownTimer[this.iClient] != 0.0
+			&& g_flClientBossWeighDownTimer[this.iClient] < GetGameTime() - this.flWeighDownTimer)
+		{
+			//Check if boss is looking down
+			float vecAngles[3];
+			GetClientEyeAngles(this.iClient, vecAngles);
+			if (vecAngles[0] > 60.0)
+			{
+				//Enable weighdown
+				g_bClientBossWeighDownForce[this.iClient] = true;
+				g_flClientBossWeighDownTimer[this.iClient] = 0.0;
+			}
+		}
 	}
-	
+
 	public void OnSpawn()
 	{
 		if (this.bModel)

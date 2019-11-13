@@ -128,7 +128,7 @@ methodmap CSeeldier < SaxtonHaleBase
 		}
 	}
 	
-	public void GetSoundAbility (char[] sSound, int length, const char[] sType)
+	public void GetSoundAbility(char[] sSound, int length, const char[] sType)
 	{
 		if (strcmp(sType, "CBraveJump") == 0)
 			strcopy(sSound, length, SEELDIER_SEE_SND);
@@ -173,6 +173,7 @@ methodmap CSeeldierMinion < SaxtonHaleBase
 		boss.iHealthPerPlayer = 0;
 		boss.nClass = TFClass_Soldier;
 		boss.iMaxRageDamage = -1;
+		boss.flWeighDownTimer = -1.0;
 		boss.bMinion = true;
 		
 		EmitSoundToClient(boss.iClient, SOUND_ALERT);	//Alert player as he spawned
