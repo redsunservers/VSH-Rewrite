@@ -441,9 +441,9 @@ methodmap CRageGhost < SaxtonHaleBase
 	public void OnPlayerKilled(Event event)
 	{
 		//Purely cosmetic effect, but let's add a cool little icon for killing with the rage
-		int iClientEntIndex = event.GetInt("inflictor_entindex");
+		int iInflictor = event.GetInt("inflictor_entindex");
 		
-		if (g_bGhostEnable[this.iClient] && iClientEntIndex == this.iClient)
+		if (g_bGhostEnable[this.iClient] && iInflictor == this.iClient)
 		{
 			event.SetString("weapon_logclassname", "purgatory");
 			event.SetString("weapon", "purgatory");
