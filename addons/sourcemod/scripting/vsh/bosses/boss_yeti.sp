@@ -93,6 +93,13 @@ methodmap CYeti < SaxtonHaleBase
 		*/
 	}
 	
+	public void OnThink()
+	{
+		int iWeapon = GetPlayerWeaponSlot(this.iClient, view_as<int>(WeaponSlot_Melee));
+		if (iWeapon > MaxClients)
+			SetEntPropFloat(iWeapon, Prop_Send, "m_flNextSecondaryAttack", GetGameTime() + 60.0);
+	}
+	
 	public void OnRage()
 	{
 		FakeClientCommand(this.iClient, "voicemenu %d %d", 2, 1);
