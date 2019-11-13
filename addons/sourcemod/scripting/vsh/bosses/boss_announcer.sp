@@ -248,6 +248,7 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 	{
 		boss.flSpeed = -1.0;
 		boss.iMaxRageDamage = -1;
+		boss.flWeighDownTimer = -1.0;
 		boss.bMinion = true;
 		boss.bCanBeHealed = true;
 		boss.bModel = false;

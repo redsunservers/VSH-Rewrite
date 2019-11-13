@@ -136,6 +136,20 @@ methodmap SaxtonHaleBase
 		public native set(float val);
 	}
 	
+	// Retrieve/Set timer while in air to allow weighdown, -1.0 to disable weighdown
+	property float flWeighDownTimer
+	{
+		public native get();
+		public native set(float val);
+	}
+	
+	// Retrieve/Set weighdown force
+	property float flWeighDownForce
+	{
+		public native get();
+		public native set(float val);
+	}
+	
 	// Retrieve/Set time remaining for glow to end in seconds, 0.0 for no glow, -1.0 for permanent 
 	property float flGlowTime
 	{
