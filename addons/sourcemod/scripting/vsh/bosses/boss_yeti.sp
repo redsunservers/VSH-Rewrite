@@ -32,6 +32,7 @@ static char g_strYetiBackStabbed[][] =  {
 };
 
 static char g_strYetiVoice[][] =  {
+	"player/taunt_yeti_roar_beginning.wav"
 	"player/taunt_yeti_roar_first.wav", 
 	"player/taunt_yeti_roar_second.wav"
 };
