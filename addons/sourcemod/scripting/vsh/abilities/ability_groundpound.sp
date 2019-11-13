@@ -46,8 +46,8 @@ methodmap CGroundPound < SaxtonHaleBase
 	public CGroundPound(CGroundPound ability)
 	{
 		ability.flImpactRadius = 500.0;
-		ability.flImpactDamage = 50.0;
-		ability.flImpactLaunchVelocity = 500.0;
+		ability.flImpactDamage = 25.0;
+		ability.flImpactLaunchVelocity = 650.0;
 	}
 	
 	public Action OnTakeDamage(int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
