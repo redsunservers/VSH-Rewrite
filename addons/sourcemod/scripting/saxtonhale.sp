@@ -158,6 +158,25 @@ enum
 	LAST_SHARED_COLLISION_GROUP
 };
 
+// entity effects
+enum
+{
+	EF_BONEMERGE			= (1<<0),	// Performs bone merge on client side
+	EF_BRIGHTLIGHT			= (1<<1),	// DLIGHT centered at entity origin
+	EF_DIMLIGHT				= (1<<2),	// player flashlight
+	EF_NOINTERP				= (1<<3),	// don't interpolate the next frame
+	EF_NOSHADOW				= (1<<4),	// Don't cast no shadow
+	EF_NODRAW				= (1<<5),	// don't draw entity
+	EF_NORECEIVESHADOW		= (1<<6),	// Don't receive no shadow
+	EF_BONEMERGE_FASTCULL	= (1<<7),	// For use with EF_BONEMERGE. If this is set, then it places this ent's origin at its
+										// parent and uses the parent's bbox + the max extents of the aiment.
+										// Otherwise, it sets up the parent's bones every frame to figure out where to place
+										// the aiment, which is inefficient because it'll setup the parent's bones even if
+										// the parent is not in the PVS.
+	EF_ITEM_BLINK			= (1<<8),	// blink an item so that the user notices it.
+	EF_PARENT_ANIMATES		= (1<<9),	// always assume that the parent entity is animating
+};
+
 // Beam types, encoded as a byte
 enum 
 {
@@ -347,6 +366,7 @@ Handle g_hSDKEquipWearable = null;
 #include "vsh/abilities/ability_body_eat.sp"
 #include "vsh/abilities/ability_brave_jump.sp"
 #include "vsh/abilities/ability_drop_model.sp"
+#include "vsh/abilities/ability_model_override.sp"
 #include "vsh/abilities/ability_rage_bomb.sp"
 #include "vsh/abilities/ability_rage_conditions.sp"
 #include "vsh/abilities/ability_rage_ghost.sp"
@@ -548,6 +568,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterAbility("CBraveJump");
 	SaxtonHale_RegisterAbility("CDropModel");
 	SaxtonHale_RegisterAbility("CBomb");
+	SaxtonHale_RegisterAbility("CModelOverride");
 	SaxtonHale_RegisterAbility("CRageAddCond");
 	SaxtonHale_RegisterAbility("CRageGhost");
 	SaxtonHale_RegisterAbility("CLightRage");
@@ -1454,7 +1475,6 @@ public Action Event_PlayerDeath(Event event, const char[] sName, bool bDontBroad
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
-	if (!g_bRoundStarted) return Plugin_Continue;
 
 	int iVictim = GetClientOfUserId(event.GetInt("userid"));
 	int iAttacker = GetClientOfUserId(event.GetInt("attacker"));
@@ -1491,7 +1511,7 @@ public Action Event_PlayerDeath(Event event, const char[] sName, bool bDontBroad
 			bossAttacker.CallFunction("OnPlayerKilled", event, iVictim);
 	}
 	
-	if (SaxtonHale_IsValidAttack(iVictim) && !bDeadRinger)
+	if (g_bRoundStarted && !bDeadRinger && SaxtonHale_IsValidAttack(iVictim))
 	{
 		//Victim who died is still "alive" during this event, so we subtract by 1 to not count victim
 		int iLastAlive = SaxtonHale_GetAliveAttackPlayers() - 1;
@@ -1550,7 +1570,7 @@ public Action Event_PlayerDeath(Event event, const char[] sName, bool bDontBroad
 	}
 	
 	//Reset flags
-	if (!bDeadRinger)
+	if (g_bRoundStarted && !bDeadRinger)
 	{
 		g_iClientOwner[iVictim] = 0;
 		Client_RemoveFlag(iVictim, haleClientFlags_BossTeam);

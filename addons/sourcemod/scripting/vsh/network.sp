@@ -74,7 +74,7 @@ stock bool Network_CreateEntityGlow(int iEntity, char[] sModel, int iColor[4] = 
 		
 		// Set effect flags.
 		int iFlags = GetEntProp(iGlow, Prop_Send, "m_fEffects");
-		SetEntProp(iGlow, Prop_Send, "m_fEffects", iFlags | (1 << 0)); // EF_BONEMERGE
+		SetEntProp(iGlow, Prop_Send, "m_fEffects", iFlags | EF_BONEMERGE); // EF_BONEMERGE
 		
 		SetVariantString("!activator");
 		AcceptEntityInput(iGlow, "SetParent", iEntity);
