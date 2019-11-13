@@ -7,8 +7,8 @@ static float g_flGhostRadius[TF_MAXPLAYERS+1];
 static float g_flGhostDuration[TF_MAXPLAYERS+1];
 static float g_flGhostHealSteal[TF_MAXPLAYERS+1];
 static float g_flGhostHealGain[TF_MAXPLAYERS+1];
-static float g_flGhostPullStrength[TF_MAXPLAYERS+1];
 static float g_flGhostBuildingDrain[TF_MAXPLAYERS+1];
+static float g_flGhostPullStrength[TF_MAXPLAYERS+1];
 
 static float g_flGhostHealStartTime[TF_MAXPLAYERS+1][2048];
 static int g_iGhostHealStealCount[TF_MAXPLAYERS+1][2048];
@@ -109,8 +109,8 @@ methodmap CRageGhost < SaxtonHaleBase
 		ability.flDuration = 8.0;
 		ability.flHealSteal = 20.0;	//Steals hp per second
 		ability.flHealGain = 40.0;	//Gains hp per second
-		ability.flBuildingDrain = 1.0;	//Building health drain multiplier, 0.0 or lower disables it
-		ability.flPullStrength = 1.0;	//Pull strength multiplier, negative values push enemies away instead. Note that making it too weak will only pull players if they're airborne
+		ability.flBuildingDrain = 1.0;	//Building health drain multiplier based on flHealSteal, 0.0 or lower disables it
+		ability.flPullStrength = 10.0;	//Scale of pull strength, negative values push enemies away instead. Note that making it too weak will only pull players if they're airborne
 		
 		g_bGhostEnable[ability.iClient] = false;
 		g_flGhostLastSpookTime[ability.iClient] = 0.0;
@@ -208,7 +208,7 @@ methodmap CRageGhost < SaxtonHaleBase
 							vecPullVelocity[2] = 0.0;
 							
 							NormalizeVector(vecPullVelocity, vecPullVelocity);
-							ScaleVector(vecPullVelocity, (10.0 * this.flPullStrength));
+							ScaleVector(vecPullVelocity, this.flPullStrength);
 							
 							//Consider their current velocity
 							float vecTargetVelocity[3];
@@ -295,10 +295,10 @@ methodmap CRageGhost < SaxtonHaleBase
 								
 							float flTimeGap = GetGameTime() - g_flGhostHealStartTime[iClient][iBuilding];
 								
-							int iExpectedSteal = RoundToCeil(flTimeGap * flHealSteal);
+							int iExpectedSteal = RoundToCeil(flTimeGap * flHealSteal * this.flBuildingDrain);
 							if (iExpectedSteal > g_iGhostHealStealCount[iClient][iBuilding])
 							{
-								float flDamage = (float(iExpectedSteal - g_iGhostHealStealCount[iClient][iBuilding]) * this.flBuildingDrain);
+								float flDamage = (float(iExpectedSteal - g_iGhostHealStealCount[iClient][iBuilding]));
 								SDKHooks_TakeDamage(iBuilding, iClient, iClient, flDamage);
 								g_iGhostHealStealCount[iClient][iBuilding] = iExpectedSteal;
 							}
@@ -402,7 +402,7 @@ methodmap CRageGhost < SaxtonHaleBase
 				{
 					if (iEntity <= MaxClients)
 						g_iGhostHealGainCount[iClient][iEntity] = 0;
-						
+
 					g_iGhostHealStealCount[iClient][iEntity] = 0;
 					g_flGhostHealStartTime[iClient][iEntity] = 0.0;
 					Timer_EntityCleanup(null, g_iGhostParticleBeam[iClient][iEntity]);
@@ -441,7 +441,9 @@ methodmap CRageGhost < SaxtonHaleBase
 	public void OnPlayerKilled(Event event)
 	{
 		//Purely cosmetic effect, but let's add a cool little icon for killing with the rage
-		if (g_bGhostEnable[this.iClient])
+		int iClientEntIndex = event.GetInt("inflictor_entindex");
+		
+		if (g_bGhostEnable[this.iClient] && iClientEntIndex == this.iClient)
 		{
 			event.SetString("weapon_logclassname", "purgatory");
 			event.SetString("weapon", "purgatory");
