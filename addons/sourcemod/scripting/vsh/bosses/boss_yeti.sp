@@ -90,20 +90,20 @@ methodmap CYeti < SaxtonHaleBase
 		2: damage bonus
 		252: reduction in push force taken from damage
 		259: Deals 3x falling damage to the player you land on
-		214: kill_eater
+		214: kill_eater (7500-7615 for Legendary strange rank)
 		*/
 	}
 	
 	public void OnThink()
 	{
-		int iWeapon = GetPlayerWeaponSlot(this.iClient, view_as<int>(WeaponSlot_Melee));
+		int iWeapon = GetPlayerWeaponSlot(this.iClient, WeaponSlot_Melee);
 		if (iWeapon > MaxClients)
 			SetEntPropFloat(iWeapon, Prop_Send, "m_flNextSecondaryAttack", GetGameTime() + 60.0);
 	}
 	
 	public void OnRage()
 	{
-		FakeClientCommand(this.iClient, "voicemenu %d %d", 2, 1);
+		FakeClientCommand(this.iClient, "voicemenu 2 1");
 	}
 	
 	public void GetSound(char[] sSound, int length, SaxtonHaleSound iSoundType)

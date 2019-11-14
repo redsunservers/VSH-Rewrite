@@ -55,22 +55,22 @@ methodmap CGroundPound < SaxtonHaleBase
 		if (!(damagetype & DMG_FALL))
 			return Plugin_Continue;
 		
-		float flBossOrigin[3];
-		GetClientAbsOrigin(this.iClient, flBossOrigin);
+		float vecBossOrigin[3];
+		GetClientAbsOrigin(this.iClient, vecBossOrigin);
 		
-		EmitAmbientSound(IMPACT_SOUND, flBossOrigin, _, SNDLEVEL_SCREAMING);
-		TF2_Shake(flBossOrigin, 10.0, this.flImpactRadius, 1.0, 0.5);
-		TF2_SpawnParticle(IMPACT_PARTICLE, flBossOrigin);
+		EmitAmbientSound(IMPACT_SOUND, vecBossOrigin, _, SNDLEVEL_SCREAMING);
+		TF2_Shake(vecBossOrigin, 10.0, this.flImpactRadius, 1.0, 0.5);
+		TF2_SpawnParticle(IMPACT_PARTICLE, vecBossOrigin);
 		
 		for (int iClient = 1; iClient <= MaxClients; iClient++)
 		{
-			if (IsClientInGame(iClient) && GetClientTeam(iClient) != GetClientTeam(this.iClient) && IsClientInRange(iClient, flBossOrigin, this.flImpactRadius) && GetEntityFlags(iClient) & FL_ONGROUND)
+			if (IsClientInGame(iClient) && GetClientTeam(iClient) != GetClientTeam(this.iClient) && IsClientInRange(iClient, vecBossOrigin, this.flImpactRadius) && GetEntityFlags(iClient) & FL_ONGROUND)
 			{
-				float flClientVelocity[3];
-				GetEntPropVector(iClient, Prop_Data, "m_vecVelocity", flClientVelocity);
-				flClientVelocity[2] += this.flImpactLaunchVelocity;
+				float vecClientVelocity[3];
+				GetEntPropVector(iClient, Prop_Data, "m_vecVelocity", vecClientVelocity);
+				vecClientVelocity[2] += this.flImpactLaunchVelocity;
 				
-				TeleportEntity(iClient, NULL_VECTOR, NULL_VECTOR, flClientVelocity);
+				TeleportEntity(iClient, NULL_VECTOR, NULL_VECTOR, vecClientVelocity);
 				SDKHooks_TakeDamage(iClient, this.iClient, this.iClient, this.flImpactDamage);
 			}
 		}

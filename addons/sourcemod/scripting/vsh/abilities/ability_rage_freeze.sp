@@ -70,8 +70,8 @@ methodmap CRageFreeze < SaxtonHaleBase
 	
 	public void OnRage()
 	{
-		float flBossOrigin[3];
-		GetClientAbsOrigin(this.iClient, flBossOrigin);
+		float vecBossOrigin[3];
+		GetClientAbsOrigin(this.iClient, vecBossOrigin);
 		
 		float flRadius = this.flRadius;
 		if (this.bSuperRage)flRadius *= 1.5;
@@ -80,16 +80,16 @@ methodmap CRageFreeze < SaxtonHaleBase
 		
 		for (int iClient = 1; iClient <= MaxClients; iClient++)
 		{
-			if (IsClientInGame(iClient) && IsPlayerAlive(iClient) && GetClientTeam(iClient) != GetClientTeam(this.iClient) && IsClientInRange(iClient, flBossOrigin, flRadius) && !TF2_IsUbercharged(iClient))
+			if (IsClientInGame(iClient) && IsPlayerAlive(iClient) && GetClientTeam(iClient) != GetClientTeam(this.iClient) && IsClientInRange(iClient, vecBossOrigin, flRadius) && !TF2_IsUbercharged(iClient))
 			{
-				float flClientOrigin[3];
-				GetClientAbsOrigin(iClient, flClientOrigin);
+				float vecClientOrigin[3];
+				GetClientAbsOrigin(iClient, vecClientOrigin);
 				
-				TF2_SpawnParticle(FREEZE_PARTICLE_01, flClientOrigin);
-				TF2_SpawnParticle(FREEZE_PARTICLE_02, flClientOrigin);
-				TF2_SpawnParticle(FREEZE_PARTICLE_03, flClientOrigin);
-				EmitAmbientSound(FREEZE_BEGIN_SOUND, flClientOrigin);
-				TF2_Shake(flBossOrigin, 10.0, this.flRadius, 1.0, 0.5);
+				TF2_SpawnParticle(FREEZE_PARTICLE_01, vecClientOrigin);
+				TF2_SpawnParticle(FREEZE_PARTICLE_02, vecClientOrigin);
+				TF2_SpawnParticle(FREEZE_PARTICLE_03, vecClientOrigin);
+				EmitAmbientSound(FREEZE_BEGIN_SOUND, vecClientOrigin);
+				TF2_Shake(vecBossOrigin, 10.0, this.flRadius, 1.0, 0.5);
 				TF2_StunPlayer(iClient, this.flSlowDuration, this.flSlowPercentage, TF_STUNFLAG_SLOWDOWN, this.iClient);
 				
 				CreateTimer(this.flSlowDuration, FreezeClient, GetClientUserId(iClient));
@@ -112,19 +112,25 @@ methodmap CRageFreeze < SaxtonHaleBase
 public Action FreezeClient(Handle hTimer, int iUserId)
 {
 	int iClient = GetClientOfUserId(iUserId);
-	SetEntityMoveType(iClient, MOVETYPE_NONE);
-	SetEntityRenderColor(iClient, 128, 255, 255, 255);
-	float flOrigin[3];
-	GetClientAbsOrigin(iClient, flOrigin);
-	EmitAmbientSound(FREEZE_SOUND, flOrigin);
+	if (0 < iClient <= MaxClients && IsClientInGame(iClient) && IsPlayerAlive(iClient))
+	{
+		SetEntityMoveType(iClient, MOVETYPE_NONE);
+		SetEntityRenderColor(iClient, 128, 176, 255, 255);
+		float vecOrigin[3];
+		GetClientAbsOrigin(iClient, vecOrigin);
+		EmitAmbientSound(FREEZE_SOUND, vecOrigin);
+	}
 }
 
 public Action UnfreezeClient(Handle hTimer, int iUserId)
 {
 	int iClient = GetClientOfUserId(iUserId);
-	SetEntityMoveType(iClient, MOVETYPE_WALK);
-	SetEntityRenderColor(iClient, 255, 255, 255, 255);
-	float flOrigin[3];
-	GetClientAbsOrigin(iClient, flOrigin);
-	EmitAmbientSound(UNFREEZE_SOUND, flOrigin);
-} 
+	if (0 < iClient <= MaxClients && IsClientInGame(iClient))
+	{
+		SetEntityMoveType(iClient, MOVETYPE_WALK);
+		SetEntityRenderColor(iClient, 255, 255, 255, 255);
+		float vecOrigin[3];
+		GetClientAbsOrigin(iClient, vecOrigin);
+		EmitAmbientSound(UNFREEZE_SOUND, vecOrigin);
+	}
+}

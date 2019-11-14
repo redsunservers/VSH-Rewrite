@@ -3029,12 +3029,12 @@ stock void TF2_Explode(int iAttacker = -1, float flPos[3], float flDamage, float
 		SDKHooks_TakeDamage(iBomb, 0, iAttacker, 9999.0);
 }
 
-stock void TF2_Shake(float flOrigin[3], float flAmplitude, float flRadius, float flDuration, float flFrequency)
+stock void TF2_Shake(float vecOrigin[3], float flAmplitude, float flRadius, float flDuration, float flFrequency)
 {
 	int iShake = CreateEntityByName("env_shake");
 	if (iShake != -1)
 	{
-		DispatchKeyValueVector(iShake, "origin", flOrigin);
+		DispatchKeyValueVector(iShake, "origin", vecOrigin);
 		DispatchKeyValueFloat(iShake, "amplitude", flAmplitude);
 		DispatchKeyValueFloat(iShake, "radius", flRadius);
 		DispatchKeyValueFloat(iShake, "duration", flDuration);
@@ -3263,9 +3263,9 @@ stock int FindStringIndex2(int tableidx, const char[] str)
 	return INVALID_STRING_INDEX;
 }
 
-stock bool IsClientInRange(int iClient, float flOrigin[3], float flRadius)
+stock bool IsClientInRange(int iClient, float vecOrigin[3], float flRadius)
 {
-	float flClientOrigin[3];
-	GetClientAbsOrigin(iClient, flClientOrigin);
-	return GetVectorDistance(flOrigin, flClientOrigin) <= flRadius;
+	float vecClientOrigin[3];
+	GetClientAbsOrigin(iClient, vecClientOrigin);
+	return GetVectorDistance(vecOrigin, vecClientOrigin) <= flRadius;
 }
