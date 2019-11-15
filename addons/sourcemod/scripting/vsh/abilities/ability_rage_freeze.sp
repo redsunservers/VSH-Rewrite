@@ -9,6 +9,7 @@ static float g_flAbilityRadius[TF_MAXPLAYERS + 1];
 static float g_flSlowDuration[TF_MAXPLAYERS + 1];
 static float g_flSlowPercentage[TF_MAXPLAYERS + 1];
 static float g_flFreezeDuration[TF_MAXPLAYERS + 1];
+static bool g_bFreezeAffected[TF_MAXPLAYERS + 1];
 
 methodmap CRageFreeze < SaxtonHaleBase
 {
@@ -82,6 +83,8 @@ methodmap CRageFreeze < SaxtonHaleBase
 		{
 			if (IsClientInGame(iClient) && IsPlayerAlive(iClient) && GetClientTeam(iClient) != GetClientTeam(this.iClient) && IsClientInRange(iClient, vecBossOrigin, flRadius) && !TF2_IsUbercharged(iClient))
 			{
+				g_bFreezeAffected[iClient] = true;
+				
 				float vecClientOrigin[3];
 				GetClientAbsOrigin(iClient, vecClientOrigin);
 				
@@ -95,6 +98,15 @@ methodmap CRageFreeze < SaxtonHaleBase
 				CreateTimer(this.flSlowDuration, FreezeClient, GetClientUserId(iClient));
 				CreateTimer(this.flSlowDuration + flFreezeDuration, UnfreezeClient, GetClientUserId(iClient));
 			}
+		}
+	}
+	
+	public void OnThink()
+	{
+		for (int iClient = 1; iClient <= MaxClients; iClient++)
+		{
+			if (IsClientInGame(iClient) && !IsPlayerAlive(iClient))
+				g_bFreezeAffected[iClient] = false;
 		}
 	}
 	
@@ -112,7 +124,7 @@ methodmap CRageFreeze < SaxtonHaleBase
 public Action FreezeClient(Handle hTimer, int iUserId)
 {
 	int iClient = GetClientOfUserId(iUserId);
-	if (0 < iClient <= MaxClients && IsClientInGame(iClient) && IsPlayerAlive(iClient))
+	if (0 < iClient <= MaxClients && IsClientInGame(iClient) && g_bFreezeAffected[iClient])
 	{
 		SetEntityMoveType(iClient, MOVETYPE_NONE);
 		SetEntityRenderColor(iClient, 128, 176, 255, 255);
@@ -129,8 +141,12 @@ public Action UnfreezeClient(Handle hTimer, int iUserId)
 	{
 		SetEntityMoveType(iClient, MOVETYPE_WALK);
 		SetEntityRenderColor(iClient, 255, 255, 255, 255);
-		float vecOrigin[3];
-		GetClientAbsOrigin(iClient, vecOrigin);
-		EmitAmbientSound(UNFREEZE_SOUND, vecOrigin);
+		
+		if (IsPlayerAlive(iClient))
+		{
+			float vecOrigin[3];
+			GetClientAbsOrigin(iClient, vecOrigin);
+			EmitAmbientSound(UNFREEZE_SOUND, vecOrigin);
+		}
 	}
 }
