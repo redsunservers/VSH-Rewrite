@@ -734,6 +734,10 @@ public __pl_saxtonhale_SetNTVOptional()
 	MarkNativeAsOptional("SaxtonHaleBase.flSpeedMult.set");
 	MarkNativeAsOptional("SaxtonHaleBase.flEnvDamageCap.get");
 	MarkNativeAsOptional("SaxtonHaleBase.flEnvDamageCap.set");
+	MarkNativeAsOptional("SaxtonHaleBase.flWeighDownTimer.get");
+	MarkNativeAsOptional("SaxtonHaleBase.flWeighDownTimer.set");
+	MarkNativeAsOptional("SaxtonHaleBase.flWeighDownForce.get");
+	MarkNativeAsOptional("SaxtonHaleBase.flWeighDownForce.set");
 	MarkNativeAsOptional("SaxtonHaleBase.flGlowTime.get");
 	MarkNativeAsOptional("SaxtonHaleBase.flGlowTime.set");
 	MarkNativeAsOptional("SaxtonHaleBase.flRageLastTime.get");
