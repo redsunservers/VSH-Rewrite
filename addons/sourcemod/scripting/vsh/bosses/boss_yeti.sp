@@ -161,4 +161,9 @@ methodmap CYeti < SaxtonHaleBase
 		for (int i = 0; i < sizeof(g_strYetiVoice); i++)PrecacheSound(g_strYetiVoice[i]);
 		for (int i = 0; i < sizeof(g_strYetiFootsteps); i++)PrecacheSound(g_strYetiFootsteps[i]);
 	}
+	
+	public bool IsBossHidden()
+	{
+		return true;
+	}
 };

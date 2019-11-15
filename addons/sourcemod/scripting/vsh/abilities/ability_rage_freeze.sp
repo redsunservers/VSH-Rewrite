@@ -119,11 +119,6 @@ methodmap CRageFreeze < SaxtonHaleBase
 		PrecacheParticleSystem(FREEZE_PARTICLE_02);
 		PrecacheParticleSystem(FREEZE_PARTICLE_03);
 	}
-	
-	public bool IsBossHidden()
-	{
-		return true;
-	}
 };
 
 public Action FreezeClient(Handle hTimer, int iUserId)
