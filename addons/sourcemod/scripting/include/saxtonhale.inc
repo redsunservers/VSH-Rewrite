@@ -706,6 +706,14 @@ public SharedPlugin __pl_saxtonhale =
 #if !defined REQUIRE_PLUGIN
 public __pl_saxtonhale_SetNTVOptional()
 {
+	MarkNativeAsOptional("SaxtonHale_RegisterBoss");
+	MarkNativeAsOptional("SaxtonHale_UnregisterBoss");
+	MarkNativeAsOptional("SaxtonHale_RegisterModifiers");
+	MarkNativeAsOptional("SaxtonHale_UnregisterModifiers");
+	MarkNativeAsOptional("SaxtonHale_RegisterAbility");
+	MarkNativeAsOptional("SaxtonHale_UnregisterAbility");
+	MarkNativeAsOptional("SaxtonHale_GetPlugin");
+	
 	MarkNativeAsOptional("SaxtonHaleBase.CallFunction");
 	
 	MarkNativeAsOptional("SaxtonHaleBase.bValid.get");
@@ -758,13 +766,6 @@ public __pl_saxtonhale_SetNTVOptional()
 	MarkNativeAsOptional("SaxtonHale_SetParamArray");
 	MarkNativeAsOptional("SaxtonHale_GetParamString");
 	MarkNativeAsOptional("SaxtonHale_SetParamString");
-	
-	MarkNativeAsOptional("SaxtonHale_RegisterBoss");
-	MarkNativeAsOptional("SaxtonHale_UnregisterBoss");
-	MarkNativeAsOptional("SaxtonHale_RegisterModifiers");
-	MarkNativeAsOptional("SaxtonHale_UnregisterModifiers");
-	MarkNativeAsOptional("SaxtonHale_RegisterAbility");
-	MarkNativeAsOptional("SaxtonHale_UnregisterAbility");
 	
 	MarkNativeAsOptional("SaxtonHale_GetBossTeam");
 	MarkNativeAsOptional("SaxtonHale_GetAttackTeam");
