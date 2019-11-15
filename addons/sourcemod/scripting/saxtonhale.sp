@@ -367,9 +367,11 @@ Handle g_hSDKEquipWearable = null;
 #include "vsh/abilities/ability_body_eat.sp"
 #include "vsh/abilities/ability_brave_jump.sp"
 #include "vsh/abilities/ability_drop_model.sp"
+#include "vsh/abilities/ability_groundpound.sp"
 #include "vsh/abilities/ability_model_override.sp"
 #include "vsh/abilities/ability_rage_bomb.sp"
 #include "vsh/abilities/ability_rage_conditions.sp"
+#include "vsh/abilities/ability_rage_freeze.sp"
 #include "vsh/abilities/ability_rage_ghost.sp"
 #include "vsh/abilities/ability_rage_light.sp"
 #include "vsh/abilities/ability_rage_scare.sp"
@@ -392,6 +394,7 @@ Handle g_hSDKEquipWearable = null;
 #include "vsh/bosses/boss_seeldier.sp"
 #include "vsh/bosses/boss_blutarch.sp"
 #include "vsh/bosses/boss_redmond.sp"
+#include "vsh/bosses/boss_yeti.sp"
 #include "vsh/bosses/boss_zombie.sp"
 
 #include "vsh/modifiers/modifiers_speed.sp"
@@ -546,6 +549,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterBoss("CBrutalSniper");
 	SaxtonHale_RegisterBoss("CAnnouncer");
 	SaxtonHale_RegisterBoss("CHorsemann");
+	SaxtonHale_RegisterBoss("CYeti");
 	
 	//Register misc bosses
 	SaxtonHale_RegisterBoss("CSeeMan", "CSeeldier");
@@ -569,8 +573,10 @@ public void OnPluginStart()
 	SaxtonHale_RegisterAbility("CBraveJump");
 	SaxtonHale_RegisterAbility("CDropModel");
 	SaxtonHale_RegisterAbility("CBomb");
+	SaxtonHale_RegisterAbility("CGroundPound");
 	SaxtonHale_RegisterAbility("CModelOverride");
 	SaxtonHale_RegisterAbility("CRageAddCond");
+	SaxtonHale_RegisterAbility("CRageFreeze");
 	SaxtonHale_RegisterAbility("CRageGhost");
 	SaxtonHale_RegisterAbility("CLightRage");
 	SaxtonHale_RegisterAbility("CScareRage");
@@ -3024,6 +3030,23 @@ stock void TF2_Explode(int iAttacker = -1, float flPos[3], float flDamage, float
 		SDKHooks_TakeDamage(iBomb, 0, iAttacker, 9999.0);
 }
 
+stock void TF2_Shake(float vecOrigin[3], float flAmplitude, float flRadius, float flDuration, float flFrequency)
+{
+	int iShake = CreateEntityByName("env_shake");
+	if (iShake != -1)
+	{
+		DispatchKeyValueVector(iShake, "origin", vecOrigin);
+		DispatchKeyValueFloat(iShake, "amplitude", flAmplitude);
+		DispatchKeyValueFloat(iShake, "radius", flRadius);
+		DispatchKeyValueFloat(iShake, "duration", flDuration);
+		DispatchKeyValueFloat(iShake, "frequency", flFrequency);
+		
+		DispatchSpawn(iShake);
+		AcceptEntityInput(iShake, "StartShake");
+		RemoveEntity(iShake);
+	}
+}
+
 stock int TF2_SpawnParticle(char[] sParticle, float vecOrigin[3] = NULL_VECTOR, float flAngles[3] = NULL_VECTOR, bool bActivate = true, int iEntity = 0, int iControlPoint = 0)
 {
 	int iParticle = CreateEntityByName("info_particle_system");
@@ -3239,4 +3262,11 @@ stock int FindStringIndex2(int tableidx, const char[] str)
 	}
 
 	return INVALID_STRING_INDEX;
+}
+
+stock bool IsClientInRange(int iClient, float vecOrigin[3], float flRadius)
+{
+	float vecClientOrigin[3];
+	GetClientAbsOrigin(iClient, vecClientOrigin);
+	return GetVectorDistance(vecOrigin, vecClientOrigin) <= flRadius;
 }
