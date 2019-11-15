@@ -16,7 +16,7 @@ void Menu_Init()
 	
 	// Main Menu
 	g_hMenuMain = new Menu(Menu_SelectMain);
-	g_hMenuMain.SetTitle("[VSH REWRITE] - %s", PLUGIN_VERSION);
+	g_hMenuMain.SetTitle("[VSH REWRITE] - %s.%s", PLUGIN_VERSION, PLUGIN_VERSION_REVISION);
 	g_hMenuMain.AddItem("class", "Class & Weapon Menu (!vshclass)");
 	g_hMenuMain.AddItem("boss", "Bosses Info (!vshboss)");
 	g_hMenuMain.AddItem("modifiers", "Modifiers Info (!vshmodifiers)");

@@ -19,7 +19,8 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.1.4"
+#define PLUGIN_VERSION 			"1.2.0"
+#define PLUGIN_VERSION_REVISION "manual"
 
 #define MAX_BUTTONS 		26
 #define MAX_TYPE_CHAR		32	//Max char size of methodmaps name
@@ -437,7 +438,7 @@ public Plugin myinfo =
 	name = "Versus Saxton Hale Rewrite",
 	author = "42, Kenzzer",
 	description = "Popular VSH Gamemode Rewritten from scrach",
-	version = PLUGIN_VERSION,
+	version = PLUGIN_VERSION ... "." ... PLUGIN_VERSION_REVISION,
 	url = "https://github.com/redsunservers/VSH-Rewrite",
 };
 
