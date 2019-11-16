@@ -58,9 +58,8 @@ void MenuBoss_AddBoss(const char[] sBossType)
 	
 	g_hMenuNextBoss.AddItem(sBossType, sName);
 	
-	if (bIsHidden) return;
-	
-	g_hMenuBossMain.AddItem(sBossType, sName);
+	if (!bIsHidden)
+		g_hMenuBossMain.AddItem(sBossType, sName);
 	
 	//Create menu info for boss
 	Menu hMenuBossInfo = new Menu(MenuBoss_SelectBossInfo);
@@ -132,9 +131,8 @@ void MenuBoss_AddModifiers(const char[] sModifiersType)
 	
 	g_hMenuNextModifiers.AddItem(sModifiersType, sName);
 	
-	if (bIsHidden) return;
-	
-	g_hMenuModifiersMain.AddItem(sModifiersType, sName);
+	if (!bIsHidden)
+		g_hMenuModifiersMain.AddItem(sModifiersType, sName);
 	
 	//Create menu info for modifiers
 	Menu hMenuModifiersInfo = new Menu(MenuBoss_SelectModifiersInfo);
