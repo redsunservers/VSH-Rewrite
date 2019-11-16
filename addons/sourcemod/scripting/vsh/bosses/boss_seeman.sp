@@ -51,9 +51,10 @@ methodmap CSeeMan < SaxtonHaleBase
 	public Action OnTakeDamage(int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 	{
 		char sWeaponClassName[32];
-		if (weapon >= 0) GetEdictClassname(inflictor, sWeaponClassName, sizeof(sWeaponClassName));
+		if (inflictor >= 0) GetEdictClassname(inflictor, sWeaponClassName, sizeof(sWeaponClassName));
 		
-		if (this.iClient == attacker && strcmp(sWeaponClassName, "tf_generic_bomb") == 0) return Plugin_Stop; // Don't let the bombs from the bomb ability damages us!
+		//Disable self-damage from bomb rage ability
+		if (this.iClient == attacker && strcmp(sWeaponClassName, "tf_generic_bomb") == 0) return Plugin_Stop;
 
 		EmitSoundToAll(SEEMAN_SEE_SND, this.iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
 		return Plugin_Continue;
@@ -62,7 +63,7 @@ methodmap CSeeMan < SaxtonHaleBase
 	public void OnSpawn()
 	{
 		char attribs[128];
-		Format(attribs, sizeof(attribs), "2 ; 1.9 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65");
+		Format(attribs, sizeof(attribs), "2 ; 1.9 ; 252 ; 0.5 ; 259 ; 1.0");
 		int iWeapon = this.CallFunction("CreateWeapon", 195, "tf_weapon_bottle", 100, TFQual_Collectors, attribs);
 		if (iWeapon > MaxClients)
 			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
@@ -72,7 +73,6 @@ methodmap CSeeMan < SaxtonHaleBase
 		2: damage bonus
 		252: reduction in push force taken from damage
 		259: Deals 3x falling damage to the player you land on
-		329: reduction in airblast vulnerability
 		*/
 	}
 	
@@ -118,8 +118,6 @@ methodmap CSeeMan < SaxtonHaleBase
 	
 	public void Precache()
 	{
-		CBomb.Precache();
-		
 		PrepareSound(SEEMAN_SEE_SND);
 		PrepareSound(SEEMAN_RAGE_SND);
 		PrepareSound(SEE_BOSSES_INTRO_SND);

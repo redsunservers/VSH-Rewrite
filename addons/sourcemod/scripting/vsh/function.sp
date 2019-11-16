@@ -205,19 +205,9 @@ void Function_FinishStack(int[][] value)
 
 bool Function_Call(SaxtonHaleBase boss, const char[] sClass, Action action, any &returnValue)
 {
-	//Find function
-	char sFunctionName[FUNCTION_ARRAY_MAX];
-	Format(sFunctionName, sizeof(sFunctionName), "%s.%s", sClass, g_sFunctionStackName[g_iFunctionStack]);
-	
-	Handle hPlugin = Function_GetPlugin(sClass);
-	Function func = GetFunctionByName(hPlugin, sFunctionName);
-	
-	if (func != INVALID_FUNCTION)
+	//Start function if valid
+	if (boss.StartFunction(sClass, g_sFunctionStackName[g_iFunctionStack]))
 	{
-		//Valid function, start call
-		Call_StartFunction(hPlugin, func);
-		Call_PushCell(boss);
-		
 		//Push params
 		ParamType paramType[FUNCTION_PARAM_MAX+1];
 		int iSize = Function_GetParamType(g_sFunctionStackName[g_iFunctionStack], paramType);
@@ -440,4 +430,9 @@ Handle Function_GetPlugin(const char[] sClass)
 void Function_RemovePlugin(const char[] sClass)
 {
 	g_mFunctionPlugin.Remove(sClass);
+}
+
+StringMapSnapshot Function_GetPluginSnapshot()
+{
+	return g_mFunctionPlugin.Snapshot();
 }

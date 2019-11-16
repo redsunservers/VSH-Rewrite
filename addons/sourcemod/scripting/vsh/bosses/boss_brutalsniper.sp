@@ -1,5 +1,5 @@
 #define BRUTALSNIPER_MODEL "models/player/saxton_hale/cbs_v4.mdl"
-#define BRUTALSNIPER_THEME "saxton_hale/the_millionaires_holiday.mp3"
+#define BRUTALSNIPER_THEME "vsh_rewrite/brutalsniper/brutalsniper_music.mp3"
 #define BRUTALSNIPER_MAXWEAPONS 4
 
 #define ITEM_KUKRI			3
@@ -133,7 +133,7 @@ methodmap CBrutalSniper < SaxtonHaleBase
 		*/
 		
 		g_iBrutalSniperWeaponCooldown[this.iClient][0] = BRUTALSNIPER_MAXWEAPONS - 2;	//Kukri
-		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65");
+		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0");
 		iWeapon = this.CallFunction("CreateWeapon", ITEM_KUKRI, "tf_weapon_club", 100, TFQual_Collectors, attribs);
 		if (iWeapon > MaxClients)
 			SetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
@@ -143,7 +143,6 @@ methodmap CBrutalSniper < SaxtonHaleBase
 		2: damage bonus
 		252: reduction in push force taken from damage
 		259: Deals 3x falling damage to the player you land on
-		329: reduction in airblast vulnerability
 		*/
 	}
 	

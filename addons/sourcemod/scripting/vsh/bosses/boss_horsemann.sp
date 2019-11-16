@@ -75,6 +75,12 @@ methodmap CHorsemann < SaxtonHaleBase
 		boss.CallFunction("CreateAbility", "CTeleportSwap");
 		boss.CallFunction("CreateAbility", "CRageGhost");
 		
+		/*
+		CModelOverride modelOverride = boss.CallFunction("CreateAbility", "CModelOverride");
+		modelOverride.SetModel(HORSEMANN_MODEL);
+		modelOverride.flScale = 0.5;
+		*/
+		
 		boss.iBaseHealth = 700;
 		boss.iHealthPerPlayer = 650;
 		boss.nClass = TFClass_DemoMan;
@@ -96,14 +102,14 @@ methodmap CHorsemann < SaxtonHaleBase
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
 		StrCat(sInfo, length, "\n- Becomes ghost to fly, immune to damage, and unable to attack for 8 seconds");
-		StrCat(sInfo, length, "\n- Steals health from nearby players with random spooky effects");
-		StrCat(sInfo, length, "\n- 200%% Rage: Extends duration to 16 seconds");
+		StrCat(sInfo, length, "\n- Pulls and steals health from nearby players with random spooky effects");
+		StrCat(sInfo, length, "\n- 200%% Rage: Larger range and health steal is doubled");
 	}
 	
 	public void OnSpawn()
 	{
 		char attribs[128];
-		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65 ; 264 ; 0.73 ; 551 ; 1");
+		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 264 ; 0.73 ; 551 ; 1");
 		int iWeapon = this.CallFunction("CreateWeapon", 266, "tf_weapon_sword", 100, TFQual_Unusual, attribs);
 
 		if (iWeapon > MaxClients)
@@ -117,7 +123,6 @@ methodmap CHorsemann < SaxtonHaleBase
 		2: damage bonus
 		252: reduction in push force taken from damage
 		259: Deals 3x falling damage to the player you land on
-		329: reduction in airblast vulnerability
 		436: ragdolls_plasma_effect
 		264: melee range multiplier (tf_weapon_sword have 37% extra range)
 		551: special taunt

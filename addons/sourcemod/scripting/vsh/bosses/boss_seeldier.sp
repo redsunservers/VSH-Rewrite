@@ -37,7 +37,7 @@ methodmap CSeeldier < SaxtonHaleBase
 	public void OnSpawn()
 	{
 		char attribs[128];
-		Format(attribs, sizeof(attribs), "2 ; 1.9 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65");
+		Format(attribs, sizeof(attribs), "2 ; 1.9 ; 252 ; 0.5 ; 259 ; 1.0");
 		int iWeapon = this.CallFunction("CreateWeapon", 195, "tf_weapon_shovel", 100, TFQual_Collectors, attribs);
 		if (iWeapon > MaxClients)
 			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
@@ -47,7 +47,6 @@ methodmap CSeeldier < SaxtonHaleBase
 		2: damage bonus
 		252: reduction in push force taken from damage
 		259: Deals 3x falling damage to the player you land on
-		329: reduction in airblast vulnerability
 		*/
 	}
 	
@@ -129,7 +128,7 @@ methodmap CSeeldier < SaxtonHaleBase
 		}
 	}
 	
-	public void GetSoundAbility (char[] sSound, int length, const char[] sType)
+	public void GetSoundAbility(char[] sSound, int length, const char[] sType)
 	{
 		if (strcmp(sType, "CBraveJump") == 0)
 			strcopy(sSound, length, SEELDIER_SEE_SND);
@@ -174,6 +173,7 @@ methodmap CSeeldierMinion < SaxtonHaleBase
 		boss.iHealthPerPlayer = 0;
 		boss.nClass = TFClass_Soldier;
 		boss.iMaxRageDamage = -1;
+		boss.flWeighDownTimer = -1.0;
 		boss.bMinion = true;
 		
 		EmitSoundToClient(boss.iClient, SOUND_ALERT);	//Alert player as he spawned

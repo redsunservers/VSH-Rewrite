@@ -45,6 +45,77 @@ enum SaxtonHaleSound
 };
 
 /**
+ * Registers a boss to be selected, use more than 1 bosses in 1 native for misc boss
+ *
+ * @note Make sure plugin unregisters boss once unloaded
+ *
+ * @param ...               Methodmap constructor of boss type.
+ * @noreturn
+ * @error                   No params passed, or constructor already exists from boss, modifiers or ability
+ */
+native void SaxtonHale_RegisterBoss(const char[] ...);
+
+/**
+ * Unregisters a boss
+ *
+ * @note If one of misc boss is removed while other boss still here, it get auto-moved to normal boss pick.
+ *
+ * @param                   sBossType Methodmap constructor of boss type.
+ * @noreturn
+ */
+native void SaxtonHale_UnregisterBoss(const char[] sBossType);
+
+/**
+ * Registers a modifier to be selected
+ *
+ * @note Make sure plugin unregisters modifiers once unloaded
+ *
+ * @param sModifiersType    Methodmap constructor of modifiers type.
+ * @noreturn
+ * @error                   Constructor already exists from boss, modifiers or ability
+ */
+native void SaxtonHale_RegisterModifiers(const char[] sModifiersType);
+
+/**
+ * Unregisters a modifier
+ *
+ * @note If one of misc boss is removed while other boss still here, it get auto-moved to normal boss pick.
+ *
+ * @param sModifiersType    Methodmap constructor of modifiers type.
+ * @noreturn
+ */
+native void SaxtonHale_UnregisterModifiers(const char[] sModifiersType);
+
+/**
+ * Registers an ability to have functions be called
+ *
+ * @note Make sure plugin unregisters ability once unloaded
+ *
+ * @param sAbilityType      Methodmap constructor of ability type.
+ * @noreturn
+ * @error                   Constructor already exists from boss, modifiers or ability
+ */
+native void SaxtonHale_RegisterAbility(const char[] sAbilityType);
+
+/**
+ * Unregisters an ability
+ *
+ * @note If one of misc boss is removed while other boss still here, it get auto-moved to normal boss pick.
+ *
+ * @param sAbilityType      Methodmap constructor of modifiers type.
+ * @noreturn
+ */
+native void SaxtonHale_UnregisterAbility(const char[] sAbilityType);
+
+/**
+ * Gets constructor's plugin owner
+ *
+ * @param sType             Methodmap constructor to get plugin owner.
+ * @return                  Constructor's plugin owner handle, null if constructor does not exist
+ */
+native Handle SaxtonHale_GetPlugin(const char[] sType);
+
+/**
  * Boss methodmap
  */
 methodmap SaxtonHaleBase
@@ -63,6 +134,29 @@ methodmap SaxtonHaleBase
 	// @return			    Return value of function
 	// @error               Invalid function name, too few params expected, incorrect ParamType or reached max allowed call stack.
 	public native any CallFunction(const char[] sName, any...);
+	
+	// Starts a function to specified constructor and function name, ignoring hooks
+	//
+	// @param sType         Name of constructor to call
+	// @param sFunction     Function name to call
+	// @return              True if found and function call started, false if function does not exist
+	public bool StartFunction(const char[] sType, const char[] sFunction)
+	{
+		Handle hPlugin = SaxtonHale_GetPlugin(sType);
+		if (hPlugin == null)
+			return false;
+		
+		char sBuffer[64];
+		Format(sBuffer, sizeof(sBuffer), "%s.%s", sType, sFunction);
+		
+		Function func = GetFunctionByName(hPlugin, sBuffer);
+		if (func == INVALID_FUNCTION)
+			return false;
+		
+		Call_StartFunction(hPlugin, func);
+		Call_PushCell(this);
+		return true;
+	}
 	
 	// Retrieve client index.
 	property int iClient
@@ -131,6 +225,20 @@ methodmap SaxtonHaleBase
 	
 	// Retrieve/Set max env damage to be teleported to spawn
 	property float flEnvDamageCap
+	{
+		public native get();
+		public native set(float val);
+	}
+	
+	// Retrieve/Set timer while in air to allow weighdown, -1.0 to disable weighdown
+	property float flWeighDownTimer
+	{
+		public native get();
+		public native set(float val);
+	}
+	
+	// Retrieve/Set weighdown force
+	property float flWeighDownForce
 	{
 		public native get();
 		public native set(float val);
@@ -353,69 +461,6 @@ native void SaxtonHale_GetParamString(int iParam, char[] value, int iLength);
  * @error                   Called while not inside hook, param outside of bounds, or ParamType not String
  */
 native void SaxtonHale_SetParamString(int iParam, char[] value);
-
-/**
- * Registers a boss to be selected, use more than 1 bosses in 1 native for misc boss
- *
- * @note Make sure plugin unregisters boss once unloaded
- *
- * @param ...               Methodmap constructor of boss type.
- * @noreturn
- * @error                   No params passed, or constructor already exists from boss, modifiers or ability
- */
-native void SaxtonHale_RegisterBoss(const char[] ...);
-
-/**
- * Unregisters a boss
- *
- * @note If one of misc boss is removed while other boss still here, it get auto-moved to normal boss pick.
- *
- * @param                   sBossType Methodmap constructor of boss type.
- * @noreturn
- */
-native void SaxtonHale_UnregisterBoss(const char[] sBossType);
-
-/**
- * Registers a modifier to be selected
- *
- * @note Make sure plugin unregisters modifiers once unloaded
- *
- * @param sModifiersType    Methodmap constructor of modifiers type.
- * @noreturn
- * @error                   Constructor already exists from boss, modifiers or ability
- */
-native void SaxtonHale_RegisterModifiers(const char[] sModifiersType);
-
-/**
- * Unregisters a modifier
- *
- * @note If one of misc boss is removed while other boss still here, it get auto-moved to normal boss pick.
- *
- * @param sModifiersType    Methodmap constructor of modifiers type.
- * @noreturn
- */
-native void SaxtonHale_UnregisterModifiers(const char[] sModifiersType);
-
-/**
- * Registers an ability to have functions be called
- *
- * @note Make sure plugin unregisters ability once unloaded
- *
- * @param sAbilityType      Methodmap constructor of ability type.
- * @noreturn
- * @error                   Constructor already exists from boss, modifiers or ability
- */
-native void SaxtonHale_RegisterAbility(const char[] sAbilityType);
-
-/**
- * Unregisters an ability
- *
- * @note If one of misc boss is removed while other boss still here, it get auto-moved to normal boss pick.
- *
- * @param sAbilityType      Methodmap constructor of modifiers type.
- * @noreturn
- */
-native void SaxtonHale_UnregisterAbility(const char[] sAbilityType);
 
 /**
  * Forward called when boss got telefraged
@@ -661,6 +706,14 @@ public SharedPlugin __pl_saxtonhale =
 #if !defined REQUIRE_PLUGIN
 public __pl_saxtonhale_SetNTVOptional()
 {
+	MarkNativeAsOptional("SaxtonHale_RegisterBoss");
+	MarkNativeAsOptional("SaxtonHale_UnregisterBoss");
+	MarkNativeAsOptional("SaxtonHale_RegisterModifiers");
+	MarkNativeAsOptional("SaxtonHale_UnregisterModifiers");
+	MarkNativeAsOptional("SaxtonHale_RegisterAbility");
+	MarkNativeAsOptional("SaxtonHale_UnregisterAbility");
+	MarkNativeAsOptional("SaxtonHale_GetPlugin");
+	
 	MarkNativeAsOptional("SaxtonHaleBase.CallFunction");
 	
 	MarkNativeAsOptional("SaxtonHaleBase.bValid.get");
@@ -681,6 +734,10 @@ public __pl_saxtonhale_SetNTVOptional()
 	MarkNativeAsOptional("SaxtonHaleBase.flSpeedMult.set");
 	MarkNativeAsOptional("SaxtonHaleBase.flEnvDamageCap.get");
 	MarkNativeAsOptional("SaxtonHaleBase.flEnvDamageCap.set");
+	MarkNativeAsOptional("SaxtonHaleBase.flWeighDownTimer.get");
+	MarkNativeAsOptional("SaxtonHaleBase.flWeighDownTimer.set");
+	MarkNativeAsOptional("SaxtonHaleBase.flWeighDownForce.get");
+	MarkNativeAsOptional("SaxtonHaleBase.flWeighDownForce.set");
 	MarkNativeAsOptional("SaxtonHaleBase.flGlowTime.get");
 	MarkNativeAsOptional("SaxtonHaleBase.flGlowTime.set");
 	MarkNativeAsOptional("SaxtonHaleBase.flRageLastTime.get");
@@ -713,13 +770,6 @@ public __pl_saxtonhale_SetNTVOptional()
 	MarkNativeAsOptional("SaxtonHale_SetParamArray");
 	MarkNativeAsOptional("SaxtonHale_GetParamString");
 	MarkNativeAsOptional("SaxtonHale_SetParamString");
-	
-	MarkNativeAsOptional("SaxtonHale_RegisterBoss");
-	MarkNativeAsOptional("SaxtonHale_UnregisterBoss");
-	MarkNativeAsOptional("SaxtonHale_RegisterModifiers");
-	MarkNativeAsOptional("SaxtonHale_UnregisterModifiers");
-	MarkNativeAsOptional("SaxtonHale_RegisterAbility");
-	MarkNativeAsOptional("SaxtonHale_UnregisterAbility");
 	
 	MarkNativeAsOptional("SaxtonHale_GetBossTeam");
 	MarkNativeAsOptional("SaxtonHale_GetAttackTeam");

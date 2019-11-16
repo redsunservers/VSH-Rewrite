@@ -6,6 +6,7 @@ methodmap CZombie < SaxtonHaleBase
 	{
 		boss.nClass = TFClass_Scout;
 		boss.flSpeed = -1.0;
+		boss.flWeighDownTimer = -1.0;
 		boss.iMaxRageDamage = -1;
 		boss.bMinion = true;
 		boss.bModel = false;

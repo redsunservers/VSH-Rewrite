@@ -19,7 +19,8 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define PLUGIN_VERSION "1.1.2"
+#define PLUGIN_VERSION 			"1.2.0"
+#define PLUGIN_VERSION_REVISION "manual"
 
 #define MAX_BUTTONS 		26
 #define MAX_TYPE_CHAR		32	//Max char size of methodmaps name
@@ -50,6 +51,7 @@
 #define ITEM_ROCK_PAPER_SCISSORS	1110
 
 #define SOUND_ALERT			"ui/system_message_alert.wav"
+#define SOUND_METERFULL		"player/recharged.wav"
 #define SOUND_BACKSTAB		"player/spy_shield_break.wav"
 #define SOUND_DOUBLEDONK	"player/doubledonk.wav"
 
@@ -113,6 +115,14 @@ enum
 	LifeState_Dead = 2
 };
 
+enum FlamethrowerState
+{
+	FlamethrowerState_Idle = 0,
+	FlamethrowerState_StartFiring,
+	FlamethrowerState_Firing,
+	FlamethrowerState_Airblast,
+};
+
 enum MinigunState
 {
 	MinigunState_Idle = 0,
@@ -147,6 +157,25 @@ enum
 	COLLISION_GROUP_NPC_SCRIPTED,	// USed for NPCs in scripts that should not collide with each other
 
 	LAST_SHARED_COLLISION_GROUP
+};
+
+// entity effects
+enum
+{
+	EF_BONEMERGE			= (1<<0),	// Performs bone merge on client side
+	EF_BRIGHTLIGHT			= (1<<1),	// DLIGHT centered at entity origin
+	EF_DIMLIGHT				= (1<<2),	// player flashlight
+	EF_NOINTERP				= (1<<3),	// don't interpolate the next frame
+	EF_NOSHADOW				= (1<<4),	// Don't cast no shadow
+	EF_NODRAW				= (1<<5),	// don't draw entity
+	EF_NORECEIVESHADOW		= (1<<6),	// Don't receive no shadow
+	EF_BONEMERGE_FASTCULL	= (1<<7),	// For use with EF_BONEMERGE. If this is set, then it places this ent's origin at its
+										// parent and uses the parent's bbox + the max extents of the aiment.
+										// Otherwise, it sets up the parent's bones every frame to figure out where to place
+										// the aiment, which is inefficient because it'll setup the parent's bones even if
+										// the parent is not in the PVS.
+	EF_ITEM_BLINK			= (1<<8),	// blink an item so that the user notices it.
+	EF_PARENT_ANIMATES		= (1<<9),	// always assume that the parent entity is animating
 };
 
 // Beam types, encoded as a byte
@@ -308,7 +337,6 @@ int g_iHealthBarHealth;
 int g_iHealthBarMaxHealth;
 
 //Player data
-float g_flPlayerSpeedMultiplier[TF_MAXPLAYERS+1];
 int g_iPlayerLastButtons[TF_MAXPLAYERS+1];
 int g_iPlayerDamage[TF_MAXPLAYERS+1];
 int g_iPlayerAssistDamage[TF_MAXPLAYERS+1];
@@ -340,8 +368,11 @@ Handle g_hSDKEquipWearable = null;
 #include "vsh/abilities/ability_brave_jump.sp"
 #include "vsh/abilities/ability_dash_jump.sp"
 #include "vsh/abilities/ability_drop_model.sp"
+#include "vsh/abilities/ability_groundpound.sp"
+#include "vsh/abilities/ability_model_override.sp"
 #include "vsh/abilities/ability_rage_bomb.sp"
 #include "vsh/abilities/ability_rage_conditions.sp"
+#include "vsh/abilities/ability_rage_freeze.sp"
 #include "vsh/abilities/ability_rage_ghost.sp"
 #include "vsh/abilities/ability_rage_light.sp"
 #include "vsh/abilities/ability_rage_scare.sp"
@@ -365,6 +396,7 @@ Handle g_hSDKEquipWearable = null;
 #include "vsh/bosses/boss_seeldier.sp"
 #include "vsh/bosses/boss_blutarch.sp"
 #include "vsh/bosses/boss_redmond.sp"
+#include "vsh/bosses/boss_yeti.sp"
 #include "vsh/bosses/boss_zombie.sp"
 
 #include "vsh/modifiers/modifiers_speed.sp"
@@ -411,7 +443,7 @@ public Plugin myinfo =
 	name = "Versus Saxton Hale Rewrite",
 	author = "42, Kenzzer",
 	description = "Popular VSH Gamemode Rewritten from scrach",
-	version = PLUGIN_VERSION,
+	version = PLUGIN_VERSION ... "." ... PLUGIN_VERSION_REVISION,
 	url = "https://github.com/redsunservers/VSH-Rewrite",
 };
 
@@ -503,6 +535,12 @@ public void OnPluginStart()
 	TagsName_Init();
 	Winstreak_Init();
 	
+	//Add base constructor to list of plugins (dont register!)
+	Handle hPlugin = GetMyHandle();
+	Function_AddPlugin("SaxtonHaleBoss", hPlugin);
+	Function_AddPlugin("SaxtonHaleModifiers", hPlugin);
+	Function_AddPlugin("SaxtonHaleAbility", hPlugin);
+	
 	//Register normal bosses
 	SaxtonHale_RegisterBoss("CSaxtonHale");
 	SaxtonHale_RegisterBoss("CPainisCupcake");
@@ -513,6 +551,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterBoss("CBrutalSniper");
 	SaxtonHale_RegisterBoss("CAnnouncer");
 	SaxtonHale_RegisterBoss("CHorsemann");
+	SaxtonHale_RegisterBoss("CYeti");
 	SaxtonHale_RegisterBoss("CBonkBoy");
 	
 	//Register misc bosses
@@ -538,7 +577,10 @@ public void OnPluginStart()
 	SaxtonHale_RegisterAbility("CDashJump");
 	SaxtonHale_RegisterAbility("CDropModel");
 	SaxtonHale_RegisterAbility("CBomb");
+	SaxtonHale_RegisterAbility("CGroundPound");
+	SaxtonHale_RegisterAbility("CModelOverride");
 	SaxtonHale_RegisterAbility("CRageAddCond");
+	SaxtonHale_RegisterAbility("CRageFreeze");
 	SaxtonHale_RegisterAbility("CRageGhost");
 	SaxtonHale_RegisterAbility("CLightRage");
 	SaxtonHale_RegisterAbility("CScareRage");
@@ -600,8 +642,12 @@ void Plugin_Cvars(bool toggle)
 	static float flFeignDeathDuration;
 	static float flFeignDeathSpeed;
 
-	if (toggle)
+	static bool toggled = false; // Used to avoid a overwrite of default value if toggled twice
+
+	if (toggle && !toggled)
 	{
+		toggled = true;
+
 		bArenaUseQueue = tf_arena_use_queue.BoolValue;
 		tf_arena_use_queue.BoolValue = false;
 
@@ -638,8 +684,10 @@ void Plugin_Cvars(bool toggle)
 		flFeignDeathSpeed = tf_feign_death_speed_duration.FloatValue;
 		tf_feign_death_speed_duration.FloatValue = 0.0;
 	}
-	else
+	else if (!toggle && toggled)
 	{
+		toggled = false;
+
 		tf_arena_use_queue.BoolValue = bArenaUseQueue;
 		tf_arena_first_blood.BoolValue = bArenaFirstBlood;
 		mp_forcecamera.BoolValue = bForceCamera;
@@ -699,17 +747,20 @@ public void OnMapStart()
 
 		Config_Refresh();
 
-		//Precache every bosses
-		int iLength = g_aAllBossesType.Length;
+		//Precache every bosses/abilities/modifiers registered
+		SaxtonHaleBase boss = SaxtonHaleBase(0); //client index doesn't matter
+		StringMapSnapshot snapshot = Function_GetPluginSnapshot();
+		
+		int iLength = snapshot.Length;
 		for (int i = 0; i < iLength; i++)
 		{
-			char sBossType[MAX_TYPE_CHAR];
-			g_aAllBossesType.GetString(i, sBossType, sizeof(sBossType));
-			
-			SaxtonHaleBase boss = SaxtonHaleBase(0);
-			boss.CallFunction("SetBossType", sBossType);
-			boss.CallFunction("Precache");
+			char sType[256];
+			snapshot.GetKey(i, sType, sizeof(sType));
+			if (boss.StartFunction(sType, "Precache"))
+				Call_Finish();
 		}
+
+		delete snapshot;
 
 		for (int i = 1; i <= 4; i++)
 		{
@@ -722,6 +773,7 @@ public void OnMapStart()
 		PrecacheParticleSystem(PARTICLE_GHOST);
 
 		PrecacheSound(SOUND_ALERT);
+		PrecacheSound(SOUND_METERFULL);
 		PrecacheSound(SOUND_BACKSTAB);
 		PrecacheSound(SOUND_DOUBLEDONK);
 		
@@ -925,7 +977,6 @@ public Action Event_RoundStart(Event event, const char[] sName, bool bDontBroadc
 
 	g_iTotalAttackCount = SaxtonHale_GetAliveAttackPlayers();	//Update amount of attack players
 
-	Tags_RoundStart();
 	Winstreak_RoundStart();
 
 	RequestFrame(Frame_InitVshPreRoundTimer, tf_arena_preround_time.IntValue);
@@ -1435,7 +1486,6 @@ public Action Event_PlayerDeath(Event event, const char[] sName, bool bDontBroad
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
-	if (!g_bRoundStarted) return Plugin_Continue;
 
 	int iVictim = GetClientOfUserId(event.GetInt("userid"));
 	int iAttacker = GetClientOfUserId(event.GetInt("attacker"));
@@ -1472,7 +1522,7 @@ public Action Event_PlayerDeath(Event event, const char[] sName, bool bDontBroad
 			bossAttacker.CallFunction("OnPlayerKilled", event, iVictim);
 	}
 	
-	if (SaxtonHale_IsValidAttack(iVictim) && !bDeadRinger)
+	if (g_bRoundStarted && !bDeadRinger && SaxtonHale_IsValidAttack(iVictim))
 	{
 		//Victim who died is still "alive" during this event, so we subtract by 1 to not count victim
 		int iLastAlive = SaxtonHale_GetAliveAttackPlayers() - 1;
@@ -1531,7 +1581,7 @@ public Action Event_PlayerDeath(Event event, const char[] sName, bool bDontBroad
 	}
 	
 	//Reset flags
-	if (!bDeadRinger)
+	if (g_bRoundStarted && !bDeadRinger)
 	{
 		g_iClientOwner[iVictim] = 0;
 		Client_RemoveFlag(iVictim, haleClientFlags_BossTeam);
@@ -1621,9 +1671,8 @@ public Action Event_PlayerInventoryUpdate(Event event, const char[] sName, bool 
 
 	if (g_iTotalRoundPlayed <= 0) return;
 	
+	Tags_ResetClient(iClient);
 	TagsCore_RefreshClient(iClient);
-	
-	Hud_SetRageView(iClient, false);
 	
 	if (SaxtonHale_IsValidAttack(iClient))
 		TagsCore_CallAll(iClient, TagsCall_Spawn);
@@ -1644,6 +1693,7 @@ public Action Event_PlayerHurt(Event event, const char[] sName, bool bDontBroadc
 	{
 		int iAttacker = GetClientOfUserId(event.GetInt("attacker"));
 		int iDamageAmount = event.GetInt("damageamount");
+		Tags_OnPlayerHurt(iClient, iAttacker, iDamageAmount);
 		
 		if (0 < iAttacker <= MaxClients && IsClientInGame(iAttacker) && iClient != iAttacker)
 		{
@@ -1829,7 +1879,6 @@ public void OnClientConnected(int iClient)
 {
 	Network_ResetClient(iClient);
 
-	g_flPlayerSpeedMultiplier[iClient] = 1.0;
 	g_iPlayerDamage[iClient] = 0;
 	g_iPlayerAssistDamage[iClient] = 0;
 	g_iClientFlags[iClient] = 0;
@@ -2514,18 +2563,9 @@ void SDK_Init()
 		LogMessage("Failed to create hook: CBaseEntity::ShouldTransmit!");
 	else
 		DHookAddParam(g_hHookShouldTransmit, HookParamType_ObjectPtr);
-
-	// This hook allows to change max speed
-	Handle hHook = DHookCreateFromConf(hGameData, "CTFPlayer::TeamFortress_CalculateMaxSpeed");
-	if (hHook == null)
-		LogMessage("Failed to create hook: CTFPlayer::TeamFortress_CalculateMaxSpeed!");
-	else
-		DHookEnableDetour(hHook, false, Hook_CalculateMaxSpeed);
-	
-	delete hHook;
 	
 	// This hook allows to allow/block medigun heals
-	hHook = DHookCreateFromConf(hGameData, "CWeaponMedigun::AllowedToHealTarget");
+	Handle hHook = DHookCreateFromConf(hGameData, "CWeaponMedigun::AllowedToHealTarget");
 	if (hHook == null)
 		LogMessage("Failed to create hook: CWeaponMedigun::AllowedToHealTarget!");
 	else
@@ -2559,19 +2599,6 @@ public MRESReturn Hook_EntityShouldTransmit(int iEntity, Handle hReturn, Handle 
 {
 	DHookSetReturn(hReturn, FL_EDICT_ALWAYS);
 	return MRES_Supercede;
-}
-
-public MRESReturn Hook_CalculateMaxSpeed(int iClient, Handle hReturn, Handle hParams)
-{
-	if (g_flPlayerSpeedMultiplier[iClient] != 1.0)
-	{
-		float flSpeed = DHookGetReturn(hReturn);
-		flSpeed *= g_flPlayerSpeedMultiplier[iClient];
-		DHookSetReturn(hReturn, flSpeed);
-		return MRES_Supercede;
-	}
-	
-	return MRES_Ignored;
 }
 
 public MRESReturn Hook_AllowedToHealTarget(int iMedigun, Handle hReturn, Handle hParams)
@@ -3007,6 +3034,23 @@ stock void TF2_Explode(int iAttacker = -1, float flPos[3], float flDamage, float
 		SDKHooks_TakeDamage(iBomb, 0, iAttacker, 9999.0);
 }
 
+stock void TF2_Shake(float vecOrigin[3], float flAmplitude, float flRadius, float flDuration, float flFrequency)
+{
+	int iShake = CreateEntityByName("env_shake");
+	if (iShake != -1)
+	{
+		DispatchKeyValueVector(iShake, "origin", vecOrigin);
+		DispatchKeyValueFloat(iShake, "amplitude", flAmplitude);
+		DispatchKeyValueFloat(iShake, "radius", flRadius);
+		DispatchKeyValueFloat(iShake, "duration", flDuration);
+		DispatchKeyValueFloat(iShake, "frequency", flFrequency);
+		
+		DispatchSpawn(iShake);
+		AcceptEntityInput(iShake, "StartShake");
+		RemoveEntity(iShake);
+	}
+}
+
 stock int TF2_SpawnParticle(char[] sParticle, float vecOrigin[3] = NULL_VECTOR, float flAngles[3] = NULL_VECTOR, bool bActivate = true, int iEntity = 0, int iControlPoint = 0)
 {
 	int iParticle = CreateEntityByName("info_particle_system");
@@ -3222,4 +3266,11 @@ stock int FindStringIndex2(int tableidx, const char[] str)
 	}
 
 	return INVALID_STRING_INDEX;
+}
+
+stock bool IsClientInRange(int iClient, float vecOrigin[3], float flRadius)
+{
+	float vecClientOrigin[3];
+	GetClientAbsOrigin(iClient, vecClientOrigin);
+	return GetVectorDistance(vecOrigin, vecClientOrigin) <= flRadius;
 }

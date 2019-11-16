@@ -1,40 +1,40 @@
 #define HALE_MODEL "models/player/saxton_hale_jungle_inferno/saxton_hale.mdl"
 
 static char g_strHaleRoundStart[][] = {
-	"saxton_hale/saxton_hale_responce_start1.mp3",
-	"saxton_hale/saxton_hale_responce_start2.mp3",
-	"saxton_hale/saxton_hale_responce_start3.mp3",
-	"saxton_hale/saxton_hale_responce_start4.mp3",
-	"saxton_hale/saxton_hale_responce_start5.mp3"
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_start1.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_start2.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_start3.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_start4.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_start5.mp3"
 };
 
 static char g_strHaleWin[][] = {
-	"saxton_hale/saxton_hale_responce_win1.mp3",
-	"saxton_hale/saxton_hale_responce_win2.mp3"
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_win1.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_win2.mp3"
 };
 
 static char g_strHaleLose[][] = {
-	"saxton_hale/saxton_hale_responce_fail1.mp3",
-	"saxton_hale/saxton_hale_responce_fail2.mp3",
-	"saxton_hale/saxton_hale_responce_fail3.mp3"
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_fail1.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_fail2.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_fail3.mp3"
 };
 
 static char g_strHaleRage[][] = {
-	"saxton_hale/saxton_hale_responce_rage1.mp3",
-	"saxton_hale/saxton_hale_responce_rage2.mp3",
-	"saxton_hale/saxton_hale_responce_rage3.mp3",
-	"saxton_hale/saxton_hale_responce_rage4.mp3"
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_rage1.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_rage2.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_rage3.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_rage4.mp3"
 };
 
 static char g_strHaleJump[][] = {
-	"saxton_hale/saxton_hale_responce_jump1.mp3",
-	"saxton_hale/saxton_hale_responce_jump2.mp3",
-	"saxton_hale/saxton_hale_132_jump_1.mp3",
-	"saxton_hale/saxton_hale_132_jump_2.mp3"
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_jump1.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_jump2.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_132_jump_1.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_132_jump_2.mp3"
 };
 
 static char g_strHaleKillScout[][] = {
-	"saxton_hale/saxton_hale_132_kill_scout.mp3"
+	"vsh_rewrite/saxton_hale/saxton_hale_132_kill_scout.mp3"
 };
 /*	//No soldier voicelines
 static char g_strHaleKillSoldier[][] = {
@@ -42,58 +42,58 @@ static char g_strHaleKillSoldier[][] = {
 };
 */
 static char g_strHaleKillPyro[][] = {
-	"saxton_hale/saxton_hale_132_kill_w_and_m1.mp3"
+	"vsh_rewrite/saxton_hale/saxton_hale_132_kill_w_and_m1.mp3"
 };
 
 static char g_strHaleKillDemoman[][] = {
-	"saxton_hale/saxton_hale_132_kill_demo.mp3"
+	"vsh_rewrite/saxton_hale/saxton_hale_132_kill_demo.mp3"
 };
 
 static char g_strHaleKillHeavy[][] = {
-	"saxton_hale/saxton_hale_132_kill_heavy.mp3"
+	"vsh_rewrite/saxton_hale/saxton_hale_132_kill_heavy.mp3"
 };
 
 static char g_strHaleKillEngineer[][] = {
-	"saxton_hale/saxton_hale_132_kill_engie_1.mp3",
-	"saxton_hale/saxton_hale_132_kill_engie_2.mp3",
-	"saxton_hale/saxton_hale_responce_kill_eggineer1.mp3",
-	"saxton_hale/saxton_hale_responce_kill_eggineer1.mp3"
+	"vsh_rewrite/saxton_hale/saxton_hale_132_kill_engie_1.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_132_kill_engie_2.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_kill_eggineer1.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_kill_eggineer1.mp3"
 };
 
 static char g_strHaleKillMedic[][] = {
-	"saxton_hale/saxton_hale_responce_kill_medic.mp3"
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_kill_medic.mp3"
 };
 
 static char g_strHaleKillSniper[][] = {
-	"saxton_hale/saxton_hale_responce_kill_sniper1.mp3",
-	"saxton_hale/saxton_hale_responce_kill_sniper2.mp3"
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_kill_sniper1.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_kill_sniper2.mp3"
 };
 
 static char g_strHaleKillSpy[][] = {
-	"saxton_hale/saxton_hale_responce_kill_spy1.mp3",
-	"saxton_hale/saxton_hale_responce_kill_spy2.mp3",
-	"saxton_hale/saxton_hale_132_kill_spie.mp3"
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_kill_spy1.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_kill_spy2.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_132_kill_spie.mp3"
 };
 
 static char g_strHaleKillBuilding[][] = {
-	"saxton_hale/saxton_hale_132_kill_toy.mp3"
+	"vsh_rewrite/saxton_hale/saxton_hale_132_kill_toy.mp3"
 };
 
 static char g_strHaleLastMan[][] = {
-	"saxton_hale/saxton_hale_responce_2.mp3",
-	"saxton_hale/saxton_hale_132_last.mp3",
-	"saxton_hale/saxton_hale_responce_lastman1.mp3",
-	"saxton_hale/saxton_hale_responce_lastman2.mp3",
-	"saxton_hale/saxton_hale_responce_lastman3.mp3",
-	"saxton_hale/saxton_hale_responce_lastman4.mp3",
-	"saxton_hale/saxton_hale_responce_lastman5.mp3"
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_2.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_132_last.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_lastman1.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_lastman2.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_lastman3.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_lastman4.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_lastman5.mp3"
 };
 
 static char g_strHaleBackStabbed[][] = {
-	"saxton_hale/saxton_hale_132_stub_1.mp3",
-	"saxton_hale/saxton_hale_132_stub_2.mp3",
-	"saxton_hale/saxton_hale_132_stub_3.mp3",
-	"saxton_hale/saxton_hale_132_stub_4.mp3"
+	"vsh_rewrite/saxton_hale/saxton_hale_132_stub_1.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_132_stub_2.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_132_stub_3.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_132_stub_4.mp3"
 };
 
 methodmap CSaxtonHale < SaxtonHaleBase
@@ -131,7 +131,7 @@ methodmap CSaxtonHale < SaxtonHaleBase
 	public void OnSpawn()
 	{
 		char attribs[128];
-		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65 ; 214 ; %d", GetRandomInt(9999, 99999));
+		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 214 ; %d", GetRandomInt(9999, 99999));
 		int iWeapon = this.CallFunction("CreateWeapon", 195, "tf_weapon_shovel", 100, TFQual_Strange, attribs);
 		if (iWeapon > MaxClients)
 			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
@@ -141,7 +141,6 @@ methodmap CSaxtonHale < SaxtonHaleBase
 		2: damage bonus
 		252: reduction in push force taken from damage
 		259: Deals 3x falling damage to the player you land on
-		329: reduction in airblast vulnerability
 		214: kill_eater
 		*/
 	}

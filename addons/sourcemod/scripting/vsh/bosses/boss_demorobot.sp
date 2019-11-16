@@ -1,6 +1,6 @@
 #define DEMO_ROBOT_GIANT_SCALE					1.75
 #define DEMO_ROBOT_TURN_INTO_GIANT  			"mvm/giant_heavy/giant_heavy_entrance.wav"
-#define DEMO_ROBOT_THEME						"redsun/vsh/benoist/demorobot/theme.mp3"
+#define DEMO_ROBOT_THEME						"vsh_rewrite/demorobot/demorobot_music.mp3"
 #define DEMO_ROBOT_DEATH						"mvm/sentrybuster/mvm_sentrybuster_explode.wav"
 #define DEMO_ROBOT_MODEL						"models/bots/demo/bot_demo.mdl"
 #define DEMO_ROBOT_GRENADE_LAUNCHER_SHOOT		"mvm/giant_demoman/giant_demoman_grenade_shoot.wav"
@@ -112,7 +112,7 @@ methodmap CDemoRobot < SaxtonHaleBase
 	public void OnSpawn()
 	{
 		char attribs[128];
-		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65 ; 436 ; 1.0 ; 264 ; 0.73");
+		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 436 ; 1.0 ; 264 ; 0.73");
 		int iWeapon = this.CallFunction("CreateWeapon", 132, "tf_weapon_sword", 100, TFQual_Collectors, attribs);
 		if (iWeapon > MaxClients)
 			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
@@ -122,7 +122,7 @@ methodmap CDemoRobot < SaxtonHaleBase
 		2: damage bonus
 		252: reduction in push force taken from damage
 		259: Deals 3x falling damage to the player you land on
-		329: reduction in airblast vulnerability
+		
 		436: ragdolls_plasma_effect
 		264: melee range multiplier (tf_weapon_sword have 37% extra range)
 		*/

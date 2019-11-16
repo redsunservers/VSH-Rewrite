@@ -1,8 +1,9 @@
+#define ELECTRIC_BEAM	"sprites/laserbeam.vmt"
+
 methodmap CModifiersElectric < SaxtonHaleBase
 {
 	public CModifiersElectric(CModifiersElectric boss)
 	{
-		PrecacheGeneric("sprites/laserbeam.vmt");
 	}
 	
 	public void GetModifiersName(char[] sName, int length)
@@ -62,7 +63,7 @@ methodmap CModifiersElectric < SaxtonHaleBase
 					int iLaser = CreateEntityByName("env_laser");
 					if (iLaser > MaxClients)
 					{
-						SetEntityModel(iLaser, "sprites/laserbeam.vmt");
+						SetEntityModel(iLaser, ELECTRIC_BEAM);
 						DispatchKeyValue(iLaser, "renderamt", "100");		//Brightness
 						DispatchKeyValue(iLaser, "rendermode", "0");
 						DispatchKeyValue(iLaser, "rendercolor", "255 192 0");	//Color
@@ -88,5 +89,10 @@ methodmap CModifiersElectric < SaxtonHaleBase
 		}
 		
 		return Plugin_Changed;
+	}
+	
+	public void Precache()
+	{
+		PrecacheGeneric(ELECTRIC_BEAM);
 	}
 };
