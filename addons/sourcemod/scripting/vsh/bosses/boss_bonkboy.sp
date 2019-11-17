@@ -1,5 +1,6 @@
 static int g_iBonkBoyModelHelmet;
 static int g_iBonkBoyModelMask;
+static int g_iBonkBoyModelShirt;
 static int g_iBonkBoyModelBag;
 /*
 static char g_strBonkBoyRoundStart[][] = {
@@ -140,6 +141,10 @@ methodmap CBonkBoy < SaxtonHaleBase
 		if (iWearable > MaxClients)
 			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iBonkBoyModelMask);
 		
+		iWearable = this.CallFunction("CreateWeapon", 30685, "tf_wearable", 1, TFQual_Collectors, "");	//Thrilling Tracksuit
+		if (iWearable > MaxClients)
+			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iBonkBoyModelShirt);
+			
 		iWearable = this.CallFunction("CreateWeapon", 30751, "tf_wearable", 1, TFQual_Collectors, "");	//Bonk Batter's Backup
 		if (iWearable > MaxClients)
 			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iBonkBoyModelBag);
@@ -180,6 +185,7 @@ methodmap CBonkBoy < SaxtonHaleBase
 	{
 		g_iBonkBoyModelHelmet = PrecacheModel("models/player/items/scout/bonk_helmet.mdl");
 		g_iBonkBoyModelMask = PrecacheModel("models/workshop/player/items/scout/bonk_mask/bonk_mask.mdl");
+		g_iBonkBoyModelShirt = PrecacheModel("models/workshop/player/items/scout/hwn2015_death_racer_jacket/hwn2015_death_racer_jacket.mdl");
 		g_iBonkBoyModelBag = PrecacheModel("models/workshop/player/items/scout/dec15_scout_baseball_bag/dec15_scout_baseball_bag.mdl");
 		/*
 		for (int i = 0; i < sizeof(g_strBonkBoyRoundStart); i++) PrepareSound(g_strBonkBoyRoundStart[i]);
