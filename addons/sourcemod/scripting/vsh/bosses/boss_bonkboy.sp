@@ -94,7 +94,8 @@ methodmap CBonkBoy < SaxtonHaleBase
 		StrCat(sInfo, length, "\nHealth: Low");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nAbilities");
-		StrCat(sInfo, length, "\n- Faster speed movement");
+		StrCat(sInfo, length, "\n- Dash Jump");
+		StrCat(sInfo, length, "\n- Sandman with fast recharge balls, able to hold 3 max");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
 		StrCat(sInfo, length, "\n- ");
@@ -104,17 +105,16 @@ methodmap CBonkBoy < SaxtonHaleBase
 	public void OnSpawn()
 	{
 		char attribs[128];
-		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65");	// ; 278 ; 0.0
+		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65 ; 38 ; 1.0 ; 278 ; 0.33 ; 279 ; 3.0");
 		int iWeapon = this.CallFunction("CreateWeapon", 44, "tf_weapon_bat_wood", 1, TFQual_Collectors, attribs);
 		if (iWeapon > MaxClients)
 		{
-			SetEntPropFloat(iWeapon, Prop_Send, "m_flEffectBarRegenTime", 0.0);	//Set meter to 0
 			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
 			
-			//Set ball count to 0
+			//Correctly set ammo to 3
 			int iAmmoType = GetEntProp(iWeapon, Prop_Send, "m_iPrimaryAmmoType");
 			if (iAmmoType > -1)
-				SetEntProp(this.iClient, Prop_Send, "m_iAmmo", 0, 4, iAmmoType);
+				SetEntProp(this.iClient, Prop_Send, "m_iAmmo", 3, 4, iAmmoType);
 		}
 
 		/*
@@ -125,7 +125,9 @@ methodmap CBonkBoy < SaxtonHaleBase
 		259: Deals 3x falling damage to the player you land on
 		329: reduction in airblast vulnerability
 		
+		38: Launches a ball that slows opponents
 		278: increase in recharge rate
+		279: max misc ammo on wearer
 		*/
 		
 		int iWearable = -1;
@@ -143,28 +145,6 @@ methodmap CBonkBoy < SaxtonHaleBase
 			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iBonkBoyModelBag);
 	}
 	
-	public void OnThink()
-	{
-		//Set sandman meter to 0
-		int iWeapon = TF2_GetItemInSlot(this.iClient, WeaponSlot_Melee);
-		if (iWeapon > MaxClients)
-			SetEntPropFloat(iWeapon, Prop_Send, "m_flEffectBarRegenTime", 0.0);
-	}
-	
-	public void OnRage()
-	{
-		//Add 10 balls
-		int iWeapon = TF2_GetItemInSlot(this.iClient, WeaponSlot_Melee);
-		if (iWeapon > MaxClients)
-		{
-			int iAmmoType = GetEntProp(iWeapon, Prop_Send, "m_iPrimaryAmmoType");
-			if (iAmmoType > -1)
-			{
-				int iAmmo = GetEntProp(this.iClient, Prop_Send, "m_iAmmo", 4, iAmmoType);
-				SetEntProp(this.iClient, Prop_Send, "m_iAmmo", iAmmo+10, 4, iAmmoType);
-			}
-		}
-	}
 	/*
 	public void GetSound(char[] sSound, int length, SaxtonHaleSound iSoundType)
 	{
