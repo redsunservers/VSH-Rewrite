@@ -554,8 +554,8 @@ public void Tags_SummonZombie(int iClient, int iTarget, TagsParams tParams)
 		if (IsClientInGame(i)
 			&& GetClientTeam(i) > 1
 			&& !IsPlayerAlive(i)
-			&& Preferences_Get(i, halePreferences_Revival)
-			&& !Client_HasFlag(i, haleClientFlags_Punishment)
+			&& Preferences_Get(i, Preferences_Revival)
+			&& !Client_HasFlag(i, ClientFlags_Punishment)
 			&& (!SaxtonHale_IsValidBoss(i, false)))
 		{
 			iDeadPlayers[iLength] = i;
@@ -721,7 +721,7 @@ public void Frame_AreaOfRange(DataPack data)
 	{
 		float vecPos[3], vecTargetPos[3];
 		GetClientAbsOrigin(iClient, vecPos);
-		int iTeam = GetClientTeam(iClient);
+		TFTeam nTeam = TF2_GetClientTeam(iClient);
 
 		for (int i = 1; i <= MaxClients; i++)
 		{
@@ -738,8 +738,8 @@ public void Frame_AreaOfRange(DataPack data)
 		
 		int iColor[4];
 		iColor[3] = 255;
-		if (iTeam == TFTeam_Red) iColor[0] = 255;
-		else if (iTeam == TFTeam_Blue) iColor[2] = 255;
+		if (nTeam == TFTeam_Red) iColor[0] = 255;
+		else if (nTeam == TFTeam_Blue) iColor[2] = 255;
 		
 		//Ring effect
 		vecPos[2] += 8.0;

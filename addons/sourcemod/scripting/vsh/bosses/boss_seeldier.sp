@@ -72,8 +72,8 @@ methodmap CSeeldier < SaxtonHaleBase
 			if (IsClientInGame(i)
 				&& GetClientTeam(i) > 1
 				&& !IsPlayerAlive(i)
-				&& Preferences_Get(i, halePreferences_Revival)
-				&& !Client_HasFlag(i, haleClientFlags_Punishment))
+				&& Preferences_Get(i, Preferences_Revival)
+				&& !Client_HasFlag(i, ClientFlags_Punishment))
 			{
 				if (SaxtonHale_IsValidBoss(i, false)) continue; // Can't let dead boss ressurect
 				
@@ -93,8 +93,8 @@ methodmap CSeeldier < SaxtonHaleBase
 			int iClient = aValidMinions.Get(i);
 
 			// Allow them to join the boss team
-			Client_AddFlag(iClient, haleClientFlags_BossTeam);
-			TF2_ForceTeamJoin(iClient, BOSS_TEAM);
+			Client_AddFlag(iClient, ClientFlags_BossTeam);
+			TF2_ForceTeamJoin(iClient, TFTeam_Boss);
 			
 			SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 			boss.CallFunction("CreateBoss", "CSeeldierMinion");

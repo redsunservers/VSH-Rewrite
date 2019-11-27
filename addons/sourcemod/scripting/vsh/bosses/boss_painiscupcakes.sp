@@ -125,7 +125,7 @@ methodmap CPainisCupcake < SaxtonHaleBase
 		if (light != INVALID_ABILITY)
 		{
 			int iColor[4];
-			if (GetClientTeam(this.iClient) == TFTeam_Red)
+			if (TF2_GetClientTeam(this.iClient) == TFTeam_Red)
 			{
 				iColor[0] = 255;
 				iColor[1] = 0;

@@ -497,13 +497,13 @@ public any Native_SetParamString(Handle hPlugin, int iNumParams)
 //TFTeam SaxtonHale_GetBossTeam();
 public any Native_GetBossTeam(Handle hPlugin, int iNumParams)
 {
-	return BOSS_TEAM;
+	return TFTeam_Boss;
 }
 
 //TFTeam SaxtonHale_GetAttackTeam();
 public any Native_GetAttackTeam(Handle hPlugin, int iNumParams)
 {
-	return ATTACK_TEAM;
+	return TFTeam_Attack;
 }
 
 //TFClassType SaxtonHale_GetMainClass(int iClient);
@@ -625,9 +625,9 @@ public any Native_SetAdmin(Handle hPlugin, int iNumParams)
 		ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not connected", iClient);
 
 	if (bEnable)
-		Client_AddFlag(iClient, haleClientFlags_Admin);
+		Client_AddFlag(iClient, ClientFlags_Admin);
 	else
-		Client_RemoveFlag(iClient, haleClientFlags_Admin);
+		Client_RemoveFlag(iClient, ClientFlags_Admin);
 }
 
 //SaxtonHale_SetPunishment(int iClient, bool bEnable);
@@ -642,9 +642,9 @@ public any Native_SetPunishment(Handle hPlugin, int iNumParams)
 		ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not connected", iClient);
 
 	if (bEnable)
-		Client_AddFlag(iClient, haleClientFlags_Punishment);
+		Client_AddFlag(iClient, ClientFlags_Punishment);
 	else
-		Client_RemoveFlag(iClient, haleClientFlags_Punishment);
+		Client_RemoveFlag(iClient, ClientFlags_Punishment);
 }
 
 //Macro to setup natives for every properties

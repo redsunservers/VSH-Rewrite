@@ -32,8 +32,8 @@ bool Queue_IsClientAllowed(int iClient)
 		&& IsClientInGame(iClient)
 		&& GetClientTeam(iClient) > 1			//Is client not in spectator
 		&& Queue_PlayerGetPoints(iClient) != -1	//Does client have his queue point loaded
-		&& !Client_HasFlag(iClient, haleClientFlags_Punishment)	//Is client not in punishment
-		&& Preferences_Get(iClient, halePreferences_PickAsBoss)	//Is client not in boss disable preferences
+		&& !Client_HasFlag(iClient, ClientFlags_Punishment)	//Is client not in punishment
+		&& Preferences_Get(iClient, Preferences_PickAsBoss)	//Is client not in boss disable preferences
 		&& (IsFakeClient(iClient) || (GetClientAvgLatency(iClient, NetFlow_Outgoing) * 1024.0) < g_ConfigConvar.LookupFloat("vsh_boss_ping_limit")))	//Is client under the ping limit
 	{
 		return true;
@@ -48,19 +48,19 @@ void Queue_AddPlayerPoints(int iClient, int iPoints)
 {
 	if (g_iClientQueuePoints[iClient] == -1)
 	{
-		PrintToChat(iClient, "%s%s Your queue points seems to be not loaded...", VSH_TAG, VSH_ERROR_COLOR);
+		PrintToChat(iClient, "%s%s Your queue points seems to be not loaded...", TEXT_TAG, TEXT_ERROR);
 		return;
 	}
-	else if (!Preferences_Get(iClient, halePreferences_PickAsBoss))
+	else if (!Preferences_Get(iClient, Preferences_PickAsBoss))
 	{
-		PrintToChat(iClient, "%s%s You have not been awarded any queue points based on your boss preferences.", VSH_TAG, VSH_TEXT_COLOR);
+		PrintToChat(iClient, "%s%s You have not been awarded any queue points based on your boss preferences.", TEXT_TAG, TEXT_COLOR);
 		return;
 	}
 
 	g_iClientQueuePoints[iClient] += iPoints;
 	Cookies_SaveQueue(iClient, Queue_PlayerGetPoints(iClient));
 	
-	PrintToChat(iClient, "%s%s You have been awarded %d queue points! (Total: %i)", VSH_TAG, VSH_TEXT_COLOR, iPoints, g_iClientQueuePoints[iClient]);
+	PrintToChat(iClient, "%s%s You have been awarded %d queue points! (Total: %i)", TEXT_TAG, TEXT_COLOR, iPoints, g_iClientQueuePoints[iClient]);
 }
 
 void Queue_SetPlayerPoints(int iClient, int iPoints)

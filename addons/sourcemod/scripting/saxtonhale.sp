@@ -3,8 +3,6 @@
 	#warning This plugin should be compiled with SourcePawn Public Methodmap to be compiled correctly!
 #endif
 
-#define SAXTONHALE_MAIN_PLUGIN
-
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
@@ -19,36 +17,21 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define PLUGIN_VERSION 			"1.2.0"
-#define PLUGIN_VERSION_REVISION "manual"
+#define PLUGIN_VERSION 					"1.2.0"
+#define PLUGIN_VERSION_REVISION 		"manual"
 
-#define MAX_BUTTONS 		26
-#define MAX_TYPE_CHAR		32	//Max char size of methodmaps name
-#define MAXLEN_CONFIG_VALUE 256	//Max config string buffer size
+#define MAX_BUTTONS 					26
+#define MAX_TYPE_CHAR					32		//Max char size of methodmaps name
+#define MAXLEN_CONFIG_VALUE 			256		//Max config string buffer size
 
-#define	TFTeam_Unassigned 	0
-#define	TFTeam_Spectator 	1
-#define TFTeam_Red 			2
-#define TFTeam_Blue 		3
+#define TF_MAXPLAYERS					32
 
-#define TF_MAXPLAYERS		32
-
-#define BOSS_TEAM			TFTeam_Blue
-#define ATTACK_TEAM			TFTeam_Red
-
-#define ATTRIB_CRITBOOST_ON_KILL		31
-#define ATTRIB_HEAL_ON_KILL				180
-#define ATTRIB_HEALTH_PACK_ON_KILL  	203
-#define ATTRIB_DECAPITATE_TYPE			219
-#define ATTRIB_HEAL_ON_KILL_BASE_HEALTH	220
 #define ATTRIB_MELEE_RANGE_MULTIPLIER	264
 #define ATTRIB_BIDERECTIONAL			276
 #define ATTRIB_JUMP_HEIGHT				326
 #define ATTRIB_SENTRYATTACKSPEED		343
-#define ATTRIB_FOCUS_ON_KILL			387
-#define ATTRIB_MELEE_KILL_CHARGE_METER	2034
 
-#define ITEM_ROCK_PAPER_SCISSORS	1110
+#define ITEM_ROCK_PAPER_SCISSORS		1110
 
 #define SOUND_ALERT			"ui/system_message_alert.wav"
 #define SOUND_METERFULL		"player/recharged.wav"
@@ -68,28 +51,31 @@
 #define FL_EDICT_DONTSEND	(1<<4)	// don't transmit this entity
 #define FL_EDICT_PVSCHECK	(1<<5)	// always transmit entity, but cull against PVS
 
-#define VSH_TAG				"\x07E19300[\x07E17100VSH REWRITE\x07E19300]\x01"
-#define VSH_TEXT_COLOR		"\x07E19F00"
-#define VSH_TEXT_DARK		"\x07E17100"
-#define VSH_TEXT_POSITIVE	"\x0744FF11"
-#define VSH_TEXT_NEGATIVE	"\x07FF4411"
-#define VSH_TEXT_NEUTRAL	"\x07EEEEEE"
-#define VSH_ERROR_COLOR		"\x07FF2F00"
+#define TEXT_TAG			"\x07E19300[\x07E17100VSH REWRITE\x07E19300]\x01"
+#define TEXT_COLOR			"\x07E19F00"
+#define TEXT_DARK			"\x07E17100"
+#define TEXT_POSITIVE		"\x0744FF11"
+#define TEXT_NEGATIVE		"\x07FF4411"
+#define TEXT_NEUTRAL		"\x07EEEEEE"
+#define TEXT_ERROR			"\x07FF2F00"
 
-enum haleClientFlags( <<=1 )
+const TFTeam TFTeam_Boss = TFTeam_Blue;
+const TFTeam TFTeam_Attack = TFTeam_Red;
+
+enum ClientFlags ( <<=1 )
 {
-	haleClientFlags_BossTeam = 1,
-	haleClientFlags_Admin,
-	haleClientFlags_Punishment,
+	ClientFlags_BossTeam = 1,
+	ClientFlags_Admin,
+	ClientFlags_Punishment,
 };
 
-enum halePreferences( <<=1 )
+enum Preferences ( <<=1 )
 {
-	halePreferences_PickAsBoss = 1,
-	halePreferences_Winstreak,
-	halePreferences_MultiBoss,
-	halePreferences_Music,
-	halePreferences_Revival,
+	Preferences_PickAsBoss = 1,
+	Preferences_Winstreak,
+	Preferences_MultiBoss,
+	Preferences_Music,
+	Preferences_Revival,
 };
 
 enum
@@ -210,21 +196,6 @@ enum
 	CHANNEL_MAX = 6,
 };
 
-//ConVars
-ConVar tf_arena_use_queue;
-ConVar mp_teams_unbalance_limit;
-ConVar tf_arena_first_blood;
-ConVar tf_dropped_weapon_lifetime;
-ConVar mp_forcecamera;
-ConVar tf_scout_hype_pep_max;
-ConVar tf_damage_disablespread;
-ConVar tf_feign_death_activate_damage_scale;
-ConVar tf_feign_death_damage_scale;
-ConVar tf_stealth_damage_reduction;
-ConVar tf_feign_death_duration;
-ConVar tf_feign_death_speed_duration;
-ConVar tf_arena_preround_time;
-
 char g_strPreferencesName[][32] = {
 	"Boss Selection",
 	"Winstreak",
@@ -269,12 +240,12 @@ char g_strColorTag[][] = {
 
 // Color Code
 char g_strColorCode[][] = {
-	VSH_TEXT_POSITIVE,
-	VSH_TEXT_POSITIVE,
-	VSH_TEXT_NEGATIVE,
-	VSH_TEXT_NEGATIVE,
-	VSH_TEXT_NEUTRAL,
-	VSH_TEXT_NEUTRAL
+	TEXT_POSITIVE,
+	TEXT_POSITIVE,
+	TEXT_NEGATIVE,
+	TEXT_NEGATIVE,
+	TEXT_NEUTRAL,
+	TEXT_NEUTRAL
 };
 
 // Default weapon index for each class and slot
@@ -305,13 +276,13 @@ TFClassType g_nClassDisplay[sizeof(g_strClassName)] = {
 	TFClass_Spy,
 };
 
-bool g_bEnabled = false;
-bool g_bRoundStarted = false;
-bool g_bBlockRagdoll = false;
-bool g_bIceRagdoll = false;
+bool g_bEnabled;
+bool g_bRoundStarted;
+bool g_bBlockRagdoll;
+bool g_bIceRagdoll;
 
-bool g_bSpecialRound = false;
-TFClassType g_nSpecialRoundNextClass = TFClass_Unknown;
+bool g_bSpecialRound;
+TFClassType g_nSpecialRoundNextClass;
 
 int g_iSpritesLaserbeam;
 int g_iSpritesGlow;
@@ -331,7 +302,7 @@ ArrayList g_aMiscBossesType;	//ArrayList of ArrayList string bosses type
 ArrayList g_aAllBossesType; 	//ArrayList of all bosses
 ArrayList g_aModifiersType;		//ArrayList of modifiers
 
-Handle g_hTimerBossMusic = null;
+Handle g_hTimerBossMusic;
 char g_sBossMusic[PLATFORM_MAX_PATH];
 int g_iHealthBarHealth;
 int g_iHealthBarMaxHealth;
@@ -349,16 +320,31 @@ int g_iClientFlags[TF_MAXPLAYERS+1];
 int g_iTotalRoundPlayed;
 int g_iTotalAttackCount;
 
+//ConVars
+ConVar tf_arena_use_queue;
+ConVar mp_teams_unbalance_limit;
+ConVar tf_arena_first_blood;
+ConVar tf_dropped_weapon_lifetime;
+ConVar mp_forcecamera;
+ConVar tf_scout_hype_pep_max;
+ConVar tf_damage_disablespread;
+ConVar tf_feign_death_activate_damage_scale;
+ConVar tf_feign_death_damage_scale;
+ConVar tf_stealth_damage_reduction;
+ConVar tf_feign_death_duration;
+ConVar tf_feign_death_speed_duration;
+ConVar tf_arena_preround_time;
+
 //SDK functions
-Handle g_hHookGetMaxHealth = null;
-Handle g_hHookShouldTransmit = null;
-Handle g_hSDKGetMaxHealth = null;
-Handle g_hSDKGetMaxAmmo = null;
-Handle g_hSDKSendWeaponAnim = null;
-Handle g_hSDKGetMaxClip = null;
-Handle g_hSDKRemoveWearable = null;
-Handle g_hSDKGetEquippedWearable = null;
-Handle g_hSDKEquipWearable = null;
+Handle g_hHookGetMaxHealth;
+Handle g_hHookShouldTransmit;
+Handle g_hSDKGetMaxHealth;
+Handle g_hSDKGetMaxAmmo;
+Handle g_hSDKSendWeaponAnim;
+Handle g_hSDKGetMaxClip;
+Handle g_hSDKRemoveWearable;
+Handle g_hSDKGetEquippedWearable;
+Handle g_hSDKEquipWearable;
 
 #include "vsh/base_ability.sp"
 #include "vsh/base_modifiers.sp"
@@ -505,7 +491,7 @@ public void OnPluginStart()
 	AddNormalSoundHook(NormalSoundHook);
 
 	//Allow client 0 (server/console) use admin commands
-	Client_AddFlag(0, haleClientFlags_Admin);
+	Client_AddFlag(0, ClientFlags_Admin);
 	
 	//Client 0 also used to call boss function and fetch data without needing active boss (precache, menus etc)
 	//Modifiers should always be enabled, so modifiers function can be called
@@ -803,7 +789,7 @@ public void OnGameFrame()
 		for (int iClient = 1; iClient <= MaxClients; iClient++)
 		{
 			SaxtonHaleBase boss = SaxtonHaleBase(iClient);
-			if (IsClientInGame(iClient) && GetClientTeam(iClient) == BOSS_TEAM && boss.bValid && !boss.bMinion)
+			if (IsClientInGame(iClient) && TF2_GetClientTeam(iClient) == TFTeam_Boss && boss.bValid && !boss.bMinion)
 			{
 				if (IsPlayerAlive(iClient))
 					g_iHealthBarHealth += GetEntProp(iClient, Prop_Send, "m_iHealth");
@@ -908,10 +894,11 @@ public Action Event_RoundStart(Event event, const char[] sName, bool bDontBroadc
 	{
 		if (IsClientInGame(iClient))
 		{
-			if (GetClientTeam(iClient) == TFTeam_Red)
-				iRed++;
-			else if (GetClientTeam(iClient) == TFTeam_Blue)
-				iBlu++;
+			switch (TF2_GetClientTeam(iClient))
+			{
+				case TFTeam_Red: iRed++;
+				case TFTeam_Blue: iBlu++;
+			}
 		}
 	}
 	// Both team must have at least one player!
@@ -924,12 +911,13 @@ public Action Event_RoundStart(Event event, const char[] sName, bool bDontBroadc
 				if (IsClientInGame(iClient))
 				{
 					//Once we found someone whos in red or blue, swap his team
-					if (GetClientTeam(iClient) == TFTeam_Red)
+					TFTeam nTeam = TF2_GetClientTeam(iClient);
+					if (nTeam == TFTeam_Red)
 					{
 						TF2_ForceTeamJoin(iClient, TFTeam_Blue);
 						return;
 					}
-					else if (GetClientTeam(iClient) == TFTeam_Blue)
+					else if (nTeam == TFTeam_Blue)
 					{
 						TF2_ForceTeamJoin(iClient, TFTeam_Red);
 						return;
@@ -952,7 +940,7 @@ public Action Event_RoundStart(Event event, const char[] sName, bool bDontBroadc
 		if (boss.bValid)
 			boss.CallFunction("Destroy");
 
-		Client_RemoveFlag(iClient, haleClientFlags_BossTeam);
+		Client_RemoveFlag(iClient, ClientFlags_BossTeam);
 
 		g_iPlayerDamage[iClient] = 0;
 		g_iPlayerAssistDamage[iClient] = 0;
@@ -966,7 +954,7 @@ public Action Event_RoundStart(Event event, const char[] sName, bool bDontBroadc
 		if (GetClientTeam(iClient) <= 1) continue;
 
 		// Put every players in same team & pick the boss later
-		TF2_ForceTeamJoin(iClient, ATTACK_TEAM);
+		TF2_ForceTeamJoin(iClient, TFTeam_Attack);
 	}
 
 	PickNextBoss();	//Set boss
@@ -1046,7 +1034,7 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 						ReplaceString(sDesp, sizeof(sDesp), "%", "%%");
 	
 						//Add VSH color at start
-						Format(sDesp, sizeof(sDesp), "%s%s", VSH_TEXT_COLOR, sDesp);
+						Format(sDesp, sizeof(sDesp), "%s%s", TEXT_COLOR, sDesp);
 						PrintToChat(iClient, sDesp);
 					}
 				}
@@ -1070,7 +1058,7 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 			if (!StrEmpty(g_sBossMusic))
 			{
 				for (int i = 1; i <= MaxClients; i++)
-					if (IsClientInGame(i) && Preferences_Get(i, halePreferences_Music))
+					if (IsClientInGame(i) && Preferences_Get(i, Preferences_Music))
 						EmitSoundToClient(i, g_sBossMusic);
 				
 				if (flMusicTime > 0.0)
@@ -1159,11 +1147,11 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 	if (0 < iNextPlayer <= MaxClients && IsClientInGame(iNextPlayer))
 	{
 		char sFormat[512];
-		Format(sFormat, sizeof(sFormat), "%s================\nYou are about to be the next boss!\n", VSH_TEXT_COLOR);
+		Format(sFormat, sizeof(sFormat), "%s================\nYou are about to be the next boss!\n", TEXT_COLOR);
 
 		if (g_bPlayerTriggerSpecialRound[iNextPlayer])
 			Format(sFormat, sizeof(sFormat), "%sYour round will be a special round", sFormat);
-		else if (!Preferences_Get(iNextPlayer, halePreferences_Winstreak))
+		else if (!Preferences_Get(iNextPlayer, Preferences_Winstreak))
 			Format(sFormat, sizeof(sFormat), "%sYour winstreak preference is currently disabled", sFormat);
 		else if (Winstreak_IsAllowed(iNextPlayer))
 			Format(sFormat, sizeof(sFormat), "%sYou currently have %d winstreak", sFormat, Winstreak_GetCurrent(iNextPlayer));
@@ -1184,7 +1172,7 @@ public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcas
 	g_hTimerBossMusic = null;
 	g_bRoundStarted = false;
 
-	int iWinningTeam = event.GetInt("team");
+	TFTeam iWinningTeam = view_as<TFTeam>(event.GetInt("team"));
 
 	g_iTotalRoundPlayed++;
 	if (g_iTotalRoundPlayed <= 1)
@@ -1196,7 +1184,7 @@ public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcas
 
 	int iMainBoss = GetMainBoss();
 	
-	if (iWinningTeam == BOSS_TEAM)
+	if (iWinningTeam == TFTeam_Boss)
 	{
 		if (0 < iMainBoss <= MaxClients && IsClientInGame(iMainBoss))//Play our win line
 		{
@@ -1208,7 +1196,7 @@ public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcas
 				if (!StrEmpty(sSound))
 					BroadcastSoundToTeam(TFTeam_Spectator, sSound);
 
-				Forward_BossWin(BOSS_TEAM);
+				Forward_BossWin(TFTeam_Boss);
 
 				if (Winstreak_IsEnabled())
 					Winstreak_SetCurrent(iMainBoss, Winstreak_GetCurrent(iMainBoss) + 1, true);
@@ -1227,7 +1215,7 @@ public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcas
 				if (!StrEmpty(sSound))
 					BroadcastSoundToTeam(TFTeam_Spectator, sSound);
 
-				Forward_BossLose(BOSS_TEAM);
+				Forward_BossLose(TFTeam_Boss);
 
 				if (Winstreak_IsEnabled())
 					Winstreak_SetCurrent(iMainBoss, 0, true);
@@ -1251,7 +1239,7 @@ public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcas
 			{				
 				aPlayersList.Push(iClient);
 				
-				if (!Client_HasFlag(iClient, haleClientFlags_Punishment))
+				if (!Client_HasFlag(iClient, ClientFlags_Punishment))
 				{
 					int iAddQueue = 10 + RoundToFloor(float(SaxtonHale_GetScore(iClient)) / 300.0);
 					if (iAddQueue > 20)
@@ -1400,22 +1388,22 @@ void Frame_VerifyTeam(int userid)
 	int iClient = GetClientOfUserId(userid);
 	if (iClient <= 0 || !IsClientInGame(iClient)) return;
 
-	int iTeam = GetClientTeam(iClient);
-	if (iTeam <= 1) return;
+	TFTeam nTeam = TF2_GetClientTeam(iClient);
+	if (nTeam <= TFTeam_Spectator) return;
 
-	if (Client_HasFlag(iClient, haleClientFlags_BossTeam))
+	if (Client_HasFlag(iClient, ClientFlags_BossTeam))
 	{
-		if (iTeam == ATTACK_TEAM)	//Check if player is in attack team, if so put it back to boss team
+		if (nTeam == TFTeam_Attack)	//Check if player is in attack team, if so put it back to boss team
 		{
-			ChangeClientTeam(iClient, BOSS_TEAM);
+			TF2_ChangeClientTeam(iClient, TFTeam_Boss);
 			TF2_RespawnPlayer(iClient);
 		}
 	}
 	else
 	{
-		if (iTeam == BOSS_TEAM)		//Check if attack players is in boss team, if so put it back to attack team
+		if (nTeam == TFTeam_Boss)		//Check if attack players is in boss team, if so put it back to attack team
 		{
-			ChangeClientTeam(iClient, ATTACK_TEAM);
+			TF2_ChangeClientTeam(iClient, TFTeam_Attack);
 			TF2_RespawnPlayer(iClient);
 		}
 	}
@@ -1580,7 +1568,7 @@ public Action Event_PlayerDeath(Event event, const char[] sName, bool bDontBroad
 	if (g_bRoundStarted && !bDeadRinger)
 	{
 		g_iClientOwner[iVictim] = 0;
-		Client_RemoveFlag(iVictim, haleClientFlags_BossTeam);
+		Client_RemoveFlag(iVictim, ClientFlags_BossTeam);
 	}
 
 	return Plugin_Changed;
@@ -1808,7 +1796,7 @@ public void TF2_OnConditionAdded(int iClient, TFCond nCond)
 	if (iTaunt == ITEM_ROCK_PAPER_SCISSORS)		//Disable this taunt due to possible stall in last man and easy 999 damage from that taunt
 	{
 		TF2_RemoveCondition(iClient, TFCond_Taunting);
-		PrintToChat(iClient, "%s%s Rock, Paper, Scissors taunt is disabled in this gamemode", VSH_TAG, VSH_ERROR_COLOR);
+		PrintToChat(iClient, "%s%s Rock, Paper, Scissors taunt is disabled in this gamemode", TEXT_TAG, TEXT_ERROR);
 	}
 }
 
@@ -1846,7 +1834,7 @@ public Action Timer_Music(Handle hTimer, SaxtonHaleBase boss)
 			//Stop current music before playing another one
 			StopSound(iClient, SNDCHAN_AUTO, g_sBossMusic);
 			
-			if (Preferences_Get(iClient, halePreferences_Music))
+			if (Preferences_Get(iClient, Preferences_Music))
 				EmitSoundToClient(iClient, g_sBossMusic);
 		}
 	}
@@ -1859,7 +1847,7 @@ public Action Timer_WelcomeMessage(Handle hTimer)
 	if (!g_bEnabled)
 		return Plugin_Stop;
 	
-	PrintToChatAll("%s%s Welcome to Versus Saxton Hale: Rewrite! \nType %s/vsh%s for more info about it.", VSH_TAG, VSH_TEXT_COLOR, VSH_TEXT_DARK, VSH_TEXT_COLOR);
+	PrintToChatAll("%s%s Welcome to Versus Saxton Hale: Rewrite! \nType %s/vsh%s for more info about it.", TEXT_TAG, TEXT_COLOR, TEXT_DARK, TEXT_COLOR);
 	return Plugin_Continue;
 }
 
@@ -1903,7 +1891,7 @@ public void OnClientPostAdminCheck(int iClient)
 {
 	AdminId iAdmin = GetUserAdmin(iClient);
 	if (iAdmin.HasFlag(Admin_RCON) || iAdmin.HasFlag(Admin_Root))
-		Client_AddFlag(iClient, haleClientFlags_Admin);
+		Client_AddFlag(iClient, ClientFlags_Admin);
 }
 
 public void OnClientDisconnect(int iClient)
@@ -2135,7 +2123,7 @@ public Action Client_KillCommand(int iClient, const char[] sCommand, int iArgs)
 
 	if (g_bRoundStarted && SaxtonHale_IsValidBoss(iClient, false))
 	{
-		PrintToChat(iClient, "%s%s Do not suicide and waste round as Boss. Use !vshbosstoggle instead.", VSH_TAG, VSH_ERROR_COLOR);
+		PrintToChat(iClient, "%s%s Do not suicide and waste round as Boss. Use !vshbosstoggle instead.", TEXT_TAG, TEXT_ERROR);
 		return Plugin_Handled;
 	}
 
@@ -2160,7 +2148,7 @@ public Action Client_JoinTeamCommand(int iClient, const char[] sCommand, int iAr
 		{
 			if (g_bRoundStarted || GameRules_GetRoundState() == RoundState_Preround)
 			{
-				PrintToChat(iClient, "%s%s Do not suicide and waste round as Boss. Use !vshbosstoggle instead.", VSH_TAG, VSH_ERROR_COLOR);
+				PrintToChat(iClient, "%s%s Do not suicide and waste round as Boss. Use !vshbosstoggle instead.", TEXT_TAG, TEXT_ERROR);
 				return Plugin_Handled;
 			}
 		}
@@ -2181,13 +2169,13 @@ public Action Client_JoinTeamCommand(int iClient, const char[] sCommand, int iAr
 	
 	if (!bBoss) return Plugin_Continue;
 
-	if (Client_HasFlag(iClient, haleClientFlags_BossTeam))
-		ChangeClientTeam(iClient, BOSS_TEAM);
+	if (Client_HasFlag(iClient, ClientFlags_BossTeam))
+		TF2_ChangeClientTeam(iClient, TFTeam_Boss);
 	else
-		ChangeClientTeam(iClient, ATTACK_TEAM);
+		TF2_ChangeClientTeam(iClient, TFTeam_Attack);
 
-	int iTeam = GetClientTeam(iClient);
-	ShowVGUIPanel(iClient, iTeam == TFTeam_Blue ? "class_blue" : "class_red");
+	TFTeam nTeam = TF2_GetClientTeam(iClient);
+	ShowVGUIPanel(iClient, nTeam == TFTeam_Blue ? "class_blue" : "class_red");
 
 	return Plugin_Handled;
 }
@@ -2358,17 +2346,17 @@ void Client_AddHealth(int iClient, int iAdditionalHeal, int iMaxOverHeal=0)
 	}
 }
 
-public void Client_AddFlag(int iClient, haleClientFlags flag)
+public void Client_AddFlag(int iClient, ClientFlags flag)
 {
 	g_iClientFlags[iClient] |= view_as<int>(flag);
 }
 
-public void Client_RemoveFlag(int iClient, haleClientFlags flag)
+public void Client_RemoveFlag(int iClient, ClientFlags flag)
 {
 	g_iClientFlags[iClient] &= ~view_as<int>(flag);
 }
 
-public bool Client_HasFlag(int iClient, haleClientFlags flag)
+public bool Client_HasFlag(int iClient, ClientFlags flag)
 {
 	return !!(g_iClientFlags[iClient] & view_as<int>(flag));
 }
@@ -2726,17 +2714,17 @@ stock int GetMainBoss()
 	return iBoss;
 }
 
-stock void TF2_ForceTeamJoin(int iClient, int iTeam)
+stock void TF2_ForceTeamJoin(int iClient, TFTeam nTeam)
 {
-	TFClassType class = TF2_GetPlayerClass(iClient);
-	if (class == TFClass_Unknown)
+	TFClassType nClass = TF2_GetPlayerClass(iClient);
+	if (nClass == TFClass_Unknown)
 	{
 		// Player hasn't chosen a class. Choose one for him.
 		TF2_SetPlayerClass(iClient, view_as<TFClassType>(GetRandomInt(1, 9)), true, true);
 	}
 
 	SetEntProp(iClient, Prop_Send, "m_lifeState", LifeState_Dead);
-	ChangeClientTeam(iClient, iTeam);
+	TF2_ChangeClientTeam(iClient, nTeam);
 	SetEntProp(iClient, Prop_Send, "m_lifeState", LifeState_Alive);
 
 	TF2_RespawnPlayer(iClient);
@@ -2991,7 +2979,7 @@ stock void CheckForceAttackWin(int iVictim=0)
 	int iMinionCount = 0;
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
-		if (iClient != iVictim && IsClientInGame(iClient) && IsPlayerAlive(iClient) && GetClientTeam(iClient) == BOSS_TEAM)
+		if (iClient != iVictim && IsClientInGame(iClient) && IsPlayerAlive(iClient) && TF2_GetClientTeam(iClient) == TFTeam_Boss)
 		{
 			if (SaxtonHale_IsValidBoss(iClient, false))
 				iBossCount++;
@@ -3007,7 +2995,7 @@ stock void CheckForceAttackWin(int iVictim=0)
 		
 		SetVariantString("force_map_reset 1");
 		AcceptEntityInput(iRoundWin, "AddOutput");
-		SetVariantInt(ATTACK_TEAM);
+		SetVariantInt(view_as<int>(TFTeam_Attack));
 		AcceptEntityInput(iRoundWin, "SetTeam");
 		AcceptEntityInput(iRoundWin, "RoundWin");
 	}
@@ -3182,14 +3170,14 @@ stock void CreateFade(int iClient, int iDuration = 2000, int iRed = 255, int iGr
 	EndMessage();
 }
 
-stock void BroadcastSoundToTeam(int team, const char[] strSound)
+stock void BroadcastSoundToTeam(TFTeam nTeam, const char[] strSound)
 {
-	switch (team)
+	switch (nTeam)
 	{
 		case TFTeam_Red, TFTeam_Blue:
 		{
 			for (int iClient = 1; iClient <= MaxClients; iClient++)
-				if (IsClientInGame(iClient) && !IsFakeClient(iClient) && GetClientTeam(iClient) == team)
+				if (IsClientInGame(iClient) && !IsFakeClient(iClient) && TF2_GetClientTeam(iClient) == nTeam)
 					ClientCommand(iClient, "playgamesound %s", strSound);
 		}
 		default:
