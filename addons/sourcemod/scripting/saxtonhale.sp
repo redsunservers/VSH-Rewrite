@@ -2758,9 +2758,9 @@ stock int TF2_CreateGlow(int iEnt, int iColor[4])
 	return ent;
 }
 
-stock bool TF2_FindAttribute(int iClient, int iAttrib, float &flVal)
+stock bool TF2_FindAttribute(int iEntity, int iAttrib, float &flVal)
 {
-	Address addAttrib = TF2Attrib_GetByDefIndex(iClient, iAttrib);
+	Address addAttrib = TF2Attrib_GetByDefIndex(iEntity, iAttrib);
 	if (addAttrib != Address_Null)
 	{
 		flVal = TF2Attrib_GetValue(addAttrib);
