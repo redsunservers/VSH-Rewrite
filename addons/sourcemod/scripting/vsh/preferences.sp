@@ -1,13 +1,13 @@
 static int g_iPlayerPreferences[TF_MAXPLAYERS+1] = -1;
 
-bool Preferences_Get(int iClient, halePreferences preferences)
+bool Preferences_Get(int iClient, Preferences preferences)
 {
 	if (g_iPlayerPreferences[iClient] == -1) return false;
 	
 	return !(g_iPlayerPreferences[iClient] & view_as<int>(preferences));
 }
 
-bool Preferences_Set(int iClient, halePreferences preferences, bool bEnable)
+bool Preferences_Set(int iClient, Preferences preferences, bool bEnable)
 {
 	if (g_iPlayerPreferences[iClient] == -1) return false;
 	

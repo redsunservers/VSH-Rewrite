@@ -134,7 +134,7 @@ void Menu_DisplayPreferences(int iClient)
 	
 	for (int iPreferences = 0; iPreferences < sizeof(g_strPreferencesName); iPreferences++)
 	{
-		halePreferences preferences = view_as<halePreferences>(RoundToNearest(Pow(2.0, float(iPreferences))));
+		Preferences preferences = view_as<Preferences>(RoundToNearest(Pow(2.0, float(iPreferences))));
 		
 		char buffer[512];
 		if (Preferences_Get(iClient, preferences))

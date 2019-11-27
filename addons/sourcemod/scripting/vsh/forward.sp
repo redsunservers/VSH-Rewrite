@@ -17,17 +17,17 @@ void Forward_AskLoad()
 	g_hForwardUpdateWinstreak = new GlobalForward("SaxtonHale_OnUpdateWinstreak", ET_Ignore, Param_Cell, Param_Cell);
 }
 
-void Forward_BossWin(int iTeam)
+void Forward_BossWin(TFTeam nTeam)
 {
 	Call_StartForward(g_hForwardBossWin);
-	Call_PushCell(iTeam);
+	Call_PushCell(nTeam);
 	Call_Finish();
 }
 
-void Forward_BossLose(int iTeam)
+void Forward_BossLose(TFTeam nTeam)
 {
 	Call_StartForward(g_hForwardBossLose);
-	Call_PushCell(iTeam);
+	Call_PushCell(nTeam);
 	Call_Finish();
 }
 

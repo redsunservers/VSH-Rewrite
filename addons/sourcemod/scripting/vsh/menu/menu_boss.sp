@@ -327,7 +327,7 @@ public int MenuBoss_SelectNextList(Menu hMenu, MenuAction action, int iClient, i
 	else if (StrEqual(sSelect, "clear"))
 	{
 		g_aNextBoss.Clear();
-		PrintToChatAll("%s%s %N cleared all next boss", VSH_TAG, VSH_TEXT_COLOR, iClient);
+		PrintToChatAll("%s%s %N cleared all next boss", TEXT_TAG, TEXT_COLOR, iClient);
 		MenuBoss_DisplayNextList(iClient);
 	}
 	else if (StrEqual(sSelect, "back"))
@@ -472,7 +472,7 @@ public int MenuBoss_SelectNextModifiers(Menu hMenu, MenuAction action, int iClie
 	//Print chat boss been set
 	char sBuffer[256];
 	GetNextBossName(g_nextMenuSelectBoss[iClient], sBuffer, sizeof(sBuffer));
-	PrintToChatAll("%s%s %N added next boss %s", VSH_TAG, VSH_TEXT_COLOR, iClient, sBuffer);
+	PrintToChatAll("%s%s %N added next boss %s", TEXT_TAG, TEXT_COLOR, iClient, sBuffer);
 	
 	//Clear stuffs
 	g_nextMenuSelectBoss[iClient].iUserId = 0;

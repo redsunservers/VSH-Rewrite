@@ -20,6 +20,14 @@ enum
 	TagsAttrib_MAX,
 }
 
+enum TagsMath
+{
+	TagsMath_Set,
+	TagsMath_Add,
+	TagsMath_Multiply,
+	TagsMath_Damage
+}
+
 void Tags_ResetClient(int iClient)
 {
 	if (g_aAttrib == null)
@@ -295,12 +303,12 @@ public void Tags_SetEntProp(int iClient, int iTarget, TagsParams tParams)
 	{
 		int iValue = tParams.GetInt("value");
 		
-		if (StrEqual(sMath, "add"))
-			iValue += GetEntProp(iTarget, Prop_Send, sProp);
-		else if (StrEqual(sMath, "multiply"))
-			iValue *= GetEntProp(iTarget, Prop_Send, sProp);
-		else if (StrEqual(sMath, "damage"))
-			iValue = RoundToFloor(float(g_iPlayerDamage[iClient]) / float(iValue));
+		switch (Tags_GetMath(sMath))
+		{
+			case TagsMath_Add: iValue += GetEntProp(iTarget, Prop_Send, sProp);
+			case TagsMath_Multiply: iValue *= GetEntProp(iTarget, Prop_Send, sProp);
+			case TagsMath_Damage: iValue = RoundToFloor(float(g_iPlayerDamage[iClient]) / float(iValue));
+		}
 		
 		int iMin, iMax;
 		if (tParams.GetIntEx("min", iMin) && iValue < iMin) iValue = iMin;
@@ -312,12 +320,12 @@ public void Tags_SetEntProp(int iClient, int iTarget, TagsParams tParams)
 	{
 		float flValue = tParams.GetFloat("value");
 		
-		if (StrEqual(sMath, "add"))
-			flValue += GetEntPropFloat(iTarget, Prop_Send, sProp);
-		else if (StrEqual(sMath, "multiply"))
-			flValue *= GetEntPropFloat(iTarget, Prop_Send, sProp);
-		else if (StrEqual(sMath, "damage"))
-			flValue = float(g_iPlayerDamage[iClient]) / flValue;
+		switch (Tags_GetMath(sMath))
+		{
+			case TagsMath_Add: flValue += GetEntPropFloat(iTarget, Prop_Send, sProp);
+			case TagsMath_Multiply: flValue *= GetEntPropFloat(iTarget, Prop_Send, sProp);
+			case TagsMath_Damage: flValue = float(g_iPlayerDamage[iClient]) / flValue;
+		}
 		
 		float flMin, flMax;
 		if (tParams.GetFloatEx("min", flMin) && flValue < flMin) flValue = flMin;
@@ -325,6 +333,32 @@ public void Tags_SetEntProp(int iClient, int iTarget, TagsParams tParams)
 		
 		SetEntPropFloat(iTarget, Prop_Send, sProp, flValue);
 	}
+}
+
+public void Tags_SetAttrib(int iClient, int iTarget, TagsParams tParams)
+{
+	if (iTarget <= 0 || !IsValidEdict(iTarget))
+		return;
+	
+	int iIndex = tParams.GetInt("index");
+	float flValue = tParams.GetFloat("value");
+	
+	float flCurrentValue = 0.0;
+	TF2_FindAttribute(iTarget, iIndex, flCurrentValue);
+	
+	char sMath[32];
+	tParams.GetString("math", sMath, sizeof(sMath));
+	
+	switch (Tags_GetMath(sMath))
+	{
+		case TagsMath_Add: flValue += flCurrentValue;
+		case TagsMath_Multiply: flValue *= flCurrentValue;
+		case TagsMath_Damage: flValue = float(g_iPlayerDamage[iClient]) / flValue;
+	}
+	
+	//Set attrib
+	TF2Attrib_SetByDefIndex(iTarget, iIndex, flValue);
+	TF2Attrib_ClearCache(iTarget);
 }
 
 public void Tags_AddAttrib(int iClient, int iTarget, TagsParams tParams)
@@ -624,8 +658,8 @@ public void Tags_SummonZombie(int iClient, int iTarget, TagsParams tParams)
 		if (IsClientInGame(i)
 			&& GetClientTeam(i) > 1
 			&& !IsPlayerAlive(i)
-			&& Preferences_Get(i, halePreferences_Revival)
-			&& !Client_HasFlag(i, haleClientFlags_Punishment)
+			&& Preferences_Get(i, Preferences_Revival)
+			&& !Client_HasFlag(i, ClientFlags_Punishment)
 			&& (!SaxtonHale_IsValidBoss(i, false)))
 		{
 			iDeadPlayers[iLength] = i;
@@ -791,7 +825,7 @@ public void Frame_AreaOfRange(DataPack data)
 	{
 		float vecPos[3], vecTargetPos[3];
 		GetClientAbsOrigin(iClient, vecPos);
-		int iTeam = GetClientTeam(iClient);
+		TFTeam nTeam = TF2_GetClientTeam(iClient);
 
 		for (int i = 1; i <= MaxClients; i++)
 		{
@@ -808,8 +842,8 @@ public void Frame_AreaOfRange(DataPack data)
 		
 		int iColor[4];
 		iColor[3] = 255;
-		if (iTeam == TFTeam_Red) iColor[0] = 255;
-		else if (iTeam == TFTeam_Blue) iColor[2] = 255;
+		if (nTeam == TFTeam_Red) iColor[0] = 255;
+		else if (nTeam == TFTeam_Blue) iColor[2] = 255;
 		
 		//Ring effect
 		vecPos[2] += 8.0;
@@ -864,6 +898,20 @@ public Action Timer_ResetAttrib(Handle hTimer, DataPack data)
 			return;
 		}
 	}
+}
+
+stock TagsMath Tags_GetMath(const char[] sMath)
+{
+	if (StrEqual(sMath, "set"))
+		return TagsMath_Set;
+	else if (StrEqual(sMath, "add"))
+		return TagsMath_Add;
+	else if (StrEqual(sMath, "multiply"))
+		return TagsMath_Multiply;
+	else if (StrEqual(sMath, "damage"))
+		return TagsMath_Damage;
+	
+	return TagsMath_Set;
 }
 
 stock int Tags_GetBackstabCount(int iClient, int iVictim)

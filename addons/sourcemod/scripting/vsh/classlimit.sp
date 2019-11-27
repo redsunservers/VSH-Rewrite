@@ -49,7 +49,7 @@ public void ClassLimit_Refresh()
 		if (iMaxLimit < TF_MAXPLAYERS && iMaxLimit != -1)	//If total count is smaller than max players and not unlimited...
 		{
 			g_bClassLimit = false;				//...disable class limit
-			PrintToChatAll("%s%s Class Limit config total number is too small! (min %d out of %d)", VSH_TAG, VSH_ERROR_COLOR, TF_MAXPLAYERS, iMaxLimit);
+			PrintToChatAll("%s%s Class Limit config total number is too small! (min %d out of %d)", TEXT_TAG, TEXT_ERROR, TF_MAXPLAYERS, iMaxLimit);
 			LogMessage("Class Limit config total number is too small! (min %d out of %d)", TF_MAXPLAYERS, iMaxLimit);
 		}
 		else
@@ -86,7 +86,7 @@ public TFClassType ClassLimit_GetNewClass(int iClient)
 		//Otherwise, use current class and check if it breaks class limit
 		if (ClassLimit_GetMaxNum(nClass) != -1 && ClassLimit_GetCurrentNum(nClass) > ClassLimit_GetMaxNum(nClass))
 		{
-			PrintToChat(iClient, "%s%s %s slot is already full! (max %d)", VSH_TAG, VSH_ERROR_COLOR, g_strClassName[nClass], ClassLimit_GetMaxNum(nClass));
+			PrintToChat(iClient, "%s%s %s slot is already full! (max %d)", TEXT_TAG, TEXT_ERROR, g_strClassName[nClass], ClassLimit_GetMaxNum(nClass));
 			
 			//Create a list of all classes to randomize and select one
 			TFClassType nClassList[sizeof(g_strClassName)-1];	//Don't want to count unknown class at 0
@@ -143,7 +143,7 @@ public Action ClassLimit_JoinClass(int iClient, TFClassType nClass)
 	}
 	else if (ClassLimit_GetCurrentNum(nClass) >= ClassLimit_GetMaxNum(nClass))
 	{
-		PrintToChat(iClient, "%s%s %s slot is already full! (max %d)", VSH_TAG, VSH_ERROR_COLOR, g_strClassName[nClass], ClassLimit_GetMaxNum(nClass));
+		PrintToChat(iClient, "%s%s %s slot is already full! (max %d)", TEXT_TAG, TEXT_ERROR, g_strClassName[nClass], ClassLimit_GetMaxNum(nClass));
 		return Plugin_Handled;
 	}
 	else
