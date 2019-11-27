@@ -1482,14 +1482,11 @@ public Action Event_PlayerDeath(Event event, const char[] sName, bool bDontBroad
 
 	bool bDeadRinger = (event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER) != 0;
 
-	int iSentry = MaxClients+1;
-	while((iSentry = FindEntityByClassname(iSentry, "obj_sentrygun")) > MaxClients)
+	int iSentry = TF2_GetBuilding(iVictim, TFObject_Sentry);
+	if (iSentry > MaxClients)
 	{
-		if (GetEntPropEnt(iSentry, Prop_Send, "m_hBuilder") == iVictim)
-		{
-			SetVariantInt(999999);
-			AcceptEntityInput(iSentry, "RemoveHealth");
-		}
+		SetVariantInt(999999);
+		AcceptEntityInput(iSentry, "RemoveHealth");
 	}
 	
 	if (bossVictim.bValid)
@@ -2374,19 +2371,6 @@ stock int Client_GetEyeTarget(int iClient)
 	return iHit;
 }
 
-stock int Client_GetBuilding(int iClient, const char[] sBuilding)
-{
-	int iBuilding = MaxClients+1;
-	while((iBuilding = FindEntityByClassname(iBuilding, sBuilding)) > MaxClients)
-	{
-		//Check if same builder
-		if (GetEntPropEnt(iBuilding, Prop_Send, "m_hBuilder") == iClient)
-			return iBuilding;
-	}
-	
-	return -1;
-}
-
 public Action Crossbow_OnTouch(int iEntity, int iToucher)
 {
 	if (!SaxtonHale_IsValidBoss(iToucher))
@@ -2606,14 +2590,20 @@ public MRESReturn Hook_AllowedToHealTarget(int iMedigun, Handle hReturn, Handle 
 		TagsParams tParams = new TagsParams();
 		TagsCore_CallSlot(iClient, TagsCall_Heal, WeaponSlot_Secondary, tParams);
 		
-		//Override heal result
-		int iResult;
-		if (tParams.GetIntEx("healbuilding", iResult))
+		if (iHealTarget > MaxClients)
 		{
-			bool bResult = !!iResult;
-			DHookSetReturn(hReturn, bResult);
-			delete tParams;
-			return MRES_Supercede;
+			char sClassname[256];
+			GetEntityClassname(iHealTarget, sClassname, sizeof(sClassname));
+			
+			//Override heal result
+			int iResult;
+			if (StrContains(sClassname, "obj_") == 0 && GetEntProp(iHealTarget, Prop_Send, "m_iTeamNum") == GetClientTeam(iClient) && tParams.GetIntEx("healbuilding", iResult))
+			{
+				bool bResult = !!iResult;
+				DHookSetReturn(hReturn, bResult);
+				delete tParams;
+				return MRES_Supercede;
+			}
 		}
 		
 		delete tParams;
@@ -2911,6 +2901,22 @@ stock int TF2_GetPatient(int iClient)
 		return -1;
 	
 	return GetEntPropEnt(iWeapon, Prop_Send, "m_hHealingTarget");
+}
+
+stock int TF2_GetBuilding(int iClient, TFObjectType nType, TFObjectMode nMode = TFObjectMode_None)
+{
+	int iBuilding = MaxClients+1;
+	while ((iBuilding = FindEntityByClassname(iBuilding, "obj_*")) > MaxClients)
+	{
+		if (GetEntPropEnt(iBuilding, Prop_Send, "m_hBuilder") == iClient
+			&& view_as<TFObjectType>(GetEntProp(iBuilding, Prop_Send, "m_iObjectType")) == nType
+			&& view_as<TFObjectMode>(GetEntProp(iBuilding, Prop_Send, "m_iObjectMode")) == nMode)
+		{
+			return iBuilding;
+		}
+	}
+	
+	return -1;
 }
 
 stock int TF2_CreateAndEquipWeapon(int iClient, int iIndex, char[] sClassnameTemp = NULL_STRING, int iLevel = 0, TFQuality iQuality = TFQual_Normal, char[] sAttrib = NULL_STRING, bool bAttrib = false)
