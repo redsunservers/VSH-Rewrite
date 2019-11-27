@@ -84,7 +84,7 @@ enum struct TagsFilterStruct
 			}
 			case TagsFilterType_SentryTarget:
 			{
-				int iSentry = Client_GetBuilding(iClient, "obj_sentrygun");
+				int iSentry = TF2_GetBuilding(iClient, TFObject_Sentry);
 				if (iSentry > MaxClients)
 				{
 					//Check if target is valid boss

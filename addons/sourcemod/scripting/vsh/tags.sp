@@ -1,6 +1,8 @@
 static int g_iBackstabCount[TF_MAXPLAYERS+1][TF_MAXPLAYERS+1];
 static int g_iClimbAmount[TF_MAXPLAYERS+1];
 static int g_iZombieUsed[TF_MAXPLAYERS+1];
+static float g_flUberBeforeHealingBuilding[TF_MAXPLAYERS+1];
+static float g_flDispenserBoost[TF_MAXPLAYERS+1];
 
 static bool g_bTagsLunchbox[TF_MAXPLAYERS+1];
 
@@ -25,11 +27,18 @@ void Tags_ResetClient(int iClient)
 	
 	g_iClimbAmount[iClient] = 0;
 	g_iZombieUsed[iClient] = 0;
+	g_flUberBeforeHealingBuilding[iClient] = 0.0;
+	g_flDispenserBoost[iClient] = 0.0;
+	
 	g_iTagsAirblastRequirement[iClient] = -1;
 	g_iTagsAirblastDamage[iClient] = 0;
 	
 	for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
 		g_iBackstabCount[iClient][iVictim] = 0;
+	
+	PrintToChatAll("reset %N", iClient);
+	TF2Attrib_SetByDefIndex(iClient, ATTRIB_SENTRYATTACKSPEED, 1.0);
+	TF2Attrib_SetByDefIndex(iClient, ATTRIB_BIDERECTIONAL, 0.0);
 	
 	Hud_SetRageView(iClient, false);
 }
@@ -80,6 +89,101 @@ void Tags_OnThink(int iClient)
 					TagsCore_CallAll(iClient, TagsCall_Lunchbox);
 				}
 			}
+		}
+		else if (StrContains(sClassname, "tf_weapon_medigun") == 0)
+		{
+			//Healing buildings, Set uber back to what it was when healing building
+			int iHealTarget = GetEntPropEnt(iSecondary, Prop_Send, "m_hHealingTarget");
+			
+			if (iHealTarget > -1 && GetEntProp(iSecondary, Prop_Send, "m_bChargeRelease"))
+				g_flUberBeforeHealingBuilding[iClient] = 0.0;
+			else if (iHealTarget > MaxClients)
+				SetEntPropFloat(iSecondary, Prop_Send, "m_flChargeLevel", g_flUberBeforeHealingBuilding[iClient]);
+			else
+				g_flUberBeforeHealingBuilding[iClient] = GetEntPropFloat(iSecondary, Prop_Send, "m_flChargeLevel");
+		}
+	}
+	
+	static int TELEPORTER_BODYGROUP_ARROW 	= (1 << 1);
+	
+	//Compiler no like this
+	const int iObjectType = view_as<int>(TFObjectType);
+	const int iObjectMode = view_as<int>(TFObjectMode);
+	int iBuilding[iObjectType][iObjectMode];	//Building index built from client
+	
+	TFTeam nTeam = TF2_GetClientTeam(iClient);
+	
+	//Get buildings that were healed
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == nTeam)
+		{
+			char sClassname[32];
+			int iMedigun = GetPlayerWeaponSlot(i, WeaponSlot_Secondary);
+			if (iMedigun <= MaxClients)
+				continue;
+			
+			GetEdictClassname(iMedigun, sClassname, sizeof(sClassname));
+			if (StrContains(sClassname, "tf_weapon_medigun") != 0)
+				continue;
+			
+			int iPatient = GetEntPropEnt(iMedigun, Prop_Send, "m_hHealingTarget");
+			if (iPatient > MaxClients)
+			{
+				char sPatientClassname[64];
+				GetEdictClassname(iPatient, sPatientClassname, sizeof(sPatientClassname));
+				if (StrContains(sPatientClassname, "obj_") == 0 && GetEntPropEnt(iPatient, Prop_Send, "m_hBuilder") == iClient)
+				{
+					TFObjectType nType = view_as<TFObjectType>(GetEntProp(iPatient, Prop_Send, "m_iObjectType"));
+					TFObjectType nMode = view_as<TFObjectType>(GetEntProp(iPatient, Prop_Send, "m_iObjectMode"));
+					iBuilding[nType][nMode] = iPatient;
+				}
+			}
+		}
+	}
+	
+	//Sentry
+	if (iBuilding[TFObject_Sentry][TFObjectMode_None] > MaxClients)
+		TF2Attrib_SetByDefIndex(iClient, ATTRIB_SENTRYATTACKSPEED, 0.5);
+	else
+		TF2Attrib_SetByDefIndex(iClient, ATTRIB_SENTRYATTACKSPEED, 1.0);
+	
+	//Dispenser
+	if (iBuilding[TFObject_Dispenser][TFObjectMode_None] > MaxClients && g_flDispenserBoost[iClient] <= GetGameTime())
+	{
+		int iMetal = GetEntProp(iBuilding[TFObject_Dispenser][TFObjectMode_None], Prop_Send, "m_iAmmoMetal");
+		if (iMetal < 400)
+		{
+			SetEntProp(iBuilding[TFObject_Dispenser][TFObjectMode_None], Prop_Send, "m_iAmmoMetal", iMetal+1);
+			g_flDispenserBoost[iClient] = GetGameTime()+0.25;
+		}
+	}
+	
+	//Teleporter
+	if (iBuilding[TFObject_Teleporter][TFObjectMode_Entrance] <= MaxClients && iBuilding[TFObject_Teleporter][TFObjectMode_Exit] <= MaxClients)
+	{
+		float flVal;
+		if (TF2_FindAttribute(iClient, ATTRIB_BIDERECTIONAL, flVal) && flVal >= 1.0)
+		{
+			TF2Attrib_SetByDefIndex(iClient, ATTRIB_BIDERECTIONAL, 0.0);
+			
+			int iTeleporterExit = TF2_GetBuilding(iClient, TFObject_Teleporter, TFObjectMode_Exit);
+			if (iTeleporterExit > MaxClients)
+			{
+				int iBodyGroups = GetEntProp(iTeleporterExit, Prop_Send, "m_nBody");
+				SetEntProp(iTeleporterExit, Prop_Send, "m_nBody", iBodyGroups &~ TELEPORTER_BODYGROUP_ARROW);
+			}
+		}
+	}
+	else
+	{
+		TF2Attrib_SetByDefIndex(iClient, ATTRIB_BIDERECTIONAL, 1.0);
+		
+		int iTeleporterExit = TF2_GetBuilding(iClient, TFObject_Teleporter, TFObjectMode_Exit);
+		if (iTeleporterExit > MaxClients)
+		{
+			int iBodyGroups = GetEntProp(iTeleporterExit, Prop_Send, "m_nBody");
+			SetEntProp(iTeleporterExit, Prop_Send, "m_nBody", iBodyGroups | TELEPORTER_BODYGROUP_ARROW);
 		}
 	}
 }
