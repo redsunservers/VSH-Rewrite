@@ -44,7 +44,6 @@ void Tags_ResetClient(int iClient)
 	for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
 		g_iBackstabCount[iClient][iVictim] = 0;
 	
-	PrintToChatAll("reset %N", iClient);
 	TF2Attrib_SetByDefIndex(iClient, ATTRIB_SENTRYATTACKSPEED, 1.0);
 	TF2Attrib_SetByDefIndex(iClient, ATTRIB_BIDERECTIONAL, 0.0);
 	
