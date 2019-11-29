@@ -1,14 +1,15 @@
-// Modified to use heavy's stuff by Kirillian, custom invulnerability textures by Kirillian.
+// Modified to be used as custom model for heavy, including custom invulnerability textures made by Kirillian.
 // http://steamcommunity.com/profiles/76561198031833921
+// This model and its textures can be freely used without additional permission.
 "VertexLitGeneric"
 {
-	"$basetexture" "models\player\boss\yeti\yeti_invun"
+	"$basetexture" "models/player/boss/yeti/yeti_invun"
 	<dx90
 	{
 		 	"$bumpmap" "water/dx80_tfwater001_normal"
 	}
 	"$bumpmap" "models/player/items/taunts/yeti/yeti_body_normal"
-	"$envmap" "models\player\boss\yeti\invun_grey"
+	"$envmap" "models/player/boss/yeti/invun_grey"
 //	"$envmaptint" "[.2 .2 .2]"
 	"$surfaceprop" "metal"
 	"$halflambert" "1"
