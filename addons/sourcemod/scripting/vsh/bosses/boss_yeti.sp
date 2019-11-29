@@ -178,6 +178,19 @@ methodmap CYeti < SaxtonHaleBase
 		for (int i = 0; i < sizeof(g_strYetiBackStabbed); i++)PrecacheSound(g_strYetiBackStabbed[i]);
 		for (int i = 0; i < sizeof(g_strYetiVoice); i++)PrecacheSound(g_strYetiVoice[i]);
 		for (int i = 0; i < sizeof(g_strYetiFootsteps); i++)PrecacheSound(g_strYetiFootsteps[i]);
+		
+		AddFileToDownloadsTable("materials/models/player/boss/yeti/invun_grey.vtf");
+		AddFileToDownloadsTable("materials/models/player/boss/yeti/yeti_face_invun.vmt");
+		AddFileToDownloadsTable("materials/models/player/boss/yeti/yeti_face_invun.vtf");
+		AddFileToDownloadsTable("materials/models/player/boss/yeti/yeti_invun.vmt");
+		AddFileToDownloadsTable("materials/models/player/boss/yeti/yeti_invun.vtf");
+		
+		AddFileToDownloadsTable("models/player/kirillian/boss/yeti_modded.dx80.vtx");
+		AddFileToDownloadsTable("models/player/kirillian/boss/yeti_modded.dx90.vtx");
+		AddFileToDownloadsTable("models/player/kirillian/boss/yeti_modded.mdl");
+		AddFileToDownloadsTable("models/player/kirillian/boss/yeti_modded.phy");
+		AddFileToDownloadsTable("models/player/kirillian/boss/yeti_modded.sw.vtx");
+		AddFileToDownloadsTable("models/player/kirillian/boss/yeti_modded.vvd");
 	}
 	
 	public bool IsBossHidden()
