@@ -148,7 +148,7 @@ methodmap CBodyEat < SaxtonHaleBase
 		//Create glow to body
 		Network_CreateEntityGlow(iRagdoll, sModel, iColor, BodyGlow_Transmit);
 		SetEntProp(iRagdoll, Prop_Data, "m_CollisionGroup", COLLISION_GROUP_DEBRIS_TRIGGER);
-		DHookEntity(g_hHookShouldTransmit, true, iRagdoll);
+		SDK_AlwaysTransmitEntity(iRagdoll);
 		
 		//Kill body from timer
 		CreateTimer(30.0, Timer_EntityCleanup, EntIndexToEntRef(iRagdoll));
