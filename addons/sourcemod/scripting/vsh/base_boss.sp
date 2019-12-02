@@ -27,7 +27,7 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 		this.flMaxRagePercentage = 2.0;
 		this.iRageDamage = 0;
 		this.flEnvDamageCap = 400.0;
-		this.flWeighDownTimer = 1.75;
+		this.flWeighDownTimer = 2.8;
 		this.flWeighDownForce = 3000.0;
 		this.flGlowTime = 0.0;
 		this.bMinion = false;
