@@ -1,65 +1,136 @@
-static Menu g_hMenuBossMain;			//Main menu of boss info
-static ArrayList g_aMenuBossName;		//Array of bosses ordered from g_aMenuBossInfo
-static ArrayList g_aMenuBossInfo;		//Menus of each boss info
+enum ( <<=1 )
+{
+	MenuBossFlags_Hidden = 1,
+	MenuBossFlags_Random,
+	MenuBossFlags_None
+}
 
-static Menu g_hMenuModifiersMain;		//Main menu of modifiers info
-static ArrayList g_aMenuModifiersName;	//Array of modifiers ordered from g_aMenuModifiersInfo
-static ArrayList g_aMenuModifiersInfo;	//Menus of each modifiers info
+//Callback when selecting boss/modifiers list
+typedef MenuBossListCallback = function void (int iClient, const char[] sType);
 
-static Menu g_hMenuNextBoss;
-static Menu g_hMenuNextModifiers;
+static MenuBossListCallback g_fMenuBossCallback[TF_MAXPLAYERS+1];	//Callback function to use once client selected boss/modifiers
 
+static StringMap g_mMenuInfo; 		//Menu handles of boss/modifers info
 static NextBoss g_nextMenuSelectBoss[TF_MAXPLAYERS+1];
 
 void MenuBoss_Init()
 {
-	//Boss/modifiers types
-	g_aMenuBossName = new ArrayList(MAX_TYPE_CHAR);
-	g_aMenuModifiersName = new ArrayList(MAX_TYPE_CHAR);
-	
-	//Menu handles
-	g_aMenuBossInfo = new ArrayList();
-	g_aMenuModifiersInfo = new ArrayList();
-	
-	//Create boss info menu
-	g_hMenuBossMain = new Menu(MenuBoss_SelectBossMain);
-	g_hMenuBossMain.SetTitle("Boss Menu");
-	g_hMenuBossMain.AddItem("back", "<- Back");
-
-	//Create boss selection menu for admins
-	g_hMenuNextBoss = new Menu(MenuBoss_SelectNextBoss);
-	g_hMenuNextBoss.SetTitle("Select next boss\n---");
-	g_hMenuNextBoss.AddItem("back", "<- back");
-	g_hMenuNextBoss.AddItem("random", "Random");
-	g_hMenuNextBoss.AddItem("", "---", ITEMDRAW_DISABLED);
-	
-	//Create modifiers info menu
-	g_hMenuModifiersMain = new Menu(MenuBoss_SelectModifiersMain);
-	g_hMenuModifiersMain.SetTitle("Modifiers Menu");
-	g_hMenuModifiersMain.AddItem("back", "<- Back");
-	
-	//Create modifiers selection menu for admins
-	g_hMenuNextModifiers = new Menu(MenuBoss_SelectNextModifiers);
-	g_hMenuNextModifiers.SetTitle("Select next modifiers");
-	g_hMenuNextModifiers.AddItem("back", "<- back");
-	g_hMenuNextModifiers.AddItem("random", "Random");
-	g_hMenuNextModifiers.AddItem("CModifiersNone", "None");
-	g_hMenuNextModifiers.AddItem("", "---", ITEMDRAW_DISABLED);
+	g_mMenuInfo = new StringMap();
 }
 
-void MenuBoss_AddBoss(const char[] sBossType)
+/*
+ * Display list of bosses/modifiers
+ */
+ 
+void MenuBoss_DisplayBossList(int iClient, MenuBossListCallback callback, int iFlags = 0)
+{
+	Menu hMenuList = new Menu(MenuBoss_SelectList);
+	hMenuList.SetTitle("Boss Menu\n---");
+	hMenuList.AddItem("back", "<- back");
+	
+	if (iFlags & MenuBossFlags_Random)
+		hMenuList.AddItem("random", "Random");
+	
+	if (iFlags & MenuBossFlags_None)
+		hMenuList.AddItem("none", "None");
+	
+	//Loop through every bosses
+	int iLength = g_aAllBossesType.Length;
+	for (int i = 0; i < iLength; i++)
+	{
+		//Get boss type
+		char sBossType[MAX_TYPE_CHAR];
+		g_aAllBossesType.GetString(i, sBossType, sizeof(sBossType));
+		
+		SaxtonHaleBase boss = SaxtonHaleBase(0);
+		boss.CallFunction("SetBossType", sBossType);
+		
+		//If disallow hidden bosses, check that
+		if (!(iFlags & MenuBossFlags_Hidden) && boss.CallFunction("IsBossHidden"))
+			continue;
+		
+		//Get boss name
+		char sName[512];
+		boss.CallFunction("GetBossName", sName, sizeof(sName));
+		
+		//Add to menu
+		hMenuList.AddItem(sBossType, sName);
+	}
+	
+	g_fMenuBossCallback[iClient] = callback;
+	hMenuList.Display(iClient, MENU_TIME_FOREVER);
+}
+
+void MenuBoss_DisplayModifiersList(int iClient, MenuBossListCallback callback, int iFlags = 0)
+{
+	Menu hMenuList = new Menu(MenuBoss_SelectList);
+	hMenuList.SetTitle("Modifiers Menu\n---");
+	hMenuList.AddItem("back", "<- back");
+	
+	if (iFlags & MenuBossFlags_Random)
+		hMenuList.AddItem("random", "Random");
+	
+	if (iFlags & MenuBossFlags_None)
+		hMenuList.AddItem("none", "None");
+	
+	//Loop through every bosses
+	int iLength = g_aModifiersType.Length;
+	for (int i = 0; i < iLength; i++)
+	{
+		//Get boss type
+		char sModifiersType[MAX_TYPE_CHAR];
+		g_aModifiersType.GetString(i, sModifiersType, sizeof(sModifiersType));
+		
+		SaxtonHaleBase boss = SaxtonHaleBase(0);
+		boss.CallFunction("SetModifiersType", sModifiersType);
+		
+		//If disallow hidden modifiers, check that
+		if (!(iFlags & MenuBossFlags_Hidden) && boss.CallFunction("IsModifiersHidden"))
+			continue;
+		
+		//Get modifiers name
+		char sName[512];
+		boss.CallFunction("GetModifiersName", sName, sizeof(sName));
+		
+		//Add to menu
+		hMenuList.AddItem(sModifiersType, sName);
+	}
+	
+	g_fMenuBossCallback[iClient] = callback;
+	hMenuList.Display(iClient, MENU_TIME_FOREVER);
+}
+
+public int MenuBoss_SelectList(Menu hMenu, MenuAction action, int iClient, int iSelect)
+{
+	if (action == MenuAction_End)
+	{
+		delete hMenu;
+	}
+	else if (action == MenuAction_Select)
+	{
+		char sSelect[MAX_TYPE_CHAR];
+		hMenu.GetItem(iSelect, sSelect, sizeof(sSelect));
+		
+		Call_StartFunction(null, g_fMenuBossCallback[iClient]);
+		g_fMenuBossCallback[iClient] = INVALID_FUNCTION;
+		
+		Call_PushCell(iClient);
+		Call_PushString(sSelect);
+		Call_Finish();
+	}
+}
+
+/*
+ * Add/Remove bosses/modifiers info menu
+ */
+
+void MenuBoss_AddInfoBoss(const char[] sBossType)
 {
 	char sName[512], sInfo[512];
 	
 	SaxtonHaleBase boss = SaxtonHaleBase(0);
 	boss.CallFunction("SetBossType", sBossType);
 	boss.CallFunction("GetBossName", sName, sizeof(sName));
-	bool bIsHidden = boss.CallFunction("IsBossHidden");
-	
-	g_hMenuNextBoss.AddItem(sBossType, sName);
-	
-	if (!bIsHidden)
-		g_hMenuBossMain.AddItem(sBossType, sName);
 	
 	//Create menu info for boss
 	Menu hMenuBossInfo = new Menu(MenuBoss_SelectBossInfo);
@@ -74,65 +145,16 @@ void MenuBoss_AddBoss(const char[] sBossType)
 	hMenuBossInfo.SetTitle(sInfo);
 	hMenuBossInfo.AddItem("back", "<- Back");
 	
-	g_aMenuBossName.PushString(sBossType);
-	g_aMenuBossInfo.Push(hMenuBossInfo);
+	g_mMenuInfo.SetValue(sBossType, hMenuBossInfo);
 }
 
-void MenuBoss_RemoveBoss(const char[] sBossType)
-{
-	//Remove from boss info
-	int iLength = g_hMenuBossMain.ItemCount;
-	for (int i = 0; i < iLength; i++)
-	{
-		char sBuffer[MAX_TYPE_CHAR];
-		g_hMenuBossMain.GetItem(i, sBuffer, sizeof(sBuffer));
-		if (StrEqual(sBossType, sBuffer))
-		{
-			//Found boss in menu, erase from list
-			g_hMenuBossMain.RemoveItem(i);
-			break;
-		}
-	}
-	
-	//Delete boss info menu
-	int iIndex = g_aMenuBossName.FindString(sBossType);
-	if (iIndex >= 0)
-	{
-		Menu hMenu = g_aMenuBossInfo.Get(iIndex);
-		delete hMenu;
-		
-		g_aMenuBossName.Erase(iIndex);
-		g_aMenuBossInfo.Erase(iIndex);
-	}
-	
-	//Remove from boss selection
-	iLength = g_hMenuNextBoss.ItemCount;
-	for (int i = 0; i < iLength; i++)
-	{
-		char sBuffer[MAX_TYPE_CHAR];
-		g_hMenuNextBoss.GetItem(i, sBuffer, sizeof(sBuffer));
-		if (StrEqual(sBossType, sBuffer))
-		{
-			//Found boss in menu, erase from list
-			g_hMenuBossMain.RemoveItem(i);
-			break;
-		}
-	}
-}
-
-void MenuBoss_AddModifiers(const char[] sModifiersType)
+void MenuBoss_AddInfoModifiers(const char[] sModifiersType)
 {
 	char sName[512], sInfo[512];
 	
 	SaxtonHaleBase boss = SaxtonHaleBase(0);
 	boss.CallFunction("SetModifiersType", sModifiersType);
 	boss.CallFunction("GetModifiersName", sName, sizeof(sName));
-	bool bIsHidden = boss.CallFunction("IsModifiersHidden");
-	
-	g_hMenuNextModifiers.AddItem(sModifiersType, sName);
-	
-	if (!bIsHidden)
-		g_hMenuModifiersMain.AddItem(sModifiersType, sName);
 	
 	//Create menu info for modifiers
 	Menu hMenuModifiersInfo = new Menu(MenuBoss_SelectModifiersInfo);
@@ -147,129 +169,60 @@ void MenuBoss_AddModifiers(const char[] sModifiersType)
 	hMenuModifiersInfo.SetTitle(sInfo);
 	hMenuModifiersInfo.AddItem("back", "<- Back");
 	
-	g_aMenuModifiersName.PushString(sModifiersType);
-	g_aMenuModifiersInfo.Push(hMenuModifiersInfo);
+	g_mMenuInfo.SetValue(sModifiersType, hMenuModifiersInfo);
 }
 
-void MenuBoss_RemoveModifiers(const char[] sModifiersType)
+void MenuBoss_RemoveInfo(const char[] sType)
 {
-	//Remove from boss info
-	int iLength = g_hMenuModifiersMain.ItemCount;
-	for (int i = 0; i < iLength; i++)
+	Menu hMenuInfo;
+	if (g_mMenuInfo.GetValue(sType, hMenuInfo))
 	{
-		char sBuffer[MAX_TYPE_CHAR];
-		g_hMenuModifiersMain.GetItem(i, sBuffer, sizeof(sBuffer));
-		if (StrEqual(sModifiersType, sBuffer))
-		{
-			//Found boss in menu, erase from list
-			g_hMenuModifiersMain.RemoveItem(i);
-			break;
-		}
-	}
-	
-	//Delete modifiers info menu
-	int iIndex = g_aMenuModifiersName.FindString(sModifiersType);
-	if (iIndex >= 0)
-	{
-		Menu hMenu = g_aMenuModifiersInfo.Get(iIndex);
-		delete hMenu;
-		
-		g_aMenuModifiersName.Erase(iIndex);
-		g_aMenuModifiersInfo.Erase(iIndex);
-	}
-	
-	//Remove from boss selection
-	iLength = g_hMenuNextModifiers.ItemCount;
-	for (int i = 0; i < iLength; i++)
-	{
-		char sBuffer[MAX_TYPE_CHAR];
-		g_hMenuNextModifiers.GetItem(i, sBuffer, sizeof(sBuffer));
-		if (StrEqual(sModifiersType, sBuffer))
-		{
-			//Found boss in menu, erase from list
-			g_hMenuNextModifiers.RemoveItem(i);
-			break;
-		}
+		delete hMenuInfo;
+		g_mMenuInfo.Remove(sType);
 	}
 }
 
-void MenuBoss_DisplayBossMain(int iClient)
-{
-	g_hMenuBossMain.Display(iClient, MENU_TIME_FOREVER);
-}
+/*
+ * Display bosses/modifiers info
+ */
 
-public int MenuBoss_SelectBossMain(Menu hMenu, MenuAction action, int iClient, int iSelect)
+public void MenuBoss_CallbackInfo(int iClient, const char[] sType)
 {
-	if (action != MenuAction_Select) return;
-	
-	char sSelect[MAX_TYPE_CHAR];
-	hMenu.GetItem(iSelect, sSelect, sizeof(sSelect));
-	
-	if (StrEqual(sSelect, "back"))
+	if (StrEqual(sType, "back"))
 		Menu_DisplayMain(iClient);
 	else
-		MenuBoss_DisplayBossInfo(iClient, sSelect);
+		MenuBoss_DisplayInfo(iClient, sType);
 }
 
-void MenuBoss_DisplayBossInfo(int iClient, char[] sBossType, int iTime = MENU_TIME_FOREVER)
+void MenuBoss_DisplayInfo(int iClient, const char[] sType, int iTime = MENU_TIME_FOREVER)
 {
-	int iIndex = g_aMenuBossName.FindString(sBossType);
-	if (iIndex < 0)
+	Menu hMenuInfo;
+	if (!g_mMenuInfo.GetValue(sType, hMenuInfo))
 	{
 		Menu_DisplayError(iClient);
 		return;
 	}
 	
-	Menu hMenuBossInfo = g_aMenuBossInfo.Get(iIndex);
-	hMenuBossInfo.Display(iClient, iTime);
+	hMenuInfo.Display(iClient, iTime);
 }
 
 public int MenuBoss_SelectBossInfo(Menu hMenu, MenuAction action, int iClient, int iSelect)
 {
-	if (action != MenuAction_Select) return;
-	
 	//Only back button in menu
-	MenuBoss_DisplayBossMain(iClient);
-}
-
-void MenuBoss_DisplayModifiersMain(int iClient)
-{
-	g_hMenuModifiersMain.Display(iClient, MENU_TIME_FOREVER);
-}
-
-public int MenuBoss_SelectModifiersMain(Menu hMenu, MenuAction action, int iClient, int iSelect)
-{
-	if (action != MenuAction_Select) return;
-	
-	char sSelect[MAX_TYPE_CHAR];
-	hMenu.GetItem(iSelect, sSelect, sizeof(sSelect));
-	
-	if (StrEqual(sSelect, "back"))
-		Menu_DisplayMain(iClient);
-	else
-		MenuBoss_DisplayModifiersInfo(iClient, sSelect);
-}
-
-void MenuBoss_DisplayModifiersInfo(int iClient, char[] sModifiersType)
-{
-	int iIndex = g_aMenuModifiersName.FindString(sModifiersType);
-	if (iIndex < 0)
-	{
-		Menu_DisplayError(iClient);
-		return;
-	}
-	
-	Menu hMenuModifiersInfo = g_aMenuModifiersInfo.Get(iIndex);
-	hMenuModifiersInfo.Display(iClient, MENU_TIME_FOREVER);
+	if (action == MenuAction_Select)
+		MenuBoss_DisplayBossList(iClient, MenuBoss_CallbackInfo);
 }
 
 public int MenuBoss_SelectModifiersInfo(Menu hMenu, MenuAction action, int iClient, int iSelect)
 {
-	if (action != MenuAction_Select) return;
-	
 	//Only back button in menu
-	MenuBoss_DisplayModifiersMain(iClient);
+	if (action == MenuAction_Select)
+		MenuBoss_DisplayModifiersList(iClient, MenuBoss_CallbackInfo);
 }
+
+/*
+ * Admin next boss menus
+ */
 
 void MenuBoss_DisplayNextList(int iClient)
 {
@@ -347,7 +300,6 @@ void MenuBoss_DisplayNextClient(int iClient)
 	hAdminNextBoss_Client.SetTitle("Select Player to be Boss\n---");
 	hAdminNextBoss_Client.AddItem("back", "<- back");
 	hAdminNextBoss_Client.AddItem("", "None");
-	hAdminNextBoss_Client.AddItem("", "---", ITEMDRAW_DISABLED);
 	
 	for (int i = 1; i <= MaxClients; i++)
 	{
@@ -407,63 +359,47 @@ public int MenuBoss_SelectNextClient(Menu hMenu, MenuAction action, int iClient,
 		else
 			g_nextMenuSelectBoss[iClient].iUserId = 0;
 		
-		MenuBoss_DisplayNextBoss(iClient);
+		MenuBoss_DisplayBossList(iClient, MenuBoss_CallbackNextBoss, MenuBossFlags_Hidden|MenuBossFlags_Random);
 	}
 }
 
-void MenuBoss_DisplayNextBoss(int iClient)
+public void MenuBoss_CallbackNextBoss(int iClient, const char[] sType)
 {
-	g_hMenuNextBoss.Display(iClient, MENU_TIME_FOREVER);
-}
-
-public int MenuBoss_SelectNextBoss(Menu hMenu, MenuAction action, int iClient, int iSelect)
-{
-	if (action != MenuAction_Select) return;
-	
-	char sSelect[MAX_TYPE_CHAR];
-	hMenu.GetItem(iSelect, sSelect, sizeof(sSelect));
-	
-	if (StrEqual(sSelect, "back"))
+	if (StrEqual(sType, "back"))
 	{
 		MenuBoss_DisplayNextClient(iClient);
 		return;
 	}
-	else if (StrEqual(sSelect, "random"))
+	else if (StrEqual(sType, "random"))
 	{
 		Format(g_nextMenuSelectBoss[iClient].sBoss, sizeof(g_nextMenuSelectBoss[].sBoss), "");
 	}
 	else
 	{
-		Format(g_nextMenuSelectBoss[iClient].sBoss, sizeof(g_nextMenuSelectBoss[].sBoss), sSelect);
+		Format(g_nextMenuSelectBoss[iClient].sBoss, sizeof(g_nextMenuSelectBoss[].sBoss), sType);
 	}
 	
-	MenuBoss_DisplayNextModifiers(iClient);
+	MenuBoss_DisplayModifiersList(iClient, MenuBoss_CallbackNextModifiers, MenuBossFlags_Hidden|MenuBossFlags_Random|MenuBossFlags_None);
 }
 
-void MenuBoss_DisplayNextModifiers(int iClient)
+public void MenuBoss_CallbackNextModifiers(int iClient, const char[] sType)
 {
-	g_hMenuNextModifiers.Display(iClient, MENU_TIME_FOREVER);
-}
-
-public int MenuBoss_SelectNextModifiers(Menu hMenu, MenuAction action, int iClient, int iSelect)
-{
-	if (action != MenuAction_Select) return;
-	
-	char sSelect[MAX_TYPE_CHAR];
-	hMenu.GetItem(iSelect, sSelect, sizeof(sSelect));
-	
-	if (StrEqual(sSelect, "back"))
+	if (StrEqual(sType, "back"))
 	{
-		MenuBoss_DisplayNextBoss(iClient);
+		MenuBoss_DisplayBossList(iClient, MenuBoss_CallbackNextBoss, MenuBossFlags_Hidden|MenuBossFlags_Random);
 		return;
 	}
-	else if (StrEqual(sSelect, "random"))
+	else if (StrEqual(sType, "random"))
 	{
 		Format(g_nextMenuSelectBoss[iClient].sModifiers, sizeof(g_nextMenuSelectBoss[].sModifiers), "");
 	}
+	else if (StrEqual(sType, "none"))
+	{
+		Format(g_nextMenuSelectBoss[iClient].sModifiers, sizeof(g_nextMenuSelectBoss[].sModifiers), "CModifiersNone");
+	}
 	else
 	{
-		Format(g_nextMenuSelectBoss[iClient].sModifiers, sizeof(g_nextMenuSelectBoss[].sModifiers), sSelect);
+		Format(g_nextMenuSelectBoss[iClient].sModifiers, sizeof(g_nextMenuSelectBoss[].sModifiers), sType);
 	}
 	
 	//Push NextBoss to ArrayList

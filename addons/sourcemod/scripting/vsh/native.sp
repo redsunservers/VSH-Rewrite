@@ -94,7 +94,7 @@ public any Native_RegisterBoss(Handle hPlugin, int iNumParams)
 			aArray.PushString(sBossType);
 		
 		g_aAllBossesType.PushString(sBossType);
-		MenuBoss_AddBoss(sBossType);	//Add boss to menu
+		MenuBoss_AddInfoBoss(sBossType);	//Add boss to menu
 	}
 	
 	if (iNumParams > 1)
@@ -118,7 +118,7 @@ public any Native_UnregisterBoss(Handle hPlugin, int iNumParams)
 	if (iIndex >= 0) g_aAllBossesType.Erase(iIndex);
 	
 	//Remove from menu
-	MenuBoss_RemoveBoss(sBossType);
+	MenuBoss_RemoveInfo(sBossType);
 	
 	//Remove from misc boss array
 	int iLength = g_aMiscBossesType.Length;
@@ -150,7 +150,7 @@ public any Native_RegisterModifiers(Handle hPlugin, int iNumParams)
 		ThrowNativeError(SP_ERROR_NATIVE, "Constructor (%s) already registered", sModifiersType);
 	
 	g_aModifiersType.PushString(sModifiersType);
-	MenuBoss_AddModifiers(sModifiersType);	//Add modifiers to menu
+	MenuBoss_AddInfoModifiers(sModifiersType);	//Add modifiers to menu
 }
 
 //void SaxtonHale_UnregisterModifiers(const char[] sModifiersType);
@@ -166,7 +166,7 @@ public any Native_UnregisterModifiers(Handle hPlugin, int iNumParams)
 	if (iIndex >= 0) g_aModifiersType.Erase(iIndex);
 	
 	//Remove from menu
-	MenuBoss_RemoveModifiers(sModifiersType);
+	MenuBoss_RemoveInfo(sModifiersType);
 }
 
 //void SaxtonHale_RegisterAbility(const char[] sAbilityType);
