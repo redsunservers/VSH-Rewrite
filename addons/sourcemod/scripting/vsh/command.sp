@@ -115,7 +115,7 @@ public Action Command_Boss(int iClient, int iArgs)
 		return Plugin_Handled;
 	}
 
-	MenuBoss_DisplayBossMain(iClient);
+	MenuBoss_DisplayBossList(iClient, MenuBoss_CallbackInfo);
 	return Plugin_Handled;
 }
 
@@ -129,7 +129,7 @@ public Action Command_Modifiers(int iClient, int iArgs)
 		return Plugin_Handled;
 	}
 
-	MenuBoss_DisplayModifiersMain(iClient);
+	MenuBoss_DisplayModifiersList(iClient, MenuBoss_CallbackInfo);
 	return Plugin_Handled;
 }
 
