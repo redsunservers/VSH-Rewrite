@@ -72,9 +72,9 @@ public int Menu_SelectMain(Menu hMenu, MenuAction action, int iClient, int iSele
 	if (StrEqual(sSelect, "class"))
 		MenuWeapon_DisplayMain(iClient);
 	else if (StrEqual(sSelect, "boss"))
-		MenuBoss_DisplayBossMain(iClient);
+		MenuBoss_DisplayBossList(iClient, MenuBoss_CallbackInfo);
 	else if (StrEqual(sSelect, "modifiers"))
-		MenuBoss_DisplayModifiersMain(iClient);
+		MenuBoss_DisplayModifiersList(iClient, MenuBoss_CallbackInfo);
 	else if (StrEqual(sSelect, "queue"))
 		Menu_DisplayQueue(iClient);
 	else if (StrEqual(sSelect, "preference"))

@@ -230,7 +230,7 @@ void SetBoss(int iClient, char[] sBossType, char[] sModifiersType)
 		TF2_RespawnPlayer(iClient);
 		
 		//Display to client what boss you are for 10 seconds
-		MenuBoss_DisplayBossInfo(iClient, sBossType, 10);
+		MenuBoss_DisplayInfo(iClient, sBossType, 10);
 	}
 }
 

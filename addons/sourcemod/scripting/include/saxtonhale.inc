@@ -6,6 +6,22 @@
 #include <tf2_stocks>
 
 /**
+ * Supported ParamType for calling boss functions, all pass by ref unless noted:
+ * Param_Cell               Integers, but not pass by ref
+ * Param_CellByRef          Integers
+ * Param_Float              Floats, but not pass by ref
+ * Param_FloatByRef         Floats
+ * Param_String             Const strings, not pass by ref
+ * Param_StringByRef        Dynamic strings, must require Param_Cell or Param_CellByRef after this param for size of string
+ * Param_Array              Dynamic array, must require Param_Cell or Param_CellByRef after this param for size of array
+ * Param_Vector             Static array with size 3
+ * Param_Color              Static array with size 4
+ */
+const ParamType Param_StringByRef = view_as<ParamType>((6 << 1)|SP_PARAMFLAG_BYREF);
+const ParamType Param_Vector      = view_as<ParamType>((7 << 1)|SP_PARAMFLAG_BYREF);
+const ParamType Param_Color       = view_as<ParamType>((8 << 1)|SP_PARAMFLAG_BYREF);
+
+/**
  * List of TF2 item quality to set boss's weapon
  */
 enum TFQuality
@@ -13,20 +29,31 @@ enum TFQuality
 	TFQual_None = -1,
 	TFQual_Normal = 0,
 	TFQual_Genuine,
-	TFQual_Rarity2,		//Unused
+	TFQual_Rarity2,         /**< Unused */
 	TFQual_Vintage,
-	TFQual_Rarity3,		//Unused
+	TFQual_Rarity3,         /**< Unused */
 	TFQual_Unusual,
 	TFQual_Unique,
 	TFQual_Community,
-	TFQual_Developer,	//Known as Valve quality
+	TFQual_Developer,       /**< Known as Valve Quality */
 	TFQual_Selfmade,
-	TFQual_Customized,	//Unused
+	TFQual_Customized,      /**< Unused */
 	TFQual_Strange,
-	TFQual_Completed,	//Unused
+	TFQual_Completed,       /**< Unused */
 	TFQual_Haunted,
 	TFQual_Collectors,
 	TFQual_Decorated,
+};
+
+/**
+ * List of class types
+ */
+enum SaxtonHaleClassType
+{
+	VSHClassType_Core,      /**< Core Class from main plugin, called for every client bosses */
+	VSHClassType_Boss,      /**< Boss */
+	VSHClassType_Ability,   /**< Ability */
+	VSHClassType_Modifier,  /**< Modifier */
 };
 
 /**
@@ -45,78 +72,56 @@ enum SaxtonHaleSound
 };
 
 /**
- * Registers a boss to be selected, use more than 1 bosses in 1 native for misc boss
+ * Initialize a function for plugins to use said function
  *
- * @note Make sure plugin unregisters boss once unloaded
+ * @note There can only be 4 max dynamic arrays per function (Param_StringByRef and Param_Array)
  *
- * @param ...               Methodmap constructor of boss type.
- * @noreturn
- * @error                   No params passed, or constructor already exists from boss, modifiers or ability
+ * @param sName             Name of function to create.
+ * @param type              Execution type to be used.
+ * @param ...               Variable number of parameter types
+ * @error                   Function name already initialized, too many ParamType passed, unsupported ParamType, or dynamic arrays not formatted correctly
  */
-native void SaxtonHale_RegisterBoss(const char[] ...);
+native void SaxtonHale_InitFunction(const char[] sName, ExecType type, ParamType ...);
 
 /**
- * Unregisters a boss
+ * Registers a class to be used and selected
  *
- * @note If one of misc boss is removed while other boss still here, it get auto-moved to normal boss pick.
+ * @note Make sure plugin unregisters class once unloaded
  *
- * @param                   sBossType Methodmap constructor of boss type.
- * @noreturn
+ * @param sClass            Methodmap class name to register.
+ * @param nClassType        Type of class, boss, ability or modifier.
+ * @error                   Class name already registered, or VSHClassType_Core passed not from main plugin
  */
-native void SaxtonHale_UnregisterBoss(const char[] sBossType);
+native void SaxtonHale_RegisterClass(const char[] sClass, SaxtonHaleClassType nClassType);
 
 /**
- * Registers a modifier to be selected
+ * Unregisters a class
  *
- * @note Make sure plugin unregisters modifiers once unloaded
- *
- * @param sModifiersType    Methodmap constructor of modifiers type.
- * @noreturn
- * @error                   Constructor already exists from boss, modifiers or ability
+ * @param sClass            Methodmap class name to unregister.
+ * @error                   Class Type is VSHClassType_Core
  */
-native void SaxtonHale_RegisterModifiers(const char[] sModifiersType);
-
-/**
- * Unregisters a modifier
- *
- * @note If one of misc boss is removed while other boss still here, it get auto-moved to normal boss pick.
- *
- * @param sModifiersType    Methodmap constructor of modifiers type.
- * @noreturn
- */
-native void SaxtonHale_UnregisterModifiers(const char[] sModifiersType);
-
-/**
- * Registers an ability to have functions be called
- *
- * @note Make sure plugin unregisters ability once unloaded
- *
- * @param sAbilityType      Methodmap constructor of ability type.
- * @noreturn
- * @error                   Constructor already exists from boss, modifiers or ability
- */
-native void SaxtonHale_RegisterAbility(const char[] sAbilityType);
-
-/**
- * Unregisters an ability
- *
- * @note If one of misc boss is removed while other boss still here, it get auto-moved to normal boss pick.
- *
- * @param sAbilityType      Methodmap constructor of modifiers type.
- * @noreturn
- */
-native void SaxtonHale_UnregisterAbility(const char[] sAbilityType);
+native void SaxtonHale_UnregisterClass(const char[] sClass);
 
 /**
  * Gets constructor's plugin owner
  *
- * @param sType             Methodmap constructor to get plugin owner.
- * @return                  Constructor's plugin owner handle, null if constructor does not exist
+ * @param sClass            Methodmap class name to get plugin owner.
+ * @return                  Class's plugin owner handle, null if constructor does not exist
  */
-native Handle SaxtonHale_GetPlugin(const char[] sType);
+native Handle SaxtonHale_GetPlugin(const char[] sClass);
 
 /**
- * Boss methodmap
+ * Registers multi bosses to be played togther
+ *
+ * @note Make sure SaxtonHale_RegisterClass is used first to register each bosses
+ *
+ * @param ...               Methodmap class name to registers for multi bosses
+ * @error                   Class name already registered, or less than 2 bosses passed
+ */
+native void SaxtonHale_RegisterMultiBoss(const char[] ...);
+
+/**
+ * Client Boss methodmap
  */
 methodmap SaxtonHaleBase
 {
@@ -334,17 +339,6 @@ methodmap SaxtonHaleBase
 const SaxtonHaleBase INVALID_ABILITY = view_as<SaxtonHaleBase>(-1);
 
 /**
- * Initialize a function for plugins to use said function
- *
- * @param sName             Name of function to create.
- * @param type              Execution type to be used.
- * @param ...               Variable number of parameter types
- * @noreturn
- * @error                   Function name already initialized, more than 16 ParamType passed or unsupported ParamType
- */
-native void SaxtonHale_InitFunction(const char[] sName, ExecType type, ParamType ...);
-
-/**
  * Type of hooks
  */
 enum SaxtonHaleHookMode
@@ -357,24 +351,18 @@ enum SaxtonHaleHookMode
  * Callback of hook functions
  */
 typeset SaxtonHaleHookCallback
-{	
+{
 	// Callback when function is being called.
 	//
 	// @param boss          Client boss whose being called.
-	// @param result        Current value to return function as, overriding does nothing.
-	// @noreturn
-	function void (SaxtonHaleBase boss);
-	function void (SaxtonHaleBase boss, any &result);
-	
-	// Callback when function is being called.
-	//
-	// @param boss          Client boss whose being called.
-	// @param result        Current value to return function as, can override if returned higher than Plugin_Continue.
+	// @param result        Optional current value to return function as, can override if returned higher than Plugin_Continue.
 	//
 	// @return              Plugin_Continue if no actions with return and params
 	// @return              Plugin_Changed to override return and params. Note that if hook type is pre, functions may override values agian.
-	// @return              Plugin_Handled to override return and params, prevent further functions and hooks overriding, but still call.
+	// @return              Plugin_Handled to override return and params, Call other functions, but prevent further override.
 	// @return              Plugin_Stop to override return and params even if current return is Plugin_Handled, prevent further functions and hooks called.
+	function void (SaxtonHaleBase boss);
+	function void (SaxtonHaleBase boss, any &result);
 	function Action (SaxtonHaleBase boss);
 	function Action (SaxtonHaleBase boss, any &result);
 }
@@ -384,8 +372,7 @@ typeset SaxtonHaleHookCallback
  *
  * @param sName             Name of function to hook.
  * @param callback          Callback when function get called.
- * @param hookType          Type of hook, pre to call before functions get called, or post to call after functions get called. Overriding return and params work on both pre and post.
- * @noreturn
+ * @param hookType          Type of hook, pre to call before functions called, or post to call after functions called. Overriding return and params work on both pre and post.
  */
 native void SaxtonHale_HookFunction(const char[] sName, SaxtonHaleHookCallback callback, SaxtonHaleHookMode hookType = VSHHookMode_Post);
 
@@ -397,70 +384,65 @@ native void SaxtonHale_HookFunction(const char[] sName, SaxtonHaleHookCallback c
  * @param sName             Name of function to unhook.
  * @param callback          Callback when function get called.
  * @param hookType          Type of hook, pre or post.
- * @noreturn
  */
 native void SaxtonHale_UnhookFunction(const char[] sName, SaxtonHaleHookCallback callback, SaxtonHaleHookMode hookType = VSHHookMode_Post);
 
 /**
- * Get param from function hook
+ * Get param from function hook, supported ParamType Param_Cell, Param_CellByRef, Param_Float, and Param_FloatByRef
  *
  * @param iParam            Param number to get.
  * @return                  Value of param
- * @error                   Called while not inside hook, param outside of bounds, or ParamType not Cell/Float/CellByRef/FloatByRef
+ * @error                   Called while not inside hook, param outside of bounds, or incorrect ParamType
  */
 native any SaxtonHale_GetParam(int iParam);
 
 /**
- * Set param from function hook
+ * Set param to function hook, supported ParamType Param_CellByRef, and Param_FloatByRef
  *
  * @param iParam            Param number to set.
  * @param value             Value to set.
- * @noreturn
- * @error                   Called while not inside hook, param outside of bounds, or ParamType not CellByRef/FloatByRef
+ * @error                   Called while not inside hook, param outside of bounds, or incorrect ParamType
  */
 native void SaxtonHale_SetParam(int iParam, any value);
 
 /**
- * Get array param from function hook
- *
- * @param iParam            Param number to get.
- * @param value             Array value to get.
- * @param iLength           Length of array
- * @noreturn
- * @error                   Called while not inside hook, param outside of bounds, or ParamType not Array
- */
-native void SaxtonHale_GetParamArray(int iParam, any[] value, int iLength);
-
-/**
- * Set array param from function hook
- *
- * @param iParam            Param number to set.
- * @param value             Array value to set.
- * @noreturn
- * @error                   Called while not inside hook, param outside of bounds, or ParamType not Array
- */
-native void SaxtonHale_SetParamArray(int iParam, any[] value);
-
-/**
- * Get string param from function hook
+ * Get string param from function hook, supported ParamType Param_String, and Param_StringByRef
  *
  * @param iParam            Param number to get.
  * @param value             String value to get.
  * @param iLength           Length of string
- * @noreturn
- * @error                   Called while not inside hook, param outside of bounds, or ParamType not String
+ * @error                   Called while not inside hook, param outside of bounds, or incorrect ParamType
  */
 native void SaxtonHale_GetParamString(int iParam, char[] value, int iLength);
 
 /**
- * Set string param from function hook
+ * Set string param to function hook, supported ParamType Param_StringByRef
  *
  * @param iParam            Param number to set.
  * @param value             String value to set.
- * @noreturn
- * @error                   Called while not inside hook, param outside of bounds, or ParamType not String
+ * @error                   Called while not inside hook, param outside of bounds, or incorrect ParamType
  */
-native void SaxtonHale_SetParamString(int iParam, char[] value);
+native void SaxtonHale_SetParamString(int iParam, const char[] value);
+
+/**
+ * Get array param from function hook, supported ParamType Param_Array, Param_Vector, and Param_Color
+ *
+ * @param iParam            Param number to get.
+ * @param value             Array value to get.
+ * @param iLength           Length of array
+ * @error                   Called while not inside hook, param outside of bounds, or incorrect ParamType
+ */
+native void SaxtonHale_GetParamArray(int iParam, any[] value, int iLength);
+
+/**
+ * Set array param to function hook, supported ParamType Param_Array, Param_Vector, and Param_Color
+ *
+ * @param iParam            Param number to set.
+ * @param value             Array value to set.
+ * @param iLength           Length of array
+ * @error                   Called while not inside hook, param outside of bounds, or incorrect ParamType
+ */
+native void SaxtonHale_SetParamArray(int iParam, const any[] value, int iLength);
 
 /**
  * Forward called when boss got telefraged
@@ -468,7 +450,6 @@ native void SaxtonHale_SetParamString(int iParam, char[] value);
  * @param iBoss				Client boss whose got telefraged
  * @param iAttacker 		Client whose took the teleporter
  * @param iTeleporterOwner	Client whose the owner of teleporter used
- * @noreturn
  */
 forward void SaxtonHale_OnTeleportDamage(int iBoss, int iAttacker, int iTeleporterOwner);
 
@@ -477,7 +458,6 @@ forward void SaxtonHale_OnTeleportDamage(int iBoss, int iAttacker, int iTeleport
  *
  * @param iClient		    Client whose done enough backstabs
  * @param iBoss 		    Client boss whose taken damage from backstab
- * @noreturn
  */
 forward void SaxtonHale_OnChainStabs(int iAttacker, int iBoss);
 
@@ -486,7 +466,6 @@ forward void SaxtonHale_OnChainStabs(int iAttacker, int iBoss);
  *
  * @param iClient		    Client that his preferences got updated
  * @param iPreferences	    New preferences
- * @noreturn
  */
 forward void SaxtonHale_OnUpdatePreferences(int iClient, int iPreferences);
 
@@ -495,7 +474,6 @@ forward void SaxtonHale_OnUpdatePreferences(int iClient, int iPreferences);
  *
  * @param iClient	        Client that his queue got updated
  * @param iQueue	        New queue points
- * @noreturn
  */
 forward void SaxtonHale_OnUpdateQueue(int iClient, int iQueue);
 
@@ -504,7 +482,6 @@ forward void SaxtonHale_OnUpdateQueue(int iClient, int iQueue);
  *
  * @param iClient		    Client that his winstreak got updated
  * @param iWinstreak    	New winstreak amount
- * @noreturn
  */
 forward void SaxtonHale_OnUpdateWinstreak(int iClient, int iWinstreak);
 
@@ -563,7 +540,6 @@ native bool SaxtonHale_ForceSpecialRound(int iClient = 0, TFClassType nClass = T
  *
  * @param iClient	    	Client to set new preferences
  * @param preferences	    New preferences to set
- * @noreturn
  * @error                   Invalid client index or client not connected
  */
 native void SaxtonHale_SetPreferences(int iClient, int iPreferences);
@@ -573,7 +549,6 @@ native void SaxtonHale_SetPreferences(int iClient, int iPreferences);
  *
  * @param iClient        	Client to set new preferences
  * @param iQueue        	Queue points to set
- * @noreturn
  * @error                   Invalid client index or client not connected
  */
 native void SaxtonHale_SetQueue(int iClient, int iQueue);
@@ -583,7 +558,6 @@ native void SaxtonHale_SetQueue(int iClient, int iQueue);
  *
  * @param iClient           Client to set new winstreak
  * @param iWinstreak    	Winstreak amount to set
- * @noreturn
  * @error                   Invalid client index or client not connected
  */
 native void SaxtonHale_SetWinstreak(int iClient, int iWinstreak);
@@ -600,7 +574,6 @@ native bool SaxtonHale_IsWinstreakEnable();
  *
  * @param iClient        	Client to set admin status
  * @param bEnable        	True if allow to give admin command, false otherwise
- * @noreturn
  * @error                   Invalid client index or client not connected
  */
 native void SaxtonHale_SetAdmin(int iClient, bool bEnable);
@@ -610,7 +583,6 @@ native void SaxtonHale_SetAdmin(int iClient, bool bEnable);
  *
  * @param iClient        	Client to set punishment status
  * @param bEnable        	True if give punishment, false otherwise
- * @noreturn
  * @error                   Invalid client index or client not connected
  */
 native void SaxtonHale_SetPunishment(int iClient, bool bEnable);
@@ -682,7 +654,6 @@ stock int SaxtonHale_GetScore(int iClient)
  * Precaches sound and add to download table
  *
  * @param sSound            Sound to precache and add to download table
- * @noreturn
  */
 stock void SaxtonHale_PrepareSound(const char[] sSound)
 {
@@ -691,6 +662,28 @@ stock void SaxtonHale_PrepareSound(const char[] sSound)
 	Format(sBuffer, sizeof(sBuffer), "sound/%s", sSound);
 	AddFileToDownloadsTable(sBuffer);
 }
+
+/**
+ * Deprecated functions, do not use
+ */
+
+#pragma deprecated Use SaxtonHale_RegisterClass instead!
+native void SaxtonHale_RegisterBoss(const char[] ...);
+
+#pragma deprecated Use SaxtonHale_UnregisterClass instead!
+native void SaxtonHale_UnregisterBoss(const char[] sBossType);
+
+#pragma deprecated Use SaxtonHale_RegisterClass instead!
+native void SaxtonHale_RegisterModifiers(const char[] sModifiersType);
+
+#pragma deprecated Use SaxtonHale_UnregisterClass instead!
+native void SaxtonHale_UnregisterModifiers(const char[] sModifiersType);
+
+#pragma deprecated Use SaxtonHale_RegisterClass instead!
+native void SaxtonHale_RegisterAbility(const char[] sAbilityType);
+
+#pragma deprecated Use SaxtonHale_UnregisterClass instead!
+native void SaxtonHale_UnregisterAbility(const char[] sAbilityType);
 
 public SharedPlugin __pl_saxtonhale =
 {
@@ -706,13 +699,11 @@ public SharedPlugin __pl_saxtonhale =
 #if !defined REQUIRE_PLUGIN
 public __pl_saxtonhale_SetNTVOptional()
 {
-	MarkNativeAsOptional("SaxtonHale_RegisterBoss");
-	MarkNativeAsOptional("SaxtonHale_UnregisterBoss");
-	MarkNativeAsOptional("SaxtonHale_RegisterModifiers");
-	MarkNativeAsOptional("SaxtonHale_UnregisterModifiers");
-	MarkNativeAsOptional("SaxtonHale_RegisterAbility");
-	MarkNativeAsOptional("SaxtonHale_UnregisterAbility");
+	MarkNativeAsOptional("SaxtonHale_InitFunction");
+	MarkNativeAsOptional("SaxtonHale_RegisterClass");
+	MarkNativeAsOptional("SaxtonHale_UnregisterClass");
 	MarkNativeAsOptional("SaxtonHale_GetPlugin");
+	MarkNativeAsOptional("SaxtonHale_RegisterMultiBoss");
 	
 	MarkNativeAsOptional("SaxtonHaleBase.CallFunction");
 	
@@ -759,17 +750,15 @@ public __pl_saxtonhale_SetNTVOptional()
 	MarkNativeAsOptional("SaxtonHaleBase.nClass.get");
 	MarkNativeAsOptional("SaxtonHaleBase.nClass.set");
 	
-	MarkNativeAsOptional("SaxtonHale_InitFunction");
-	
 	MarkNativeAsOptional("SaxtonHale_HookFunction");
 	MarkNativeAsOptional("SaxtonHale_UnhookFunction");
 	
 	MarkNativeAsOptional("SaxtonHale_GetParam");
 	MarkNativeAsOptional("SaxtonHale_SetParam");
-	MarkNativeAsOptional("SaxtonHale_GetParamArray");
-	MarkNativeAsOptional("SaxtonHale_SetParamArray");
 	MarkNativeAsOptional("SaxtonHale_GetParamString");
 	MarkNativeAsOptional("SaxtonHale_SetParamString");
+	MarkNativeAsOptional("SaxtonHale_GetParamArray");
+	MarkNativeAsOptional("SaxtonHale_SetParamArray");
 	
 	MarkNativeAsOptional("SaxtonHale_GetBossTeam");
 	MarkNativeAsOptional("SaxtonHale_GetAttackTeam");
@@ -783,5 +772,12 @@ public __pl_saxtonhale_SetNTVOptional()
 	MarkNativeAsOptional("SaxtonHale_IsWinstreakEnable");
 	MarkNativeAsOptional("SaxtonHale_SetAdmin");
 	MarkNativeAsOptional("SaxtonHale_SetPunishment");
+	
+	MarkNativeAsOptional("SaxtonHale_RegisterBoss");
+	MarkNativeAsOptional("SaxtonHale_UnregisterBoss");
+	MarkNativeAsOptional("SaxtonHale_RegisterModifiers");
+	MarkNativeAsOptional("SaxtonHale_UnregisterModifiers");
+	MarkNativeAsOptional("SaxtonHale_RegisterAbility");
+	MarkNativeAsOptional("SaxtonHale_UnregisterAbility");
 }
 #endif

@@ -17,8 +17,12 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-#define PLUGIN_VERSION 					"1.2.0"
+#define PLUGIN_VERSION 					"1.3.0"
 #define PLUGIN_VERSION_REVISION 		"manual"
+
+#if !defined SP_MAX_EXEC_PARAMS
+	#define SP_MAX_EXEC_PARAMS			32		//Max possible params in SourcePawn
+#endif
 
 #define MAX_BUTTONS 					26
 #define MAX_TYPE_CHAR					32		//Max char size of methodmaps name
@@ -297,6 +301,7 @@ enum struct NextBoss
 
 ArrayList g_aNextBoss;			//ArrayList of NextBoss struct
 
+//TODO remove all below
 ArrayList g_aBossesType;		//ArrayList of string bosses type
 ArrayList g_aMiscBossesType;	//ArrayList of ArrayList string bosses type
 ArrayList g_aAllBossesType; 	//ArrayList of all bosses
@@ -397,6 +402,13 @@ ConVar tf_arena_preround_time;
 #include "vsh/menu/menu_weapon.sp"
 #include "vsh/menu.sp"
 
+#include "vsh/function/func_stack.sp"
+#include "vsh/function/func_call.sp"
+#include "vsh/function/func_class.sp"
+#include "vsh/function/func_function.sp"
+#include "vsh/function/func_hook.sp"
+#include "vsh/function/func_native.sp"
+
 #include "vsh/classlimit.sp"
 #include "vsh/command.sp"
 #include "vsh/console.sp"
@@ -404,7 +416,6 @@ ConVar tf_arena_preround_time;
 #include "vsh/dome.sp"
 #include "vsh/event.sp"
 #include "vsh/forward.sp"
-#include "vsh/function.sp"
 #include "vsh/hud.sp"
 #include "vsh/native.sp"
 #include "vsh/network.sp"
@@ -428,6 +439,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 {
 	Forward_AskLoad();
 	Native_AskLoad();
+	FuncNative_AskLoad();
 	RegPluginLibrary("saxtonhale");
 	
 	return APLRes_Success;
@@ -479,7 +491,10 @@ public void OnPluginStart()
 	Cookies_Init();
 	Dome_Init();
 	Event_Init();
-	Function_Init();
+	FuncClass_Init();
+	FuncFunction_Init();
+	FuncHook_Init();
+	FuncStack_Init();
 	Menu_Init();
 	NextBoss_Init();
 	TagsCall_Init();
@@ -488,58 +503,61 @@ public void OnPluginStart()
 	SDK_Init();
 	Winstreak_Init();
 	
-	//Add base constructor to list of plugins (dont register!)
-	Handle hPlugin = GetMyHandle();
-	Function_AddPlugin("SaxtonHaleBoss", hPlugin);
-	Function_AddPlugin("SaxtonHaleModifiers", hPlugin);
-	Function_AddPlugin("SaxtonHaleAbility", hPlugin);
+	//Register base constructor
+	SaxtonHale_RegisterClass("SaxtonHaleBoss", VSHClassType_Core);
+	SaxtonHale_RegisterClass("SaxtonHaleModifiers", VSHClassType_Core);
+	SaxtonHale_RegisterClass("SaxtonHaleAbility", VSHClassType_Core);
 	
 	//Register normal bosses
-	SaxtonHale_RegisterBoss("CSaxtonHale");
-	SaxtonHale_RegisterBoss("CPainisCupcake");
-	SaxtonHale_RegisterBoss("CVagineer");
-	SaxtonHale_RegisterBoss("CDemoRobot");
-	SaxtonHale_RegisterBoss("CGentleSpy");
-	SaxtonHale_RegisterBoss("CDemoPan");
-	SaxtonHale_RegisterBoss("CBrutalSniper");
-	SaxtonHale_RegisterBoss("CAnnouncer");
-	SaxtonHale_RegisterBoss("CHorsemann");
-	SaxtonHale_RegisterBoss("CYeti");
+	SaxtonHale_RegisterClass("CSaxtonHale", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CPainisCupcake", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CVagineer", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CDemoRobot", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CGentleSpy", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CDemoPan", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CBrutalSniper", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CAnnouncer", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CHorsemann", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CYeti", VSHClassType_Boss);
 	
 	//Register misc bosses
-	SaxtonHale_RegisterBoss("CSeeMan", "CSeeldier");
-	SaxtonHale_RegisterBoss("CBlutarch", "CRedmond");
+	SaxtonHale_RegisterClass("CSeeMan", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CBlutarch", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CSeeldier", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CRedmond", VSHClassType_Boss);
+	SaxtonHale_RegisterMultiBoss("CSeeMan", "CSeeldier");
+	SaxtonHale_RegisterMultiBoss("CBlutarch", "CRedmond");
 	
 	//Register minions
-	SaxtonHale_RegisterBoss("CSeeldierMinion");
-	SaxtonHale_RegisterBoss("CAnnouncerMinion");
-	SaxtonHale_RegisterBoss("CZombie");
-	
-	//Register modifiers
-	SaxtonHale_RegisterModifiers("CModifiersSpeed");
-	SaxtonHale_RegisterModifiers("CModifiersJump");
-	SaxtonHale_RegisterModifiers("CModifiersHot");
-	SaxtonHale_RegisterModifiers("CModifiersIce");
-	SaxtonHale_RegisterModifiers("CModifiersElectric");
-	SaxtonHale_RegisterModifiers("CModifiersAngry");
+	SaxtonHale_RegisterClass("CSeeldierMinion", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CAnnouncerMinion", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CZombie", VSHClassType_Boss);
 	
 	//Register ability
-	SaxtonHale_RegisterAbility("CBodyEat");
-	SaxtonHale_RegisterAbility("CBraveJump");
-	SaxtonHale_RegisterAbility("CDropModel");
-	SaxtonHale_RegisterAbility("CBomb");
-	SaxtonHale_RegisterAbility("CGroundPound");
-	SaxtonHale_RegisterAbility("CModelOverride");
-	SaxtonHale_RegisterAbility("CRageAddCond");
-	SaxtonHale_RegisterAbility("CRageFreeze");
-	SaxtonHale_RegisterAbility("CRageGhost");
-	SaxtonHale_RegisterAbility("CLightRage");
-	SaxtonHale_RegisterAbility("CScareRage");
-	SaxtonHale_RegisterAbility("CTeleportSwap");
-	SaxtonHale_RegisterAbility("CWallClimb");
-	SaxtonHale_RegisterAbility("CWeaponCharge");
-	SaxtonHale_RegisterAbility("CWeaponFists");
-	SaxtonHale_RegisterAbility("CWeaponSpells");
+	SaxtonHale_RegisterClass("CBodyEat", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CBraveJump", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CDropModel", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CBomb", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CGroundPound", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CModelOverride", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CRageAddCond", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CRageFreeze", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CRageGhost", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CLightRage", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CScareRage", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CTeleportSwap", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CWallClimb", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CWeaponCharge", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CWeaponFists", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CWeaponSpells", VSHClassType_Ability);
+	
+	//Register modifiers
+	SaxtonHale_RegisterClass("CModifiersSpeed", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("CModifiersJump", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("CModifiersHot", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("CModifiersIce", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("CModifiersElectric", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("CModifiersAngry", VSHClassType_Modifier);
 	
 	//Init our convars
 	g_ConfigConvar.Create("vsh_force_load", "-1", "Force enable VSH on map start? (-1 for default, 0 for force disable, 1 for force enable)", _, true, -1.0, true, 1.0);
@@ -700,18 +718,18 @@ public void OnMapStart()
 
 		//Precache every bosses/abilities/modifiers registered
 		SaxtonHaleBase boss = SaxtonHaleBase(0); //client index doesn't matter
-		StringMapSnapshot snapshot = Function_GetPluginSnapshot();
+		ArrayList aClass = FuncClass_GetAll();
 		
-		int iLength = snapshot.Length;
+		int iLength = aClass.Length;
 		for (int i = 0; i < iLength; i++)
 		{
-			char sType[256];
-			snapshot.GetKey(i, sType, sizeof(sType));
+			char sType[MAX_TYPE_CHAR];
+			aClass.GetString(i, sType, sizeof(sType));
 			if (boss.StartFunction(sType, "Precache"))
 				Call_Finish();
 		}
-
-		delete snapshot;
+		
+		delete aClass;
 
 		for (int i = 1; i <= 4; i++)
 		{
