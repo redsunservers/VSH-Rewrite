@@ -173,6 +173,7 @@ public any FuncNative_UnregisterClass(Handle hPlugin, int iNumParams)
 	
 	FuncClass_Unregister(sClass);
 	MenuBoss_RemoveInfo(sClass);
+	NextBoss_Remove(sClass);
 }
 
 //Handle SaxtonHale_GetPlugin(const char[] sClass);

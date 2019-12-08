@@ -6,62 +6,63 @@ void FuncCall_Start(SaxtonHaleBase boss, FuncStack funcStack)
 	if (!FuncHook_Call(boss, funcStack, VSHHookMode_Pre))
 		return;
 	
-	//Calculate dynamic array max size
-	int iArrayCount;
+	//Calculate array max size
 	int iArraySize;
 	for (int iParam = 0; iParam < funcStack.iParamLength; iParam++)
 	{
-		if (funcStack.nParamType[iParam] == Param_StringByRef || funcStack.nParamType[iParam] == Param_Array)
+		int iBuffer = 0;
+		
+		switch (funcStack.nParamType[iParam])
 		{
-			iArrayCount++;
-			int iBuffer = funcStack.GetArrayLength(iParam);
-			if (iBuffer > iArraySize)
-				iArraySize = iBuffer;
+			case Param_String, Param_StringByRef, Param_Array: iBuffer = funcStack.GetArrayLength(iParam);
+			case Param_Vector: iBuffer = 3;
+			case Param_Color: iBuffer = 4;
 		}
+		
+		if (iBuffer > iArraySize)
+			iArraySize = iBuffer;
 	}
 	
-	//Create dynamic and static arrays by reference
-	any[][] arrayDynamic = new any[iArrayCount][iArraySize];
-	any arrayStatic[SP_MAX_EXEC_PARAMS][4];
+	//Create arrays by reference
+	any[][] array = new any[funcStack.iParamLength][iArraySize];
 	
 	//Get dynamic and static array values
-	int iDynamicCount = 0;
 	for (int iParam = 0; iParam < funcStack.iParamLength; iParam++)
 	{
 		switch (funcStack.nParamType[iParam])
 		{
-			case Param_StringByRef, Param_Array:
+			case Param_String, Param_StringByRef, Param_Array:
 			{
-				funcStack.GetArray(iParam+1, arrayDynamic[iDynamicCount++]);
+				funcStack.GetArray(iParam+1, array[iParam]);
 			}
 			case Param_Vector:
 			{
-				arrayStatic[iParam][0] = funcStack.array0[iParam];
-				arrayStatic[iParam][1] = funcStack.array1[iParam];
-				arrayStatic[iParam][2] = funcStack.array2[iParam];
+				array[iParam][0] = funcStack.array0[iParam];
+				array[iParam][1] = funcStack.array1[iParam];
+				array[iParam][2] = funcStack.array2[iParam];
 			}
 			case Param_Color:
 			{
-				arrayStatic[iParam][0] = funcStack.array0[iParam];
-				arrayStatic[iParam][1] = funcStack.array1[iParam];
-				arrayStatic[iParam][2] = funcStack.array2[iParam];
-				arrayStatic[iParam][3] = funcStack.array3[iParam];
+				array[iParam][0] = funcStack.array0[iParam];
+				array[iParam][1] = funcStack.array1[iParam];
+				array[iParam][2] = funcStack.array2[iParam];
+				array[iParam][3] = funcStack.array3[iParam];
 			}
 		}
 	}
 	
 	//Call base_boss
-	if (!FuncCall_Call(boss, "SaxtonHaleBoss", funcStack, arrayDynamic, iArraySize, arrayStatic))
+	if (!FuncCall_Call(boss, "SaxtonHaleBoss", funcStack, array, iArraySize))
 		return;
 	
 	//Call boss specific
 	SaxtonHaleBoss saxtonBoss = view_as<SaxtonHaleBoss>(boss);
 	saxtonBoss.GetBossType(sBuffer, sizeof(sBuffer));
-	if (!FuncCall_Call(boss, sBuffer, funcStack, arrayDynamic, iArraySize, arrayStatic))
+	if (!FuncCall_Call(boss, sBuffer, funcStack, array, iArraySize))
 		return;
 	
 	//Call base_ability
-	if (!FuncCall_Call(boss, "SaxtonHaleAbility", funcStack, arrayDynamic, iArraySize, arrayStatic))
+	if (!FuncCall_Call(boss, "SaxtonHaleAbility", funcStack, array, iArraySize))
 		return;
 	
 	//Call every abilites from boss
@@ -70,45 +71,44 @@ void FuncCall_Start(SaxtonHaleBase boss, FuncStack funcStack)
 		SaxtonHaleAbility saxtonAbility = view_as<SaxtonHaleAbility>(boss);
 		saxtonAbility.GetAbilityType(sBuffer, sizeof(sBuffer), i);
 		if (!StrEmpty(sBuffer))
-			if (!FuncCall_Call(boss, sBuffer, funcStack, arrayDynamic, iArraySize, arrayStatic))
+			if (!FuncCall_Call(boss, sBuffer, funcStack, array, iArraySize))
 				return;
 	}
 	
 	if (boss.bModifiers)
 	{
 		//Call base_modifiers
-		if (!FuncCall_Call(boss, "SaxtonHaleModifiers", funcStack, arrayDynamic, iArraySize, arrayStatic))
+		if (!FuncCall_Call(boss, "SaxtonHaleModifiers", funcStack, array, iArraySize))
 			return;
 		
 		//Call modifier specific
 		SaxtonHaleModifiers saxtonModifiers = view_as<SaxtonHaleModifiers>(boss);
 		saxtonModifiers.GetModifiersType(sBuffer, sizeof(sBuffer));
-		if (!FuncCall_Call(boss, sBuffer, funcStack, arrayDynamic, iArraySize, arrayStatic))
+		if (!FuncCall_Call(boss, sBuffer, funcStack, array, iArraySize))
 			return;
 	}
 	
-	//Set dynamic and static arrays back
-	iDynamicCount = 0;
+	//Set arrays back
 	for (int iParam = 0; iParam < funcStack.iParamLength; iParam++)
 	{
 		switch (funcStack.nParamType[iParam])
 		{
 			case Param_StringByRef, Param_Array:
 			{
-				funcStack.SetArray(iParam+1, arrayDynamic[iDynamicCount++]);
+				funcStack.SetArray(iParam+1, array[iParam]);
 			}
 			case Param_Vector:
 			{
-				funcStack.array0[iParam] = arrayStatic[iParam][0];
-				funcStack.array1[iParam] = arrayStatic[iParam][1];
-				funcStack.array2[iParam] = arrayStatic[iParam][2];
+				funcStack.array0[iParam] = array[iParam][0];
+				funcStack.array1[iParam] = array[iParam][1];
+				funcStack.array2[iParam] = array[iParam][2];
 			}
 			case Param_Color:
 			{
-				funcStack.array0[iParam] = arrayStatic[iParam][0];
-				funcStack.array1[iParam] = arrayStatic[iParam][1];
-				funcStack.array2[iParam] = arrayStatic[iParam][2];
-				funcStack.array3[iParam] = arrayStatic[iParam][3];
+				funcStack.array0[iParam] = array[iParam][0];
+				funcStack.array1[iParam] = array[iParam][1];
+				funcStack.array2[iParam] = array[iParam][2];
+				funcStack.array3[iParam] = array[iParam][3];
 			}
 		}
 	}
@@ -117,14 +117,13 @@ void FuncCall_Start(SaxtonHaleBase boss, FuncStack funcStack)
 	FuncHook_Call(boss, funcStack, VSHHookMode_Post);
 }
 
-bool FuncCall_Call(SaxtonHaleBase boss, const char[] sClass, FuncStack funcStack, any[][] arrayDynamic, int iArraySize, any arrayStatic[SP_MAX_EXEC_PARAMS][4])
+bool FuncCall_Call(SaxtonHaleBase boss, const char[] sClass, FuncStack funcStack, any[][] array, int iArraySize)
 {
 	//Start function if valid
 	if (!boss.StartFunction(sClass, funcStack.sFunction))
 		return true;
 	
 	int iCopyback = (funcStack.action <= Plugin_Changed) ? SM_PARAM_COPYBACK : 0;
-	int iDynamicCount = 0;
 	
 	//Push params
 	for (int iParam = 0; iParam < funcStack.iParamLength; iParam++)
@@ -165,26 +164,23 @@ bool FuncCall_Call(SaxtonHaleBase boss, const char[] sClass, FuncStack funcStack
 			}
 			case Param_String:
 			{
-				int iLength = funcStack.GetArrayLength(iParam);
-				char[] sBuffer = new char[iLength];
-				funcStack.GetArray(iParam, view_as<any>(sBuffer));
-				Call_PushString(sBuffer);
+				Call_PushString(view_as<char>(array[iParam]));
 			}
 			case Param_StringByRef:
 			{
-				Call_PushStringEx(view_as<char>(arrayDynamic[iDynamicCount++]), iArraySize, SM_PARAM_STRING_UTF8|SM_PARAM_STRING_COPY, iCopyback);
+				Call_PushStringEx(view_as<char>(array[iParam]), iArraySize, SM_PARAM_STRING_UTF8|SM_PARAM_STRING_COPY, iCopyback);
 			}
 			case Param_Array:
 			{
-				Call_PushArrayEx(arrayDynamic[iDynamicCount++], iArraySize, iCopyback);
+				Call_PushArrayEx(array[iParam], iArraySize, iCopyback);
 			}
 			case Param_Vector:
 			{
-				Call_PushArrayEx(arrayStatic[iParam], 3, iCopyback);
+				Call_PushArrayEx(array[iParam], 3, iCopyback);
 			}
 			case Param_Color:
 			{
-				Call_PushArrayEx(arrayStatic[iParam], 4, iCopyback);
+				Call_PushArrayEx(array[iParam], 4, iCopyback);
 			}
 		}
 	}
