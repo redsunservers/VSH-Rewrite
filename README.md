@@ -1,4 +1,4 @@
-# VSH-Rewrite [![Action Status](https://github.com/redsunservers/VSH-Rewrite/workflows/Package/badge.svg)](https://github.com/redsunservers/VSH-Rewrite/actions?query=workflow%3APackage)
+# VSH-Rewrite [![Action Status](https://github.com/redsunservers/VSH-Rewrite/workflows/Package/badge.svg)](https://github.com/redsunservers/VSH-Rewrite/actions?query=workflow%3APackage+branch%3Amaster)
 
 A complete rewrite for one of the largest custom gamemodes, Versus Saxton Hale. [Originaly made by Eggman, released public on 1st February 2011](https://forums.alliedmods.net/showthread.php?t=146884?t=146884)
 VSH-Rewrite started its development by [Kenzzer](https://github.com/Kenzzer) at alpha stage on November 4th 2017, then continued by [42](https://github.com/FortyTwoFortyTwo) from 18th October 2018. Plugin then released public on September 17th 2019.
@@ -11,7 +11,7 @@ VSH-Rewrite started its development by [Kenzzer](https://github.com/Kenzzer) at 
 - Winstreak. Everytime boss wins a round, health pool gets smaller until a single boss death to reset all progress, for players to take the challenge
 
 ## Builds
-All builds can be found [here](https://github.com/redsunservers/VSH-Rewrite/actions?query=workflow%3APackage).
+All builds can be found [here](https://github.com/redsunservers/VSH-Rewrite/actions?query=workflow%3APackage+branch%3Amaster).
 To download latest build version, select latest package then "Artifacts" button at top right.
 
 ## Requirements
