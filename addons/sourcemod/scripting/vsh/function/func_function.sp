@@ -120,11 +120,6 @@ stock int FuncFunction_GetParamType(const char[] sFunction, ParamType nParamType
 	return funcFunction.iParamLength;
 }
 
-stock bool FuncFunction_IsParamTypeDynamic(ParamType nParamType)
-{
-	return nParamType == Param_StringByRef || nParamType == Param_Array;
-}
-
 stock bool FuncFunction_GetParamTypeName(ParamType nParamType, char[] sBuffer, int iLength)
 {
 	switch (nParamType)

@@ -74,8 +74,6 @@ enum SaxtonHaleSound
 /**
  * Initialize a function for plugins to use said function
  *
- * @note There can only be 4 max dynamic arrays per function (Param_StringByRef and Param_Array)
- *
  * @param sName             Name of function to create.
  * @param type              Execution type to be used.
  * @param ...               Variable number of parameter types

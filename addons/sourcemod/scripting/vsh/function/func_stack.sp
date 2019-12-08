@@ -79,17 +79,6 @@ enum struct FuncStack
 		buffer[3] = this.array3[iParam-1];
 	}
 	
-	void GetArrayAll(any buffer[SP_MAX_EXEC_PARAMS][4])
-	{
-		for (int i = 0; i < this.iParamLength; i++)
-		{
-			buffer[i][0] = this.array0[i];
-			buffer[i][1] = this.array1[i];
-			buffer[i][2] = this.array2[i];
-			buffer[i][3] = this.array3[i];
-		}
-	}
-	
 	void SetCell(int iParam, any value)
 	{
 		this.cell[iParam-1] = value;
@@ -113,17 +102,6 @@ enum struct FuncStack
 		this.array1[iParam-1] = value[1];
 		this.array2[iParam-1] = value[2];
 		this.array3[iParam-1] = value[3];
-	}
-	
-	void SetArrayAll(const any buffer[SP_MAX_EXEC_PARAMS][4])
-	{
-		for (int i = 0; i < this.iParamLength; i++)
-		{
-			this.array0[i] = buffer[i][0];
-			this.array1[i] = buffer[i][1];
-			this.array2[i] = buffer[i][2];
-			this.array3[i] = buffer[i][3];
-		}
 	}
 	
 	void Delete()

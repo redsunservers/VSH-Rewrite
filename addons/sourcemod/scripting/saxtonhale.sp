@@ -300,13 +300,6 @@ enum struct NextBoss
 }
 
 ArrayList g_aNextBoss;			//ArrayList of NextBoss struct
-
-//TODO remove all below
-ArrayList g_aBossesType;		//ArrayList of string bosses type
-ArrayList g_aMiscBossesType;	//ArrayList of ArrayList string bosses type
-ArrayList g_aAllBossesType; 	//ArrayList of all bosses
-ArrayList g_aModifiersType;		//ArrayList of modifiers
-
 Handle g_hTimerBossMusic;
 char g_sBossMusic[PLATFORM_MAX_PATH];
 int g_iHealthBarHealth;
@@ -478,10 +471,6 @@ public void OnPluginStart()
 	boss.bModifiers = true;
 	
 	g_aNextBoss = new ArrayList(sizeof(NextBoss));
-	g_aBossesType = new ArrayList(MAX_TYPE_CHAR);
-	g_aMiscBossesType = new ArrayList();
-	g_aAllBossesType = new ArrayList(MAX_TYPE_CHAR);
-	g_aModifiersType = new ArrayList(MAX_TYPE_CHAR);
 	
 	Config_Init();
 	

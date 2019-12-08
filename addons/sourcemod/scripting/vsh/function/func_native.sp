@@ -77,7 +77,6 @@ public any FuncNative_InitFunction(Handle hPlugin, int iNumParams)
 	//Push all ParamType to array
 	ParamType nParamType[SP_MAX_EXEC_PARAMS];
 	bool bDynamicArray = false;
-	int iDynamicArrayCount = 0;
 	
 	for (int iParam = 0; iParam < iNumParams; iParam++)
 	{
@@ -124,17 +123,7 @@ public any FuncNative_InitFunction(Handle hPlugin, int iNumParams)
 			ThrowNativeError(SP_ERROR_NATIVE, "Expected Param_Cell or Param_CellByRef, but found %s (Param %d) for %s (Param %d)", sParamTypeName1, iParam+1, sParamTypeName2, iParam-1);
 		}
 		
-		bDynamicArray = false;
-		
-		//If dynamic array size, check if reached max supported
-		if (FuncFunction_IsParamTypeDynamic(nParamType[iParam]))
-		{
-			bDynamicArray = true;
-			iDynamicArrayCount++;
-			
-			if (iDynamicArrayCount > 4)
-				ThrowNativeError(SP_ERROR_NATIVE, "Reached max allowed dynamic array size (Max 4)");
-		}
+		bDynamicArray = nParamType[iParam] == Param_StringByRef || nParamType[iParam] == Param_Array;
 	}
 	
 	//Check for dynamic array length but at end of params

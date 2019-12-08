@@ -1,5 +1,9 @@
+static ArrayList g_aNextBossMulti;
+
 void NextBoss_Init()
 {
+	g_aNextBossMulti = new ArrayList();
+	
 	g_ConfigConvar.Create("vsh_boss_chance_saxton", "0.25", "% chance for next boss to be Saxton Hale (0.0 - 1.0)", _, true, 0.0, true, 1.0);
 	g_ConfigConvar.Create("vsh_boss_chance_multi", "0.20", "% chance for next boss to be multiple bosses (after Saxton Hale roll) (0.0 - 1.0)", _, true, 0.0, true, 1.0);
 	g_ConfigConvar.Create("vsh_boss_chance_modifiers", "0.15", "% chance for next boss to have random modifiers (0.0 - 1.0)", _, true, 0.0, true, 1.0);
@@ -239,9 +243,7 @@ stock int GetRandomBosses(char[] sBosses, int iLength, bool bDuo = false)
 	//Saxton Hale should always be 0 in ArrayList
 	if (GetRandomFloat(0.0, 1.0) <= g_ConfigConvar.LookupFloat("vsh_boss_chance_saxton"))
 	{
-		char sBossType[MAX_TYPE_CHAR];
-		g_aBossesType.GetString(0, sBossType, sizeof(sBossType));
-		Format(sBosses, iLength, sBossType);
+		Format(sBosses, iLength, "CSaxtonHale");
 		return;
 	}
 	
@@ -393,4 +395,39 @@ stock void GetNextBossName(NextBoss nextStruct, char[] sBuffer, int iLength)
 	}
 	
 	Format(sBuffer, iLength, "%s%s", sBuffer, sBossName);
+}
+
+void NextBoss_AddMulti(ArrayList aBosses)
+{
+	g_aNextBossMulti.Push(aBosses);
+}
+
+void NextBoss_RemoveMultiArray(ArrayList aBosses)
+{
+	int iLength = g_aNextBossMulti.Length;
+	for (int i = iLength; i >= 0; i--)
+	{
+		ArrayList aMultiBoss = g_aNextBossMulti.Get(0);
+		
+		int iMultiLength = aMultiBoss.Length;
+		for (int j = iMultiLength; j >= 0; j--)
+		{
+			char sMultiBoss[MAX_TYPE_CHAR];
+			aMultiBoss.GetString(j, sMultiBoss, sizeof(sMultiBoss));
+			
+			int iIndex = aBosses.FindString(sMultiBoss);
+			if (iIndex >= 0)
+			{
+				//Erase multi boss from normal array
+				aBosses.Erase(iIndex);
+			}
+			else
+			{
+				//Multi boss doesnt exist, erase from multi array
+				aMultiBoss.Erase(j);
+				
+				if ()
+			}
+		}
+	}
 }

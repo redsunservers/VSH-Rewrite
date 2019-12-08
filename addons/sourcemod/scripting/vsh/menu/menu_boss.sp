@@ -21,7 +21,7 @@ void MenuBoss_Init()
 /*
  * Display list of bosses/modifiers
  */
- 
+
 void MenuBoss_DisplayBossList(int iClient, MenuBossListCallback callback, int iFlags = 0)
 {
 	Menu hMenuList = new Menu(MenuBoss_SelectList);
@@ -35,12 +35,13 @@ void MenuBoss_DisplayBossList(int iClient, MenuBossListCallback callback, int iF
 		hMenuList.AddItem("none", "None");
 	
 	//Loop through every bosses
-	int iLength = g_aAllBossesType.Length;
+	ArrayList aBosses = FuncClass_GetAllType(VSHClassType_Boss);
+	int iLength = aBosses.Length;
 	for (int i = 0; i < iLength; i++)
 	{
 		//Get boss type
 		char sBossType[MAX_TYPE_CHAR];
-		g_aAllBossesType.GetString(i, sBossType, sizeof(sBossType));
+		aBosses.GetString(i, sBossType, sizeof(sBossType));
 		
 		SaxtonHaleBase boss = SaxtonHaleBase(0);
 		boss.CallFunction("SetBossType", sBossType);
@@ -57,6 +58,7 @@ void MenuBoss_DisplayBossList(int iClient, MenuBossListCallback callback, int iF
 		hMenuList.AddItem(sBossType, sName);
 	}
 	
+	delete aBosses;
 	g_fMenuBossCallback[iClient] = callback;
 	hMenuList.Display(iClient, MENU_TIME_FOREVER);
 }
@@ -73,13 +75,14 @@ void MenuBoss_DisplayModifiersList(int iClient, MenuBossListCallback callback, i
 	if (iFlags & MenuBossFlags_None)
 		hMenuList.AddItem("none", "None");
 	
-	//Loop through every bosses
-	int iLength = g_aModifiersType.Length;
+	//Loop through every modifiers
+	ArrayList aModifiers = FuncClass_GetAllType(VSHClassType_Modifier);
+	int iLength = aModifiers.Length;
 	for (int i = 0; i < iLength; i++)
 	{
 		//Get boss type
 		char sModifiersType[MAX_TYPE_CHAR];
-		g_aModifiersType.GetString(i, sModifiersType, sizeof(sModifiersType));
+		aModifiers.GetString(i, sModifiersType, sizeof(sModifiersType));
 		
 		SaxtonHaleBase boss = SaxtonHaleBase(0);
 		boss.CallFunction("SetModifiersType", sModifiersType);
@@ -96,6 +99,7 @@ void MenuBoss_DisplayModifiersList(int iClient, MenuBossListCallback callback, i
 		hMenuList.AddItem(sModifiersType, sName);
 	}
 	
+	delete aModifiers;
 	g_fMenuBossCallback[iClient] = callback;
 	hMenuList.Display(iClient, MENU_TIME_FOREVER);
 }
