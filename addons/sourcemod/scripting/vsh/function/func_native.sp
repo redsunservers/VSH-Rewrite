@@ -229,6 +229,7 @@ public any FuncNative_CallFunction(Handle hPlugin, int iNumParams)
 				if (iError != SP_ERROR_NONE)
 					ThrowNativeError(SP_ERROR_NATIVE, "Unable to get string value (param %d, error code %d)", iParam, iError);
 				
+				iLength++;
 				char[] sBuffer = new char[iLength];
 				GetNativeString(iParam+2, sBuffer, iLength);
 				funcStack.PushArray(view_as<any>(sBuffer), iLength, Param_String);
@@ -417,7 +418,7 @@ public any FuncNative_GetParamStringLength(Handle hPlugin, int iNumParams)
 	{
 		char sParamTypeName[32];
 		FuncFunction_GetParamTypeName(nParamType, sParamTypeName, sizeof(sParamTypeName));
-		ThrowNativeError(SP_ERROR_NATIVE, "Unable to get string from %s (Function %s, param %d)", sParamTypeName, funcStack.sFunction, iParam);
+		ThrowNativeError(SP_ERROR_NATIVE, "Unable to get string length from %s (Function %s, param %d)", sParamTypeName, funcStack.sFunction, iParam);
 	}
 	
 	//return string length
@@ -466,6 +467,8 @@ public any FuncNative_SetParamString(Handle hPlugin, int iNumParams)
 	//Get and set string
 	int iLength;
 	GetNativeStringLength(2, iLength);
+	
+	iLength++;
 	char[] sBuffer = new char[iLength];
 	GetNativeString(2, sBuffer, iLength);
 	funcStack.SetArray(iParam, view_as<any>(sBuffer));

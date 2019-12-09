@@ -72,7 +72,7 @@ enum SaxtonHaleSound
 };
 
 /**
- * Initialize a function for plugins to use said function
+ * Initialize a function for methodmap class to use
  *
  * @param sName             Name of function to create.
  * @param type              Execution type to be used.
@@ -101,10 +101,10 @@ native void SaxtonHale_RegisterClass(const char[] sClass, SaxtonHaleClassType nC
 native void SaxtonHale_UnregisterClass(const char[] sClass);
 
 /**
- * Gets constructor's plugin owner
+ * Gets class's plugin owner
  *
  * @param sClass            Methodmap class name to get plugin owner.
- * @return                  Class's plugin owner handle, null if constructor does not exist
+ * @return                  Class's plugin owner handle, null if class does not exist
  */
 native Handle SaxtonHale_GetPlugin(const char[] sClass);
 
@@ -762,6 +762,7 @@ public __pl_saxtonhale_SetNTVOptional()
 	
 	MarkNativeAsOptional("SaxtonHale_GetParam");
 	MarkNativeAsOptional("SaxtonHale_SetParam");
+	MarkNativeAsOptional("SaxtonHale_GetParamStringLength");
 	MarkNativeAsOptional("SaxtonHale_GetParamString");
 	MarkNativeAsOptional("SaxtonHale_SetParamString");
 	MarkNativeAsOptional("SaxtonHale_GetParamArray");

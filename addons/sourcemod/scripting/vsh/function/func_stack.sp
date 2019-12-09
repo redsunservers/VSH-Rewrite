@@ -143,6 +143,22 @@ bool FuncStack_Set(FuncStack funcStack)
 	return true;
 }
 
+bool FuncStack_Clone(FuncStack funcStack)
+{
+	int iPos = g_aFuncStack.Length-1;
+	if (iPos < 0)
+		return false;
+	
+	g_aFuncStack.GetArray(iPos, funcStack);
+	
+	//Clone arrays
+	for (int i = 0; i < funcStack.iParamLength; i++)
+		if (funcStack.array[i])
+			funcStack.array[i] = funcStack.array[i].Clone();
+	
+	return true;
+}
+
 bool FuncStack_Erase()
 {
 	int iPos = g_aFuncStack.Length-1;

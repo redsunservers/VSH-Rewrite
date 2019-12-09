@@ -7,14 +7,15 @@ void FuncCall_Start(SaxtonHaleBase boss, FuncStack funcStack)
 		return;
 	
 	//Calculate array max size
-	int iArraySize;
+	int iParamLength = (funcStack.iParamLength > 0) ? funcStack.iParamLength : 1;
+	int iArraySize = 1;
 	for (int iParam = 0; iParam < funcStack.iParamLength; iParam++)
 	{
 		int iBuffer = 0;
 		
 		switch (funcStack.nParamType[iParam])
 		{
-			case Param_String, Param_StringByRef, Param_Array: iBuffer = funcStack.GetArrayLength(iParam);
+			case Param_String, Param_StringByRef, Param_Array: iBuffer = funcStack.GetArrayLength(iParam+1);
 			case Param_Vector: iBuffer = 3;
 			case Param_Color: iBuffer = 4;
 		}
@@ -24,7 +25,7 @@ void FuncCall_Start(SaxtonHaleBase boss, FuncStack funcStack)
 	}
 	
 	//Create arrays by reference
-	any[][] array = new any[funcStack.iParamLength][iArraySize];
+	any[][] array = new any[iParamLength][iArraySize];
 	
 	//Get dynamic and static array values
 	for (int iParam = 0; iParam < funcStack.iParamLength; iParam++)

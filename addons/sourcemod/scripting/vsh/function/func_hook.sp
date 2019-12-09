@@ -49,15 +49,16 @@ bool FuncHook_Call(SaxtonHaleBase boss, FuncStack funcStack, SaxtonHaleHookMode 
 		return true;
 	}
 	
-	//Create buffer incase Plugin_Continue is returned
-	FuncStack buffer;
-	buffer = funcStack;
+	FuncStack_Set(funcStack);	//Set current stack for hooks to get new params
+	
+	FuncStack funcClone;
+	FuncStack_Clone(funcClone);	//Clone with new, old handle values
 	
 	//Start call
 	Call_StartForward(hPrivateForward);
 	Call_PushCell(boss);
 	
-	any returnValue = buffer.returnValue;
+	any returnValue = funcStack.returnValue;
 	Call_PushCellRef(returnValue);
 	
 	Action action;
@@ -68,22 +69,27 @@ bool FuncHook_Call(SaxtonHaleBase boss, FuncStack funcStack, SaxtonHaleHookMode 
 	//If new action is stop, set return and stop chain
 	if (action == Plugin_Stop)
 	{
+		funcClone.Delete();
+		FuncStack_Get(funcStack);
 		funcStack.returnValue = returnValue;
 		funcStack.action = Plugin_Stop;
 		return false;
 	}
 	
-	//If new action is higher or equal to current action and not handled, set new return value
-	else if (action >= buffer.action && buffer.action != Plugin_Handled)
+	//If new action is changed and current action not handled, get new params and set new return value
+	else if (action >= Plugin_Changed && funcStack.action != Plugin_Handled)
 	{
+		funcClone.Delete();
+		FuncStack_Get(funcStack);
 		funcStack.returnValue = returnValue;
 		funcStack.action = action;
 	}
 	
-	//Otherwise prevent parmas overriding
+	//Prevent any changed handles
 	else
 	{
-		funcStack = buffer;
+		funcStack.Delete();
+		funcStack = funcClone;
 	}
 	
 	return true;
