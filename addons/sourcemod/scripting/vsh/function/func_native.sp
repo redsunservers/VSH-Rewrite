@@ -20,6 +20,7 @@ void FuncNative_AskLoad()
 	
 	CreateNative("SaxtonHale_GetParam", FuncNative_GetParam);
 	CreateNative("SaxtonHale_SetParam", FuncNative_SetParam);
+	CreateNative("SaxtonHale_GetParamStringLength", FuncNative_GetParamStringLength);
 	CreateNative("SaxtonHale_GetParamString", FuncNative_GetParamString);
 	CreateNative("SaxtonHale_SetParamString", FuncNative_SetParamString);
 	CreateNative("SaxtonHale_GetParamArray", FuncNative_GetParamArray);
@@ -173,7 +174,7 @@ public any FuncNative_UnregisterClass(Handle hPlugin, int iNumParams)
 	
 	FuncClass_Unregister(sClass);
 	MenuBoss_RemoveInfo(sClass);
-	NextBoss_Remove(sClass);
+	NextBoss_RemoveMulti(sClass);
 }
 
 //Handle SaxtonHale_GetPlugin(const char[] sClass);
@@ -401,6 +402,26 @@ public any FuncNative_SetParam(Handle hPlugin, int iNumParams)
 	//Get and set value
 	funcStack.cell[iParam-1] = GetNativeCell(2);
 	FuncStack_Set(funcStack);
+}
+
+//int SaxtonHale_GetParamStringLength(int iParam);
+public any FuncNative_GetParamStringLength(Handle hPlugin, int iNumParams)
+{
+	//Get param + checks
+	FuncStack funcStack;
+	ParamType nParamType;
+	int iParam = FuncNative_GetFuncStack(funcStack, nParamType);
+	
+	//Check for non-string ParamType
+	if (nParamType != Param_String && nParamType != Param_StringByRef)
+	{
+		char sParamTypeName[32];
+		FuncFunction_GetParamTypeName(nParamType, sParamTypeName, sizeof(sParamTypeName));
+		ThrowNativeError(SP_ERROR_NATIVE, "Unable to get string from %s (Function %s, param %d)", sParamTypeName, funcStack.sFunction, iParam);
+	}
+	
+	//return string length
+	return funcStack.GetArrayLength(iParam);
 }
 
 //void SaxtonHale_GetParamString(int iParam, char[] value);

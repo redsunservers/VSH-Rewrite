@@ -287,7 +287,7 @@ stock void NextBoss_AddMulti(ArrayList aBosses)
 	g_aNextBossMulti.Push(aBosses);
 }
 
-stock void NextBoss_Remove(const char[] sBoss)
+stock void NextBoss_RemoveMulti(const char[] sBoss)
 {
 	int iLength = g_aNextBossMulti.Length;
 	for (int i = 0; i < iLength; i++)

@@ -404,6 +404,15 @@ native any SaxtonHale_GetParam(int iParam);
 native void SaxtonHale_SetParam(int iParam, any value);
 
 /**
+ * Get string param size from function hook, supported ParamType Param_String, and Param_StringByRef
+ *
+ * @param iParam            Param number to get.
+ * @return                  Length of string
+ * @error                   Called while not inside hook, param outside of bounds, or incorrect ParamType
+ */
+native int SaxtonHale_GetParamStringLength(int iParam);
+
+/**
  * Get string param from function hook, supported ParamType Param_String, and Param_StringByRef
  *
  * @param iParam            Param number to get.
