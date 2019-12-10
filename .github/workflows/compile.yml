@@ -10,7 +10,7 @@ jobs:
     
     steps:
       - name: Checkout
-        uses: actions/checkout@master
+        uses: actions/checkout@v1
       
       - name: Environments
         run: |
@@ -23,4 +23,4 @@ jobs:
       - name: Compile
         run: |
           cd build/addons/sourcemod/scripting
-          ./spcomp-custom-$SM_VERSION saxtonhale.sp -o ../plugins/saxtonhale.smx
+          ./spcomp-custom-$SM_VERSION -E saxtonhale.sp -o ../plugins/saxtonhale.smx

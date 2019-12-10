@@ -265,7 +265,7 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 	public Action OnAttackDamage(int &victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 	{
 		//Don't allow minion attack boss team
-		if (this.iClient != victim && GetClientTeam(victim) == BOSS_TEAM)
+		if (this.iClient != victim && TF2_GetClientTeam(victim) == TFTeam_Boss)
 		{
 			damage = 0.0;
 			return Plugin_Stop;
@@ -280,7 +280,7 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 			return Plugin_Continue;
 		
 		//Don't allow minion take damage from boss team
-		if (this.iClient != attacker && GetClientTeam(attacker) == BOSS_TEAM)
+		if (this.iClient != attacker && TF2_GetClientTeam(attacker) == TFTeam_Boss)
 		{
 			damage = 0.0;
 			return Plugin_Stop;
@@ -318,7 +318,7 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 	{
 		//Ring effect, only show to whoever in boss team or spectators
 		
-		if (GetClientTeam(this.iClient) != BOSS_TEAM && IsPlayerAlive(this.iClient))
+		if (GetClientTeam(this.iClient) != TFTeam_Boss && IsPlayerAlive(this.iClient))
 		{
 			float vecPos[3];
 			GetClientAbsOrigin(this.iClient, vecPos);
@@ -367,7 +367,7 @@ public Action Timer_AnnouncerChangeTeam(Handle hTimer, int iClient)
 	if (hTimer != g_hAnnouncerMinionTimer[iClient])
 		return;
 	
-	if (GetClientTeam(iClient) == BOSS_TEAM || GetClientTeam(iClient) <= 1 || !IsPlayerAlive(iClient))
+	if (TF2_GetClientTeam(iClient) == TFTeam_Boss || TF2_GetClientTeam(iClient) <= TFTeam_Spectator || !IsPlayerAlive(iClient))
 		return;
 	
 	if (g_iAnnouncerMinionTimeLeft[iClient] > 0)
@@ -381,9 +381,9 @@ public Action Timer_AnnouncerChangeTeam(Handle hTimer, int iClient)
 	
 	PrintCenterText(iClient, "YOU'RE NOW IN BOSS TEAM");
 	
-	Client_AddFlag(iClient, haleClientFlags_BossTeam);
+	Client_AddFlag(iClient, ClientFlags_BossTeam);
 	SetEntProp(iClient, Prop_Send, "m_lifeState", LifeState_Dead);
-	ChangeClientTeam(iClient, BOSS_TEAM);
+	TF2_ChangeClientTeam(iClient, TFTeam_Boss);
 	SetEntProp(iClient, Prop_Send, "m_lifeState", LifeState_Alive);
 	
 	//Restore weapons, health, ammo and cosmetics after changing teams

@@ -72,9 +72,9 @@ public int Menu_SelectMain(Menu hMenu, MenuAction action, int iClient, int iSele
 	if (StrEqual(sSelect, "class"))
 		MenuWeapon_DisplayMain(iClient);
 	else if (StrEqual(sSelect, "boss"))
-		MenuBoss_DisplayBossMain(iClient);
+		MenuBoss_DisplayBossList(iClient, MenuBoss_CallbackInfo);
 	else if (StrEqual(sSelect, "modifiers"))
-		MenuBoss_DisplayModifiersMain(iClient);
+		MenuBoss_DisplayModifiersList(iClient, MenuBoss_CallbackInfo);
 	else if (StrEqual(sSelect, "queue"))
 		Menu_DisplayQueue(iClient);
 	else if (StrEqual(sSelect, "preference"))
@@ -134,7 +134,7 @@ void Menu_DisplayPreferences(int iClient)
 	
 	for (int iPreferences = 0; iPreferences < sizeof(g_strPreferencesName); iPreferences++)
 	{
-		halePreferences preferences = view_as<halePreferences>(RoundToNearest(Pow(2.0, float(iPreferences))));
+		Preferences preferences = view_as<Preferences>(RoundToNearest(Pow(2.0, float(iPreferences))));
 		
 		char buffer[512];
 		if (Preferences_Get(iClient, preferences))

@@ -35,7 +35,7 @@ void PickNextBoss()
 		iMainBoss = Queue_GetPlayerFromRank(1);
 		if (iMainBoss <= 0 || iMainBoss > MaxClients || !IsClientInGame(iMainBoss))
 		{
-			PrintToChatAll("%s%s Unable to find player in queue to become boss! %sPicking random player...", VSH_TAG, VSH_ERROR_COLOR, VSH_TEXT_COLOR);
+			PrintToChatAll("%s%s Unable to find player in queue to become boss! %sPicking random player...", TEXT_TAG, TEXT_ERROR, TEXT_COLOR);
 			iMainBoss = aClients.Get(0);
 		}
 	}
@@ -44,7 +44,7 @@ void PickNextBoss()
 	if (g_aNextBoss.Length == 0)
 	{
 		char sBosses[256];
-		GetRandomBosses(sBosses, sizeof(sBosses), Preferences_Get(iMainBoss, halePreferences_MultiBoss));
+		GetRandomBosses(sBosses, sizeof(sBosses), Preferences_Get(iMainBoss, Preferences_MultiBoss));
 		
 		//Loop though all bosses selected to set modifiers
 		char sBoss[32][32];
@@ -87,7 +87,7 @@ void PickNextBoss()
 					iClient = aClients.Get(0);
 				
 				//If were not at first boss to set, we assume there duo boss going on, dont select one with pref disabled
-				else if (i > 0 && !Preferences_Get(iClient, halePreferences_MultiBoss))
+				else if (i > 0 && !Preferences_Get(iClient, Preferences_MultiBoss))
 					iClient = -1;
 				
 				if (0 < iClient <= MaxClients && IsClientInGame(iClient))
@@ -187,7 +187,7 @@ void PickNextBoss()
 			nSpecialRoundClass = view_as<TFClassType>(GetRandomInt(1, sizeof(g_strClassName)-1));
 		
 		ClassLimit_SetSpecialRound(nSpecialRoundClass);
-		PrintToChatAll("%s%s SPECIAL ROUND: %N versus %s", VSH_TAG, VSH_TEXT_COLOR, iMainBoss, g_strClassName[nSpecialRoundClass]);
+		PrintToChatAll("%s%s SPECIAL ROUND: %N versus %s", TEXT_TAG, TEXT_COLOR, iMainBoss, g_strClassName[nSpecialRoundClass]);
 		
 		g_bSpecialRound = false;
 		g_nSpecialRoundNextClass = TFClass_Unknown;
@@ -210,8 +210,8 @@ void SetBoss(int iClient, char[] sBossType, char[] sModifiersType)
 		SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 		
 		// Allow them to join the boss team
-		Client_AddFlag(iClient, haleClientFlags_BossTeam);
-		TF2_ForceTeamJoin(iClient, BOSS_TEAM);
+		Client_AddFlag(iClient, ClientFlags_BossTeam);
+		TF2_ForceTeamJoin(iClient, TFTeam_Boss);
 
 		boss.CallFunction("CreateBoss", sBossType);
 		
@@ -230,7 +230,7 @@ void SetBoss(int iClient, char[] sBossType, char[] sModifiersType)
 		TF2_RespawnPlayer(iClient);
 		
 		//Display to client what boss you are for 10 seconds
-		MenuBoss_DisplayBossInfo(iClient, sBossType, 10);
+		MenuBoss_DisplayInfo(iClient, sBossType, 10);
 	}
 }
 
@@ -253,7 +253,7 @@ stock int GetRandomBosses(char[] sBosses, int iLength, bool bDuo = false)
 		//Count players with duo prefs
 		int iPlayersDuo = 0;
 		for (int iClient = 1; iClient <= MaxClients; iClient++)
-			if (IsClientInGame(iClient) && GetClientTeam(iClient) > 1 && Preferences_Get(iClient, halePreferences_PickAsBoss) && Preferences_Get(iClient, halePreferences_MultiBoss))
+			if (IsClientInGame(iClient) && GetClientTeam(iClient) > 1 && Preferences_Get(iClient, Preferences_PickAsBoss) && Preferences_Get(iClient, Preferences_MultiBoss))
 				iPlayersDuo++;
 		
 		//Create list of every possible multi boss to select

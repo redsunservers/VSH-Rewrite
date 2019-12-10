@@ -94,7 +94,7 @@ public any Native_RegisterBoss(Handle hPlugin, int iNumParams)
 			aArray.PushString(sBossType);
 		
 		g_aAllBossesType.PushString(sBossType);
-		MenuBoss_AddBoss(sBossType);	//Add boss to menu
+		MenuBoss_AddInfoBoss(sBossType);	//Add boss to menu
 	}
 	
 	if (iNumParams > 1)
@@ -118,7 +118,7 @@ public any Native_UnregisterBoss(Handle hPlugin, int iNumParams)
 	if (iIndex >= 0) g_aAllBossesType.Erase(iIndex);
 	
 	//Remove from menu
-	MenuBoss_RemoveBoss(sBossType);
+	MenuBoss_RemoveInfo(sBossType);
 	
 	//Remove from misc boss array
 	int iLength = g_aMiscBossesType.Length;
@@ -150,7 +150,7 @@ public any Native_RegisterModifiers(Handle hPlugin, int iNumParams)
 		ThrowNativeError(SP_ERROR_NATIVE, "Constructor (%s) already registered", sModifiersType);
 	
 	g_aModifiersType.PushString(sModifiersType);
-	MenuBoss_AddModifiers(sModifiersType);	//Add modifiers to menu
+	MenuBoss_AddInfoModifiers(sModifiersType);	//Add modifiers to menu
 }
 
 //void SaxtonHale_UnregisterModifiers(const char[] sModifiersType);
@@ -166,7 +166,7 @@ public any Native_UnregisterModifiers(Handle hPlugin, int iNumParams)
 	if (iIndex >= 0) g_aModifiersType.Erase(iIndex);
 	
 	//Remove from menu
-	MenuBoss_RemoveModifiers(sModifiersType);
+	MenuBoss_RemoveInfo(sModifiersType);
 }
 
 //void SaxtonHale_RegisterAbility(const char[] sAbilityType);
@@ -497,13 +497,13 @@ public any Native_SetParamString(Handle hPlugin, int iNumParams)
 //TFTeam SaxtonHale_GetBossTeam();
 public any Native_GetBossTeam(Handle hPlugin, int iNumParams)
 {
-	return BOSS_TEAM;
+	return TFTeam_Boss;
 }
 
 //TFTeam SaxtonHale_GetAttackTeam();
 public any Native_GetAttackTeam(Handle hPlugin, int iNumParams)
 {
-	return ATTACK_TEAM;
+	return TFTeam_Attack;
 }
 
 //TFClassType SaxtonHale_GetMainClass(int iClient);
@@ -625,9 +625,9 @@ public any Native_SetAdmin(Handle hPlugin, int iNumParams)
 		ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not connected", iClient);
 
 	if (bEnable)
-		Client_AddFlag(iClient, haleClientFlags_Admin);
+		Client_AddFlag(iClient, ClientFlags_Admin);
 	else
-		Client_RemoveFlag(iClient, haleClientFlags_Admin);
+		Client_RemoveFlag(iClient, ClientFlags_Admin);
 }
 
 //SaxtonHale_SetPunishment(int iClient, bool bEnable);
@@ -642,9 +642,9 @@ public any Native_SetPunishment(Handle hPlugin, int iNumParams)
 		ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not connected", iClient);
 
 	if (bEnable)
-		Client_AddFlag(iClient, haleClientFlags_Punishment);
+		Client_AddFlag(iClient, ClientFlags_Punishment);
 	else
-		Client_RemoveFlag(iClient, haleClientFlags_Punishment);
+		Client_RemoveFlag(iClient, ClientFlags_Punishment);
 }
 
 //Macro to setup natives for every properties
