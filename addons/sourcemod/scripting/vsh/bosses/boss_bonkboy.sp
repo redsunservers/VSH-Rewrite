@@ -2,6 +2,9 @@ static int g_iBonkBoyModelHelmet;
 static int g_iBonkBoyModelMask;
 static int g_iBonkBoyModelShirt;
 static int g_iBonkBoyModelBag;
+
+static bool g_bBonkBoyRage[TF_MAXPLAYERS+1];
+
 /*
 static char g_strBonkBoyRoundStart[][] = {
 	
@@ -77,12 +80,19 @@ methodmap CBonkBoy < SaxtonHaleBase
 	{
 		boss.CallFunction("CreateAbility", "CDashJump");
 		
+		CRageAddCond rageCond = boss.CallFunction("CreateAbility", "CRageAddCond");
+		rageCond.flRageCondDuration = 5.0;
+		rageCond.AddCond(TFCond_CritHype);
+		rageCond.AddCond(TFCond_SpeedBuffAlly);
+		
 		boss.iBaseHealth = 700;
 		boss.iHealthPerPlayer = 650;
 		boss.nClass = TFClass_Scout;
-		boss.iMaxRageDamage = 2000;
+		boss.iMaxRageDamage = 1500;
 		
 		boss.flSpeed = 370.0;
+		
+		g_bBonkBoyRage[boss.iClient] = false;
 	}
 	
 	public void GetBossName(char[] sName, int length)
@@ -99,14 +109,14 @@ methodmap CBonkBoy < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- Sandman with fast recharge balls, able to hold 3 max");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- ");
-		StrCat(sInfo, length, "\n- 200%% Rage: ");
+		StrCat(sInfo, length, "\n- Soda Popper jumps and faster speed movement for 5 seconds");
+		StrCat(sInfo, length, "\n- 200%% Rage: Extends duration to 10 seconds");
 	}
 	
 	public void OnSpawn()
 	{
 		char attribs[128];
-		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65 ; 38 ; 1.0 ; 278 ; 0.33 ; 279 ; 3.0");
+		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65 ; 38 ; 1.0 ; 278 ; 0.33 ; 279 ; 3.0 ; 793 ; 1.0");
 		int iWeapon = this.CallFunction("CreateWeapon", 44, "tf_weapon_bat_wood", 1, TFQual_Collectors, attribs);
 		if (iWeapon > MaxClients)
 		{
@@ -129,6 +139,7 @@ methodmap CBonkBoy < SaxtonHaleBase
 		38: Launches a ball that slows opponents
 		278: increase in recharge rate
 		279: max misc ammo on wearer
+		793: On Hit: Builds Hype
 		*/
 		
 		int iWearable = -1;
@@ -148,6 +159,24 @@ methodmap CBonkBoy < SaxtonHaleBase
 		iWearable = this.CallFunction("CreateWeapon", 30751, "tf_wearable", 1, TFQual_Collectors, "");	//Bonk Batter's Backup
 		if (iWearable > MaxClients)
 			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iBonkBoyModelBag);
+	}
+	
+	public void OnRage()
+	{
+		//Just to fix TFCond_CritHype not doing anything
+		SetEntPropFloat(this.iClient, Prop_Send, "m_flHypeMeter", 100.0);
+		
+		this.flSpeed *= 1.5;
+		g_bBonkBoyRage[this.iClient] = true;
+	}
+	
+	public void OnThink()
+	{
+		if (g_bBonkBoyRage[this.iClient] && this.flRageLastTime < GetGameTime() - (this.bSuperRage ? 10.0 : 5.0))
+		{
+			g_bBonkBoyRage[this.iClient] = false;
+			this.flSpeed /= 1.5;
+		}
 	}
 	
 	/*
