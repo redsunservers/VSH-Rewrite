@@ -98,14 +98,9 @@ methodmap CDashJump < SaxtonHaleBase
 			float vecVel[3];
 			GetEntPropVector(this.iClient, Prop_Data, "m_vecVelocity", vecVel);
 			
-			PrintToChatAll("client angle %.2f %.2f %.2f", vecAng[0], vecAng[1], vecAng[2]);
-			PrintToChatAll("client old vel %.2f %.2f %.2f", vecVel[0], vecVel[1], vecVel[2]);
-			
 			vecVel[0] = Cosine(DegToRad(vecAng[0])) * Cosine(DegToRad(vecAng[1])) * this.flMaxForce;
 			vecVel[1] = Cosine(DegToRad(vecAng[0])) * Sine(DegToRad(vecAng[1])) * this.flMaxForce;
 			vecVel[2] = (((-vecAng[0]) * 1.5) + 90.0) * 3.0;
-			
-			PrintToChatAll("client new vel %.2f %.2f %.2f", vecVel[0], vecVel[1], vecVel[2]);
 			
 			SetEntProp(this.iClient, Prop_Send, "m_bJumping", true);
 			
