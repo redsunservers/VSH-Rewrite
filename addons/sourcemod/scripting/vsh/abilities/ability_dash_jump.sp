@@ -69,9 +69,9 @@ methodmap CDashJump < SaxtonHaleBase
 		}
 		
 		if (iCharge >= 100)
-			Format(sMessage, sizeof(sMessage), "Dash charge: %d%%, Press reload to use your dash!", iCharge);
+			Format(sMessage, sizeof(sMessage), "Dash charge: %d%%%% - Press reload to use your dash!", iCharge);
 		else
-			Format(sMessage, sizeof(sMessage), "Dash charge: %d%%", iCharge);
+			Format(sMessage, sizeof(sMessage), "Dash charge: %d%%%%", iCharge);
 		
 		Hud_AddText(this.iClient, sMessage);
 	}
