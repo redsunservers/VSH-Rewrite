@@ -105,6 +105,7 @@ methodmap CBonkBoy < SaxtonHaleBase
 		StrCat(sInfo, length, "\nHealth: Low");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nAbilities");
+		StrCat(sInfo, length, "\n- 20%% extra jump height");
 		StrCat(sInfo, length, "\n- Dash Jump");
 		StrCat(sInfo, length, "\n- Sandman with fast recharge balls, able to hold 3 max");
 		StrCat(sInfo, length, "\n ");
@@ -116,7 +117,7 @@ methodmap CBonkBoy < SaxtonHaleBase
 	public void OnSpawn()
 	{
 		char attribs[128];
-		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65 ; 38 ; 1.0 ; 278 ; 0.33 ; 279 ; 3.0 ; 793 ; 1.0");
+		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65 ; 38 ; 1.0 ; 278 ; 0.33 ; 279 ; 3.0 ; 524 ; 1.2 ; 793 ; 1.0");
 		int iWeapon = this.CallFunction("CreateWeapon", 44, "tf_weapon_bat_wood", 1, TFQual_Collectors, attribs);
 		if (iWeapon > MaxClients)
 		{
@@ -139,6 +140,7 @@ methodmap CBonkBoy < SaxtonHaleBase
 		38: Launches a ball that slows opponents
 		278: increase in recharge rate
 		279: max misc ammo on wearer
+		524: greater jump height when active
 		793: On Hit: Builds Hype
 		*/
 		
