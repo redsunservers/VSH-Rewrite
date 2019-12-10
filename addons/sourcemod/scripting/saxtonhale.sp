@@ -1145,10 +1145,9 @@ public Action Client_OnTakeDamage(int victim, int &attacker, int &inflictor, flo
 		{
 			if (!bossAttacker.bValid)
 			{
-				//Dont do anything if boss is ubered
-				if (bossVictim.bValid && !bossVictim.bMinion && !TF2_IsUbercharged(victim))
+				if (bossVictim.bValid && !bossVictim.bMinion)
 				{
-					if (damagecustom == TF_CUSTOM_TELEFRAG)
+					if (damagecustom == TF_CUSTOM_TELEFRAG && !TF2_IsUbercharged(victim))
 					{
 						int iTelefragDamage = g_ConfigConvar.LookupInt("vsh_telefrag_damage");
 						damage = float(iTelefragDamage);

@@ -337,8 +337,7 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 				EmitSoundToAll(sSound, this.iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
 		}
 
-		int iBossFlags = GetEntityFlags(this.iClient);
-		if (iBossFlags & FL_ONGROUND)
+		if (GetEntityFlags(this.iClient) & FL_ONGROUND || TF2_IsUbercharged(this.iClient))
 		{
 			damagetype |= DMG_PREVENT_PHYSICS_FORCE;
 			action = Plugin_Changed;
