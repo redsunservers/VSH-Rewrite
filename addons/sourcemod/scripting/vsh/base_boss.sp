@@ -282,6 +282,21 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 			EmitSoundToAll(sSound, this.iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
 	}
 
+	public void OnEntityCreated(int iEntity, const char[] sClassname)
+	{
+		if (strcmp(sClassname, "tf_projectile_healing_bolt") == 0)
+		{
+			SDKHook(iEntity, SDKHook_StartTouch, Crossbow_OnTouch);
+		}
+		else if (strncmp(sClassname, "item_healthkit_", 15) == 0
+			|| strncmp(sClassname, "item_ammopack_", 14) == 0
+			|| strcmp(sClassname, "tf_ammo_pack") == 0
+			|| strcmp(sClassname, "func_regenerate") == 0)
+		{
+			SDKHook(iEntity, SDKHook_Touch, ItemPack_OnTouch);
+		}
+	}
+
 	public Action OnAttackCritical(int iWeapon, bool &bResult)
 	{
 		//Disable random crit for bosses
@@ -459,4 +474,33 @@ public Action Timer_BossRageMusic(Handle hTimer, SaxtonHaleBoss boss)
 		g_flClientBossRageMusicVolume[boss.iClient] = 0.0;
 		StopSound(boss.iClient, SNDCHAN_AUTO, g_sClientBossRageMusic[boss.iClient]);
 	}
+}
+
+public Action Crossbow_OnTouch(int iEntity, int iToucher)
+{
+	if (!SaxtonHale_IsValidBoss(iToucher))
+		return Plugin_Continue;
+	
+	int iClient = GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity");
+	SaxtonHaleBase boss = SaxtonHaleBase(iToucher);
+	if (!boss.bCanBeHealed && GetClientTeam(iClient) == GetClientTeam(iToucher))
+	{
+		//Dont allow crossbows heal boss, kill arrow
+		AcceptEntityInput(iEntity, "Kill");
+		return Plugin_Handled;
+	}
+	
+	return Plugin_Continue;
+}
+
+public Action ItemPack_OnTouch(int iEntity, int iToucher)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
+	
+	//Don't allow valid non-attack players pick health and ammo packs
+	if (!SaxtonHale_IsValidAttack(iToucher))
+		return Plugin_Handled;
+
+	return Plugin_Continue;
 }
