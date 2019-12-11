@@ -53,7 +53,8 @@ methodmap CDashJump < SaxtonHaleBase
 	
 	public void OnThink()
 	{
-		if (GameRules_GetRoundState() == RoundState_Preround) return;
+		if (GameRules_GetRoundState() == RoundState_Preround)
+			return;
 		
 		char sMessage[255];
 		int iCharge;
@@ -78,11 +79,8 @@ methodmap CDashJump < SaxtonHaleBase
 	
 	public void OnButtonPress(int iButton)
 	{
-		if (iButton == IN_RELOAD)
+		if (iButton == IN_RELOAD && GameRules_GetRoundState() != RoundState_Preround && !TF2_IsPlayerInCondition(this.iClient, TFCond_Dazed))
 		{
-			if (TF2_IsPlayerInCondition(this.iClient, TFCond_Dazed))	//Can't dash if stunned
-				return;
-			
 			if (g_flDashJumpCooldownWait[this.iClient] < GetGameTime())
 				g_flDashJumpCooldownWait[this.iClient] = GetGameTime();
 			
