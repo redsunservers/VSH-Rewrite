@@ -3,7 +3,10 @@ static int g_iBonkBoyModelMask;
 static int g_iBonkBoyModelShirt;
 static int g_iBonkBoyModelBag;
 
+static int g_iBonkBoyStunType;
+
 static bool g_bBonkBoyRage[TF_MAXPLAYERS+1];
+static float g_flBonkBoyStunTime[TF_MAXPLAYERS+1];
 
 /*
 static char g_strBonkBoyRoundStart[][] = {
@@ -186,6 +189,32 @@ methodmap CBonkBoy < SaxtonHaleBase
 		}
 	}
 	
+	public void OnEntityCreated(int iEntity, const char[] sClassname)
+	{
+		if (strcmp(sClassname, "tf_projectile_stun_ball") == 0)
+		{
+			SDKHook(iEntity, SDKHook_StartTouch, BonkBoy_SandmanOnTouch);
+		}
+	}
+	
+	public Action OnAttackDamage(int &victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+	{
+		Action action = Plugin_Continue;
+		
+		if (damagecustom == TF_CUSTOM_BASEBALL && g_flBonkBoyStunTime[victim] > 0.0)
+		{
+			if (g_flBonkBoyStunTime[victim] > 0.10)
+			{
+				//Not so home run
+				TF2_StunPlayer(victim, g_flBonkBoyStunTime[victim] * 5.0, _, TF_STUNFLAGS_SMALLBONK, this.iClient);
+			}
+			
+			g_flBonkBoyStunTime[victim] = 0.0;
+		}
+		
+		return action;
+	}
+	
 	/*
 	public void GetSound(char[] sSound, int length, SaxtonHaleSound iSoundType)
 	{
@@ -219,10 +248,13 @@ methodmap CBonkBoy < SaxtonHaleBase
 	*/
 	public void Precache()
 	{
+		g_iBonkBoyStunType = FindSendPropInfo("CTFStunBall", "m_iType");
+		
 		g_iBonkBoyModelHelmet = PrecacheModel("models/player/items/scout/bonk_helmet.mdl");
 		g_iBonkBoyModelMask = PrecacheModel("models/workshop/player/items/scout/bonk_mask/bonk_mask.mdl");
 		g_iBonkBoyModelShirt = PrecacheModel("models/workshop/player/items/scout/hwn2015_death_racer_jacket/hwn2015_death_racer_jacket.mdl");
 		g_iBonkBoyModelBag = PrecacheModel("models/workshop/player/items/scout/dec15_scout_baseball_bag/dec15_scout_baseball_bag.mdl");
+		
 		/*
 		for (int i = 0; i < sizeof(g_strBonkBoyRoundStart); i++) PrepareSound(g_strBonkBoyRoundStart[i]);
 		for (int i = 0; i < sizeof(g_strBonkBoyWin); i++) PrepareSound(g_strBonkBoyWin[i]);
@@ -244,3 +276,26 @@ methodmap CBonkBoy < SaxtonHaleBase
 		*/
 	}
 };
+
+public Action BonkBoy_SandmanOnTouch(int iEntity, int iToucher)
+{
+	if (GetEntProp(iEntity, Prop_Send, "m_bTouched"))
+		return;
+	
+	int iClient = GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity");
+	if (!SaxtonHale_IsValidBoss(iClient))
+		return;
+	
+	if (iToucher <= 0 || iToucher > MaxClients || !IsClientInGame(iToucher) || TF2_GetClientTeam(iClient) == TF2_GetClientTeam(iToucher))
+		return;
+	
+	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
+	
+	char sBossType[MAX_TYPE_CHAR];
+	boss.CallFunction("GetBossType", sBossType, sizeof(sBossType));
+	if (!StrEqual(sBossType, "CBonkBoy"))
+		return;
+	
+	//Sandman init time is stored in m_iType + 4 offset
+	g_flBonkBoyStunTime[iToucher] = GetGameTime() - GetEntDataFloat(iEntity, g_iBonkBoyStunType + 0x04);
+}
