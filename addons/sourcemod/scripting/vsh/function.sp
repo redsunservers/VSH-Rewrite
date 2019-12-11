@@ -48,6 +48,7 @@ void Function_Init()
 	SaxtonHale_InitFunction("OnThink", ET_Ignore);
 	SaxtonHale_InitFunction("OnSpawn", ET_Ignore);
 	SaxtonHale_InitFunction("OnRage", ET_Ignore);
+	SaxtonHale_InitFunction("OnEntityCreated", ET_Ignore, Param_Cell, Param_String);
 	SaxtonHale_InitFunction("OnCommandKeyValues", ET_Hook, Param_String);
 	SaxtonHale_InitFunction("OnAttackCritical", ET_Hook, Param_Cell, Param_CellByRef);
 	SaxtonHale_InitFunction("OnVoiceCommand", ET_Hook, Param_String, Param_String);

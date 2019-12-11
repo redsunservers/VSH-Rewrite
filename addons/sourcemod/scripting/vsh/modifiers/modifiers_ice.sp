@@ -2,6 +2,7 @@
 #define ICE_DURATION 2.0
 #define ICE_RANGE 250.0
 
+static bool g_bIceRagdoll;
 static float g_flClientIceSlowdown[TF_MAXPLAYERS+1];
 
 methodmap CModifiersIce < SaxtonHaleBase
@@ -35,6 +36,15 @@ methodmap CModifiersIce < SaxtonHaleBase
 	{
 		if (g_flClientIceSlowdown[iVictim] > GetGameTime())
 			g_bIceRagdoll = true;
+	}
+	
+	public void OnEntityCreated(int iEntity, const char[] sClassname)
+	{
+		if (g_bIceRagdoll && strcmp(sClassname, "tf_ragdoll") == 0)
+		{
+			RequestFrame(Ice_RagdollSpawn, EntIndexToEntRef(iEntity));
+			g_bIceRagdoll = false;
+		}
 	}
 	
 	public Action OnTakeDamage(int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
