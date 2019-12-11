@@ -9,32 +9,31 @@ static bool g_bBonkBoyRage[TF_MAXPLAYERS+1];
 static float g_flBonkBoyStunTime[TF_MAXPLAYERS+1];
 static int g_iBonkBoyBallThrower[TF_MAXPLAYERS+1];
 
-/*
 static char g_strBonkBoyRoundStart[][] = {
-	
+	"vo/scout_sf12_goodmagic07.mp3",
 };
 
 static char g_strBonkBoyWin[][] = {
+	"vo/scout_domination14.mp3",
 	"vo/scout_jeers07.mp3",
+	"vo/taunts/scout_taunts13.mp3",
 };
 
 static char g_strBonkBoyLose[][] = {
-	
+	"vo/scout_painsevere01.mp3",
 };
 
 static char g_strBonkBoyRage[][] = {
-	
-};
-
-static char g_strBonkBoyJump[][] = {
-	
+	"vo/scout_apexofjump02.mp3",
+	"vo/scout_cheers04.mp3",
+	"vo/scout_sf12_badmagic11.mp3",
+	"vo/scout_sf12_goodmagic03.mp3",
 };
 
 static char g_strBonkBoyKill[][] = {
 	"vo/scout_domination03.mp3",
 	"vo/scout_domination07.mp3",
-	"vo/scout_domination14.mp3",
-	"vo/scout_domination17.mp3",
+	"vo/scout_dominationhvy10.mp3",
 	"vo/scout_misc09.mp3",
 	"vo/scout_revenge02.mp3",
 	"vo/scout_revenge03.mp3",
@@ -42,51 +41,15 @@ static char g_strBonkBoyKill[][] = {
 	"vo/scout_specialcompleted02.mp3",
 	"vo/scout_specialcompleted03.mp3",
 	"vo/scout_specialcompleted04.mp3",
-};
-
-static char g_strBonkBoyKillScout[][] = {
-	
-};
-
-static char g_strBonkBoyKillSoldier[][] = {
-	
-};
-
-static char g_strBonkBoyKillPyro[][] = {
-	
-};
-
-static char g_strBonkBoyKillDemoman[][] = {
-	"vo/scout_dominationdem01.mp3",
-};
-
-static char g_strBonkBoyKillHeavy[][] = {
-	"vo/scout_dominationhvy10.mp3",
-};
-
-static char g_strBonkBoyKillEngineer[][] = {
-	"vo/scout_dominationeng02.mp3",
-};
-
-static char g_strBonkBoyKillMedic[][] = {
-	
-};
-
-static char g_strBonkBoyKillSniper[][] = {
-	
-};
-
-static char g_strBonkBoyKillSpy[][] = {
-	
-};
-
-static char g_strBonkBoyKillBuilding[][] = {
-	
+	"vo/taunts/scout_taunts01.mp3",
+	"vo/taunts/scout_taunts18.mp3",
 };
 
 static char g_strBonkBoyLastMan[][] = {
 	"vo/scout_domination05.mp3",
 	"vo/scout_domination06.mp3",
+	"vo/scout_domination17.mp3",
+	"vo/scout_cartgoingbackdefense05.mp3",
 };
 
 static char g_strBonkBoyBackStabbed[][] = {
@@ -95,7 +58,7 @@ static char g_strBonkBoyBackStabbed[][] = {
 	"vo/scout_cartgoingbackoffense02.mp3",
 	
 };
-*/
+
 methodmap CBonkBoy < SaxtonHaleBase
 {
 	public CBonkBoy(CBonkBoy boss)
@@ -217,7 +180,6 @@ methodmap CBonkBoy < SaxtonHaleBase
 		}
 	}
 	
-	/*
 	public void GetSound(char[] sSound, int length, SaxtonHaleSound iSoundType)
 	{
 		switch (iSoundType)
@@ -226,7 +188,6 @@ methodmap CBonkBoy < SaxtonHaleBase
 			case VSHSound_Win: strcopy(sSound, length, g_strBonkBoyWin[GetRandomInt(0,sizeof(g_strBonkBoyWin)-1)]);
 			case VSHSound_Lose: strcopy(sSound, length, g_strBonkBoyLose[GetRandomInt(0,sizeof(g_strBonkBoyLose)-1)]);
 			case VSHSound_Rage: strcopy(sSound, length, g_strBonkBoyRage[GetRandomInt(0,sizeof(g_strBonkBoyRage)-1)]);
-			case VSHSound_KillBuilding: strcopy(sSound, length, g_strBonkBoyKillBuilding[GetRandomInt(0,sizeof(g_strBonkBoyKillBuilding)-1)]);
 			case VSHSound_Lastman: strcopy(sSound, length, g_strBonkBoyLastMan[GetRandomInt(0,sizeof(g_strBonkBoyLastMan)-1)]);
 			case VSHSound_Backstab: strcopy(sSound, length, g_strBonkBoyBackStabbed[GetRandomInt(0,sizeof(g_strBonkBoyBackStabbed)-1)]);
 		}
@@ -234,27 +195,9 @@ methodmap CBonkBoy < SaxtonHaleBase
 	
 	public void GetSoundKill(char[] sSound, int length, TFClassType nClass)
 	{
-		if (GetRandomInt(0, 1))
-		{
-			strcopy(sSound, length, g_strBonkBoyKill[GetRandomInt(0,sizeof(g_strBonkBoyKill)-1)]);
-		}
-		else
-		{
-			switch (nClass)
-			{
-				case TFClass_Scout: strcopy(sSound, length, g_strBonkBoyKillScout[GetRandomInt(0,sizeof(g_strBonkBoyKillScout)-1)]);
-				case TFClass_Soldier: strcopy(sSound, length, g_strBonkBoyKillSoldier[GetRandomInt(0,sizeof(g_strBonkBoyKillSoldier)-1)]);
-				case TFClass_Pyro: strcopy(sSound, length, g_strBonkBoyKillPyro[GetRandomInt(0,sizeof(g_strBonkBoyKillPyro)-1)]);
-				case TFClass_DemoMan: strcopy(sSound, length, g_strBonkBoyKillDemoman[GetRandomInt(0,sizeof(g_strBonkBoyKillDemoman)-1)]);
-				case TFClass_Heavy: strcopy(sSound, length, g_strBonkBoyKillHeavy[GetRandomInt(0,sizeof(g_strBonkBoyKillHeavy)-1)]);
-				case TFClass_Engineer: strcopy(sSound, length, g_strBonkBoyKillEngineer[GetRandomInt(0,sizeof(g_strBonkBoyKillEngineer)-1)]);
-				case TFClass_Medic: strcopy(sSound, length, g_strBonkBoyKillMedic[GetRandomInt(0,sizeof(g_strBonkBoyKillMedic)-1)]);
-				case TFClass_Sniper: strcopy(sSound, length, g_strBonkBoyKillSniper[GetRandomInt(0,sizeof(g_strBonkBoyKillSniper)-1)]);
-				case TFClass_Spy: strcopy(sSound, length, g_strBonkBoyKillSpy[GetRandomInt(0,sizeof(g_strBonkBoyKillSpy)-1)]);
-			}
-		}
+		strcopy(sSound, length, g_strBonkBoyKill[GetRandomInt(0,sizeof(g_strBonkBoyKill)-1)]);
 	}
-	*/
+	
 	public void Precache()
 	{
 		g_iBonkBoyStunType = FindSendPropInfo("CTFStunBall", "m_iType");
@@ -264,25 +207,13 @@ methodmap CBonkBoy < SaxtonHaleBase
 		g_iBonkBoyModelShirt = PrecacheModel("models/workshop/player/items/scout/hwn2015_death_racer_jacket/hwn2015_death_racer_jacket.mdl");
 		g_iBonkBoyModelBag = PrecacheModel("models/workshop/player/items/scout/dec15_scout_baseball_bag/dec15_scout_baseball_bag.mdl");
 		
-		/*
 		for (int i = 0; i < sizeof(g_strBonkBoyRoundStart); i++) PrepareSound(g_strBonkBoyRoundStart[i]);
 		for (int i = 0; i < sizeof(g_strBonkBoyWin); i++) PrepareSound(g_strBonkBoyWin[i]);
 		for (int i = 0; i < sizeof(g_strBonkBoyLose); i++) PrepareSound(g_strBonkBoyLose[i]);
 		for (int i = 0; i < sizeof(g_strBonkBoyRage); i++) PrepareSound(g_strBonkBoyRage[i]);
-		for (int i = 0; i < sizeof(g_strBonkBoyJump); i++) PrepareSound(g_strBonkBoyJump[i]);
-		for (int i = 0; i < sizeof(g_strBonkBoyKillScout); i++) PrepareSound(g_strBonkBoyKillScout[i]);
-		for (int i = 0; i < sizeof(g_strBonkBoyKillSoldier); i++) PrepareSound(g_strBonkBoyKillSoldier[i]);
-		for (int i = 0; i < sizeof(g_strBonkBoyKillPyro); i++) PrepareSound(g_strBonkBoyKillPyro[i]);
-		for (int i = 0; i < sizeof(g_strBonkBoyKillDemoman); i++) PrepareSound(g_strBonkBoyKillDemoman[i]);
-		for (int i = 0; i < sizeof(g_strBonkBoyKillHeavy); i++) PrepareSound(g_strBonkBoyKillHeavy[i]);
-		for (int i = 0; i < sizeof(g_strBonkBoyKillEngineer); i++) PrepareSound(g_strBonkBoyKillEngineer[i]);
-		for (int i = 0; i < sizeof(g_strBonkBoyKillMedic); i++) PrepareSound(g_strBonkBoyKillMedic[i]);
-		for (int i = 0; i < sizeof(g_strBonkBoyKillSniper); i++) PrepareSound(g_strBonkBoyKillSniper[i]);
-		for (int i = 0; i < sizeof(g_strBonkBoyKillSpy); i++) PrepareSound(g_strBonkBoyKillSpy[i]);
-		for (int i = 0; i < sizeof(g_strBonkBoyKillBuilding); i++) PrepareSound(g_strBonkBoyKillBuilding[i]);
+		for (int i = 0; i < sizeof(g_strBonkBoyKill); i++) PrepareSound(g_strBonkBoyKill[i]);
 		for (int i = 0; i < sizeof(g_strBonkBoyLastMan); i++) PrepareSound(g_strBonkBoyLastMan[i]);
 		for (int i = 0; i < sizeof(g_strBonkBoyBackStabbed); i++) PrepareSound(g_strBonkBoyBackStabbed[i]);
-		*/
 	}
 };
 
