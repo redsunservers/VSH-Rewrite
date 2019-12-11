@@ -257,6 +257,10 @@ public Action BonkBoy_OnTakeDamage(int victim, int &attacker, int &inflictor, fl
 	
 	if (damagecustom == TF_CUSTOM_BASEBALL && g_flBonkBoyStunTime[victim] > 0.0)
 	{
+		attacker = g_iBonkBoyBallThrower[victim];
+		g_iBonkBoyBallThrower[victim] = 0;
+		action = Plugin_Changed;
+		
 		if (g_flBonkBoyStunTime[victim] > 0.85)
 		{
 			//Home run baby
@@ -271,11 +275,7 @@ public Action BonkBoy_OnTakeDamage(int victim, int &attacker, int &inflictor, fl
 			TF2_StunPlayer(victim, g_flBonkBoyStunTime[victim] * 5.0, _, TF_STUNFLAGS_SMALLBONK, attacker);
 		}
 		
-		attacker = g_iBonkBoyBallThrower[victim];
 		g_flBonkBoyStunTime[victim] = 0.0;
-		g_iBonkBoyBallThrower[victim] = 0;
-		
-		action = Plugin_Changed;
 	}
 	
 	return action;
