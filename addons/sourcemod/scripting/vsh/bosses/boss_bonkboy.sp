@@ -116,6 +116,7 @@ methodmap CBonkBoy < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- 20%% extra jump height");
 		StrCat(sInfo, length, "\n- Dash Jump");
 		StrCat(sInfo, length, "\n- Sandman with fast recharge balls, able to hold 3 max");
+		StrCat(sInfo, length, "\n Medium range ball stuns player, moonshot instakills");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
 		StrCat(sInfo, length, "\n- Soda Popper jumps and faster speed movement for 5 seconds");
@@ -124,8 +125,8 @@ methodmap CBonkBoy < SaxtonHaleBase
 	
 	public void OnSpawn()
 	{
-		char attribs[128];
-		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65 ; 38 ; 1.0 ; 278 ; 0.33 ; 279 ; 3.0 ; 524 ; 1.2 ; 793 ; 1.0");
+		char attribs[256];
+		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65 ; 38 ; 1.0 ; 278 ; 0.33 ; 279 ; 3.0 ; 524 ; 1.2 ; 551 ; 1.0 ; 793 ; 1.0");
 		int iWeapon = this.CallFunction("CreateWeapon", 44, "tf_weapon_bat_wood", 1, TFQual_Collectors, attribs);
 		if (iWeapon > MaxClients)
 		{
@@ -149,6 +150,7 @@ methodmap CBonkBoy < SaxtonHaleBase
 		278: increase in recharge rate
 		279: max misc ammo on wearer
 		524: greater jump height when active
+		551: special_taunt
 		793: On Hit: Builds Hype
 		*/
 		
@@ -203,7 +205,16 @@ methodmap CBonkBoy < SaxtonHaleBase
 		
 		if (damagecustom == TF_CUSTOM_BASEBALL && g_flBonkBoyStunTime[victim] > 0.0)
 		{
-			if (g_flBonkBoyStunTime[victim] > 0.10)
+			if (g_flBonkBoyStunTime[victim] > 0.85)
+			{
+				//Home run baby
+				damagetype |= DMG_CRIT;
+				damage = 1337.0 / 3.0;
+				
+				TF2_StunPlayer(victim, 10.0, _, TF_STUNFLAGS_BIGBONK, this.iClient);
+				action = Plugin_Changed;
+			}
+			else if (g_flBonkBoyStunTime[victim] > 0.10)
 			{
 				//Not so home run
 				TF2_StunPlayer(victim, g_flBonkBoyStunTime[victim] * 5.0, _, TF_STUNFLAGS_SMALLBONK, this.iClient);
@@ -213,6 +224,16 @@ methodmap CBonkBoy < SaxtonHaleBase
 		}
 		
 		return action;
+	}
+	
+	public void OnPlayerKilled(Event event, int iVictim)
+	{
+		if (event.GetInt("customkill") == TF_CUSTOM_BASEBALL && event.GetInt("stun_flags") == TF_STUNFLAGS_BIGBONK)
+		{
+			event.SetInt("customkill", TF_CUSTOM_TAUNT_GRAND_SLAM);
+			event.SetString("weapon", "taunt_scout");
+			event.SetString("weapon_logclassname", "taunt_scout");
+		}
 	}
 	
 	/*
