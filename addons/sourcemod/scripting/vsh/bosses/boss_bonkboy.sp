@@ -7,6 +7,7 @@ static int g_iBonkBoyStunType;
 
 static bool g_bBonkBoyRage[TF_MAXPLAYERS+1];
 static float g_flBonkBoyStunTime[TF_MAXPLAYERS+1];
+static int g_iBonkBoyBallThrower[TF_MAXPLAYERS+1];
 
 /*
 static char g_strBonkBoyRoundStart[][] = {
@@ -134,7 +135,7 @@ methodmap CBonkBoy < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- 20%% extra jump height");
 		StrCat(sInfo, length, "\n- Dash Jump");
 		StrCat(sInfo, length, "\n- Sandman with fast recharge balls, able to hold 3 max");
-		StrCat(sInfo, length, "\n Medium range ball stuns player, moonshot instakills");
+		StrCat(sInfo, length, "\n- Medium range ball stuns player, moonshot instakills");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
 		StrCat(sInfo, length, "\n- Soda Popper jumps and faster speed movement for 5 seconds");
@@ -144,7 +145,7 @@ methodmap CBonkBoy < SaxtonHaleBase
 	public void OnSpawn()
 	{
 		char attribs[256];
-		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65 ; 38 ; 1.0 ; 278 ; 0.33 ; 279 ; 3.0 ; 524 ; 1.2 ; 551 ; 1.0 ; 793 ; 1.0");
+		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65 ; 38 ; 1.0 ; 278 ; 0.33 ; 279 ; 3.0 ; 524 ; 1.2 ; 551 ; 1.0");
 		int iWeapon = this.CallFunction("CreateWeapon", 44, "tf_weapon_bat_wood", 1, TFQual_Collectors, attribs);
 		if (iWeapon > MaxClients)
 		{
@@ -169,7 +170,6 @@ methodmap CBonkBoy < SaxtonHaleBase
 		279: max misc ammo on wearer
 		524: greater jump height when active
 		551: special_taunt
-		793: On Hit: Builds Hype
 		*/
 		
 		int iWearable = -1;
@@ -214,43 +214,6 @@ methodmap CBonkBoy < SaxtonHaleBase
 		if (strcmp(sClassname, "tf_projectile_stun_ball") == 0)
 		{
 			SDKHook(iEntity, SDKHook_StartTouch, BonkBoy_SandmanOnTouch);
-		}
-	}
-	
-	public Action OnAttackDamage(int &victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
-	{
-		Action action = Plugin_Continue;
-		
-		if (damagecustom == TF_CUSTOM_BASEBALL && g_flBonkBoyStunTime[victim] > 0.0)
-		{
-			if (g_flBonkBoyStunTime[victim] > 0.85)
-			{
-				//Home run baby
-				damagetype |= DMG_CRIT;
-				damage = 1337.0 / 3.0;
-				
-				TF2_StunPlayer(victim, 10.0, _, TF_STUNFLAGS_BIGBONK, this.iClient);
-				action = Plugin_Changed;
-			}
-			else if (g_flBonkBoyStunTime[victim] > 0.10)
-			{
-				//Not so home run
-				TF2_StunPlayer(victim, g_flBonkBoyStunTime[victim] * 5.0, _, TF_STUNFLAGS_SMALLBONK, this.iClient);
-			}
-			
-			g_flBonkBoyStunTime[victim] = 0.0;
-		}
-		
-		return action;
-	}
-	
-	public void OnPlayerKilled(Event event, int iVictim)
-	{
-		if (event.GetInt("customkill") == TF_CUSTOM_BASEBALL && event.GetInt("stun_flags") == TF_STUNFLAGS_BIGBONK)
-		{
-			event.SetInt("customkill", TF_CUSTOM_TAUNT_GRAND_SLAM);
-			event.SetString("weapon", "taunt_scout");
-			event.SetString("weapon_logclassname", "taunt_scout");
 		}
 	}
 	
@@ -325,17 +288,23 @@ methodmap CBonkBoy < SaxtonHaleBase
 
 public Action BonkBoy_SandmanOnTouch(int iEntity, int iToucher)
 {
+	SDKUnhook(iEntity, SDKHook_StartTouch, BonkBoy_SandmanOnTouch);	
+	
 	if (GetEntProp(iEntity, Prop_Send, "m_bTouched"))
 		return;
 	
-	int iClient = GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity");
-	if (!SaxtonHale_IsValidBoss(iClient))
+	int iThrower = GetEntPropEnt(iEntity, Prop_Send, "m_hThrower");	//Either from bonk boy, or from deflected pyro
+	if (iThrower <= 0 || iThrower > MaxClients || !IsClientInGame(iThrower))
 		return;
 	
-	if (iToucher <= 0 || iToucher > MaxClients || !IsClientInGame(iToucher) || TF2_GetClientTeam(iClient) == TF2_GetClientTeam(iToucher))
+	if (iToucher <= 0 || iToucher > MaxClients || !IsClientInGame(iToucher) || TF2_GetClientTeam(iThrower) == TF2_GetClientTeam(iToucher))
 		return;
 	
-	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
+	int iOwner = GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity");	//From bonk boy
+	if (!SaxtonHale_IsValidBoss(iOwner))
+		return;
+	
+	SaxtonHaleBase boss = SaxtonHaleBase(iOwner);
 	
 	char sBossType[MAX_TYPE_CHAR];
 	boss.CallFunction("GetBossType", sBossType, sizeof(sBossType));
@@ -344,4 +313,58 @@ public Action BonkBoy_SandmanOnTouch(int iEntity, int iToucher)
 	
 	//Sandman init time is stored in m_iType + 4 offset
 	g_flBonkBoyStunTime[iToucher] = GetGameTime() - GetEntDataFloat(iEntity, g_iBonkBoyStunType + 0x04);
+	g_iBonkBoyBallThrower[iToucher] = iThrower;
+	
+	SDKHook(iToucher, SDKHook_OnTakeDamage, BonkBoy_OnTakeDamage);
+	HookEvent("player_death", BonkBoy_PlayerDeath, EventHookMode_Pre);
+	RequestFrame(BonkBoy_UnhookBallDamage, GetClientUserId(iToucher));
+}
+
+public Action BonkBoy_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+{
+	Action action = Plugin_Continue;
+	
+	if (damagecustom == TF_CUSTOM_BASEBALL && g_flBonkBoyStunTime[victim] > 0.0)
+	{
+		if (g_flBonkBoyStunTime[victim] > 0.85)
+		{
+			//Home run baby
+			damagetype |= DMG_CRIT;
+			damage = 1337.0 / 3.0;
+			
+			TF2_StunPlayer(victim, 10.0, _, TF_STUNFLAGS_BIGBONK, attacker);
+		}
+		else if (g_flBonkBoyStunTime[victim] > 0.10)
+		{
+			//Not so home run
+			TF2_StunPlayer(victim, g_flBonkBoyStunTime[victim] * 5.0, _, TF_STUNFLAGS_SMALLBONK, attacker);
+		}
+		
+		attacker = g_iBonkBoyBallThrower[victim];
+		g_flBonkBoyStunTime[victim] = 0.0;
+		g_iBonkBoyBallThrower[victim] = 0;
+		
+		action = Plugin_Changed;
+	}
+	
+	return action;
+}
+
+public Action BonkBoy_PlayerDeath(Event event, const char[] sName, bool bDontBroadcast)
+{
+	if (event.GetInt("customkill") == TF_CUSTOM_BASEBALL && event.GetInt("stun_flags") == TF_STUNFLAGS_BIGBONK)
+	{
+		event.SetInt("customkill", TF_CUSTOM_TAUNT_GRAND_SLAM);
+		event.SetString("weapon", "taunt_scout");
+		event.SetString("weapon_logclassname", "taunt_scout");
+	}
+}
+
+public void BonkBoy_UnhookBallDamage(int iUserId)
+{
+	int iClient = GetClientOfUserId(iUserId);
+	if (0 < iClient <= MaxClients && IsClientInGame(iClient))
+		SDKUnhook(iClient, SDKHook_OnTakeDamage, BonkBoy_OnTakeDamage);
+	
+	UnhookEvent("player_death", BonkBoy_PlayerDeath, EventHookMode_Pre);
 }
