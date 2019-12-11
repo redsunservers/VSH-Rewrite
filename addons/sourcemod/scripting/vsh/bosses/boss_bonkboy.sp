@@ -14,7 +14,7 @@ static char g_strBonkBoyRoundStart[][] = {
 };
 
 static char g_strBonkBoyWin[][] = {
-	
+	"vo/scout_jeers07.mp3",
 };
 
 static char g_strBonkBoyLose[][] = {
@@ -27,6 +27,20 @@ static char g_strBonkBoyRage[][] = {
 
 static char g_strBonkBoyJump[][] = {
 	
+};
+
+static char g_strBonkBoyKill[][] = {
+	"vo/scout_domination03.mp3",
+	"vo/scout_domination07.mp3",
+	"vo/scout_domination14.mp3",
+	"vo/scout_domination17.mp3",
+	"vo/scout_misc09.mp3",
+	"vo/scout_revenge02.mp3",
+	"vo/scout_revenge03.mp3",
+	"vo/scout_specialcompleted01.mp3",
+	"vo/scout_specialcompleted02.mp3",
+	"vo/scout_specialcompleted03.mp3",
+	"vo/scout_specialcompleted04.mp3",
 };
 
 static char g_strBonkBoyKillScout[][] = {
@@ -42,15 +56,15 @@ static char g_strBonkBoyKillPyro[][] = {
 };
 
 static char g_strBonkBoyKillDemoman[][] = {
-	
+	"vo/scout_dominationdem01.mp3",
 };
 
 static char g_strBonkBoyKillHeavy[][] = {
-	
+	"vo/scout_dominationhvy10.mp3",
 };
 
 static char g_strBonkBoyKillEngineer[][] = {
-	
+	"vo/scout_dominationeng02.mp3",
 };
 
 static char g_strBonkBoyKillMedic[][] = {
@@ -70,10 +84,14 @@ static char g_strBonkBoyKillBuilding[][] = {
 };
 
 static char g_strBonkBoyLastMan[][] = {
-	
+	"vo/scout_domination05.mp3",
+	"vo/scout_domination06.mp3",
 };
 
 static char g_strBonkBoyBackStabbed[][] = {
+	"vo/scout_autodejectedtie01.mp3",
+	"vo/scout_autodejectedtie04.mp3",
+	"vo/scout_cartgoingbackoffense02.mp3",
 	
 };
 */
@@ -253,17 +271,24 @@ methodmap CBonkBoy < SaxtonHaleBase
 	
 	public void GetSoundKill(char[] sSound, int length, TFClassType nClass)
 	{
-		switch (nClass)
+		if (GetRandomInt(0, 1))
 		{
-			case TFClass_Scout: strcopy(sSound, length, g_strBonkBoyKillScout[GetRandomInt(0,sizeof(g_strBonkBoyKillScout)-1)]);
-			case TFClass_Soldier: strcopy(sSound, length, g_strBonkBoyKillSoldier[GetRandomInt(0,sizeof(g_strBonkBoyKillSoldier)-1)]);
-			case TFClass_Pyro: strcopy(sSound, length, g_strBonkBoyKillPyro[GetRandomInt(0,sizeof(g_strBonkBoyKillPyro)-1)]);
-			case TFClass_DemoMan: strcopy(sSound, length, g_strBonkBoyKillDemoman[GetRandomInt(0,sizeof(g_strBonkBoyKillDemoman)-1)]);
-			case TFClass_Heavy: strcopy(sSound, length, g_strBonkBoyKillHeavy[GetRandomInt(0,sizeof(g_strBonkBoyKillHeavy)-1)]);
-			case TFClass_Engineer: strcopy(sSound, length, g_strBonkBoyKillEngineer[GetRandomInt(0,sizeof(g_strBonkBoyKillEngineer)-1)]);
-			case TFClass_Medic: strcopy(sSound, length, g_strBonkBoyKillMedic[GetRandomInt(0,sizeof(g_strBonkBoyKillMedic)-1)]);
-			case TFClass_Sniper: strcopy(sSound, length, g_strBonkBoyKillSniper[GetRandomInt(0,sizeof(g_strBonkBoyKillSniper)-1)]);
-			case TFClass_Spy: strcopy(sSound, length, g_strBonkBoyKillSpy[GetRandomInt(0,sizeof(g_strBonkBoyKillSpy)-1)]);
+			strcopy(sSound, length, g_strBonkBoyKill[GetRandomInt(0,sizeof(g_strBonkBoyKill)-1)]);
+		}
+		else
+		{
+			switch (nClass)
+			{
+				case TFClass_Scout: strcopy(sSound, length, g_strBonkBoyKillScout[GetRandomInt(0,sizeof(g_strBonkBoyKillScout)-1)]);
+				case TFClass_Soldier: strcopy(sSound, length, g_strBonkBoyKillSoldier[GetRandomInt(0,sizeof(g_strBonkBoyKillSoldier)-1)]);
+				case TFClass_Pyro: strcopy(sSound, length, g_strBonkBoyKillPyro[GetRandomInt(0,sizeof(g_strBonkBoyKillPyro)-1)]);
+				case TFClass_DemoMan: strcopy(sSound, length, g_strBonkBoyKillDemoman[GetRandomInt(0,sizeof(g_strBonkBoyKillDemoman)-1)]);
+				case TFClass_Heavy: strcopy(sSound, length, g_strBonkBoyKillHeavy[GetRandomInt(0,sizeof(g_strBonkBoyKillHeavy)-1)]);
+				case TFClass_Engineer: strcopy(sSound, length, g_strBonkBoyKillEngineer[GetRandomInt(0,sizeof(g_strBonkBoyKillEngineer)-1)]);
+				case TFClass_Medic: strcopy(sSound, length, g_strBonkBoyKillMedic[GetRandomInt(0,sizeof(g_strBonkBoyKillMedic)-1)]);
+				case TFClass_Sniper: strcopy(sSound, length, g_strBonkBoyKillSniper[GetRandomInt(0,sizeof(g_strBonkBoyKillSniper)-1)]);
+				case TFClass_Spy: strcopy(sSound, length, g_strBonkBoyKillSpy[GetRandomInt(0,sizeof(g_strBonkBoyKillSpy)-1)]);
+			}
 		}
 	}
 	*/
