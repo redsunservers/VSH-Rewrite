@@ -207,13 +207,13 @@ methodmap CBonkBoy < SaxtonHaleBase
 		g_iBonkBoyModelShirt = PrecacheModel("models/workshop/player/items/scout/hwn2015_death_racer_jacket/hwn2015_death_racer_jacket.mdl");
 		g_iBonkBoyModelBag = PrecacheModel("models/workshop/player/items/scout/dec15_scout_baseball_bag/dec15_scout_baseball_bag.mdl");
 		
-		for (int i = 0; i < sizeof(g_strBonkBoyRoundStart); i++) PrepareSound(g_strBonkBoyRoundStart[i]);
-		for (int i = 0; i < sizeof(g_strBonkBoyWin); i++) PrepareSound(g_strBonkBoyWin[i]);
-		for (int i = 0; i < sizeof(g_strBonkBoyLose); i++) PrepareSound(g_strBonkBoyLose[i]);
-		for (int i = 0; i < sizeof(g_strBonkBoyRage); i++) PrepareSound(g_strBonkBoyRage[i]);
-		for (int i = 0; i < sizeof(g_strBonkBoyKill); i++) PrepareSound(g_strBonkBoyKill[i]);
-		for (int i = 0; i < sizeof(g_strBonkBoyLastMan); i++) PrepareSound(g_strBonkBoyLastMan[i]);
-		for (int i = 0; i < sizeof(g_strBonkBoyBackStabbed); i++) PrepareSound(g_strBonkBoyBackStabbed[i]);
+		for (int i = 0; i < sizeof(g_strBonkBoyRoundStart); i++) PrecacheSound(g_strBonkBoyRoundStart[i]);
+		for (int i = 0; i < sizeof(g_strBonkBoyWin); i++) PrecacheSound(g_strBonkBoyWin[i]);
+		for (int i = 0; i < sizeof(g_strBonkBoyLose); i++) PrecacheSound(g_strBonkBoyLose[i]);
+		for (int i = 0; i < sizeof(g_strBonkBoyRage); i++) PrecacheSound(g_strBonkBoyRage[i]);
+		for (int i = 0; i < sizeof(g_strBonkBoyKill); i++) PrecacheSound(g_strBonkBoyKill[i]);
+		for (int i = 0; i < sizeof(g_strBonkBoyLastMan); i++) PrecacheSound(g_strBonkBoyLastMan[i]);
+		for (int i = 0; i < sizeof(g_strBonkBoyBackStabbed); i++) PrecacheSound(g_strBonkBoyBackStabbed[i]);
 	}
 };
 
