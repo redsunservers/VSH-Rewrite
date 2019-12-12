@@ -1,6 +1,6 @@
-#define RANGER_MODEL "models/player/vsh_rewrite/uber_ranger/uber_ranger.mdl"
-#define RANGER_THEME "vsh_rewrite/uber_ranger/uberrangers_music.mp3"
-#define RANGER_RAGESOUND "mvm/mvm_tele_deliver.wav"
+#define RANGER_MODEL 		"models/player/vsh_rewrite/uber_ranger/uber_ranger.mdl"
+#define RANGER_THEME 		"vsh_rewrite/uber_ranger/uberrangers_music.mp3"
+#define RANGER_RAGESOUND 	"mvm/mvm_tele_deliver.wav"
 
 static int g_iUberRangerPrussianPickelhaube;
 static int g_iUberRangerBlightedBeak;
