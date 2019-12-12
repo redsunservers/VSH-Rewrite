@@ -187,7 +187,7 @@ methodmap CBrutalSniper < SaxtonHaleBase
 				
 				//Attribute for all melee weapons
 				char attribs[128];
-				Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65");
+				Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0");
 				
 				//Get new melee from random
 				switch (iRandom)

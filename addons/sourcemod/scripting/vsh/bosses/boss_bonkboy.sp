@@ -108,7 +108,7 @@ methodmap CBonkBoy < SaxtonHaleBase
 	public void OnSpawn()
 	{
 		char attribs[256];
-		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65 ; 38 ; 1.0 ; 278 ; 0.33 ; 279 ; 3.0 ; 524 ; 1.2 ; 551 ; 1.0");
+		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 38 ; 1.0 ; 278 ; 0.33 ; 279 ; 3.0 ; 524 ; 1.2 ; 551 ; 1.0");
 		int iWeapon = this.CallFunction("CreateWeapon", 44, "tf_weapon_bat_wood", 1, TFQual_Collectors, attribs);
 		if (iWeapon > MaxClients)
 		{
@@ -126,7 +126,6 @@ methodmap CBonkBoy < SaxtonHaleBase
 		2: damage bonus
 		252: reduction in push force taken from damage
 		259: Deals 3x falling damage to the player you land on
-		329: reduction in airblast vulnerability
 		
 		38: Launches a ball that slows opponents
 		278: increase in recharge rate
