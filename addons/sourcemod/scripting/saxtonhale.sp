@@ -370,6 +370,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/bosses/boss_blutarch.sp"
 #include "vsh/bosses/boss_redmond.sp"
 #include "vsh/bosses/boss_yeti.sp"
+#include "vsh/bosses/boss_whiteranger.sp"
 #include "vsh/bosses/boss_zombie.sp"
 
 #include "vsh/modifiers/modifiers_speed.sp"
@@ -506,6 +507,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterBoss("CHorsemann");
 	SaxtonHale_RegisterBoss("CYeti");
 	SaxtonHale_RegisterBoss("CBonkBoy");
+	SaxtonHale_RegisterBoss("CUberRanger");
 	
 	//Register misc bosses
 	SaxtonHale_RegisterBoss("CSeeMan", "CSeeldier");
@@ -514,6 +516,7 @@ public void OnPluginStart()
 	//Register minions
 	SaxtonHale_RegisterBoss("CSeeldierMinion");
 	SaxtonHale_RegisterBoss("CAnnouncerMinion");
+	SaxtonHale_RegisterBoss("CMinionRanger");
 	SaxtonHale_RegisterBoss("CZombie");
 	
 	//Register modifiers
