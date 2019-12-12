@@ -120,18 +120,22 @@ methodmap CUberRanger < SaxtonHaleBase
 		
 		int iWearable = -1;
 		
-		iWearable = this.CallFunction("CreateWeapon", 50, "tf_wearable", GetRandomInt(1, 100), TFQual_Normal, "");	//Prussian Pickelhaube
+		//Interestingly, painting the cosmetics directly doesn't seem to make them white, so we paint it through attributes in this case
+		char sWhitePaint[16];
+		Format(sWhitePaint, sizeof(sWhitePaint), "142 ; 15132390"); 
+		
+		iWearable = this.CallFunction("CreateWeapon", 50, "tf_wearable", GetRandomInt(1, 100), TFQual_Normal, sWhitePaint);	//Prussian Pickelhaube
 		if (iWearable > MaxClients)
 		{
 			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iUberRangerPrussianPickelhaube);
-			SetEntityRenderColor(iWearable, iColor[0], iColor[1], iColor[2], iColor[3]);
+			//SetEntityRenderColor(iWearable, iColor[0], iColor[1], iColor[2], iColor[3]);
 		}
 		
- 		iWearable = this.CallFunction("CreateWeapon", 315, "tf_wearable", GetRandomInt(1, 100), TFQual_Normal, "");	//Blighted Beak
+ 		iWearable = this.CallFunction("CreateWeapon", 315, "tf_wearable", GetRandomInt(1, 100), TFQual_Normal, sWhitePaint);	//Blighted Beak
 		if (iWearable > MaxClients)
 		{
 			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iUberRangerBlightedBeak);
-			SetEntityRenderColor(iWearable, iColor[0], iColor[1], iColor[2], iColor[3]);
+			//SetEntityRenderColor(iWearable, iColor[0], iColor[1], iColor[2], iColor[3]);
 		}
 			
 		for (int i = 1; i <= MaxClients; i++)
