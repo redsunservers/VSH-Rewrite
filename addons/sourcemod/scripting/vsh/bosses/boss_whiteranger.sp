@@ -213,6 +213,13 @@ methodmap CUberRanger < SaxtonHaleBase
 				TeleportEntity(iClient, vecBossPos, vecBossAng, vecVel);
 				TF2_AddCondition(iClient, TFCond_Ubercharged, 2.0);
 				
+				if (GetEntProp(this.iClient, Prop_Send, "m_bDucking") || GetEntProp(this.iClient, Prop_Send, "m_bDucked"))
+				{
+					SetEntProp(iClient, Prop_Send, "m_bDucking", true);
+					SetEntProp(iClient, Prop_Send, "m_bDucked", true);
+					SetEntityFlags(iClient, GetEntityFlags(iClient)|FL_DUCKING);
+				}
+				
 				aValidMinions.Erase(iBestClientIndex);
 			}
 		}
