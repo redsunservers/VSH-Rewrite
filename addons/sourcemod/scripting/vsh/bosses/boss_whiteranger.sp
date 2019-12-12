@@ -155,19 +155,18 @@ methodmap CUberRanger < SaxtonHaleBase
 		vecBossAng[2] = 0.0;
 		
 		//Create a lil effect
-		int iTeam = GetClientTeam(this.iClient);
-		CreateTimer(3.0, Timer_EntityCleanup, TF2_SpawnParticle(iTeam == TFTeam_Blue ? "teleportedin_blue" : "teleportedin_red", vecBossPos));
+		CreateTimer(3.0, Timer_EntityCleanup, TF2_SpawnParticle(TF2_GetClientTeam(this.iClient) == TFTeam_Boss ? "teleportedin_blue" : "teleportedin_red", vecBossPos));
 		EmitSoundToAll(RANGER_RAGESOUND, this.iClient);
 		
 		ArrayList aValidMinions = new ArrayList();
 		for (int iClient = 1; iClient <= MaxClients; iClient++)
 		{
 			if (IsClientInGame(iClient)
-				&& GetClientTeam(iClient) > TFTeam_Spectator
+				&& TF2_GetClientTeam(iClient) > TFTeam_Spectator
 				&& !IsPlayerAlive(iClient)
 				&& !g_bUberRangerPlayerWasSummoned[iClient]
-				&& Preferences_Get(iClient, halePreferences_Revival)
-				&& !Client_HasFlag(iClient, haleClientFlags_Punishment))
+				&& Preferences_Get(iClient, Preferences_Revival)
+				&& !Client_HasFlag(iClient, ClientFlags_Punishment))
 			{
 				aValidMinions.Push(iClient);
 			}
@@ -196,8 +195,8 @@ methodmap CUberRanger < SaxtonHaleBase
 				int iClient = aValidMinions.Get(iBestClientIndex);
 				
 				//Allow them to join the boss team
-				Client_AddFlag(iClient, haleClientFlags_BossTeam);
-				TF2_ForceTeamJoin(iClient, BOSS_TEAM);
+				Client_AddFlag(iClient, ClientFlags_BossTeam);
+				TF2_ForceTeamJoin(iClient, TFTeam_Boss);
 				
 				//Mark them as selected to not be included in future rages
 				g_bUberRangerPlayerWasSummoned[iClient] = true;
