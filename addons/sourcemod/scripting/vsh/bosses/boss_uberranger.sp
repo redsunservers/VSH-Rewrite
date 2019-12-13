@@ -108,13 +108,8 @@ methodmap CUberRanger < SaxtonHaleBase
 		259: Deals 3x falling damage to the player you land on
 		*/
 		
-		int iColor[4];
-		
 		//For reference: 230 230 230 is the color code for TF2's white paint
-		for (int i = 0; i < 3; i++)
-			iColor[i] = 230;
-			
-		iColor[3] = 255;
+		int iColor[4] = { 230, 230, 230, 255 };
 		
 		SetEntityRenderColor(this.iClient, iColor[0], iColor[1], iColor[2], iColor[3]);
 		
