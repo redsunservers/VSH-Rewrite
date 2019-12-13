@@ -435,6 +435,24 @@ stock int TF2_SpawnParticle(char[] sParticle, float vecOrigin[3] = NULL_VECTOR, 
 	return EntIndexToEntRef(iParticle);
 }
 
+stock void TF2_TeleportToClient(int iClient, int iTarget)
+{
+	float vecTargetPos[3], vecTargetAng[3];
+	GetClientAbsOrigin(iTarget, vecTargetPos);
+	GetClientAbsAngles(iTarget, vecTargetAng);
+	vecTargetAng[0] = 0.0;
+	vecTargetAng[2] = 0.0;
+	
+	TeleportEntity(iClient, vecTargetPos, vecTargetAng, NULL_VECTOR);
+	
+	if (GetEntProp(iTarget, Prop_Send, "m_bDucking") || GetEntProp(iTarget, Prop_Send, "m_bDucked"))
+	{
+		SetEntProp(iClient, Prop_Send, "m_bDucking", true);
+		SetEntProp(iClient, Prop_Send, "m_bDucked", true);
+		SetEntityFlags(iClient, GetEntityFlags(iClient)|FL_DUCKING);
+	}
+}
+
 stock void TF2_TeleportSwap(int iClient[2])
 {
 	float vecOrigin[2][3];

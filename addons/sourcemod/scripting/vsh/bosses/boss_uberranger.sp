@@ -204,20 +204,8 @@ methodmap CUberRanger < SaxtonHaleBase
 				boss.CallFunction("CreateBoss", "CMinionRanger");
 				TF2_RespawnPlayer(iClient);
 				
-				float vecVel[3];
-				vecVel[0] = GetRandomFloat(-200.0, 200.0);
-				vecVel[1] = GetRandomFloat(-200.0, 200.0);
-				vecVel[2] = GetRandomFloat(-200.0, 200.0);
-				
-				TeleportEntity(iClient, vecBossPos, vecBossAng, vecVel);
+				TF2_TeleportToClient(iClient, this.iClient);
 				TF2_AddCondition(iClient, TFCond_Ubercharged, 2.0);
-				
-				if (GetEntProp(this.iClient, Prop_Send, "m_bDucking") || GetEntProp(this.iClient, Prop_Send, "m_bDucked"))
-				{
-					SetEntProp(iClient, Prop_Send, "m_bDucking", true);
-					SetEntProp(iClient, Prop_Send, "m_bDucked", true);
-					SetEntityFlags(iClient, GetEntityFlags(iClient)|FL_DUCKING);
-				}
 				
 				aValidMinions.Erase(iBestClientIndex);
 			}

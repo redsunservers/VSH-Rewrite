@@ -685,16 +685,7 @@ public void Tags_SummonZombie(int iClient, int iTarget, TagsParams tParams)
 		boss.CallFunction("CreateBoss", "CZombie");
 		TF2_RespawnPlayer(iZombie);
 		
-		float vecPos[3];
-		GetClientAbsOrigin(iTarget, vecPos);
-		TeleportEntity(iZombie, vecPos, NULL_VECTOR, NULL_VECTOR);
-		
-		if (GetEntProp(iTarget, Prop_Send, "m_bDucking") || GetEntProp(iTarget, Prop_Send, "m_bDucked"))
-		{
-			SetEntProp(iZombie, Prop_Send, "m_bDucking", true);
-			SetEntProp(iZombie, Prop_Send, "m_bDucked", true);
-			SetEntityFlags(iZombie, GetEntityFlags(iZombie)|FL_DUCKING);
-		}
+		TF2_TeleportToClient(iZombie, iTarget);
 	}
 }
 
