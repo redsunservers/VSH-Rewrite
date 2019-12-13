@@ -70,12 +70,11 @@ methodmap CBonkBoy < SaxtonHaleBase
 		rageCond.AddCond(TFCond_CritHype);
 		rageCond.AddCond(TFCond_SpeedBuffAlly);
 		
+		boss.flSpeed = 400.0;
 		boss.iBaseHealth = 700;
 		boss.iHealthPerPlayer = 650;
 		boss.nClass = TFClass_Scout;
 		boss.iMaxRageDamage = 1500;
-		
-		boss.flSpeed = 370.0;
 		
 		g_bBonkBoyRage[boss.iClient] = false;
 	}
@@ -95,10 +94,10 @@ methodmap CBonkBoy < SaxtonHaleBase
 		StrCat(sInfo, length, "\nHealth: Low");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nAbilities");
-		StrCat(sInfo, length, "\n- 20%% extra jump height");
+		StrCat(sInfo, length, "\n- Faster movement speed and extra jump height");
 		StrCat(sInfo, length, "\n- Dash Jump");
 		StrCat(sInfo, length, "\n- Sandman with fast recharge balls, able to hold 3 max");
-		StrCat(sInfo, length, "\n- Medium range ball stuns player, moonshot instakills");
+		StrCat(sInfo, length, "\n- Medium range ball stuns player and building, moonshot instakills");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
 		StrCat(sInfo, length, "\n- Soda Popper jumps and faster speed movement for 5 seconds");
@@ -175,7 +174,8 @@ methodmap CBonkBoy < SaxtonHaleBase
 	{
 		if (strcmp(sClassname, "tf_projectile_stun_ball") == 0)
 		{
-			SDKHook(iEntity, SDKHook_StartTouch, BonkBoy_SandmanOnTouch);
+			SDK_HookBallImpact(iEntity, BonkBoy_BallImpact);	//To hook when ball impacts player
+			SDK_HookBallTouch(iEntity, BonkBoy_BallTouch);		//To hook when ball impacts building
 		}
 	}
 	
@@ -216,38 +216,83 @@ methodmap CBonkBoy < SaxtonHaleBase
 	}
 };
 
-public Action BonkBoy_SandmanOnTouch(int iEntity, int iToucher)
+public MRESReturn BonkBoy_BallImpact(int iEntity, Handle hParams)
 {
-	SDKUnhook(iEntity, SDKHook_StartTouch, BonkBoy_SandmanOnTouch);	
+	//Get victim whos stunned from ball
+	int iVictim = DHookGetParam(hParams, 1);
+	if (iVictim <= 0 || iVictim > MaxClients || !IsClientInGame(iVictim))
+		return;
 	
+	//Check if valid ball from Bonk Boy
+	int iThrower;
+	float flTime;
+	if (!BonkBoy_IsValidBall(iEntity, iThrower, flTime))
+		return;
+	
+	g_flBonkBoyStunTime[iVictim] = flTime;
+	g_iBonkBoyBallThrower[iVictim] = iThrower;
+	
+	SDKHook(iVictim, SDKHook_OnTakeDamage, BonkBoy_OnTakeDamage);
+	HookEvent("player_death", BonkBoy_PlayerDeath, EventHookMode_Pre);
+	RequestFrame(BonkBoy_UnhookBallDamage, GetClientUserId(iVictim));
+}
+
+public MRESReturn BonkBoy_BallTouch(int iEntity, Handle hReturn, Handle hParams)
+{
 	if (GetEntProp(iEntity, Prop_Send, "m_bTouched"))
 		return;
 	
-	int iThrower = GetEntPropEnt(iEntity, Prop_Send, "m_hThrower");	//Either from bonk boy, or from deflected pyro
-	if (iThrower <= 0 || iThrower > MaxClients || !IsClientInGame(iThrower))
+	//Check if toucher is building
+	int iBuilding = DHookGetParam(hParams, 1);
+	if (iBuilding <= MaxClients)
 		return;
 	
-	if (iToucher <= 0 || iToucher > MaxClients || !IsClientInGame(iToucher) || TF2_GetClientTeam(iThrower) == TF2_GetClientTeam(iToucher))
+	char sClassname[256];
+	GetEntityClassname(iBuilding, sClassname, sizeof(sClassname));
+	if (StrContains(sClassname, "obj_") != 0)
 		return;
 	
-	int iOwner = GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity");	//From bonk boy
+	//Check if valid ball from Bonk Boy
+	int iThrower;
+	float flTime;
+	if (!BonkBoy_IsValidBall(iEntity, iThrower, flTime))
+		return;
+	
+	//Team check
+	if (GetEntProp(iBuilding, Prop_Send, "m_iTeamNum") == GetClientTeam(iThrower))
+		return;
+	
+	//Deal damage
+	SDKHooks_TakeDamage(iBuilding, iThrower, iThrower, flTime * 120.0);
+	
+	//Stun building
+	TF2_StunBuilding(iBuilding, flTime * 8.0);
+	
+	//Mark ball as touched
+	SetEntProp(iEntity, Prop_Send, "m_bTouched", true);
+}
+
+bool BonkBoy_IsValidBall(int iEntity, int &iThrower = 0, float &flTime = 0.0)
+{
+	//Check if ball originally came from bonk boy
+	int iOwner = GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity");
 	if (!SaxtonHale_IsValidBoss(iOwner))
-		return;
+		return false;
 	
 	SaxtonHaleBase boss = SaxtonHaleBase(iOwner);
-	
 	char sBossType[MAX_TYPE_CHAR];
 	boss.CallFunction("GetBossType", sBossType, sizeof(sBossType));
 	if (!StrEqual(sBossType, "CBonkBoy"))
-		return;
+		return false;
+	
+	//Get whoever threw the ball, either from bonk boy, or from deflected pyro
+	iThrower = GetEntPropEnt(iEntity, Prop_Send, "m_hThrower");
+	if (iThrower <= 0 || iThrower > MaxClients || !IsClientInGame(iThrower))
+		return false;
 	
 	//Sandman init time is stored in m_iType + 4 offset
-	g_flBonkBoyStunTime[iToucher] = GetGameTime() - GetEntDataFloat(iEntity, g_iBonkBoyStunType + 0x04);
-	g_iBonkBoyBallThrower[iToucher] = iThrower;
-	
-	SDKHook(iToucher, SDKHook_OnTakeDamage, BonkBoy_OnTakeDamage);
-	HookEvent("player_death", BonkBoy_PlayerDeath, EventHookMode_Pre);
-	RequestFrame(BonkBoy_UnhookBallDamage, GetClientUserId(iToucher));
+	flTime = GetGameTime() - GetEntDataFloat(iEntity, g_iBonkBoyStunType + 0x04);
+	return true;
 }
 
 public Action BonkBoy_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
@@ -271,7 +316,8 @@ public Action BonkBoy_OnTakeDamage(int victim, int &attacker, int &inflictor, fl
 		else if (g_flBonkBoyStunTime[victim] > 0.10)
 		{
 			//Not so home run
-			TF2_StunPlayer(victim, g_flBonkBoyStunTime[victim] * 5.0, _, TF_STUNFLAGS_SMALLBONK, attacker);
+			damage *= g_flBonkBoyStunTime[victim] * 8.0;
+			TF2_StunPlayer(victim, g_flBonkBoyStunTime[victim] * 8.0, _, TF_STUNFLAGS_SMALLBONK, attacker);
 		}
 		
 		g_flBonkBoyStunTime[victim] = 0.0;
