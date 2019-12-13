@@ -5,6 +5,8 @@
 static int g_iUberRangerPrussianPickelhaube;
 static int g_iUberRangerBlightedBeak;
 
+static ArrayList g_aUberRangerColorList;
+
 static bool g_bUberRangerPlayerWasSummoned[TF_MAXPLAYERS+1];
 
 static char g_strUberRangerRoundStart[][] = {
@@ -135,6 +137,8 @@ methodmap CUberRanger < SaxtonHaleBase
 			
 		for (int i = 1; i <= MaxClients; i++)
 			g_bUberRangerPlayerWasSummoned[i] = false;
+			
+		UberRangerResetColorList();
 	}
 	
 	public void GetModel(char[] sModel, int length)
@@ -270,6 +274,9 @@ methodmap CUberRanger < SaxtonHaleBase
 	public void Destroy()
 	{
 		SetEntityRenderColor(this.iClient, 255, 255, 255, 255);
+		
+		if (g_aUberRangerColorList != null)
+			delete g_aUberRangerColorList;
 	}
 };
 
@@ -321,14 +328,18 @@ methodmap CMinionRanger < SaxtonHaleBase
 		259: Deals 3x falling damage to the player you land on
 		*/
 		
-		int iColor[4];
-		
-		for (int i = 0; i < 3; i++)
-			iColor[i] = GetRandomInt(10, 225);
+		if (g_aUberRangerColorList.Length <= 0 || g_aUberRangerColorList == null)
+			UberRangerResetColorList();
 			
-		iColor[3] = 255;
-		
-		SetEntityRenderColor(this.iClient, iColor[0], iColor[1], iColor[2], iColor[3]);
+		int iColor[3];
+			
+		g_aUberRangerColorList.GetArray(0, iColor);
+		for (int i = 0; i < 3; i++)
+		{
+			PrintToChatAll("%i", iColor[i]);
+		}
+		SetEntityRenderColor(this.iClient, iColor[0], iColor[1], iColor[2], 255);
+		g_aUberRangerColorList.Erase(0);
 		
 		int iWearable = -1;
 		
@@ -341,14 +352,14 @@ methodmap CMinionRanger < SaxtonHaleBase
 		if (iWearable > MaxClients)
 		{
 			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iUberRangerPrussianPickelhaube);
-			SetEntityRenderColor(iWearable, iColor[0], iColor[1], iColor[2], iColor[3]);
+			SetEntityRenderColor(iWearable, iColor[0], iColor[1], iColor[2], 255);
 		}
 		
 		iWearable = this.CallFunction("CreateWeapon", 315, "tf_wearable", GetRandomInt(1, 100), TFQual_Normal, sWhitePaint);	//Blighted Beak
 		if (iWearable > MaxClients)
 		{
 			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iUberRangerBlightedBeak);
-			SetEntityRenderColor(iWearable, iColor[0], iColor[1], iColor[2], iColor[3]);
+			SetEntityRenderColor(iWearable, iColor[0], iColor[1], iColor[2], 255);
 		}
 	}
 	
@@ -362,3 +373,51 @@ methodmap CMinionRanger < SaxtonHaleBase
 		SetEntityRenderColor(this.iClient, 255, 255, 255, 255);
 	}
 };
+
+public void UberRangerResetColorList()
+{
+	if (g_aUberRangerColorList == null)
+		g_aUberRangerColorList = new ArrayList(3);
+	else
+		g_aUberRangerColorList.Clear();
+	
+	//TF2 colors
+	g_aUberRangerColorList.PushArray({ 126, 126, 126 }); 	// Aged Mustache Grey
+	g_aUberRangerColorList.PushArray({ 20, 20, 20 }); 		// A Distinctive Lack of Hue
+	g_aUberRangerColorList.PushArray({ 105, 77, 58 }); 		// Radigan Conagher Brown
+	g_aUberRangerColorList.PushArray({ 207, 115, 54 }); 	// Mann Co. Orange
+	g_aUberRangerColorList.PushArray({ 231, 181, 59 }); 	// Australium Gold
+	g_aUberRangerColorList.PushArray({ 233, 150, 122 }); 	// Dark Salmon Injustice
+	g_aUberRangerColorList.PushArray({ 255, 105, 180 }); 	// Pink as Hell
+	g_aUberRangerColorList.PushArray({ 125, 64, 113 }); 	// A Deep Commitment to Purple
+	g_aUberRangerColorList.PushArray({ 66, 79, 59 }); 		// Zepheniah's Greed
+	g_aUberRangerColorList.PushArray({ 50, 205, 50 }); 		// The Bitter Taste of Defeat and Lime
+	g_aUberRangerColorList.PushArray({ 184, 59, 59 }); 		// Team Spirit (RED)
+	g_aUberRangerColorList.PushArray({ 88, 133, 162 }); 	// Team Spirit (BLU)
+	g_aUberRangerColorList.PushArray({ 40, 57, 77 }); 		// An Air of Debonair (BLU)
+
+	//Other colors
+	g_aUberRangerColorList.PushArray({ 25, 230, 230 }); 	// Cyan
+	
+	//Deviate slightly for variation
+	int iLength = g_aUberRangerColorList.Length;
+	for (int i = 0; i < iLength; i++) 
+	{
+		int iColor[3];
+		g_aUberRangerColorList.GetArray(i, iColor);
+		
+		for (int j = 0; j < 3; j++)
+		{
+			iColor[j] += GetRandomInt(-15, 15);
+			
+			if (iColor[j] > 255) 
+				iColor[j] = 255;
+			else if (iColor[j] < 0) 
+				iColor[j] = 0;
+		}
+			
+		g_aUberRangerColorList.SetArray(i, iColor);
+	}
+	
+	g_aUberRangerColorList.Sort(Sort_Random, Sort_Integer);
+}
