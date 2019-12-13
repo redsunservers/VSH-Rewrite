@@ -159,7 +159,7 @@ methodmap CUberRanger < SaxtonHaleBase
 		vecBossAng[2] = 0.0;
 		
 		//Create a lil effect
-		CreateTimer(3.0, Timer_EntityCleanup, TF2_SpawnParticle(TF2_GetClientTeam(this.iClient) == TFTeam_Boss ? "teleportedin_blue" : "teleportedin_red", vecBossPos));
+		CreateTimer(3.0, Timer_EntityCleanup, TF2_SpawnParticle(TF2_GetClientTeam(this.iClient) == TFTeam_Blue ? "teleportedin_blue" : "teleportedin_red", vecBossPos));
 		EmitSoundToAll(RANGER_RAGESOUND, this.iClient);
 		
 		ArrayList aValidMinions = new ArrayList();
