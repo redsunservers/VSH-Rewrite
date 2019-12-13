@@ -147,13 +147,9 @@ methodmap CUberRanger < SaxtonHaleBase
 		int iTotalSummons = 1;
 		if (this.bSuperRage) iTotalSummons = 3;
 		
-		float vecBossPos[3], vecBossAng[3];
-		GetClientAbsOrigin(this.iClient, vecBossPos);
-		GetClientAbsAngles(this.iClient, vecBossAng);
-		vecBossAng[0] = 0.0;
-		vecBossAng[2] = 0.0;
-		
 		//Create a lil effect
+		float vecBossPos[3];
+		GetClientAbsOrigin(this.iClient, vecBossPos);
 		CreateTimer(3.0, Timer_EntityCleanup, TF2_SpawnParticle(TF2_GetClientTeam(this.iClient) == TFTeam_Blue ? "teleportedin_blue" : "teleportedin_red", vecBossPos));
 		EmitSoundToAll(RANGER_RAGESOUND, this.iClient);
 		
