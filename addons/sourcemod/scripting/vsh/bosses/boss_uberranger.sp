@@ -381,19 +381,19 @@ public void UberRangerResetColorList()
 		g_aUberRangerColorList.Clear();
 	
 	//TF2 colors
-	g_aUberRangerColorList.PushArray({ 126, 126, 126 }); 	// Aged Mustache Grey
+	g_aUberRangerColorList.PushArray({ 125, 64, 113 }); 	// A Deep Commitment to Purple
 	g_aUberRangerColorList.PushArray({ 20, 20, 20 }); 		// A Distinctive Lack of Hue
-	g_aUberRangerColorList.PushArray({ 105, 77, 58 }); 		// Radigan Conagher Brown
-	g_aUberRangerColorList.PushArray({ 207, 115, 54 }); 	// Mann Co. Orange
+	g_aUberRangerColorList.PushArray({ 126, 126, 126 }); 	// Aged Mustache Grey
+	g_aUberRangerColorList.PushArray({ 40, 57, 77 }); 		// An Air of Debonair (BLU)
 	g_aUberRangerColorList.PushArray({ 231, 181, 59 }); 	// Australium Gold
 	g_aUberRangerColorList.PushArray({ 233, 150, 122 }); 	// Dark Salmon Injustice
+	g_aUberRangerColorList.PushArray({ 207, 115, 54 }); 	// Mann Co. Orange
 	g_aUberRangerColorList.PushArray({ 255, 105, 180 }); 	// Pink as Hell
-	g_aUberRangerColorList.PushArray({ 125, 64, 113 }); 	// A Deep Commitment to Purple
-	g_aUberRangerColorList.PushArray({ 66, 79, 59 }); 		// Zepheniah's Greed
-	g_aUberRangerColorList.PushArray({ 50, 205, 50 }); 		// The Bitter Taste of Defeat and Lime
-	g_aUberRangerColorList.PushArray({ 184, 59, 59 }); 		// Team Spirit (RED)
+	g_aUberRangerColorList.PushArray({ 105, 77, 58 }); 		// Radigan Conagher Brown
 	g_aUberRangerColorList.PushArray({ 88, 133, 162 }); 	// Team Spirit (BLU)
-	g_aUberRangerColorList.PushArray({ 40, 57, 77 }); 		// An Air of Debonair (BLU)
+	g_aUberRangerColorList.PushArray({ 184, 59, 59 }); 		// Team Spirit (RED)
+	g_aUberRangerColorList.PushArray({ 50, 205, 50 }); 		// The Bitter Taste of Defeat and Lime
+	g_aUberRangerColorList.PushArray({ 66, 79, 59 }); 		// Zepheniah's Greed
 
 	//Other colors
 	g_aUberRangerColorList.PushArray({ 25, 230, 230 }); 	// Cyan
