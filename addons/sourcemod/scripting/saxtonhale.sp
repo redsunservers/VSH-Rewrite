@@ -370,7 +370,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/bosses/boss_blutarch.sp"
 #include "vsh/bosses/boss_redmond.sp"
 #include "vsh/bosses/boss_yeti.sp"
-#include "vsh/bosses/boss_whiteranger.sp"
+#include "vsh/bosses/boss_uberranger.sp"
 #include "vsh/bosses/boss_zombie.sp"
 
 #include "vsh/modifiers/modifiers_speed.sp"
