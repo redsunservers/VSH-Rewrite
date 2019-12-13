@@ -64,6 +64,11 @@ methodmap CUberRanger < SaxtonHaleBase
 		boss.nClass = TFClass_Medic;
 		boss.iMaxRageDamage = 2500;
 		boss.bCanBeHealed = true;
+		
+		for (int i = 1; i <= MaxClients; i++)
+			g_bUberRangerPlayerWasSummoned[i] = false;
+			
+		UberRangerResetColorList();
 	}
 	
 	public void GetBossName(char[] sName, int length)
@@ -134,11 +139,6 @@ methodmap CUberRanger < SaxtonHaleBase
 			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iUberRangerBlightedBeak);
 			//SetEntityRenderColor(iWearable, iColor[0], iColor[1], iColor[2], iColor[3]);
 		}
-			
-		for (int i = 1; i <= MaxClients; i++)
-			g_bUberRangerPlayerWasSummoned[i] = false;
-			
-		UberRangerResetColorList();
 	}
 	
 	public void GetModel(char[] sModel, int length)
@@ -327,7 +327,6 @@ methodmap CMinionRanger < SaxtonHaleBase
 		252: reduction in push force taken from damage
 		259: Deals 3x falling damage to the player you land on
 		*/
-		
 		
 		//We're selecting their color from a preset list
 		
