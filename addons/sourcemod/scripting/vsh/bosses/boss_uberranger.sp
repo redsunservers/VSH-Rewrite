@@ -348,14 +348,19 @@ methodmap CMinionRanger < SaxtonHaleBase
 		
 		int iWearable = -1;
 		
-		iWearable = this.CallFunction("CreateWeapon", 50, "tf_wearable", GetRandomInt(1, 100), TFQual_Normal, "");	//Prussian Pickelhaube
+		//Another interesting thing: SetEntityRenderColor applies a color on top of the color it's already set for paintable models
+		//So for the color of the cosmetics to match the color of the Medic, we paint them white via an attribute then apply the random color
+		char sWhitePaint[16];
+		Format(sWhitePaint, sizeof(sWhitePaint), "142 ; 15132390");
+		
+		iWearable = this.CallFunction("CreateWeapon", 50, "tf_wearable", GetRandomInt(1, 100), TFQual_Normal, sWhitePaint);	//Prussian Pickelhaube
 		if (iWearable > MaxClients)
 		{
 			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iUberRangerPrussianPickelhaube);
 			SetEntityRenderColor(iWearable, iColor[0], iColor[1], iColor[2], iColor[3]);
 		}
 		
-		iWearable = this.CallFunction("CreateWeapon", 315, "tf_wearable", GetRandomInt(1, 100), TFQual_Normal, "");	//Blighted Beak
+		iWearable = this.CallFunction("CreateWeapon", 315, "tf_wearable", GetRandomInt(1, 100), TFQual_Normal, sWhitePaint);	//Blighted Beak
 		if (iWearable > MaxClients)
 		{
 			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iUberRangerBlightedBeak);
@@ -372,4 +377,4 @@ methodmap CMinionRanger < SaxtonHaleBase
 	{
 		SetEntityRenderColor(this.iClient, 255, 255, 255, 255);
 	}
-};	
+};
