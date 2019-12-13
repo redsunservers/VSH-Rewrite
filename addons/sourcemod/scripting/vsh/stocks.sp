@@ -437,6 +437,11 @@ stock int TF2_SpawnParticle(char[] sParticle, float vecOrigin[3] = NULL_VECTOR, 
 
 stock void TF2_TeleportToClient(int iClient, int iTarget)
 {
+	if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient) || !IsPlayerAlive(iClient))
+		return;
+	if (iTarget <= 0 || iTarget > MaxClients || !IsClientInGame(iTarget) || !IsPlayerAlive(iTarget))
+		return;
+	
 	float vecTargetPos[3], vecTargetAng[3];
 	GetClientAbsOrigin(iTarget, vecTargetPos);
 	GetClientAbsAngles(iTarget, vecTargetAng);

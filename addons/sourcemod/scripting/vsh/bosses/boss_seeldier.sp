@@ -60,12 +60,6 @@ methodmap CSeeldier < SaxtonHaleBase
 		int iTotalMinions = 3;
 		if (this.bSuperRage) iTotalMinions *= 2;
 		
-		float vecBossPos[3], vecBossAng[3];
-		GetClientAbsOrigin(this.iClient, vecBossPos);
-		GetClientAbsAngles(this.iClient, vecBossAng);
-		vecBossAng[0] = 0.0;
-		vecBossAng[2] = 0.0;
-		
 		ArrayList aValidMinions = new ArrayList();
 		for (int i = 1; i <= MaxClients; i++)
 		{
