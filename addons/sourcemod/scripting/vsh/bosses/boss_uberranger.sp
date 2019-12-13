@@ -128,17 +128,11 @@ methodmap CUberRanger < SaxtonHaleBase
 		
 		iWearable = this.CallFunction("CreateWeapon", 50, "tf_wearable", GetRandomInt(1, 100), TFQual_Normal, sWhitePaint);		//Prussian Pickelhaube
 		if (iWearable > MaxClients)
-		{
 			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iUberRangerPrussianPickelhaube);
-			//SetEntityRenderColor(iWearable, iColor[0], iColor[1], iColor[2], iColor[3]);
-		}
 		
  		iWearable = this.CallFunction("CreateWeapon", 315, "tf_wearable", GetRandomInt(1, 100), TFQual_Normal, sWhitePaint);	//Blighted Beak
 		if (iWearable > MaxClients)
-		{
 			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iUberRangerBlightedBeak);
-			//SetEntityRenderColor(iWearable, iColor[0], iColor[1], iColor[2], iColor[3]);
-		}
 	}
 	
 	public void GetModel(char[] sModel, int length)
