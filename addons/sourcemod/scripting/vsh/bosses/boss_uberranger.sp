@@ -155,10 +155,10 @@ methodmap CUberRanger < SaxtonHaleBase
 		GetValidSummonableClients(aValidMinions);
 		
 		int iLength = aValidMinions.Length;
-		if (iLength < iTotalMinions)
-			iTotalMinions = iLength;
+		if (iLength < iTotalSummons)
+			iTotalSummons = iLength;
 		else
-			iLength = iTotalMinions;
+			iLength = iTotalSummons;
 			
 		//Give priority to players who have the highest scores
 		for (int iSelection = 0; iSelection < iLength; iSelection++)
