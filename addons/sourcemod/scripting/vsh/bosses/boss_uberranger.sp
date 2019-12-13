@@ -152,34 +152,32 @@ methodmap CUberRanger < SaxtonHaleBase
 		EmitSoundToAll(RANGER_RAGESOUND, this.iClient);
 		
 		ArrayList aValidMinions = new ArrayList();
-		for (int iClient = 1; iClient <= MaxClients; iClient++)
-		{
-			if (IsClientInGame(iClient)
-				&& TF2_GetClientTeam(iClient) > TFTeam_Spectator
-				&& !IsPlayerAlive(iClient)
-				&& !g_bUberRangerPlayerWasSummoned[iClient]
-				&& Preferences_Get(iClient, Preferences_Revival)
-				&& !Client_HasFlag(iClient, ClientFlags_Punishment))
-			{
-				aValidMinions.Push(iClient);
-			}
-		}
+		GetValidSummonableClients(aValidMinions);
 		
+		int iLength = aValidMinions.Length;
+		if (iLength < iTotalMinions)
+			iTotalMinions = iLength;
+		else
+			iLength = iTotalMinions;
+			
 		//Give priority to players who have the highest scores
-		for (int iSelection = 0; iSelection < iTotalSummons; iSelection++)
+		for (int iSelection = 0; iSelection < iLength; iSelection++)
 		{
 			int iBestClientIndex = -1;
-			int iLength = aValidMinions.Length;
+			int iScoreLength = aValidMinions.Length;
 			int iBestScore = -1;
 			
-			for (int i = 0; i < iLength; i++)
+			for (int i = 0; i < iScoreLength; i++)
 			{
 				int iClient = aValidMinions.Get(i);
-				int iClientScore = SaxtonHale_GetScore(iClient);
-				if (iClientScore > iBestScore)
+				if (!g_bUberRangerPlayerWasSummoned[iClient])
 				{
-					iBestScore = iClientScore;
-					iBestClientIndex = i;
+					int iClientScore = SaxtonHale_GetScore(iClient);
+					if (iClientScore > iBestScore)
+					{
+						iBestScore = iClientScore;
+						iBestClientIndex = i;
+					}
 				}
 			}
 			

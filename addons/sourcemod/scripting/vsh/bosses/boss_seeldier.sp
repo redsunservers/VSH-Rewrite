@@ -61,21 +61,8 @@ methodmap CSeeldier < SaxtonHaleBase
 		if (this.bSuperRage) iTotalMinions *= 2;
 		
 		ArrayList aValidMinions = new ArrayList();
-		for (int i = 1; i <= MaxClients; i++)
-		{
-			if (IsClientInGame(i)
-				&& GetClientTeam(i) > 1
-				&& !IsPlayerAlive(i)
-				&& Preferences_Get(i, Preferences_Revival)
-				&& !Client_HasFlag(i, ClientFlags_Punishment))
-			{
-				if (SaxtonHale_IsValidBoss(i, false)) continue; // Can't let dead boss ressurect
-				
-				aValidMinions.Push(i);
-			}
-		}
+		GetValidSummonableClients(aValidMinions);
 		
-		aValidMinions.Sort(Sort_Random, Sort_Integer);
 		int iLength = aValidMinions.Length;
 		if (iLength < iTotalMinions)
 			iTotalMinions = iLength;

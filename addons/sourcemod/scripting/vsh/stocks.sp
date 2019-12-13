@@ -68,6 +68,28 @@ stock int GetMainBoss()
 	return iBoss;
 }
 
+stock ArrayList GetValidSummonableClients(ArrayList aClients, bool bAllowBoss = false)
+{
+	for (int iClient = 1; iClient <= MaxClients; iClient++)
+	{
+		if (IsClientInGame(iClient)
+			&& TF2_GetClientTeam(iClient) > TFTeam_Spectator
+			&& !IsPlayerAlive(iClient)
+			&& Preferences_Get(iClient, Preferences_Revival)
+			&& !Client_HasFlag(iClient, ClientFlags_Punishment))
+		{
+			if (!bAllowBoss)
+				if (SaxtonHale_IsValidBoss(iClient, false)) continue;
+				
+			aClients.Push(iClient);
+		}
+	}
+	
+	aClients.Sort(Sort_Random, Sort_Integer);
+	
+	return aClients;
+}
+
 stock void TF2_ForceTeamJoin(int iClient, TFTeam nTeam)
 {
 	TFClassType nClass = TF2_GetPlayerClass(iClient);
@@ -450,6 +472,7 @@ stock void TF2_TeleportToClient(int iClient, int iTarget)
 	
 	TeleportEntity(iClient, vecTargetPos, vecTargetAng, NULL_VECTOR);
 	
+	//Force whoever was teleported to crouch if its target was crouching, to prevent them from getting stuck
 	if (GetEntProp(iTarget, Prop_Send, "m_bDucking") || GetEntProp(iTarget, Prop_Send, "m_bDucked"))
 	{
 		SetEntProp(iClient, Prop_Send, "m_bDucking", true);
