@@ -119,7 +119,7 @@ methodmap CUberRanger < SaxtonHaleBase
 		char sWhitePaint[16];
 		Format(sWhitePaint, sizeof(sWhitePaint), "142 ; 15132390"); 
 		
-		iWearable = this.CallFunction("CreateWeapon", 50, "tf_wearable", GetRandomInt(1, 100), TFQual_Normal, sWhitePaint);	//Prussian Pickelhaube
+		iWearable = this.CallFunction("CreateWeapon", 50, "tf_wearable", GetRandomInt(1, 100), TFQual_Normal, sWhitePaint);		//Prussian Pickelhaube
 		if (iWearable > MaxClients)
 		{
 			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iUberRangerPrussianPickelhaube);
@@ -353,7 +353,7 @@ methodmap CMinionRanger < SaxtonHaleBase
 		char sWhitePaint[16];
 		Format(sWhitePaint, sizeof(sWhitePaint), "142 ; 15132390");
 		
-		iWearable = this.CallFunction("CreateWeapon", 50, "tf_wearable", GetRandomInt(1, 100), TFQual_Normal, sWhitePaint);	//Prussian Pickelhaube
+		iWearable = this.CallFunction("CreateWeapon", 50, "tf_wearable", GetRandomInt(1, 100), TFQual_Normal, sWhitePaint);		//Prussian Pickelhaube
 		if (iWearable > MaxClients)
 		{
 			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iUberRangerPrussianPickelhaube);
