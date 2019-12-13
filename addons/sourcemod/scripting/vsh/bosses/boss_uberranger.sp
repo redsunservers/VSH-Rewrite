@@ -268,9 +268,7 @@ methodmap CUberRanger < SaxtonHaleBase
 	public void Destroy()
 	{
 		SetEntityRenderColor(this.iClient, 255, 255, 255, 255);
-		
-		if (g_aUberRangerColorList != null)
-			delete g_aUberRangerColorList;
+		delete g_aUberRangerColorList;
 	}
 };
 
@@ -325,7 +323,7 @@ methodmap CMinionRanger < SaxtonHaleBase
 		//We're selecting their color from a preset list
 		
 		//Checking if the list is there at all
-		if (g_aUberRangerColorList.Length <= 0 || g_aUberRangerColorList == null)
+		if (g_aUberRangerColorList == null || g_aUberRangerColorList.Length <= 0)
 			UberRangerResetColorList();
 		
 		int iColor[3];
