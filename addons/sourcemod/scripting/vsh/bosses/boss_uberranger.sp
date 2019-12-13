@@ -328,16 +328,16 @@ methodmap CMinionRanger < SaxtonHaleBase
 		259: Deals 3x falling damage to the player you land on
 		*/
 		
+		
+		//We're selecting their color from a preset list
+		
+		//Checking if the list is there at all
 		if (g_aUberRangerColorList.Length <= 0 || g_aUberRangerColorList == null)
 			UberRangerResetColorList();
-			
+		
 		int iColor[3];
 			
 		g_aUberRangerColorList.GetArray(0, iColor);
-		for (int i = 0; i < 3; i++)
-		{
-			PrintToChatAll("%i", iColor[i]);
-		}
 		SetEntityRenderColor(this.iClient, iColor[0], iColor[1], iColor[2], 255);
 		g_aUberRangerColorList.Erase(0);
 		
