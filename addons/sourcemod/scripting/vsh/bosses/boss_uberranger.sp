@@ -73,7 +73,7 @@ methodmap CUberRanger < SaxtonHaleBase
 	
 	public void GetBossName(char[] sName, int length)
 	{
-		strcopy(sName, length, "White Über Ranger");
+		strcopy(sName, length, "Über Ranger");
 	}
 	
 	public void GetBossInfo(char[] sInfo, int length)
