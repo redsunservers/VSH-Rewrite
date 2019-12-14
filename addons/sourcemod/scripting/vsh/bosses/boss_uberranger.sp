@@ -185,9 +185,9 @@ methodmap CUberRanger < SaxtonHaleBase
 			{
 				int iClient = aValidMinions.Get(iBestClientIndex);
 				
-				SaxtonHaleBase minion = SaxtonHaleBase(iClient);
-				if (minion.bValid)
-					minion.CallFunction("Destroy");
+				SaxtonHaleBase boss = SaxtonHaleBase(iClient);
+				if (boss.bValid)
+					boss.CallFunction("Destroy");
 				
 				//Allow them to join the boss team
 				Client_AddFlag(iClient, ClientFlags_BossTeam);
@@ -196,7 +196,6 @@ methodmap CUberRanger < SaxtonHaleBase
 				//Mark them as selected to not be included in future rages
 				g_bUberRangerPlayerWasSummoned[iClient] = true;
 				
-				SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 				boss.CallFunction("CreateBoss", "CMinionRanger");
 				TF2_RespawnPlayer(iClient);
 				

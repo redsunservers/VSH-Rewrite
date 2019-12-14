@@ -73,15 +73,14 @@ methodmap CSeeldier < SaxtonHaleBase
 		{
 			int iClient = aValidMinions.Get(i);
 			
-			SaxtonHaleBase minion = SaxtonHaleBase(iClient);
-			if (minion.bValid)
-				minion.CallFunction("Destroy");
+			SaxtonHaleBase boss = SaxtonHaleBase(iClient);
+			if (boss.bValid)
+				boss.CallFunction("Destroy");
 
 			// Allow them to join the boss team
 			Client_AddFlag(iClient, ClientFlags_BossTeam);
 			TF2_ForceTeamJoin(iClient, TFTeam_Boss);
 			
-			SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 			boss.CallFunction("CreateBoss", "CSeeldierMinion");
 			TF2_RespawnPlayer(iClient);
 			
