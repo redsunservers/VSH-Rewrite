@@ -185,6 +185,10 @@ methodmap CUberRanger < SaxtonHaleBase
 			{
 				int iClient = aValidMinions.Get(iBestClientIndex);
 				
+				SaxtonHaleBase minion = SaxtonHaleBase(iClient);
+				if (minion.bValid)
+					minion.CallFunction("Destroy");
+				
 				//Allow them to join the boss team
 				Client_AddFlag(iClient, ClientFlags_BossTeam);
 				TF2_ForceTeamJoin(iClient, TFTeam_Boss);
@@ -320,14 +324,16 @@ methodmap CMinionRanger < SaxtonHaleBase
 		
 		//We're selecting their color from a preset list
 		
-		//Checking if the list is there at all
+		//Checking if the list is there at all or has been emptied
 		if (g_aUberRangerColorList == null || g_aUberRangerColorList.Length <= 0)
 			UberRangerResetColorList();
-		
-		int iColor[3];
 			
+		//Assign color
+		int iColor[4];
 		g_aUberRangerColorList.GetArray(0, iColor);
-		SetEntityRenderColor(this.iClient, iColor[0], iColor[1], iColor[2], 255);
+		iColor[3] = 255;
+		
+		SetEntityRenderColor(this.iClient, iColor[0], iColor[1], iColor[2], iColor[3]);
 		g_aUberRangerColorList.Erase(0);
 		
 		int iWearable = -1;
@@ -341,14 +347,14 @@ methodmap CMinionRanger < SaxtonHaleBase
 		if (iWearable > MaxClients)
 		{
 			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iUberRangerPrussianPickelhaube);
-			SetEntityRenderColor(iWearable, iColor[0], iColor[1], iColor[2], 255);
+			SetEntityRenderColor(iWearable, iColor[0], iColor[1], iColor[2], iColor[3]);
 		}
 		
 		iWearable = this.CallFunction("CreateWeapon", 315, "tf_wearable", GetRandomInt(1, 100), TFQual_Normal, sWhitePaint);	//Blighted Beak
 		if (iWearable > MaxClients)
 		{
 			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iUberRangerBlightedBeak);
-			SetEntityRenderColor(iWearable, iColor[0], iColor[1], iColor[2], 255);
+			SetEntityRenderColor(iWearable, iColor[0], iColor[1], iColor[2], iColor[3]);
 		}
 	}
 	

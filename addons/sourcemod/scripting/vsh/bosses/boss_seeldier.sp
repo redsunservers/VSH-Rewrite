@@ -72,6 +72,10 @@ methodmap CSeeldier < SaxtonHaleBase
 		for (int i = 0; i < iLength; i++)
 		{
 			int iClient = aValidMinions.Get(i);
+			
+			SaxtonHaleBase minion = SaxtonHaleBase(iClient);
+			if (minion.bValid)
+				minion.CallFunction("Destroy");
 
 			// Allow them to join the boss team
 			Client_AddFlag(iClient, ClientFlags_BossTeam);
