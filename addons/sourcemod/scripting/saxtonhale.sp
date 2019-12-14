@@ -351,6 +351,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/abilities/ability_rage_scare.sp"
 #include "vsh/abilities/ability_teleport_swap.sp"
 #include "vsh/abilities/ability_wallclimb.sp"
+#include "vsh/abilities/ability_weapon_ball.sp"
 #include "vsh/abilities/ability_weapon_charge.sp"
 #include "vsh/abilities/ability_weapon_fists.sp"
 #include "vsh/abilities/ability_weapon_spells.sp"
@@ -542,6 +543,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterAbility("CScareRage");
 	SaxtonHale_RegisterAbility("CTeleportSwap");
 	SaxtonHale_RegisterAbility("CWallClimb");
+	SaxtonHale_RegisterAbility("CWeaponBall");
 	SaxtonHale_RegisterAbility("CWeaponCharge");
 	SaxtonHale_RegisterAbility("CWeaponFists");
 	SaxtonHale_RegisterAbility("CWeaponSpells");

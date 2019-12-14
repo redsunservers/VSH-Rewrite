@@ -1,5 +1,7 @@
 static Handle g_hHookGetMaxHealth;
 static Handle g_hHookShouldTransmit;
+static Handle g_hHookBallImpact;
+static Handle g_hHookShouldBallTouch;
 static Handle g_hSDKGetMaxHealth;
 static Handle g_hSDKGetMaxAmmo;
 static Handle g_hSDKSendWeaponAnim;
@@ -97,6 +99,22 @@ void SDK_Init()
 	else
 		DHookAddParam(g_hHookShouldTransmit, HookParamType_ObjectPtr);
 	
+	// This hook calls when Sandman Ball stuns a player
+	iOffset = hGameData.GetOffset("CTFStunBall::ApplyBallImpactEffectOnVictim");
+	g_hHookBallImpact = DHookCreate(iOffset, HookType_Entity, ReturnType_Void, ThisPointer_CBaseEntity);
+	if (g_hHookBallImpact == null)
+		LogMessage("Failed to create hook: CTFStunBall::ApplyBallImpactEffectOnVictim!");
+	else
+		DHookAddParam(g_hHookBallImpact, HookParamType_CBaseEntity);
+	
+	// This hook calls when Sandman Ball want to touch
+	iOffset = hGameData.GetOffset("CTFStunBall::ShouldBallTouch");
+	g_hHookShouldBallTouch = DHookCreate(iOffset, HookType_Entity, ReturnType_Bool, ThisPointer_CBaseEntity);
+	if (g_hHookShouldBallTouch == null)
+		LogMessage("Failed to create hook: CTFStunBall::ApplyBallImpactEffectOnVictim!");
+	else
+		DHookAddParam(g_hHookShouldBallTouch, HookParamType_CBaseEntity);
+	
 	// This hook allows to allow/block medigun heals
 	Handle hHook = DHookCreateFromConf(hGameData, "CWeaponMedigun::AllowedToHealTarget");
 	if (hHook == null)
@@ -119,12 +137,26 @@ void SDK_Init()
 
 void SDK_HookGetMaxHealth(int iClient)
 {
-	DHookEntity(g_hHookGetMaxHealth, false, iClient);
+	if (g_hHookGetMaxHealth)
+		DHookEntity(g_hHookGetMaxHealth, false, iClient);
 }
 
 void SDK_AlwaysTransmitEntity(int iEntity)
 {
-	DHookEntity(g_hHookShouldTransmit, true, iEntity);
+	if (g_hHookShouldTransmit)
+		DHookEntity(g_hHookShouldTransmit, true, iEntity);
+}
+
+void SDK_HookBallImpact(int iEntity, DHookCallback callback)
+{
+	if (g_hHookBallImpact)
+		DHookEntity(g_hHookBallImpact, false, iEntity, _, callback);
+}
+
+void SDK_HookBallTouch(int iEntity, DHookCallback callback)
+{
+	if (g_hHookShouldBallTouch)
+		DHookEntity(g_hHookShouldBallTouch, false, iEntity, _, callback);
 }
 
 public MRESReturn Hook_GetMaxHealth(int iClient, Handle hReturn)

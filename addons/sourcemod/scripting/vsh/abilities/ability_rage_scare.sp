@@ -146,18 +146,8 @@ methodmap CScareRage < SaxtonHaleBase
 				
 				GetEntPropVector(iEntity, Prop_Send, "m_vecOrigin", vecTargetPos);
 				if (GetVectorDistance(vecTargetPos, vecPos) <= flRadius)
-				{
-					SetEntProp(iEntity, Prop_Send, "m_bDisabled", true);
-					CreateTimer(flDuration, Timer_ScareEnableSentry, EntIndexToEntRef(iEntity));
-				}
+					TF2_StunBuilding(iEntity, flDuration);
 			}
 		}
 	}
 };
-
-public Action Timer_ScareEnableSentry(Handle timer, int iRef)
-{
-	int iEntity = EntRefToEntIndex(iRef);
-	if (iEntity > MaxClients)
-		SetEntProp(iEntity, Prop_Send, "m_bDisabled", false);
-}

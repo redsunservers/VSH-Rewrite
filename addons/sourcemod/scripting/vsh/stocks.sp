@@ -305,6 +305,19 @@ stock int TF2_GetBuilding(int iClient, TFObjectType nType, TFObjectMode nMode = 
 	return -1;
 }
 
+stock void TF2_StunBuilding(int iBuilding, float flDuration)
+{
+	SetEntProp(iBuilding, Prop_Send, "m_bDisabled", true);
+	CreateTimer(flDuration, Timer_EnableBuilding, EntIndexToEntRef(iBuilding));
+}
+
+public Action Timer_EnableBuilding(Handle timer, int iRef)
+{
+	int iBuilding = EntRefToEntIndex(iRef);
+	if (iBuilding > MaxClients)
+		SetEntProp(iBuilding, Prop_Send, "m_bDisabled", false);
+}
+
 stock int TF2_CreateAndEquipWeapon(int iClient, int iIndex, char[] sClassnameTemp = NULL_STRING, int iLevel = 0, TFQuality iQuality = TFQual_Normal, char[] sAttrib = NULL_STRING, bool bAttrib = false)
 {
 	char sClassname[256];
