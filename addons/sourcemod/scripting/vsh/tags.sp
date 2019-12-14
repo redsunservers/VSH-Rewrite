@@ -297,6 +297,7 @@ public void Tags_SetEntProp(int iClient, int iTarget, TagsParams tParams)
 	tParams.GetString("type", sType, sizeof(sType));
 	tParams.GetString("prop", sProp, sizeof(sProp));
 	tParams.GetString("math", sMath, sizeof(sMath));
+	int iElement = tParams.GetInt("element", 0);
 	
 	if (StrEqual(sType, "int"))
 	{
@@ -313,7 +314,7 @@ public void Tags_SetEntProp(int iClient, int iTarget, TagsParams tParams)
 		if (tParams.GetIntEx("min", iMin) && iValue < iMin) iValue = iMin;
 		if (tParams.GetIntEx("max", iMax) && iValue > iMax) iValue = iMax;
 		
-		SetEntProp(iTarget, Prop_Send, sProp, iValue);
+		SetEntProp(iTarget, Prop_Send, sProp, iValue, _, iElement);
 	}
 	else if (StrEqual(sType, "float"))
 	{
@@ -330,7 +331,7 @@ public void Tags_SetEntProp(int iClient, int iTarget, TagsParams tParams)
 		if (tParams.GetFloatEx("min", flMin) && flValue < flMin) flValue = flMin;
 		if (tParams.GetFloatEx("max", flMax) && flValue > flMax) flValue = flMax;
 		
-		SetEntPropFloat(iTarget, Prop_Send, sProp, flValue);
+		SetEntPropFloat(iTarget, Prop_Send, sProp, flValue, iElement);
 	}
 }
 
