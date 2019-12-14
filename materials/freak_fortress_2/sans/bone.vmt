@@ -1,8 +1,0 @@
-"VertexLitGeneric"
-{
-$basetexture "freak_fortress_2\sans\bone"
-$bumpmap "freak_fortress_2\sans\boneNorm"
-$phong 1
-$ambientocclusion 1
-
-}
