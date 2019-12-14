@@ -649,32 +649,17 @@ public void Tags_SummonZombie(int iClient, int iTarget, TagsParams tParams)
 		iMaxCount = iMin;
 	
 	//Collect list of valid players
-	int[] iDeadPlayers = new int[MaxClients];
-	int iLength = 0;
+	ArrayList aDeadPlayers = new ArrayList();
+	GetValidSummonableClients(aDeadPlayers);
+	int iLength = aDeadPlayers.Length;
 	
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		if (IsClientInGame(i)
-			&& GetClientTeam(i) > 1
-			&& !IsPlayerAlive(i)
-			&& Preferences_Get(i, Preferences_Revival)
-			&& !Client_HasFlag(i, ClientFlags_Punishment)
-			&& (!SaxtonHale_IsValidBoss(i, false)))
-		{
-			iDeadPlayers[iLength] = i;
-			iLength++;
-		}
-	}
-	
-	//Sort random
-	SortIntegers(iDeadPlayers, iLength, Sort_Random);
 	if (iMaxCount > iLength)
 		iMaxCount = iLength;
 	
 	//Loop and summon zombies
 	for (int i = 0; i < iMaxCount; i++)
 	{
-		int iZombie = iDeadPlayers[i];
+		int iZombie = aDeadPlayers.Get(i);
 		SaxtonHaleBase boss = SaxtonHaleBase(iZombie);
 		if (boss.bValid)
 			boss.CallFunction("Destroy");
@@ -685,17 +670,11 @@ public void Tags_SummonZombie(int iClient, int iTarget, TagsParams tParams)
 		boss.CallFunction("CreateBoss", "CZombie");
 		TF2_RespawnPlayer(iZombie);
 		
-		float vecPos[3];
-		GetClientAbsOrigin(iTarget, vecPos);
-		TeleportEntity(iZombie, vecPos, NULL_VECTOR, NULL_VECTOR);
-		
-		if (GetEntProp(iTarget, Prop_Send, "m_bDucking") || GetEntProp(iTarget, Prop_Send, "m_bDucked"))
-		{
-			SetEntProp(iZombie, Prop_Send, "m_bDucking", true);
-			SetEntProp(iZombie, Prop_Send, "m_bDucked", true);
-			SetEntityFlags(iZombie, GetEntityFlags(iZombie)|FL_DUCKING);
-		}
+		TF2_TeleportToClient(iZombie, iTarget);
 	}
+	
+	delete aDeadPlayers;
+	g_iZombieUsed[iTarget]++;
 }
 
 public void Tags_AddAmmo(int iClient, int iTarget, TagsParams tParams)
