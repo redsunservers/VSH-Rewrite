@@ -285,16 +285,7 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 	public void OnEntityCreated(int iEntity, const char[] sClassname)
 	{
 		if (strcmp(sClassname, "tf_projectile_healing_bolt") == 0)
-		{
 			SDKHook(iEntity, SDKHook_StartTouch, Crossbow_OnTouch);
-		}
-		else if (strncmp(sClassname, "item_healthkit_", 15) == 0
-			|| strncmp(sClassname, "item_ammopack_", 14) == 0
-			|| strcmp(sClassname, "tf_ammo_pack") == 0
-			|| strcmp(sClassname, "func_regenerate") == 0)
-		{
-			SDKHook(iEntity, SDKHook_Touch, ItemPack_OnTouch);
-		}
 	}
 
 	public Action OnAttackCritical(int iWeapon, bool &bResult)
@@ -490,17 +481,5 @@ public Action Crossbow_OnTouch(int iEntity, int iToucher)
 		return Plugin_Handled;
 	}
 	
-	return Plugin_Continue;
-}
-
-public Action ItemPack_OnTouch(int iEntity, int iToucher)
-{
-	if (!g_bEnabled) return Plugin_Continue;
-	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
-	
-	//Don't allow valid non-attack players pick health and ammo packs
-	if (!SaxtonHale_IsValidAttack(iToucher))
-		return Plugin_Handled;
-
 	return Plugin_Continue;
 }
