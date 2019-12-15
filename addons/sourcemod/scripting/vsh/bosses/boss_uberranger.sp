@@ -375,43 +375,25 @@ public void UberRangerResetColorList()
 	else
 		g_aUberRangerColorList.Clear();
 	
-	//TF2 colors
-	g_aUberRangerColorList.PushArray({ 125, 64, 113 }); 	// A Deep Commitment to Purple
+	//Hand-picked colors
+	//These colors are mostly based out of TF2 paint colors, but brightened up so they stand out more
+	
+	//The following colors will have slight deviation from their current values
 	g_aUberRangerColorList.PushArray({ 20, 20, 20 }); 		// A Distinctive Lack of Hue
 	g_aUberRangerColorList.PushArray({ 126, 126, 126 }); 	// Aged Mustache Grey
-	g_aUberRangerColorList.PushArray({ 40, 57, 77 }); 		// An Air of Debonair (BLU)
-	g_aUberRangerColorList.PushArray({ 231, 181, 59 }); 	// Australium Gold
-	g_aUberRangerColorList.PushArray({ 233, 150, 122 }); 	// Dark Salmon Injustice
-	g_aUberRangerColorList.PushArray({ 207, 115, 54 }); 	// Mann Co. Orange
-	g_aUberRangerColorList.PushArray({ 255, 105, 180 }); 	// Pink as Hell
-	g_aUberRangerColorList.PushArray({ 105, 77, 58 }); 		// Radigan Conagher Brown
-	g_aUberRangerColorList.PushArray({ 88, 133, 162 }); 	// Team Spirit (BLU)
-	g_aUberRangerColorList.PushArray({ 184, 59, 59 }); 		// Team Spirit (RED)
+	g_aUberRangerColorList.PushArray({ 40, 70, 102 }); 		// An Air of Debonair (BLU) (modified)
+	g_aUberRangerColorList.PushArray({ 255, 202, 59 }); 	// Australium Gold (modified)
+	g_aUberRangerColorList.PushArray({ 255, 157, 126 }); 	// Dark Salmon Injustice (modified)
+	g_aUberRangerColorList.PushArray({ 255, 115, 200 }); 	// Pink as Hell (modified)
+	g_aUberRangerColorList.PushArray({ 105, 77, 58 }); 		// Radigan Conagher Brown (modified)
+	g_aUberRangerColorList.PushArray({ 88, 160, 187 }); 	// Team Spirit (BLU) (modified)
+	g_aUberRangerColorList.PushArray({ 210, 59, 59 }); 		// Team Spirit (RED) (modified)
 	g_aUberRangerColorList.PushArray({ 50, 205, 50 }); 		// The Bitter Taste of Defeat and Lime
-	g_aUberRangerColorList.PushArray({ 66, 79, 59 }); 		// Zepheniah's Greed
+	g_aUberRangerColorList.PushArray({ 79, 100, 59 }); 		// Zepheniah's Greed (modified)
 
-	//Other colors
 	g_aUberRangerColorList.PushArray({ 25, 230, 230 }); 	// Cyan
-	
-	//Deviate slightly for variation
-	int iLength = g_aUberRangerColorList.Length;
-	for (int i = 0; i < iLength; i++) 
-	{
-		int iColor[3];
-		g_aUberRangerColorList.GetArray(i, iColor);
-		
-		for (int j = 0; j < 3; j++)
-		{
-			iColor[j] += GetRandomInt(-15, 15);
-			
-			if (iColor[j] > 255) 
-				iColor[j] = 255;
-			else if (iColor[j] < 0) 
-				iColor[j] = 0;
-		}
-			
-		g_aUberRangerColorList.SetArray(i, iColor);
-	}
+	g_aUberRangerColorList.PushArray({ 255, 110, 0 }); 		// Orangered
+	g_aUberRangerColorList.PushArray({ 88, 21, 132 }); 		// Purple (dark)
 	
 	g_aUberRangerColorList.Sort(Sort_Random, Sort_Integer);
 }
