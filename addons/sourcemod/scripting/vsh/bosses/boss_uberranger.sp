@@ -234,6 +234,11 @@ methodmap CUberRanger < SaxtonHaleBase
 		time = 235.0;
 	}
 	
+	public void OnThink()
+	{
+		Hud_AddText(this.iClient, "Use your Medigun to heal your companions!");
+	}
+	
 	public void Precache()
 	{
 		PrecacheModel(RANGER_MODEL);
@@ -360,6 +365,11 @@ methodmap CMinionRanger < SaxtonHaleBase
 	public void GetModel(char[] sModel, int length)
 	{
 		strcopy(sModel, length, RANGER_MODEL);
+	}
+	
+	public void OnThink()
+	{
+		Hud_AddText(this.iClient, "Use your Medigun to heal your companions!");
 	}
 	
 	public void Destroy()
