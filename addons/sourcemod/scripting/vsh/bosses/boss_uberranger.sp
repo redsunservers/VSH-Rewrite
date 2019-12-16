@@ -55,8 +55,8 @@ methodmap CUberRanger < SaxtonHaleBase
 		abilityJump.iJumpChargeBuild = 1;
 		
 		CRageAddCond rageCond = boss.CallFunction("CreateAbility", "CRageAddCond");
-		rageCond.flRageCondDuration = 6.0;
-		rageCond.flRageCondSuperRageMultiplier = 1.333;	//This is 7.998 seconds, close enough
+		rageCond.flRageCondDuration = 5.0;
+		rageCond.flRageCondSuperRageMultiplier = 1.6;	// 8 seconds
 		rageCond.AddCond(TFCond_UberchargedCanteen);
 		
 		boss.iBaseHealth = 650;
@@ -68,7 +68,7 @@ methodmap CUberRanger < SaxtonHaleBase
 		for (int i = 1; i <= MaxClients; i++)
 			g_bUberRangerPlayerWasSummoned[i] = false;
 			
-		UberRangerResetColorList();
+		UberRanger_ResetColorList();
 	}
 	
 	public void GetBossName(char[] sName, int length)
@@ -85,7 +85,7 @@ methodmap CUberRanger < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- Equipped with a Medi Gun");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- Übercharge for 6 seconds");
+		StrCat(sInfo, length, "\n- Übercharge for 5 seconds");
 		StrCat(sInfo, length, "\n- Summons a fellow Über Ranger");
 		StrCat(sInfo, length, "\n- Über Rangers are allowed to heal and über each other");
 		StrCat(sInfo, length, "\n- 200%% Rage: extends über duration to 8 seconds and summons 3 Über Rangers");
@@ -198,8 +198,9 @@ methodmap CUberRanger < SaxtonHaleBase
 				
 				boss.CallFunction("CreateBoss", "CMinionRanger");
 				TF2_RespawnPlayer(iClient);
-				
 				TF2_TeleportToClient(iClient, this.iClient);
+				
+				
 				TF2_AddCondition(iClient, TFCond_Ubercharged, 2.0);
 				
 				aValidMinions.Erase(iBestClientIndex);
@@ -282,8 +283,12 @@ methodmap CMinionRanger < SaxtonHaleBase
 {
 	public CMinionRanger(CMinionRanger boss)
 	{
-		boss.iBaseHealth = 600;
-		boss.iHealthPerPlayer = 0;
+		CBraveJump abilityJump = boss.CallFunction("CreateAbility", "CBraveJump");
+		abilityJump.iJumpChargeBuild = 1;
+		abilityJump.flMaxHeigth = 650.0;
+		
+		boss.iBaseHealth = 400;
+		boss.iHealthPerPlayer = 40;
 		boss.nClass = TFClass_Medic;
 		boss.iMaxRageDamage = -1;
 		boss.flWeighDownTimer = -1.0;
@@ -330,7 +335,7 @@ methodmap CMinionRanger < SaxtonHaleBase
 		
 		//Checking if the list is there at all or has been emptied
 		if (g_aUberRangerColorList == null || g_aUberRangerColorList.Length <= 0)
-			UberRangerResetColorList();
+			UberRanger_ResetColorList();
 			
 		//Assign color
 		int iColor[4];
@@ -367,6 +372,12 @@ methodmap CMinionRanger < SaxtonHaleBase
 		strcopy(sModel, length, RANGER_MODEL);
 	}
 	
+	public void GetSoundAbility(char[] sSound, int length, const char[] sType)
+	{
+		if (strcmp(sType, "CBraveJump") == 0)
+			strcopy(sSound, length, g_strUberRangerJump[GetRandomInt(0,sizeof(g_strUberRangerJump)-1)]);
+	}
+	
 	public void OnThink()
 	{
 		Hud_AddText(this.iClient, "Use your Medigun to heal your companions!");
@@ -378,7 +389,7 @@ methodmap CMinionRanger < SaxtonHaleBase
 	}
 };
 
-public void UberRangerResetColorList()
+public void UberRanger_ResetColorList()
 {
 	if (g_aUberRangerColorList == null)
 		g_aUberRangerColorList = new ArrayList(3);
