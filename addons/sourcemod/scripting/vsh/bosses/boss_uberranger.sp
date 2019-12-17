@@ -163,25 +163,11 @@ methodmap CUberRanger < SaxtonHaleBase
 		//Give priority to players who have the highest scores
 		for (int iSelection = 0; iSelection < iLength; iSelection++)
 		{	
-			int iClient = UberRanger_GetBestClient(aValidMinions);
+			//Spawn and teleport the replacement to the boss
+			int iClient = UberRanger_SpawnBestPlayer(aValidMinions);
 			
-			if (iClient > 0)
-			{			
-				SaxtonHaleBase boss = SaxtonHaleBase(iClient);
-				if (boss.bValid)
-					boss.CallFunction("Destroy");
-				
-				//Allow them to join the boss team
-				Client_AddFlag(iClient, ClientFlags_BossTeam);
-				TF2_ForceTeamJoin(iClient, TFTeam_Boss);
-				
-				boss.CallFunction("CreateBoss", "CMinionRanger");
-				TF2_RespawnPlayer(iClient);
+			if (iClient > 0)		
 				TF2_TeleportToClient(iClient, this.iClient);
-				
-				//This condition will be present until they move
-				TF2_AddCondition(iClient, TFCond_UberchargedCanteen, 7.0);
-			}
 		}
 			
 		delete aValidMinions;
@@ -361,7 +347,7 @@ methodmap CMinionRanger < SaxtonHaleBase
 	
 	public void OnButtonPress(int button)
 	{
-		//Checking if the player uses any directional keys, thus not being AFK
+		//Check if the player uses any directional keys, thus isn't AFK
 		if (!g_bUberRangerMinionHasMoved[this.iClient])
 		{	
 			if (button == IN_MOVELEFT || button == IN_MOVERIGHT || button == IN_FORWARD || button == IN_BACK)
@@ -405,30 +391,14 @@ methodmap CMinionRanger < SaxtonHaleBase
 		{
 			ArrayList aValidMinions = new ArrayList();
 			GetValidSummonableClients(aValidMinions);
-			int iBestClient = UberRanger_GetBestClient(aValidMinions);
 			
+			//Spawn and teleport the replacement to where this AFK minion is, if valid
+			int iBestClient = UberRanger_SpawnBestPlayer(aValidMinions);	
 			if (iBestClient > 0)
-			{
-				SaxtonHaleBase boss = SaxtonHaleBase(iBestClient);
-				if (boss.bValid)
-					boss.CallFunction("Destroy");
-						
-				//Allow them to join the boss team
-				Client_AddFlag(iBestClient, ClientFlags_BossTeam);
-				TF2_ForceTeamJoin(iBestClient, TFTeam_Boss);
-						
-				boss.CallFunction("CreateBoss", "CMinionRanger");
-				TF2_RespawnPlayer(iBestClient);
-				
-				//Teleport the replacement to where this AFK minion is
 				TF2_TeleportToClient(iBestClient, this.iClient);
-						
-				//This condition will be present until they move, repeating this cycle until broken
-				TF2_AddCondition(iBestClient, TFCond_UberchargedCanteen, 7.0);
-			}
 		}
 	}
-			
+	
 	public void Destroy()
 	{
 		SetEntityRenderColor(this.iClient, 255, 255, 255, 255);
@@ -465,7 +435,7 @@ public void UberRanger_ResetColorList()
 	g_aUberRangerColorList.Sort(Sort_Random, Sort_Integer);
 }
 
-public int UberRanger_GetBestClient(ArrayList aClients)
+public int UberRanger_SpawnBestPlayer(ArrayList aClients)
 {
 	int iBestClientIndex = -1;
 	int iLength = aClients.Length;
@@ -485,6 +455,23 @@ public int UberRanger_GetBestClient(ArrayList aClients)
 				iBestClientIndex = iClient;
 			}
 		}
+	}
+
+	if (iBestClientIndex > 0)
+	{
+		SaxtonHaleBase boss = SaxtonHaleBase(iBestClientIndex);
+		if (boss.bValid)
+			boss.CallFunction("Destroy");
+
+		//Allow them to join the boss team
+		Client_AddFlag(iBestClientIndex, ClientFlags_BossTeam);
+		TF2_ForceTeamJoin(iBestClientIndex, TFTeam_Boss);
+
+		boss.CallFunction("CreateBoss", "CMinionRanger");
+		TF2_RespawnPlayer(iBestClientIndex);
+
+		//Duration of this condition will reset when they move
+		TF2_AddCondition(iBestClientIndex, TFCond_UberchargedCanteen, 7.0);
 	}
 	
 	//Returns -1 if it finds nobody suitable
