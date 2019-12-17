@@ -200,6 +200,8 @@ methodmap CUberRanger < SaxtonHaleBase
 	
 	public void OnThink()
 	{
+		if (!IsPlayerAlive(this.iClient)) return;
+		
 		Hud_AddText(this.iClient, "Use your Medigun to heal your companions!");
 	}
 	
@@ -374,14 +376,16 @@ methodmap CMinionRanger < SaxtonHaleBase
 	
 	public void OnThink()
 	{
+		if (!IsPlayerAlive(this.iClient)) return;
+		
+		char sMessage[64];
+		
 		if (!g_bUberRangerMinionHasMoved[this.iClient])
-		{
-			char sAFKWarning[64];
-			Format(sAFKWarning, sizeof(sAFKWarning), "You have %d second%s to move before getting replaced!", g_iUberRangerMinionAFKTimeLeft[this.iClient], g_iUberRangerMinionAFKTimeLeft[this.iClient] != 1 ? "s" : "");
-			Hud_AddText(this.iClient, sAFKWarning);
-		}
+			Format(sMessage, sizeof(sMessage), "You have %d second%s to move before getting replaced!", g_iUberRangerMinionAFKTimeLeft[this.iClient], g_iUberRangerMinionAFKTimeLeft[this.iClient] != 1 ? "s" : "");
 		else
-			Hud_AddText(this.iClient, "Use your Medigun to heal your companions!");
+			Format(sMessage, sizeof(sMessage), "Use your Medigun to heal your companions!");
+			
+		Hud_AddText(this.iClient, sMessage);
 	}
 	
 	public void OnDeath()
