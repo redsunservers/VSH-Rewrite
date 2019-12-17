@@ -53,7 +53,7 @@ methodmap CPyromancerBlue < SaxtonHaleBase
 {
 	public CPyromancerBlue(CPyromancerBlue boss)
 	{
-		CBraveJump boostJump = boss.CallFunction("CreateAbility", "CBraveJump");
+		boss.CallFunction("CreateAbility", "CBraveJump");
 		
 		//boostJump.flMaxHeigth /= 1.75;
 		//boostJump.flMaxDistance = 0.7;
