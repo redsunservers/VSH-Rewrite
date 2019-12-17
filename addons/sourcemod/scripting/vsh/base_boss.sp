@@ -81,7 +81,7 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 		int iEnemy = 0;
 		for (int i = 1; i <= MaxClients; i++)
 		{
-			if (IsClientInGame(i))
+			if (IsClientInGame(i) && IsPlayerAlive(i))
 			{
 				int iTargetTeam = GetClientTeam(i);
 				if (iTargetTeam > 1 && iTargetTeam != iTeam)
