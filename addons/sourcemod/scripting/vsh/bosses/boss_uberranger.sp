@@ -4,10 +4,14 @@
 
 static int g_iUberRangerPrussianPickelhaube;
 static int g_iUberRangerBlightedBeak;
+static int g_iUberRangerMinionAFKTimeLeft[TF_MAXPLAYERS+1];
 
 static ArrayList g_aUberRangerColorList;
 
+static Handle g_hUberRangerMinionAFKTimer[TF_MAXPLAYERS+1];
+
 static bool g_bUberRangerPlayerWasSummoned[TF_MAXPLAYERS+1];
+static bool g_bUberRangerMinionHasMoved[TF_MAXPLAYERS+1];
 
 static char g_strUberRangerRoundStart[][] = {
 	"vo/medic_battlecry05.mp3"
@@ -52,7 +56,7 @@ methodmap CUberRanger < SaxtonHaleBase
 	public CUberRanger(CUberRanger boss)
 	{
 		CBraveJump abilityJump = boss.CallFunction("CreateAbility", "CBraveJump");
-		abilityJump.iJumpChargeBuild = 1;
+		abilityJump.iJumpChargeBuild /= 4;				//4x slower jump charge rate
 		
 		CRageAddCond rageCond = boss.CallFunction("CreateAbility", "CRageAddCond");
 		rageCond.flRageCondDuration = 5.0;
@@ -151,8 +155,7 @@ methodmap CUberRanger < SaxtonHaleBase
 		CreateTimer(3.0, Timer_EntityCleanup, TF2_SpawnParticle(TF2_GetClientTeam(this.iClient) == TFTeam_Blue ? "teleportedin_blue" : "teleportedin_red", vecBossPos));
 		EmitSoundToAll(RANGER_RAGESOUND, this.iClient);
 		
-		ArrayList aValidMinions = new ArrayList();
-		GetValidSummonableClients(aValidMinions);
+		ArrayList aValidMinions = GetValidSummonableClients();
 		
 		int iLength = aValidMinions.Length;
 		if (iLength < iTotalSummons)
@@ -244,17 +247,13 @@ methodmap CUberRanger < SaxtonHaleBase
 	}
 };
 
-static bool g_bUberRangerMinionHasMoved[TF_MAXPLAYERS+1];
-static Handle g_hUberRangerMinionAFKTimer[TF_MAXPLAYERS+1];
-static int g_iUberRangerMinionAFKTimeLeft[TF_MAXPLAYERS+1];
-
 methodmap CMinionRanger < SaxtonHaleBase
 {
 	public CMinionRanger(CMinionRanger boss)
 	{
 		CBraveJump abilityJump = boss.CallFunction("CreateAbility", "CBraveJump");
-		abilityJump.iJumpChargeBuild = 1;
-		abilityJump.flMaxHeigth = 650.0;
+		abilityJump.iJumpChargeBuild /= 4;						//4x slower jump charge rate
+		abilityJump.flMaxHeigth /= 2;							//Half max height for super jumps
 		
 		boss.iBaseHealth = 400;
 		boss.iHealthPerPlayer = 40;
@@ -349,17 +348,14 @@ methodmap CMinionRanger < SaxtonHaleBase
 	
 	public void OnButtonPress(int button)
 	{
-		//Check if the player uses any directional keys, thus isn't AFK
+		//Check if the player presses anything, thus isn't AFK
 		if (!g_bUberRangerMinionHasMoved[this.iClient])
 		{	
-			if (button == IN_MOVELEFT || button == IN_MOVERIGHT || button == IN_FORWARD || button == IN_BACK)
-			{	
-				//Reset their über spawn protection
-				TF2_RemoveCondition(this.iClient, TFCond_UberchargedCanteen);
-				TF2_AddCondition(this.iClient, TFCond_UberchargedCanteen, 3.0);
+			//Reset their über spawn protection
+			TF2_RemoveCondition(this.iClient, TFCond_UberchargedCanteen);
+			TF2_AddCondition(this.iClient, TFCond_UberchargedCanteen, 3.0);
 				
-				g_bUberRangerMinionHasMoved[this.iClient] = true;
-			}
+			g_bUberRangerMinionHasMoved[this.iClient] = true;
 		}
 	}
 	
@@ -376,16 +372,16 @@ methodmap CMinionRanger < SaxtonHaleBase
 	
 	public void OnThink()
 	{
-		if (!IsPlayerAlive(this.iClient)) return;
-		
-		char sMessage[64];
-		
-		if (!g_bUberRangerMinionHasMoved[this.iClient])
-			Format(sMessage, sizeof(sMessage), "You have %d second%s to move before getting replaced!", g_iUberRangerMinionAFKTimeLeft[this.iClient], g_iUberRangerMinionAFKTimeLeft[this.iClient] != 1 ? "s" : "");
-		else
-			Format(sMessage, sizeof(sMessage), "Use your Medigun to heal your companions!");
-			
-		Hud_AddText(this.iClient, sMessage);
+		if (IsPlayerAlive(this.iClient))
+		{
+			char sMessage[64];
+			if (!g_bUberRangerMinionHasMoved[this.iClient])
+				Format(sMessage, sizeof(sMessage), "You have %d second%s to move before getting replaced!", g_iUberRangerMinionAFKTimeLeft[this.iClient], g_iUberRangerMinionAFKTimeLeft[this.iClient] != 1 ? "s" : "");
+			else
+				Format(sMessage, sizeof(sMessage), "Use your Medigun to heal your companions!");
+				
+			Hud_AddText(this.iClient, sMessage);
+		}
 	}
 	
 	public void OnDeath()
@@ -393,19 +389,21 @@ methodmap CMinionRanger < SaxtonHaleBase
 		//This is called on death in case people suicide after getting summoned instead of disabling respawn
 		if (!g_bUberRangerMinionHasMoved[this.iClient])
 		{
-			ArrayList aValidMinions = new ArrayList();
-			GetValidSummonableClients(aValidMinions);
+			ArrayList aValidMinions = GetValidSummonableClients();
 			
 			//Spawn and teleport the replacement to where this AFK minion is, if valid
 			int iBestClient = UberRanger_SpawnBestPlayer(aValidMinions);	
 			if (iBestClient > 0)
 				TF2_TeleportToClient(iBestClient, this.iClient);
+				
+			delete aValidMinions;
 		}
 	}
 	
 	public void Destroy()
 	{
 		SetEntityRenderColor(this.iClient, 255, 255, 255, 255);
+		g_hUberRangerMinionAFKTimer[this.iClient] = null;
 	}
 };
 
@@ -478,7 +476,7 @@ public int UberRanger_SpawnBestPlayer(ArrayList aClients)
 		TF2_AddCondition(iBestClientIndex, TFCond_UberchargedCanteen, 7.0);
 	}
 	
-	//Returns -1 if it finds nobody suitable
+	//Returns index of client who tried to spawn, or -1 if it finds nobody suitable
 	return iBestClientIndex;
 }
 
@@ -487,7 +485,7 @@ public Action Timer_UberRanger_ReplaceMinion(Handle hTimer, int iClient)
 	if (hTimer != g_hUberRangerMinionAFKTimer[iClient])
 		return;
 		
-	if (TF2_GetClientTeam(iClient) < TFTeam_Attack || !IsPlayerAlive(iClient) || g_bUberRangerMinionHasMoved[iClient])
+	if (TF2_GetClientTeam(iClient) <= TFTeam_Spectator || !IsPlayerAlive(iClient) || g_bUberRangerMinionHasMoved[iClient])
 		return;
 	
 	//Adjust the countdown on screen
@@ -498,28 +496,20 @@ public Action Timer_UberRanger_ReplaceMinion(Handle hTimer, int iClient)
 		return;
 	}
 	
-	//Snap the AFK player. There's no point in killing them if they're the only acceptable client available
-	ArrayList aValidMinions = new ArrayList();
-	GetValidSummonableClients(aValidMinions);
+	//Snap the AFK player. Note that there's no point in killing them if they're the only acceptable client available
+	ArrayList aValidMinions = GetValidSummonableClients();
 	int iLength = aValidMinions.Length;
-	bool bPlayerAvailable = false;
 	
-	if (iLength > 0)
+	for (int i = 0; i < iLength; i++)
 	{
-		for (int i = 0; i < iLength; i++)
+		int iCandidate = aValidMinions.Get(i);
+		if (!g_bUberRangerPlayerWasSummoned[iCandidate])
 		{
-			int iCandidate = aValidMinions.Get(i);
-			if (!g_bUberRangerPlayerWasSummoned[iCandidate])
-			{
-				bPlayerAvailable = true;
-				break;
-			}
+			ForcePlayerSuicide(iClient);
+			break;
 		}
 	}
-	
-	if (bPlayerAvailable)
-		ForcePlayerSuicide(iClient);
-		
+
 	delete aValidMinions;
 	
 	//Set them as moving again, in case the AFK player wasn't killed
