@@ -77,6 +77,16 @@
 				"linux"		"323"
 				"windows"	"317"
 			}
+			"CTFStunBall::ApplyBallImpactEffectOnVictim"
+			{
+				"linux"		"260"
+				"windows"	"259"
+			}
+			"CTFStunBall::ShouldBallTouch"
+			{
+				"linux"		"262"
+				"windows"	"261"
+			}
 		}
 	}
 }

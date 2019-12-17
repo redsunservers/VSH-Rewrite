@@ -282,8 +282,6 @@ TFClassType g_nClassDisplay[sizeof(g_strClassName)] = {
 
 bool g_bEnabled;
 bool g_bRoundStarted;
-bool g_bBlockRagdoll;
-bool g_bIceRagdoll;
 
 bool g_bSpecialRound;
 TFClassType g_nSpecialRoundNextClass;
@@ -339,6 +337,7 @@ ConVar tf_arena_preround_time;
 
 #include "vsh/abilities/ability_body_eat.sp"
 #include "vsh/abilities/ability_brave_jump.sp"
+#include "vsh/abilities/ability_dash_jump.sp"
 #include "vsh/abilities/ability_drop_model.sp"
 #include "vsh/abilities/ability_groundpound.sp"
 #include "vsh/abilities/ability_model_override.sp"
@@ -350,6 +349,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/abilities/ability_rage_scare.sp"
 #include "vsh/abilities/ability_teleport_swap.sp"
 #include "vsh/abilities/ability_wallclimb.sp"
+#include "vsh/abilities/ability_weapon_ball.sp"
 #include "vsh/abilities/ability_weapon_charge.sp"
 #include "vsh/abilities/ability_weapon_fists.sp"
 #include "vsh/abilities/ability_weapon_spells.sp"
@@ -363,11 +363,13 @@ ConVar tf_arena_preround_time;
 #include "vsh/bosses/boss_brutalsniper.sp"
 #include "vsh/bosses/boss_announcer.sp"
 #include "vsh/bosses/boss_horsemann.sp"
+#include "vsh/bosses/boss_bonkboy.sp"
 #include "vsh/bosses/boss_seeman.sp"
 #include "vsh/bosses/boss_seeldier.sp"
 #include "vsh/bosses/boss_blutarch.sp"
 #include "vsh/bosses/boss_redmond.sp"
 #include "vsh/bosses/boss_yeti.sp"
+#include "vsh/bosses/boss_uberranger.sp"
 #include "vsh/bosses/boss_zombie.sp"
 
 #include "vsh/modifiers/modifiers_speed.sp"
@@ -508,6 +510,8 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("CAnnouncer", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CHorsemann", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CYeti", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CBonkBoy", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CUberRanger", VSHClassType_Boss);
 	
 	//Register misc bosses
 	SaxtonHale_RegisterClass("CSeeMan", VSHClassType_Boss);
@@ -520,11 +524,13 @@ public void OnPluginStart()
 	//Register minions
 	SaxtonHale_RegisterClass("CSeeldierMinion", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CAnnouncerMinion", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CMinionRanger", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CZombie", VSHClassType_Boss);
 	
 	//Register ability
 	SaxtonHale_RegisterClass("CBodyEat", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CBraveJump", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CDashJump", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CDropModel", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CBomb", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CGroundPound", VSHClassType_Ability);
@@ -536,6 +542,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("CScareRage", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CTeleportSwap", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CWallClimb", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CWeaponBall", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CWeaponCharge", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CWeaponFists", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CWeaponSpells", VSHClassType_Ability);
@@ -784,36 +791,38 @@ public void OnGameFrame()
 
 public void OnEntityCreated(int iEntity, const char[] sClassname)
 {
-	if (!g_bEnabled) return;
-
-	if (0 < iEntity < 2049) Network_ResetEntity(iEntity);
+	if (!g_bEnabled || iEntity <= 0 || iEntity > 2048)
+		return;
+	
+	Network_ResetEntity(iEntity);
+	
+	for (int iClient = 1; iClient <= MaxClients; iClient++)
+		if (SaxtonHale_IsValidBoss(iClient))
+			SaxtonHaleBase(iClient).CallFunction("OnEntityCreated", iEntity, sClassname);
 	
 	if (StrContains(sClassname, "tf_projectile_") == 0)
 	{
 		SDKHook(iEntity, SDKHook_StartTouchPost, Tags_OnProjectileTouch);
 	}
-	
-	if (strcmp(sClassname, "tf_projectile_healing_bolt") == 0)
-	{
-		SDKHook(iEntity, SDKHook_StartTouch, Crossbow_OnTouch);
-	}
-	else if(strncmp(sClassname, "item_healthkit_", 15) == 0
+	else if (strncmp(sClassname, "item_healthkit_", 15) == 0
 		|| strncmp(sClassname, "item_ammopack_", 14) == 0
 		|| strcmp(sClassname, "tf_ammo_pack") == 0
 		|| strcmp(sClassname, "func_regenerate") == 0)
 	{
 		SDKHook(iEntity, SDKHook_Touch, ItemPack_OnTouch);
 	}
-	else if (g_bBlockRagdoll && strcmp(sClassname, "tf_ragdoll") == 0)
-	{
-		AcceptEntityInput(iEntity, "Kill");
-		g_bBlockRagdoll = false;
-	}
-	else if (g_bIceRagdoll && strcmp(sClassname, "tf_ragdoll") == 0)
-	{
-		RequestFrame(Ice_RagdollSpawn, EntIndexToEntRef(iEntity));
-		g_bIceRagdoll = false;
-	}
+}
+
+public Action ItemPack_OnTouch(int iEntity, int iToucher)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
+	
+	//Don't allow valid non-attack players pick health and ammo packs
+	if (!SaxtonHale_IsValidAttack(iToucher))
+		return Plugin_Handled;
+
+	return Plugin_Continue;
 }
 
 public void OnEntityDestroyed(int iEntity)
@@ -1152,10 +1161,9 @@ public Action Client_OnTakeDamage(int victim, int &attacker, int &inflictor, flo
 		{
 			if (!bossAttacker.bValid)
 			{
-				//Dont do anything if boss is ubered
-				if (bossVictim.bValid && !bossVictim.bMinion && !TF2_IsUbercharged(victim))
+				if (bossVictim.bValid && !bossVictim.bMinion)
 				{
-					if (damagecustom == TF_CUSTOM_TELEFRAG)
+					if (damagecustom == TF_CUSTOM_TELEFRAG && !TF2_IsUbercharged(victim))
 					{
 						int iTelefragDamage = g_ConfigConvar.LookupInt("vsh_telefrag_damage");
 						damage = float(iTelefragDamage);
@@ -1299,35 +1307,6 @@ void Client_OnButtonRelease(int iClient, int button)
 	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 	if (boss.bValid)
 		boss.CallFunction("OnButtonRelease", button);
-}
-
-public Action Crossbow_OnTouch(int iEntity, int iToucher)
-{
-	if (!SaxtonHale_IsValidBoss(iToucher))
-		return Plugin_Continue;
-	
-	int iClient = GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity");
-	SaxtonHaleBase boss = SaxtonHaleBase(iToucher);
-	if (!boss.bCanBeHealed && GetClientTeam(iClient) == GetClientTeam(iToucher))
-	{
-		//Dont allow crossbows heal boss, kill arrow
-		AcceptEntityInput(iEntity, "Kill");
-		return Plugin_Handled;
-	}
-	
-	return Plugin_Continue;
-}
-
-public Action ItemPack_OnTouch(int iEntity, int iToucher)
-{
-	if (!g_bEnabled) return Plugin_Continue;
-	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
-	
-	//Don't allow valid non-attack players pick health and ammo packs
-	if (!SaxtonHale_IsValidAttack(iToucher))
-		return Plugin_Handled;
-
-	return Plugin_Continue;
 }
 
 public Action TF2_CalcIsAttackCritical(int iClient, int iWeapon, char[] sWepClassName, bool &bResult)
