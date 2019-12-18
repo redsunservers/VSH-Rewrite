@@ -65,6 +65,11 @@ methodmap CScorchedPyromancer < SaxtonHaleBase
 		boss.iMaxRageDamage = 1700;
 	}
 	
+	public bool IsBossHidden()
+	{
+		return true;
+	}
+	
 	public void GetBossName(char[] sName, int length)
 	{
 		strcopy(sName, length, "Scorched Pyromancer");

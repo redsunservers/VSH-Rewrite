@@ -71,6 +71,11 @@ methodmap CScaldedPyromancer < SaxtonHaleBase
 		g_flFlamethrowerRemoveTime[boss.iClient] = 0.0;
 	}
 	
+	public bool IsBossHidden()
+	{
+		return true;
+	}
+	
 	public void GetBossName(char[] sName, int length)
 	{
 		strcopy(sName, length, "Scalded Pyromancer");
