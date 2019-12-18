@@ -149,10 +149,10 @@ methodmap CScorchedPyromancer < SaxtonHaleBase
 		{
 			case VSHSound_RoundStart: strcopy(sSound, length, g_strPyromancerRoundStart[GetRandomInt(0,sizeof(g_strPyromancerRoundStart)-1)]);
 			case VSHSound_Rage: strcopy(sSound, length, g_strPyromancerRage[GetRandomInt(0,sizeof(g_strPyromancerRage)-1)]);
-			case VSHSound_Lastman: strcopy(sSound, length, "vo/pyro_battlecry01.mp3");
-			case VSHSound_Win: strcopy(sSound, length, "vo/pyro_cheers01.mp3");
-			case VSHSound_Lose: strcopy(sSound, length, "vo/pyro_jeers01.mp3");
-			case VSHSound_Backstab: strcopy(sSound, length, "vo/pyro_jeers02.mp3");
+			case VSHSound_Lastman: strcopy(sSound, length, g_strPyromancerRage[0]);
+			case VSHSound_Win: strcopy(sSound, length, g_strPyromancerKill[0]);
+			case VSHSound_Lose: strcopy(sSound, length, g_strPyromancerJump[0]);
+			case VSHSound_Backstab: strcopy(sSound, length, g_strPyromancerJump[1]);
 		}
 	}
 	
