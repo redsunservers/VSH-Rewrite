@@ -71,4 +71,9 @@ methodmap CWallClimb < SaxtonHaleBase
 		fVelocity[2] = this.flMaxHeight;
 		TeleportEntity(iClient, NULL_VECTOR, NULL_VECTOR, fVelocity);
 	}
+	
+	public void OnThink()
+	{
+		Hud_AddText(this.iClient, "Climb walls by hitting them with your melee weapon!");
+	}
 };

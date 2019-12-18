@@ -7,8 +7,11 @@ void Hud_SetRageView(int iClient, bool bEnable)
 	g_bHudRage[iClient] = bEnable;
 }
 
-void Hud_AddText(int iClient, char[] sText)
+void Hud_AddText(int iClient, char[] sText, bool bShowWhenDead = false)
 {
+	if (!bShowWhenDead && !IsPlayerAlive(iClient))
+		return;
+		
 	if (!StrEmpty(g_sHudText[iClient])) StrCat(g_sHudText[iClient], sizeof(g_sHudText[]), "\n");
 	StrCat(g_sHudText[iClient], sizeof(g_sHudText[]), sText);
 }
@@ -23,11 +26,11 @@ void Hud_Think(int iClient)
 {
 	if (!g_bRoundStarted) return;
 	
+	char sMessage[255];
+	
 	if (!SaxtonHale_IsValidBoss(iClient, false))
 	{
-		char sMessage[255];
-
-		//Display Boss's health
+		//Display Boss's health to non-bosses regardless if dead or alive
 		Format(sMessage, sizeof(sMessage), "Boss Health: %i/%i", g_iHealthBarHealth, g_iHealthBarMaxHealth);
 		
 		//Display boss's rage
@@ -45,7 +48,7 @@ void Hud_Think(int iClient)
 			}
 		}
 		
-		Hud_AddText(iClient, sMessage);
+		Hud_AddText(iClient, sMessage, true);
 
 		//Display Client's damage
 		if (g_iPlayerAssistDamage[iClient] <= 0)
@@ -53,31 +56,38 @@ void Hud_Think(int iClient)
 		else
 			Format(sMessage, sizeof(sMessage), "Damage: %i Assist: %i", g_iPlayerDamage[iClient], g_iPlayerAssistDamage[iClient]);
 
-		Hud_AddText(iClient, sMessage);
-
+		Hud_AddText(iClient, sMessage, true);
+		
+		//Display airblast percentage
+		float flPercentage = Tags_GetAirblastPercentage(iClient);
+		if (flPercentage >= 0.0)
+		{
+			Format(sMessage, sizeof(sMessage), "Airblast: %i%%", RoundToFloor(flPercentage * 100.0));
+			Hud_AddText(iClient, sMessage);
+		}
+	}
+	else
+	{
+		//Display Boss's health to other bosses if they're dead
 		if (!IsPlayerAlive(iClient))
 		{
-			//If dead, display whoever client is spectating and damage
-			int iOberserTarget = GetEntPropEnt(iClient, Prop_Send, "m_hObserverTarget");
-			if (iOberserTarget != iClient && 0 < iOberserTarget <= MaxClients && IsClientInGame(iOberserTarget) && !SaxtonHaleBase(iOberserTarget).bValid)
-			{
-				if (g_iPlayerAssistDamage[iOberserTarget] <= 0)
-					Format(sMessage, sizeof(sMessage), "%N's Damage: %i", iOberserTarget, g_iPlayerDamage[iOberserTarget]);
-				else
-					Format(sMessage, sizeof(sMessage), "%N's Damage: %i Assist: %i", iOberserTarget, g_iPlayerDamage[iOberserTarget], g_iPlayerAssistDamage[iOberserTarget]);
-				
-				Hud_AddText(iClient, sMessage);
-			}
+			Format(sMessage, sizeof(sMessage), "Boss Health: %i/%i", g_iHealthBarHealth, g_iHealthBarMaxHealth);
+			Hud_AddText(iClient, sMessage, true);
 		}
-		else
+	}
+
+	if (!IsPlayerAlive(iClient))
+	{
+		//If dead, display whoever client is spectating and damage
+		int iOberserTarget = GetEntPropEnt(iClient, Prop_Send, "m_hObserverTarget");
+		if (iOberserTarget != iClient && 0 < iOberserTarget <= MaxClients && IsClientInGame(iOberserTarget) && !SaxtonHaleBase(iOberserTarget).bValid)
 		{
-			//Display airblast percentage
-			float flPercentage = Tags_GetAirblastPercentage(iClient);
-			if (flPercentage >= 0.0)
-			{
-				Format(sMessage, sizeof(sMessage), "Airblast: %i%%", RoundToFloor(flPercentage * 100.0));
-				Hud_AddText(iClient, sMessage);
-			}
+			if (g_iPlayerAssistDamage[iOberserTarget] <= 0)
+				Format(sMessage, sizeof(sMessage), "%N's Damage: %i", iOberserTarget, g_iPlayerDamage[iOberserTarget]);
+			else
+				Format(sMessage, sizeof(sMessage), "%N's Damage: %i Assist: %i", iOberserTarget, g_iPlayerDamage[iOberserTarget], g_iPlayerAssistDamage[iOberserTarget]);
+			
+			Hud_AddText(iClient, sMessage, true);
 		}
 
 		int iColor[4];
