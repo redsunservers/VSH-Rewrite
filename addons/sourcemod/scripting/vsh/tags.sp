@@ -650,8 +650,7 @@ public void Tags_SummonZombie(int iClient, int iTarget, TagsParams tParams)
 		iMaxCount = iMin;
 	
 	//Collect list of valid players
-	ArrayList aDeadPlayers = new ArrayList();
-	GetValidSummonableClients(aDeadPlayers);
+	ArrayList aDeadPlayers = GetValidSummonableClients();
 	int iLength = aDeadPlayers.Length;
 	
 	if (iMaxCount > iLength)

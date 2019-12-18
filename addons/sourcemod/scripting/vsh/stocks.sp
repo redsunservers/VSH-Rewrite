@@ -68,8 +68,10 @@ stock int GetMainBoss()
 	return iBoss;
 }
 
-stock ArrayList GetValidSummonableClients(ArrayList aClients, bool bAllowBoss = false)
+stock ArrayList GetValidSummonableClients(bool bAllowBoss = false)
 {
+	ArrayList aClients = new ArrayList();
+	
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
 		if (IsClientInGame(iClient)
