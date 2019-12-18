@@ -60,8 +60,7 @@ methodmap CSeeldier < SaxtonHaleBase
 		int iTotalMinions = 3;
 		if (this.bSuperRage) iTotalMinions *= 2;
 		
-		ArrayList aValidMinions = new ArrayList();
-		GetValidSummonableClients(aValidMinions);
+		ArrayList aValidMinions = GetValidSummonableClients();
 		
 		int iLength = aValidMinions.Length;
 		if (iLength < iTotalMinions)
