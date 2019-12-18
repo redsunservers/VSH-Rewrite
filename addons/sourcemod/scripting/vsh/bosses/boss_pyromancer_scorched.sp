@@ -117,8 +117,6 @@ methodmap CScorchedPyromancer < SaxtonHaleBase
 				}
 			}
 		}
-		
-		PrintHintText(this.iClient, "HINT: Stay near the other Pyromancer so they can crit ignited players!");
 	}
 	
 	public void OnRage()
@@ -141,6 +139,11 @@ methodmap CScorchedPyromancer < SaxtonHaleBase
 					TF2_IgnitePlayer(iVictim, iClient, 8.0);
 			}
 		}
+	}
+	
+	public void OnThink()
+	{
+		Hud_AddText(this.iClient, "HINT: Stay near the other Pyromancer so they can crit ignited players!");
 	}
 	
 	public void GetSound(char[] sSound, int length, SaxtonHaleSound iSoundType)
