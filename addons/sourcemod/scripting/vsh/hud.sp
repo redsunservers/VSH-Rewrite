@@ -79,13 +79,13 @@ void Hud_Think(int iClient)
 	if (!IsPlayerAlive(iClient))
 	{
 		//If dead, display whoever client is spectating and damage
-		int iOberserTarget = GetEntPropEnt(iClient, Prop_Send, "m_hObserverTarget");
-		if (iOberserTarget != iClient && 0 < iOberserTarget <= MaxClients && IsClientInGame(iOberserTarget) && !SaxtonHaleBase(iOberserTarget).bValid)
+		int iObserverTarget = GetEntPropEnt(iClient, Prop_Send, "m_hObserverTarget");
+		if (iObserverTarget != iClient && 0 < iObserverTarget <= MaxClients && IsClientInGame(iObserverTarget) && !SaxtonHaleBase(iObserverTarget).bValid)
 		{
-			if (g_iPlayerAssistDamage[iOberserTarget] <= 0)
-				Format(sMessage, sizeof(sMessage), "%N's Damage: %i", iOberserTarget, g_iPlayerDamage[iOberserTarget]);
+			if (g_iPlayerAssistDamage[iObserverTarget] <= 0)
+				Format(sMessage, sizeof(sMessage), "%N's Damage: %i", iObserverTarget, g_iPlayerDamage[iObserverTarget]);
 			else
-				Format(sMessage, sizeof(sMessage), "%N's Damage: %i Assist: %i", iOberserTarget, g_iPlayerDamage[iOberserTarget], g_iPlayerAssistDamage[iOberserTarget]);
+				Format(sMessage, sizeof(sMessage), "%N's Damage: %i Assist: %i", iObserverTarget, g_iPlayerDamage[iObserverTarget], g_iPlayerAssistDamage[iObserverTarget]);
 			
 			Hud_AddText(iClient, sMessage, true);
 		}
