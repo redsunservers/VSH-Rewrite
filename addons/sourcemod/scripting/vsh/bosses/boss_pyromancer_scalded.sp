@@ -60,8 +60,9 @@ methodmap CScaldedPyromancer < SaxtonHaleBase
 		boss.CallFunction("CreateAbility", "CBraveJump");
 		addCond = boss.CallFunction("CreateAbility", "CRageAddCond");
 		addCond.flRageCondDuration = RAGE_DURATION;
+		addCond.AddCond(TFCond_Buffed);
 		
-		//boostJump.flMaxHeigth /= 1.75;
+		//boostJump.flMaxHeight /= 1.75;
 		//boostJump.flMaxDistance = 0.7;
 		
 		boss.iBaseHealth = 500;
@@ -129,14 +130,10 @@ methodmap CScaldedPyromancer < SaxtonHaleBase
 				}
 			}
 		}
-		
-		PrintHintText(this.iClient, "HINT: Stay near the other Pyromancer so you can crit the ignited players!");
 	}
 	
 	public void OnRage()
 	{
-		addCond.AddCond(TFCond_Buffed);
-		
 		/*
 		Degreaser attributes:
 		
@@ -173,8 +170,6 @@ methodmap CScaldedPyromancer < SaxtonHaleBase
 		*/
 		#define TF_BACKBURNER_ATTRIBS "24 ; 1.0 ; 72 ; 0.1 ; 199 ; 0.9 ; 252 ; 0.5 ; 547 ; 0.9 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 2450 ; 862 ; 0.6 ; 863 ; 0.1 ; 865 ; 50"
 		const int TF_WEAPON_BACKBURNER = 40;
-		
-		PrintHintText(this.iClient, "HINT: Use your axe to crit players after igniting them!");
 		
 		int iWeapon = this.CallFunction("CreateWeapon", ((this.bSuperRage) ? TF_WEAPON_BACKBURNER : TF_WEAPON_DEGREASER), "tf_weapon_flamethrower", 1, TFQual_Collectors, ((this.bSuperRage) ? TF_BACKBURNER_ATTRIBS : TF_DEGREASER_ATTRIBS));
 		if (iWeapon > MaxClients)

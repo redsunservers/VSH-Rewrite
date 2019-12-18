@@ -58,6 +58,7 @@ methodmap CScorchedPyromancer < SaxtonHaleBase
 		boss.CallFunction("CreateAbility", "CBraveJump");
 		addCond = boss.CallFunction("CreateAbility", "CRageAddCond");
 		addCond.flRageCondDuration = RAGE_DURATION;
+		addCond.AddCond(TFCond_Buffed);
 		
 		boss.iBaseHealth = 500;
 		boss.iHealthPerPlayer = 750;
@@ -133,13 +134,10 @@ methodmap CScorchedPyromancer < SaxtonHaleBase
 		float vecPos[3];
 		GetClientAbsOrigin(iClient, vecPos);
 		
-		addCond.AddCond(TFCond_Buffed);
-		
 		for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
 		{
 			if (IsClientInGame(iVictim) && IsPlayerAlive(iVictim) && GetClientTeam(iVictim) != bossTeam && !TF2_IsUbercharged(iVictim))
 			{
-				
 				if (this.bSuperRage || IsClientInRange(iVictim, vecPos, RAGE_RADIUS))
 					TF2_IgnitePlayer(iVictim, iClient, 8.0);
 			}
