@@ -49,7 +49,7 @@ static int g_iCosmetics[] =
 
 static int g_iPrecacheCosmetics[4];
 
-static float g_flFlamethrowerRemoveTime[TF_MAXPLAYERS];
+static float g_flFlamethrowerRemoveTime[TF_MAXPLAYERS+1];
 
 static CRageAddCond addCond;
 
