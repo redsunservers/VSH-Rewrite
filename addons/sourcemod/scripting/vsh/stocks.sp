@@ -272,6 +272,30 @@ stock void TF2_RemoveItemInSlot(int client, int slot)
 	}
 }
 
+stock int TF2_GetAmmo(int iClient, int iSlot)
+{
+	int iWeapon = GetPlayerWeaponSlot(iClient, iSlot);
+	if (iWeapon > MaxClients)
+	{
+		int iAmmoType = GetEntProp(iWeapon, Prop_Send, "m_iPrimaryAmmoType");
+		if (iAmmoType > -1)
+			return GetEntProp(iClient, Prop_Send, "m_iAmmo", _, iAmmoType);
+	}
+	
+	return -1;
+}
+
+stock void TF2_SetAmmo(int iClient, int iSlot, int iAmmo)
+{
+	int iWeapon = GetPlayerWeaponSlot(iClient, iSlot);
+	if (iWeapon > MaxClients)
+	{
+		int iAmmoType = GetEntProp(iWeapon, Prop_Send, "m_iPrimaryAmmoType");
+		if (iAmmoType > -1)
+			SetEntProp(iClient, Prop_Send, "m_iAmmo", iAmmo, _, iAmmoType);
+	}
+}
+
 stock int TF2_GetPatient(int iClient)
 {
 	if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient) || !IsPlayerAlive(iClient))
