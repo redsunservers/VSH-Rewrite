@@ -3,6 +3,8 @@
  * By: ScrewdriverHyena
 **/
 
+static const float RAGE_DURATION = 8.0;
+
 static char g_strPyromancerRoundStart[][] = 
 {
 	"vo/pyro_laughevil01.mp3",
@@ -47,11 +49,15 @@ static int g_iCosmetics[] =
 
 static int g_iPrecacheCosmetics[4];
 
+static CRageAddCond addCond;
+
 methodmap CScorchedPyromancer < SaxtonHaleBase
 {
 	public CScorchedPyromancer(CScorchedPyromancer boss)
 	{
 		boss.CallFunction("CreateAbility", "CBraveJump");
+		addCond = boss.CallFunction("CreateAbility", "CRageAddCond");
+		addCond.flRageCondDuration = RAGE_DURATION;
 		
 		boss.iBaseHealth = 500;
 		boss.iHealthPerPlayer = 750;
@@ -118,24 +124,20 @@ methodmap CScorchedPyromancer < SaxtonHaleBase
 	public void OnRage()
 	{
 		const float RAGE_RADIUS = 750.0;
-		const float RAGE_DURATION = 8.0;
 		
 		int iClient = this.iClient;
 		int bossTeam = GetClientTeam(iClient);
-		float vecPos[3], vecTargetPos[3];
+		float vecPos[3];
 		GetClientAbsOrigin(iClient, vecPos);
 		
-		TF2_AddCondition(this.iClient, view_as<TFCond>(26), RAGE_DURATION);
+		addCond.AddCond(TFCond_Buffed);
 		
 		for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
 		{
 			if (IsClientInGame(iVictim) && IsPlayerAlive(iVictim) && GetClientTeam(iVictim) != bossTeam && !TF2_IsUbercharged(iVictim))
 			{
-				GetClientAbsOrigin(iVictim, vecTargetPos);
 				
-				float flDistance = GetVectorDistance(vecTargetPos, vecPos);
-				
-				if (this.bSuperRage || flDistance <= RAGE_RADIUS)
+				if (this.bSuperRage || IsClientInRange(iVictim, vecPos, RAGE_RADIUS))
 					TF2_IgnitePlayer(iVictim, iClient, 8.0);
 			}
 		}

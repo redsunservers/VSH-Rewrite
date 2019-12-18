@@ -3,6 +3,8 @@
  * By: ScrewdriverHyena
 **/
 
+static const float RAGE_DURATION = 8.0;
+
 static char g_strPyromancerRoundStart[][] = 
 {
 	"vo/pyro_laughevil01.mp3",
@@ -49,11 +51,15 @@ static int g_iPrecacheCosmetics[4];
 
 static float g_flFlamethrowerRemoveTime[TF_MAXPLAYERS];
 
+static CRageAddCond addCond;
+
 methodmap CScaldedPyromancer < SaxtonHaleBase
 {
 	public CScaldedPyromancer(CScaldedPyromancer boss)
 	{
 		boss.CallFunction("CreateAbility", "CBraveJump");
+		addCond = boss.CallFunction("CreateAbility", "CRageAddCond");
+		addCond.flRageCondDuration = RAGE_DURATION;
 		
 		//boostJump.flMaxHeigth /= 1.75;
 		//boostJump.flMaxDistance = 0.7;
@@ -124,9 +130,7 @@ methodmap CScaldedPyromancer < SaxtonHaleBase
 	
 	public void OnRage()
 	{
-		const float RAGE_DURATION = 8.0;
-		
-		TF2_AddCondition(this.iClient, view_as<TFCond>(26), RAGE_DURATION);
+		addCond.AddCond(TFCond_Buffed);
 		
 		/*
 		Degreaser attributes:
