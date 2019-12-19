@@ -6,22 +6,6 @@
 #include <tf2_stocks>
 
 /**
- * Supported ParamType for calling boss functions, all pass by ref unless noted:
- * Param_Cell               Integers, but not pass by ref
- * Param_CellByRef          Integers
- * Param_Float              Floats, but not pass by ref
- * Param_FloatByRef         Floats
- * Param_String             Const strings, not pass by ref
- * Param_StringByRef        Dynamic strings, must require Param_Cell or Param_CellByRef after this param for size of string
- * Param_Array              Dynamic array, must require Param_Cell or Param_CellByRef after this param for size of array
- * Param_Vector             Static array with size 3
- * Param_Color              Static array with size 4
- */
-const ParamType Param_StringByRef = view_as<ParamType>((6 << 1)|SP_PARAMFLAG_BYREF);
-const ParamType Param_Vector      = view_as<ParamType>((7 << 1)|SP_PARAMFLAG_BYREF);
-const ParamType Param_Color       = view_as<ParamType>((8 << 1)|SP_PARAMFLAG_BYREF);
-
-/**
  * List of TF2 item quality to set boss's weapon
  */
 enum TFQuality
@@ -46,6 +30,57 @@ enum TFQuality
 };
 
 /**
+ * Array types for each boss function params, for Param_String and Param_Array
+ */
+enum SaxtonHaleArrayType
+{
+	VSHArrayType_None,      /**< Not Param_String or Param_Array */
+	VSHArrayType_Const,     /**< Only works on Param_String. Length same as size of string, and always constant */
+	VSHArrayType_Static,    /**< Data is the fixed length of array */
+	VSHArrayType_Dynamic,   /**< Data is Param_Cell param position for length of array, starting from 1 */
+}
+
+/**
+ * Boss Functions methodmap
+ */
+methodmap SaxtonHaleFunction
+{
+	// Initialize a function for methodmap class to use
+	//
+	// Supported ParamType for calling boss functions:
+	// Param_Cell
+	// Param_CellByRef
+	// Param_Float
+	// Param_FloatByRef
+	// Param_String (Default array type VSHArrayType_Const)
+	// Param_Array (Default array type VSHArrayType_Static with size 1)
+	//
+	// @param sFunction         Name of function to create.
+	// @param nExecType         Execution type to be used.
+	// @param ...               Variable number of parameter types
+	// @return                  Boss Function Id
+	// @error                   Function name already initialized, too many ParamType passed, or unsupported ParamType
+	public native SaxtonHaleFunction(const char[] sFunction, ExecType nExecType, ParamType...);
+	
+	// Add parameter type to this function
+	//
+	// @param nParamType        Type of parameter
+	// @param nArrayType        If string or array, how should size of array be handled?
+	// @param iArrayData        Data of nArrayType to be handled
+	// @error                   Reached max param size, or invalid param type and array type combined
+	public native void AddParam(ParamType nParamType, SaxtonHaleArrayType nArrayType = VSHArrayType_None, int iArrayData = 0);
+	
+	// Set parameter type to this function, overriding old param
+	//
+	// @param iParam            Parameter to set, starting from 1
+	// @param nParamType        Type of parameter
+	// @param nArrayType        If string or array, how should size of array be handled?
+	// @param iArrayData        Data of nArrayType to be handled
+	// @error                   Invalid parameter number, or invalid param type and array type combined
+	public native void SetParam(int iParam, ParamType nParamType, SaxtonHaleArrayType nArrayType = VSHArrayType_None, int iArrayData = 0);
+}
+
+/**
  * List of class types
  */
 enum SaxtonHaleClassType
@@ -55,31 +90,6 @@ enum SaxtonHaleClassType
 	VSHClassType_Ability,   /**< Ability */
 	VSHClassType_Modifier,  /**< Modifier */
 };
-
-/**
- * List of sounds to get from bosses
- */
-enum SaxtonHaleSound
-{
-	VSHSound_RoundStart,
-	VSHSound_Win,
-	VSHSound_Lose,
-	VSHSound_Pain,
-	VSHSound_Rage,
-	VSHSound_KillBuilding,
-	VSHSound_Lastman,
-	VSHSound_Backstab,
-};
-
-/**
- * Initialize a function for methodmap class to use
- *
- * @param sName             Name of function to create.
- * @param type              Execution type to be used.
- * @param ...               Variable number of parameter types
- * @error                   Function name already initialized, too many ParamType passed, unsupported ParamType, or dynamic arrays not formatted correctly
- */
-native void SaxtonHale_InitFunction(const char[] sName, ExecType type, ParamType ...);
 
 /**
  * Registers a class to be used and selected
@@ -117,6 +127,21 @@ native Handle SaxtonHale_GetPlugin(const char[] sClass);
  * @error                   Class name already registered, or less than 2 bosses passed
  */
 native void SaxtonHale_RegisterMultiBoss(const char[] ...);
+
+/**
+ * List of sounds to get from bosses
+ */
+enum SaxtonHaleSound
+{
+	VSHSound_RoundStart,
+	VSHSound_Win,
+	VSHSound_Lose,
+	VSHSound_Pain,
+	VSHSound_Rage,
+	VSHSound_KillBuilding,
+	VSHSound_Lastman,
+	VSHSound_Backstab,
+};
 
 /**
  * Client Boss methodmap
@@ -674,6 +699,9 @@ stock void SaxtonHale_PrepareSound(const char[] sSound)
  * Deprecated functions, do not use
  */
 
+#pragma deprecated Use SaxtonHaleFunction.SaxtonHaleFunction instead!
+native SaxtonHaleFunction SaxtonHale_InitFunction(const char[] sFunction, ExecType nExecType, ParamType ...);
+
 #pragma deprecated Use SaxtonHale_RegisterClass instead!
 native void SaxtonHale_RegisterBoss(const char[] ...);
 
@@ -706,7 +734,10 @@ public SharedPlugin __pl_saxtonhale =
 #if !defined REQUIRE_PLUGIN
 public __pl_saxtonhale_SetNTVOptional()
 {
-	MarkNativeAsOptional("SaxtonHale_InitFunction");
+	MarkNativeAsOptional("SaxtonHaleFunction.SaxtonHaleFunction");
+	MarkNativeAsOptional("SaxtonHaleFunction.AddParam");
+	MarkNativeAsOptional("SaxtonHaleFunction.SetParam");
+	
 	MarkNativeAsOptional("SaxtonHale_RegisterClass");
 	MarkNativeAsOptional("SaxtonHale_UnregisterClass");
 	MarkNativeAsOptional("SaxtonHale_GetPlugin");
@@ -781,6 +812,7 @@ public __pl_saxtonhale_SetNTVOptional()
 	MarkNativeAsOptional("SaxtonHale_SetAdmin");
 	MarkNativeAsOptional("SaxtonHale_SetPunishment");
 	
+	MarkNativeAsOptional("SaxtonHale_InitFunction");
 	MarkNativeAsOptional("SaxtonHale_RegisterBoss");
 	MarkNativeAsOptional("SaxtonHale_UnregisterBoss");
 	MarkNativeAsOptional("SaxtonHale_RegisterModifiers");

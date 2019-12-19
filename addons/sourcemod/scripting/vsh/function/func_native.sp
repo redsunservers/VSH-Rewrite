@@ -5,8 +5,14 @@ CreateNative(sBuffer, FuncNative_Property_%2_Set); \
 Format(sBuffer, sizeof(sBuffer), "SaxtonHaleBase.%s.get", %1); \
 CreateNative(sBuffer, FuncNative_Property_%2_Get);
 
+static FuncFunctionId g_mFuncFunctionId;
+
 void FuncNative_AskLoad()
 {
+	CreateNative("SaxtonHaleFunction.SaxtonHaleFunction", FuncNative_InitFunction);
+	CreateNative("SaxtonHaleFunction.AddParam", FuncNative_FunctionAddParam);
+	CreateNative("SaxtonHaleFunction.SetParam", FuncNative_FunctionSetParam);
+	
 	CreateNative("SaxtonHale_InitFunction", FuncNative_InitFunction);
 	CreateNative("SaxtonHale_RegisterClass", FuncNative_RegisterClass);
 	CreateNative("SaxtonHale_UnregisterClass", FuncNative_UnregisterClass);
@@ -59,7 +65,12 @@ void FuncNative_AskLoad()
 	NATIVE_PROPERTY_REGISTER("nClass",nClass)
 }
 
-//void SaxtonHale_InitFunction(const char[] sName, ExecType type, ParamType ...);
+void FuncNative_Init()
+{
+	g_mFuncFunctionId = new FuncFunctionId();
+}
+
+//SaxtonHaleFunction.SaxtonHaleFunction(const char[] sName, ExecType type, ParamType ...);
 public any FuncNative_InitFunction(Handle hPlugin, int iNumParams)
 {
 	iNumParams -= 2;
@@ -69,74 +80,180 @@ public any FuncNative_InitFunction(Handle hPlugin, int iNumParams)
 	
 	char sFunction[MAX_TYPE_CHAR];
 	GetNativeString(1, sFunction, sizeof(sFunction));
-	ExecType nExecType = GetNativeCell(2);
+	
+	FuncFunction funcFunction;
+	funcFunction.nExecType = GetNativeCell(2);
+	funcFunction.iParamLength = iNumParams;
 	
 	//Check for dumb plugins passing unsupported ExecType
-	if (nExecType < ET_Ignore || nExecType > ET_Hook)
-		ThrowNativeError(SP_ERROR_NATIVE, "Unknown ExecType passed (%d)", nExecType);
+	if (funcFunction.nExecType < ET_Ignore || funcFunction.nExecType > ET_Hook)
+		ThrowNativeError(SP_ERROR_NATIVE, "Unknown ExecType passed (%d)", funcFunction.nExecType);
 	
 	//Push all ParamType to array
-	ParamType nParamType[SP_MAX_EXEC_PARAMS];
-	bool bDynamicArray = false;
-	
-	for (int iParam = 0; iParam < iNumParams; iParam++)
+	for (int iParam = 0; iParam < funcFunction.iParamLength; iParam++)
 	{
-		nParamType[iParam] = GetNativeCellRef(iParam + 3);
+		funcFunction.nParamType[iParam] = GetNativeCellRef(iParam + 3);
 		
 		//Check for any unsupported params
-		static const ParamType nAllowedType[] = {
-			Param_Cell,
-			Param_CellByRef,
-			Param_Float,
-			Param_FloatByRef,
-			Param_String,
-			Param_StringByRef,
-			Param_Array,
-			Param_Vector,
-			Param_Color
-		};
-		
-		bool bFound = false;
-		for (int i = 0; i < sizeof(nAllowedType); i++)
+		switch (funcFunction.nParamType[iParam])
 		{
-			if (nParamType[iParam] == nAllowedType[i])
+			case Param_Cell, Param_CellByRef, Param_Float, Param_FloatByRef:
 			{
-				bFound = true;
-				break;
+			}
+			case Param_String:
+			{
+				funcFunction.nArrayType[iParam] = VSHArrayType_Const;
+			}
+			case Param_Array:
+			{
+				funcFunction.nArrayType[iParam] = VSHArrayType_Static;
+				funcFunction.iArrayData[iParam] = 1;
+			}
+			default:
+			{
+				//Unsupported ParamType
+				char sParamTypeName[32];
+				if (FuncFunction_GetParamTypeName(funcFunction.nParamType[iParam], sParamTypeName, sizeof(sParamTypeName)))
+					ThrowNativeError(SP_ERROR_NATIVE, "Unsupported %s passed (Param %d)", sParamTypeName, iParam+1);
+				else
+					ThrowNativeError(SP_ERROR_NATIVE, "Unknown ParamType passed (Param %d)", sParamTypeName, iParam+1);
 			}
 		}
-		
-		if (!bFound)
+	}
+	
+	SaxtonHaleFunction nId = g_mFuncFunctionId.AddStruct(sFunction, funcFunction);
+	if (nId == view_as<SaxtonHaleFunction>(-1))
+		ThrowNativeError(SP_ERROR_NATIVE, "Function (%s) already exists", sFunction);
+	
+	return nId;
+}
+
+//void SaxtonHaleFunction.AddParam(ParamType nParamType, SaxtonHaleArrayType nArrayType = VSHArrayType_None, int iArrayData = 0);
+public any FuncNative_FunctionAddParam(Handle hPlugin, int iNumParams)
+{
+	SaxtonHaleFunction nId = GetNativeCell(1);
+	
+	FuncFunction funcFunction;
+	g_mFuncFunctionId.GetStruct(nId, funcFunction);
+	
+	int iParam = funcFunction.iParamLength;
+	if (iParam >= SP_MAX_EXEC_PARAMS)
+		ThrowNativeError(SP_ERROR_NATIVE, "Function reached max params (%d)", SP_MAX_EXEC_PARAMS);
+	
+	funcFunction.nParamType[iParam] = GetNativeCell(2);
+	funcFunction.nArrayType[iParam] = GetNativeCell(3);
+	funcFunction.iArrayData[iParam] = GetNativeCell(4);
+	
+	switch (funcFunction.nParamType[iParam])
+	{
+		case Param_Cell, Param_CellByRef, Param_Float, Param_FloatByRef:
+		{
+			if (funcFunction.nArrayType[iParam] != VSHArrayType_None)
+			{
+				char sParamTypeName[32];
+				FuncFunction_GetParamTypeName(funcFunction.nParamType[iParam], sParamTypeName, sizeof(sParamTypeName));
+				ThrowNativeError(SP_ERROR_NATIVE, "%s must use VSHArrayType_None", sParamTypeName);
+			}
+		}
+		case Param_String, Param_Array:
 		{
 			char sParamTypeName[32];
-			if (FuncFunction_GetParamTypeName(nParamType[iParam], sParamTypeName, sizeof(sParamTypeName)))
-				ThrowNativeError(SP_ERROR_NATIVE, "Unsupported %s passed (Param %d)", sParamTypeName, iParam+1);
+			FuncFunction_GetParamTypeName(funcFunction.nParamType[iParam], sParamTypeName, sizeof(sParamTypeName));
+			
+			if (funcFunction.nArrayType[iParam] == VSHArrayType_None)
+				ThrowNativeError(SP_ERROR_NATIVE, "%s must not use VSHArrayType_None", sParamTypeName);
+			if (funcFunction.nArrayType[iParam] == VSHArrayType_Const && funcFunction.nParamType[iParam] == Param_Array)
+				ThrowNativeError(SP_ERROR_NATIVE, "Param_Array must not use VSHArrayType_Const");
+			else if (funcFunction.nArrayType[iParam] == VSHArrayType_Static && funcFunction.iArrayData[iParam] <= 0)
+				ThrowNativeError(SP_ERROR_NATIVE, "%s must have VSHArrayType_Static size greater than 0 (%d <= 0)", sParamTypeName, funcFunction.iArrayData[iParam]);
+			else if (funcFunction.nArrayType[iParam] == VSHArrayType_Dynamic)
+			{
+				if (funcFunction.iArrayData[iParam] <= 0)
+					ThrowNativeError(SP_ERROR_NATIVE, "%s must have VSHArrayType_Dynamic param greater than 0 (%d > 0)", sParamTypeName, funcFunction.iArrayData[iParam]);
+				else if (funcFunction.iArrayData[iParam] >= funcFunction.iParamLength)
+					ThrowNativeError(SP_ERROR_NATIVE, "%s must have VSHArrayType_Dynamic param less than param count (%d < %d)", sParamTypeName, funcFunction.iArrayData[iParam], funcFunction.iParamLength);
+				else if (funcFunction.nParamType[funcFunction.iArrayData[iParam]-1] != Param_Cell)
+					ThrowNativeError(SP_ERROR_NATIVE, "%s must have VSHArrayType_Dynamic param Param_Cell (Param %d)", sParamTypeName, funcFunction.iArrayData[iParam]);
+			}
+		}
+		default:
+		{
+			//Unsupported ParamType
+			char sParamTypeName[32];
+			if (FuncFunction_GetParamTypeName(funcFunction.nParamType[iParam], sParamTypeName, sizeof(sParamTypeName)))
+				ThrowNativeError(SP_ERROR_NATIVE, "%s is unsupported (Param %d)", sParamTypeName, iParam+1);
 			else
 				ThrowNativeError(SP_ERROR_NATIVE, "Unknown ParamType passed (Param %d)", sParamTypeName, iParam+1);
 		}
-		
-		//If previous type is dynamic array, check if this is cell
-		if (bDynamicArray && nParamType[iParam] != Param_Cell && nParamType[iParam] != Param_CellByRef)
-		{
-			char sParamTypeName1[32], sParamTypeName2[32];
-			FuncFunction_GetParamTypeName(nParamType[iParam], sParamTypeName1, sizeof(sParamTypeName1));
-			FuncFunction_GetParamTypeName(nParamType[iParam-1], sParamTypeName2, sizeof(sParamTypeName2));
-			ThrowNativeError(SP_ERROR_NATIVE, "Expected Param_Cell or Param_CellByRef, but found %s (Param %d) for %s (Param %d)", sParamTypeName1, iParam+1, sParamTypeName2, iParam-1);
-		}
-		
-		bDynamicArray = nParamType[iParam] == Param_StringByRef || nParamType[iParam] == Param_Array;
 	}
 	
-	//Check for dynamic array length but at end of params
-	if (bDynamicArray)
+	funcFunction.iParamLength++;
+	g_mFuncFunctionId.SetStruct(nId, funcFunction);
+}
+
+//void SaxtonHaleFunction.SetParam(int iParam, ParamType nParamType, SaxtonHaleArrayType nArrayType = VSHArrayType_None, int iArrayData = 0);
+public any FuncNative_FunctionSetParam(Handle hPlugin, int iNumParams)
+{
+	SaxtonHaleFunction nId = GetNativeCell(1);
+	
+	FuncFunction funcFunction;
+	g_mFuncFunctionId.GetStruct(nId, funcFunction);
+	
+	int iParam = GetNativeCell(2);
+	if (iParam <= 0)
+		ThrowNativeError(SP_ERROR_NATIVE, "Param must be greater than 0 (%d > 0)", iParam);
+	else if (iParam > funcFunction.iParamLength)
+		ThrowNativeError(SP_ERROR_NATIVE, "Param must be less than param count (%d <= %d)", iParam, funcFunction.iParamLength);
+	
+	iParam--;
+	funcFunction.nParamType[iParam] = GetNativeCell(3);
+	funcFunction.nArrayType[iParam] = GetNativeCell(4);
+	funcFunction.iArrayData[iParam] = GetNativeCell(5);
+	
+	switch (funcFunction.nParamType[iParam])
 	{
-		char sParamTypeName[32];
-		FuncFunction_GetParamTypeName(nParamType[iNumParams-1], sParamTypeName, sizeof(sParamTypeName));
-		ThrowNativeError(SP_ERROR_NATIVE, "Expected Param_Cell or Param_CellByRef at end of param for %s (Param %d)", sParamTypeName, iNumParams-1);
+		case Param_Cell, Param_CellByRef, Param_Float, Param_FloatByRef:
+		{
+			if (funcFunction.nArrayType[iParam] != VSHArrayType_None)
+			{
+				char sParamTypeName[32];
+				FuncFunction_GetParamTypeName(funcFunction.nParamType[iParam], sParamTypeName, sizeof(sParamTypeName));
+				ThrowNativeError(SP_ERROR_NATIVE, "%s must use VSHArrayType_None", sParamTypeName);
+			}
+		}
+		case Param_String, Param_Array:
+		{
+			char sParamTypeName[32];
+			FuncFunction_GetParamTypeName(funcFunction.nParamType[iParam], sParamTypeName, sizeof(sParamTypeName));
+			
+			if (funcFunction.nArrayType[iParam] == VSHArrayType_None)
+				ThrowNativeError(SP_ERROR_NATIVE, "%s must not use VSHArrayType_None", sParamTypeName);
+			if (funcFunction.nArrayType[iParam] == VSHArrayType_Const && funcFunction.nParamType[iParam] == Param_Array)
+				ThrowNativeError(SP_ERROR_NATIVE, "Param_Array must not use VSHArrayType_Const");
+			else if (funcFunction.nArrayType[iParam] == VSHArrayType_Static && funcFunction.iArrayData[iParam] <= 0)
+				ThrowNativeError(SP_ERROR_NATIVE, "%s must have VSHArrayType_Static size greater than 0 (%d <= 0)", sParamTypeName, funcFunction.iArrayData[iParam]);
+			else if (funcFunction.nArrayType[iParam] == VSHArrayType_Dynamic)
+			{
+				if (funcFunction.iArrayData[iParam] <= 0)
+					ThrowNativeError(SP_ERROR_NATIVE, "%s must have VSHArrayType_Dynamic param greater than 0 (%d <= 0)", sParamTypeName, funcFunction.iArrayData[iParam]);
+				else if (funcFunction.iArrayData[iParam] >= funcFunction.iParamLength)
+					ThrowNativeError(SP_ERROR_NATIVE, "%s must have VSHArrayType_Dynamic param less than param count (%d >= %d)", sParamTypeName, funcFunction.iArrayData[iParam], funcFunction.iParamLength);
+				else if (funcFunction.nParamType[funcFunction.iArrayData[iParam]-1] != Param_Cell)
+					ThrowNativeError(SP_ERROR_NATIVE, "%s must have VSHArrayType_Dynamic param Param_Cell (Param %d)", sParamTypeName, funcFunction.iArrayData[iParam]);
+			}
+		}
+		default:
+		{
+			//Unsupported ParamType
+			char sParamTypeName[32];
+			if (FuncFunction_GetParamTypeName(funcFunction.nParamType[iParam], sParamTypeName, sizeof(sParamTypeName)))
+				ThrowNativeError(SP_ERROR_NATIVE, "%s is unsupported (Param %d)", sParamTypeName, iParam+1);
+			else
+				ThrowNativeError(SP_ERROR_NATIVE, "Unknown ParamType passed (Param %d)", sParamTypeName, iParam+1);
+		}
 	}
 	
-	if (!FuncFunction_Register(sFunction, nExecType, nParamType, iNumParams))
-		ThrowNativeError(SP_ERROR_NATIVE, "Function (%s) already exists", sFunction);
+	g_mFuncFunctionId.SetStruct(nId, funcFunction);
 }
 
 //void SaxtonHale_RegisterClass(const char[] sClass, SaxtonHaleClassType nClassType);
@@ -200,81 +317,67 @@ public any FuncNative_CallFunction(Handle hPlugin, int iNumParams)
 	char sFunction[MAX_TYPE_CHAR];
 	GetNativeString(2, sFunction, sizeof(sFunction));
 	
-	ParamType nParamType[SP_MAX_EXEC_PARAMS];
-	int iSize = FuncFunction_GetParamType(sFunction, nParamType);
-	if (iSize == -1)
+	//Get function to call
+	FuncFunction funcFunction;
+	if (!FuncFunction_Get(sFunction, funcFunction))
 		ThrowNativeError(SP_ERROR_NATIVE, "Invalid function name passed (%s)", sFunction);
-	
-	if (iSize > iNumParams-2)
-		ThrowNativeError(SP_ERROR_NATIVE, "Too few param passed (Found %d params, expected %d)", iNumParams-2, iSize);
+	else if (funcFunction.iParamLength >  iNumParams-2)
+		ThrowNativeError(SP_ERROR_NATIVE, "Too few param passed (Found %d params, expected %d)", iNumParams-2, funcFunction.iParamLength);
 	
 	//Create stack
 	FuncStack funcStack;
 	Format(funcStack.sFunction, sizeof(funcStack.sFunction), sFunction);
-	funcStack.nExecType = FuncFunction_GetExecType(sFunction);
+	funcStack.nExecType = funcFunction.nExecType;
+	funcStack.nParamType = funcFunction.nParamType;
 	
 	//Fill params
-	for (int iParam = 1; iParam <= iSize; iParam++)
+	for (int iParam = 1; iParam <= funcFunction.iParamLength; iParam++)
 	{
-		switch (nParamType[iParam-1])
+		switch (funcStack.nParamType[iParam-1])
 		{
 			case Param_Cell, Param_CellByRef, Param_Float, Param_FloatByRef:	// ... (Param_VarArgs) is always ByRef
 			{
-				funcStack.PushCell(GetNativeCellRef(iParam+2), nParamType[iParam-1]);
+				funcStack.PushCell(GetNativeCellRef(iParam+2), funcStack.nParamType[iParam-1]);
 			}
-			case Param_String:
+			case Param_String, Param_Array:
 			{
 				int iLength;
-				int iError = GetNativeStringLength(iParam+2, iLength);
-				if (iError != SP_ERROR_NONE)
-					ThrowNativeError(SP_ERROR_NATIVE, "Unable to get string value (param %d, error code %d)", iParam, iError);
 				
-				iLength++;
-				char[] sBuffer = new char[iLength];
-				GetNativeString(iParam+2, sBuffer, iLength);
-				funcStack.PushArray(view_as<any>(sBuffer), iLength, Param_String);
-			}
-			case Param_StringByRef:
-			{
-				int iLength = GetNativeCellRef(iParam+3);	//Get length of array from next param
+				switch (funcStack.nParamType[iParam-1])
+				{
+					case VSHArrayType_Const:
+					{
+						GetNativeStringLength(iParam+2, iLength);
+						iLength++;
+					}
+					case VSHArrayType_Static:
+					{
+						iLength = funcFunction.iArrayData[iParam-1];
+					}
+					case VSHArrayType_Dynamic:
+					{
+						iLength = GetNativeCell(funcFunction.iArrayData[iParam-1]);
+					}
+				}
 				
-				char[] sBuffer = new char[iLength];
-				int iError = GetNativeString(iParam+2, sBuffer, iLength);
-				if (iError != SP_ERROR_NONE)
-					ThrowNativeError(SP_ERROR_NATIVE, "Unable to get string value (param %d, error code %d)", iParam, iError);
-				
-				funcStack.PushArray(view_as<any>(sBuffer), iLength, Param_StringByRef);
-			}
-			case Param_Array:	//Dynamic array
-			{
-				int iLength = GetNativeCellRef(iParam+3);	//Get length of array from next param
-				if (iLength <= 0)
-					ThrowNativeError(SP_ERROR_NATIVE, "Dynamic array size must be more than 0 (array param %d, length param %d)", iParam+3, iParam+4);
-				
-				any[] buffer = new any[iLength];
-				int iError = GetNativeArray(iParam+2, buffer, iLength);
-				if (iError != SP_ERROR_NONE)
-					ThrowNativeError(SP_ERROR_NATIVE, "Unable to get dynamic array value (param %d, error code %d)", iParam, iError);
-				
-				funcStack.PushArray(buffer, iLength, Param_Array);
-			}
-			case Param_Vector:	//Static array with size 3
-			{
-				any buffer[3];
-				int iError = GetNativeArray(iParam+2, buffer, sizeof(buffer));
-				if (iError != SP_ERROR_NONE)
-					ThrowNativeError(SP_ERROR_NATIVE, "Unable to get vector array value (param %d, error code %d)", iParam, iError);
-				
-				funcStack.PushVector(buffer);
-			}
-			case Param_Color:	//Static array with size 4
-			{
-				any buffer[4];
-				int iError = GetNativeArray(iParam+2, buffer, sizeof(buffer));
-				if (iError != SP_ERROR_NONE)
-					ThrowNativeError(SP_ERROR_NATIVE, "Unable to get color array value (param %d, error code %d)", iParam, iError);
-				
-				funcStack.PushColor(buffer);
+				if (funcStack.nParamType[iParam-1] == Param_String)
+				{
+					char[] sBuffer = new char[iLength];
+					int iError = GetNativeString(iParam+2, sBuffer, iLength);
+					if (iError != SP_ERROR_NONE)
+						ThrowNativeError(SP_ERROR_NATIVE, "Unable to get string value (param %d, error %d)", iParam, iError);
+					
+					funcStack.PushArray(view_as<any>(sBuffer), iLength, Param_String);
+				}
+				else if (funcStack.nParamType[iParam-1] == Param_Array)
+				{
+					any[] buffer = new any[iLength];
+					int iError = GetNativeArray(iParam+2, buffer, iLength);
+					if (iError != SP_ERROR_NONE)
+						ThrowNativeError(SP_ERROR_NATIVE, "Unable to get array value (param %d, error %d)", iParam, iError);
+					
+					funcStack.PushArray(buffer, iLength, Param_Array);
+				}
 			}
 		}
 	}
@@ -285,15 +388,15 @@ public any FuncNative_CallFunction(Handle hPlugin, int iNumParams)
 	FuncStack_Erase();
 	
 	//Set ref native values
-	for (int iParam = 1; iParam <= iSize; iParam++)
+	for (int iParam = 1; iParam <= funcFunction.iParamLength; iParam++)
 	{
-		switch (nParamType[iParam-1])
+		switch (funcStack.nParamType[iParam-1])
 		{
 			case Param_CellByRef, Param_FloatByRef:
 			{
 				SetNativeCellRef(iParam+2, funcStack.GetCell(iParam));
 			}
-			case Param_StringByRef:
+			case Param_String:
 			{
 				int iLength = funcStack.GetArrayLength(iParam);
 				char[] sBuffer = new char[iLength];
@@ -303,7 +406,7 @@ public any FuncNative_CallFunction(Handle hPlugin, int iNumParams)
 				if (iError != SP_ERROR_NONE)
 					ThrowNativeError(SP_ERROR_NATIVE, "Unable to return string value (param %d, error code %d)", iParam, iError);
 			}
-			case Param_Array:	//Dynamic array
+			case Param_Array:
 			{
 				int iLength = funcStack.GetArrayLength(iParam);
 				any[] buffer = new any[iLength];
@@ -311,25 +414,7 @@ public any FuncNative_CallFunction(Handle hPlugin, int iNumParams)
 				
 				int iError = SetNativeArray(iParam+2, buffer, iLength);
 				if (iError != SP_ERROR_NONE)
-					ThrowNativeError(SP_ERROR_NATIVE, "Unable to return dynamic array value (param %d, error code %d)", iParam, iError);
-			}
-			case Param_Vector:	//Static array with size 3
-			{
-				any buffer[3];
-				funcStack.GetVector(iParam, buffer);
-				
-				int iError = SetNativeArray(iParam+2, buffer, sizeof(buffer));
-				if (iError != SP_ERROR_NONE)
-					ThrowNativeError(SP_ERROR_NATIVE, "Unable to return vector array value (param %d, error code %d)", iParam, iError);
-			}
-			case Param_Color:	//Static array with size 4
-			{
-				any buffer[4];
-				funcStack.GetColor(iParam, buffer);
-				
-				int iError = SetNativeArray(iParam+2, buffer, sizeof(buffer));
-				if (iError != SP_ERROR_NONE)
-					ThrowNativeError(SP_ERROR_NATIVE, "Unable to return color array value (param %d, error code %d)", iParam, iError);
+					ThrowNativeError(SP_ERROR_NATIVE, "Unable to return array value (param %d, error code %d)", iParam, iError);
 			}
 		}
 	}
@@ -414,7 +499,7 @@ public any FuncNative_GetParamStringLength(Handle hPlugin, int iNumParams)
 	int iParam = FuncNative_GetFuncStack(funcStack, nParamType);
 	
 	//Check for non-string ParamType
-	if (nParamType != Param_String && nParamType != Param_StringByRef)
+	if (nParamType != Param_String)
 	{
 		char sParamTypeName[32];
 		FuncFunction_GetParamTypeName(nParamType, sParamTypeName, sizeof(sParamTypeName));
@@ -434,7 +519,7 @@ public any FuncNative_GetParamString(Handle hPlugin, int iNumParams)
 	int iParam = FuncNative_GetFuncStack(funcStack, nParamType);
 	
 	//Check for non-string ParamType
-	if (nParamType != Param_String && nParamType != Param_StringByRef)
+	if (nParamType != Param_String)
 	{
 		char sParamTypeName[32];
 		FuncFunction_GetParamTypeName(nParamType, sParamTypeName, sizeof(sParamTypeName));
@@ -457,7 +542,7 @@ public any FuncNative_SetParamString(Handle hPlugin, int iNumParams)
 	int iParam = FuncNative_GetFuncStack(funcStack, nParamType);
 	
 	//Check for non-string ParamType
-	if (nParamType != Param_StringByRef)
+	if (nParamType != Param_String)
 	{
 		char sParamTypeName[32];
 		FuncFunction_GetParamTypeName(nParamType, sParamTypeName, sizeof(sParamTypeName));
@@ -482,35 +567,19 @@ public any FuncNative_GetParamArray(Handle hPlugin, int iNumParams)
 	ParamType nParamType;
 	int iParam = FuncNative_GetFuncStack(funcStack, nParamType);
 	
-	//Get and set array
-	switch (nParamType)
+	//Check for non-array ParamType
+	if (nParamType != Param_Array)
 	{
-		case Param_Array:
-		{
-			int iLength = GetNativeCell(3);
-			any[] buffer = new any[iLength];
-			funcStack.GetArray(iParam, buffer);
-			SetNativeArray(2, buffer, iLength);
-		}
-		case Param_Vector:
-		{
-			any buffer[3];
-			funcStack.GetVector(iParam, buffer);
-			SetNativeArray(2, buffer, GetNativeCell(3));
-		}
-		case Param_Color:
-		{
-			any buffer[4];
-			funcStack.GetColor(iParam, buffer);
-			SetNativeArray(2, buffer, GetNativeCell(3));
-		}
-		default:
-		{
-			char sParamTypeName[32];
-			FuncFunction_GetParamTypeName(nParamType, sParamTypeName, sizeof(sParamTypeName));
-			ThrowNativeError(SP_ERROR_NATIVE, "Unable to get array from %s (Function %s, param %d)", sParamTypeName, funcStack.sFunction, iParam);
-		}
+		char sParamTypeName[32];
+		FuncFunction_GetParamTypeName(nParamType, sParamTypeName, sizeof(sParamTypeName));
+		ThrowNativeError(SP_ERROR_NATIVE, "Unable to get array from %s (Function %s, param %d)", sParamTypeName, funcStack.sFunction, iParam);
 	}
+	
+	//Get and set array
+	int iLength = GetNativeCell(3);
+	any[] buffer = new any[iLength];
+	funcStack.GetArray(iParam, buffer);
+	SetNativeArray(2, buffer, iLength);
 }
 
 //void SaxtonHale_SetParamArray(int iParam, any[] value);
@@ -521,35 +590,19 @@ public any FuncNative_SetParamArray(Handle hPlugin, int iNumParams)
 	ParamType nParamType;
 	int iParam = FuncNative_GetFuncStack(funcStack, nParamType);
 	
-	//Get and set array
-	switch (nParamType)
+	//Check for non-array ParamType
+	if (nParamType != Param_Array)
 	{
-		case Param_Array:
-		{
-			int iLength = GetNativeCell(3);
-			any[] buffer = new any[iLength];
-			GetNativeArray(2, buffer, iLength);
-			funcStack.SetArray(iParam, buffer);
-		}
-		case Param_Vector:
-		{
-			any buffer[3];
-			GetNativeArray(2, buffer, sizeof(buffer));
-			funcStack.SetVector(iParam, buffer);
-		}
-		case Param_Color:
-		{
-			any buffer[4];
-			GetNativeArray(2, buffer, sizeof(buffer));
-			funcStack.SetColor(iParam, buffer);
-		}
-		default:
-		{
-			char sParamTypeName[32];
-			FuncFunction_GetParamTypeName(nParamType, sParamTypeName, sizeof(sParamTypeName));
-			ThrowNativeError(SP_ERROR_NATIVE, "Unable to set array from %s (Function %s, param %d)", sParamTypeName, funcStack.sFunction, iParam);
-		}
+		char sParamTypeName[32];
+		FuncFunction_GetParamTypeName(nParamType, sParamTypeName, sizeof(sParamTypeName));
+		ThrowNativeError(SP_ERROR_NATIVE, "Unable to set array from %s (Function %s, param %d)", sParamTypeName, funcStack.sFunction, iParam);
 	}
+	
+	//Get and set array
+	int iLength = GetNativeCell(3);
+	any[] buffer = new any[iLength];
+	GetNativeArray(2, buffer, iLength);
+	funcStack.SetArray(iParam, buffer);
 }
 
 /**

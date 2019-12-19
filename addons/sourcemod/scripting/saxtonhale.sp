@@ -485,6 +485,7 @@ public void OnPluginStart()
 	FuncClass_Init();
 	FuncFunction_Init();
 	FuncHook_Init();
+	FuncNative_Init();
 	FuncStack_Init();
 	Menu_Init();
 	NextBoss_Init();
@@ -493,6 +494,109 @@ public void OnPluginStart()
 	TagsName_Init();
 	SDK_Init();
 	Winstreak_Init();
+	
+	SaxtonHaleFunction func;
+	
+	//Boss functions
+	SaxtonHaleFunction("CreateBoss", ET_Single, Param_String);
+	SaxtonHaleFunction("IsBossHidden", ET_Single);
+	SaxtonHaleFunction("SetBossType", ET_Ignore, Param_String);
+	
+	func = SaxtonHaleFunction("GetBossType", ET_Ignore, Param_String, Param_Cell);
+	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
+	
+	func = SaxtonHaleFunction("GetBossName", ET_Ignore, Param_String, Param_Cell);
+	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
+	
+	func = SaxtonHaleFunction("GetBossInfo", ET_Ignore, Param_String, Param_Cell);
+	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
+	
+	
+	//Modifiers functions
+	SaxtonHaleFunction("CreateModifiers", ET_Single, Param_String);
+	SaxtonHaleFunction("IsModifiersHidden", ET_Single);
+	SaxtonHaleFunction("SetModifiersType", ET_Ignore, Param_String);
+	
+	func = SaxtonHaleFunction("GetModifiersType", ET_Ignore, Param_String, Param_Cell);
+	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
+	
+	func = SaxtonHaleFunction("GetModifiersName", ET_Ignore, Param_String, Param_Cell);
+	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
+	
+	func = SaxtonHaleFunction("GetModifiersInfo", ET_Ignore, Param_String, Param_Cell);
+	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
+	
+	//Ability functions
+	SaxtonHaleFunction("CreateAbility", ET_Single, Param_String);
+	SaxtonHaleFunction("FindAbility", ET_Single, Param_String);
+	SaxtonHaleFunction("DestroyAbility", ET_Ignore, Param_String);
+	
+	//General functions
+	SaxtonHaleFunction("OnThink", ET_Ignore);
+	SaxtonHaleFunction("OnSpawn", ET_Ignore);
+	SaxtonHaleFunction("OnRage", ET_Ignore);
+	SaxtonHaleFunction("OnEntityCreated", ET_Ignore, Param_Cell, Param_String);
+	SaxtonHaleFunction("OnCommandKeyValues", ET_Hook, Param_String);
+	SaxtonHaleFunction("OnAttackCritical", ET_Hook, Param_Cell, Param_CellByRef);
+	SaxtonHaleFunction("OnVoiceCommand", ET_Hook, Param_String, Param_String);
+	
+	func = SaxtonHaleFunction("OnSoundPlayed", ET_Hook, Param_Array, Param_CellByRef, Param_String, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_String, Param_CellByRef);
+	func.SetParam(1, Param_Array, VSHArrayType_Static, MAXPLAYERS);
+	func.SetParam(3, Param_String, VSHArrayType_Static, PLATFORM_MAX_PATH);
+	func.SetParam(9, Param_String, VSHArrayType_Static, PLATFORM_MAX_PATH);
+	
+	//Damage/Death functions
+	SaxtonHaleFunction("OnPlayerKilled", ET_Ignore, Param_Cell, Param_Cell);
+	SaxtonHaleFunction("OnDeath", ET_Ignore, Param_Cell);
+	
+	func = SaxtonHaleFunction("OnAttackDamage", ET_Hook, Param_CellByRef, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array, Param_Cell);
+	func.SetParam(6, Param_Array, VSHArrayType_Static, 3);
+	func.SetParam(7, Param_Array, VSHArrayType_Static, 3);
+	
+	func = SaxtonHaleFunction("OnTakeDamage", ET_Hook, Param_CellByRef, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array, Param_Cell);
+	func.SetParam(6, Param_Array, VSHArrayType_Static, 3);
+	func.SetParam(7, Param_Array, VSHArrayType_Static, 3);
+	
+	//Button functions
+	SaxtonHaleFunction("OnButton", ET_Ignore, Param_CellByRef);
+	SaxtonHaleFunction("OnButtonPress", ET_Ignore, Param_Cell);
+	SaxtonHaleFunction("OnButtonHold", ET_Ignore, Param_Cell);
+	SaxtonHaleFunction("OnButtonRelease", ET_Ignore, Param_Cell);
+	
+	//Building functions
+	SaxtonHaleFunction("OnBuild", ET_Single, Param_Cell, Param_Cell);
+	SaxtonHaleFunction("OnBuildObject", ET_Event, Param_Cell);
+	SaxtonHaleFunction("OnDestroyObject", ET_Event, Param_Cell);
+	SaxtonHaleFunction("OnObjectSapped", ET_Event, Param_Cell);
+	
+	//Retrieve array/strings
+	func = SaxtonHaleFunction("GetModel", ET_Ignore, Param_String, Param_Cell);
+	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
+	
+	func = SaxtonHaleFunction("GetSound", ET_Ignore, Param_String, Param_Cell, Param_Cell);
+	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
+	
+	func = SaxtonHaleFunction("GetSoundKill", ET_Ignore, Param_String, Param_Cell, Param_Cell);
+	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
+	
+	func = SaxtonHaleFunction("GetSoundAbility", ET_Ignore, Param_String, Param_Cell, Param_String);
+	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
+	
+	func = SaxtonHaleFunction("GetRenderColor", ET_Ignore, Param_Array);
+	func.SetParam(1, Param_Array, VSHArrayType_Static, 4);
+	
+	func = SaxtonHaleFunction("GetMusicInfo", ET_Ignore, Param_String, Param_Cell, Param_FloatByRef);
+	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
+	
+	func = SaxtonHaleFunction("GetRageMusicInfo", ET_Ignore, Param_String, Param_Cell, Param_FloatByRef);
+	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
+	
+	//Misc functions
+	SaxtonHaleFunction("Precache", ET_Ignore);
+	SaxtonHaleFunction("CalculateMaxHealth", ET_Single);
+	SaxtonHaleFunction("AddRage", ET_Ignore, Param_Cell);
+	SaxtonHaleFunction("CreateWeapon", ET_Single, Param_Cell, Param_String, Param_Cell, Param_Cell, Param_String);
+	SaxtonHaleFunction("Destroy", ET_Ignore);
 	
 	//Register base constructor
 	SaxtonHale_RegisterClass("SaxtonHaleBoss", VSHClassType_Core);

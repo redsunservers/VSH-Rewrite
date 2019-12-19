@@ -11,15 +11,7 @@ void FuncCall_Start(SaxtonHaleBase boss, FuncStack funcStack)
 	int iArraySize = 1;
 	for (int iParam = 0; iParam < funcStack.iParamLength; iParam++)
 	{
-		int iBuffer = 0;
-		
-		switch (funcStack.nParamType[iParam])
-		{
-			case Param_String, Param_StringByRef, Param_Array: iBuffer = funcStack.GetArrayLength(iParam+1);
-			case Param_Vector: iBuffer = 3;
-			case Param_Color: iBuffer = 4;
-		}
-		
+		int iBuffer = funcStack.GetArrayLength(iParam+1);
 		if (iBuffer > iArraySize)
 			iArraySize = iBuffer;
 	}
@@ -27,30 +19,10 @@ void FuncCall_Start(SaxtonHaleBase boss, FuncStack funcStack)
 	//Create arrays by reference
 	any[][] array = new any[iParamLength][iArraySize];
 	
-	//Get dynamic and static array values
+	//Get array values
 	for (int iParam = 0; iParam < funcStack.iParamLength; iParam++)
-	{
-		switch (funcStack.nParamType[iParam])
-		{
-			case Param_String, Param_StringByRef, Param_Array:
-			{
-				funcStack.GetArray(iParam+1, array[iParam]);
-			}
-			case Param_Vector:
-			{
-				array[iParam][0] = funcStack.array0[iParam];
-				array[iParam][1] = funcStack.array1[iParam];
-				array[iParam][2] = funcStack.array2[iParam];
-			}
-			case Param_Color:
-			{
-				array[iParam][0] = funcStack.array0[iParam];
-				array[iParam][1] = funcStack.array1[iParam];
-				array[iParam][2] = funcStack.array2[iParam];
-				array[iParam][3] = funcStack.array3[iParam];
-			}
-		}
-	}
+		if (funcStack.nParamType[iParam] == Param_String || funcStack.nParamType[iParam] == Param_Array)
+			funcStack.GetArray(iParam+1, array[iParam]);
 	
 	//Call base_boss
 	if (!FuncCall_Call(boss, "SaxtonHaleBoss", funcStack, array, iArraySize))
@@ -91,28 +63,8 @@ void FuncCall_Start(SaxtonHaleBase boss, FuncStack funcStack)
 	
 	//Set arrays back
 	for (int iParam = 0; iParam < funcStack.iParamLength; iParam++)
-	{
-		switch (funcStack.nParamType[iParam])
-		{
-			case Param_StringByRef, Param_Array:
-			{
-				funcStack.SetArray(iParam+1, array[iParam]);
-			}
-			case Param_Vector:
-			{
-				funcStack.array0[iParam] = array[iParam][0];
-				funcStack.array1[iParam] = array[iParam][1];
-				funcStack.array2[iParam] = array[iParam][2];
-			}
-			case Param_Color:
-			{
-				funcStack.array0[iParam] = array[iParam][0];
-				funcStack.array1[iParam] = array[iParam][1];
-				funcStack.array2[iParam] = array[iParam][2];
-				funcStack.array3[iParam] = array[iParam][3];
-			}
-		}
-	}
+		if (funcStack.nParamType[iParam] == Param_String || funcStack.nParamType[iParam] == Param_Array)
+			funcStack.SetArray(iParam+1, array[iParam]);
 	
 	//Start post hooks
 	FuncHook_Call(boss, funcStack, VSHHookMode_Post);
@@ -165,23 +117,11 @@ bool FuncCall_Call(SaxtonHaleBase boss, const char[] sClass, FuncStack funcStack
 			}
 			case Param_String:
 			{
-				Call_PushString(view_as<char>(array[iParam]));
-			}
-			case Param_StringByRef:
-			{
 				Call_PushStringEx(view_as<char>(array[iParam]), iArraySize, SM_PARAM_STRING_UTF8|SM_PARAM_STRING_COPY, iCopyback);
 			}
 			case Param_Array:
 			{
 				Call_PushArrayEx(array[iParam], iArraySize, iCopyback);
-			}
-			case Param_Vector:
-			{
-				Call_PushArrayEx(array[iParam], 3, iCopyback);
-			}
-			case Param_Color:
-			{
-				Call_PushArrayEx(array[iParam], 4, iCopyback);
 			}
 		}
 	}

@@ -5,13 +5,7 @@ enum struct FuncStack
 	ParamType nParamType[SP_MAX_EXEC_PARAMS];
 	
 	any cell[SP_MAX_EXEC_PARAMS]; 			// Param_Cell, Param_CellByRef, Param_Float, Param_FloatByRef
-	ArrayList array[SP_MAX_EXEC_PARAMS];	// Param_String, Param_StringByRef, Param_Array
-	
-	//Because enum struct cant have more than 1 dimension
-	any array0[SP_MAX_EXEC_PARAMS]; 		// Param_Vector, Param_Color
-	any array1[SP_MAX_EXEC_PARAMS];			// Param_Vector, Param_Color
-	any array2[SP_MAX_EXEC_PARAMS];			// Param_Vector, Param_Color
-	any array3[SP_MAX_EXEC_PARAMS];			// Param_Color
+	ArrayList array[SP_MAX_EXEC_PARAMS];	// Param_String, Param_Array
 	
 	int iParamLength;				// Number of params passed
 	
@@ -31,23 +25,6 @@ enum struct FuncStack
 		this.nParamType[this.iParamLength++] = nParamType;
 	}
 	
-	void PushVector(const any value[3])
-	{
-		this.array0[this.iParamLength] = value[0];
-		this.array1[this.iParamLength] = value[1];
-		this.array2[this.iParamLength] = value[2];
-		this.nParamType[this.iParamLength++] = Param_Vector;
-	}
-	
-	void PushColor(const any value[4])
-	{
-		this.array0[this.iParamLength] = value[0];
-		this.array1[this.iParamLength] = value[1];
-		this.array2[this.iParamLength] = value[2];
-		this.array3[this.iParamLength] = value[3];
-		this.nParamType[this.iParamLength++] = Param_Color;
-	}
-	
 	any GetCell(int iParam)
 	{
 		return this.cell[iParam-1];
@@ -64,21 +41,6 @@ enum struct FuncStack
 			this.array[iParam-1].GetArray(0, buffer);
 	}
 	
-	void GetVector(int iParam, any buffer[3])
-	{
-		buffer[0] = this.array0[iParam-1];
-		buffer[1] = this.array1[iParam-1];
-		buffer[2] = this.array2[iParam-1];
-	}
-	
-	void GetColor(int iParam, any buffer[4])
-	{
-		buffer[0] = this.array0[iParam-1];
-		buffer[1] = this.array1[iParam-1];
-		buffer[2] = this.array2[iParam-1];
-		buffer[3] = this.array3[iParam-1];
-	}
-	
 	void SetCell(int iParam, any value)
 	{
 		this.cell[iParam-1] = value;
@@ -87,21 +49,6 @@ enum struct FuncStack
 	void SetArray(int iParam, const any[] value)
 	{
 		this.array[iParam-1].SetArray(0, value);
-	}
-	
-	void SetVector(int iParam, const any value[3])
-	{
-		this.array0[iParam-1] = value[0];
-		this.array1[iParam-1] = value[1];
-		this.array2[iParam-1] = value[2];
-	}
-	
-	void SetColor(int iParam, const any value[4])
-	{
-		this.array0[iParam-1] = value[0];
-		this.array1[iParam-1] = value[1];
-		this.array2[iParam-1] = value[2];
-		this.array3[iParam-1] = value[3];
 	}
 	
 	void Delete()
