@@ -253,7 +253,7 @@ methodmap CMinionRanger < SaxtonHaleBase
 	{
 		CBraveJump abilityJump = boss.CallFunction("CreateAbility", "CBraveJump");
 		abilityJump.iJumpChargeBuild /= 4;	//4x slower jump charge rate
-		abilityJump.flMaxHeigth /= 2;		//Half max height for super jumps
+		abilityJump.flMaxHeight /= 2;		//Half max height for super jumps
 		
 		boss.iBaseHealth = 400;
 		boss.iHealthPerPlayer = 40;

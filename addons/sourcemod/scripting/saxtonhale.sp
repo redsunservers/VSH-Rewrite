@@ -373,6 +373,8 @@ ConVar tf_arena_preround_time;
 #include "vsh/bosses/boss_yeti.sp"
 #include "vsh/bosses/boss_uberranger.sp"
 #include "vsh/bosses/boss_zombie.sp"
+#include "vsh/bosses/boss_pyromancer_scorched.sp"
+#include "vsh/bosses/boss_pyromancer_scalded.sp"
 
 #include "vsh/modifiers/modifiers_speed.sp"
 #include "vsh/modifiers/modifiers_jump.sp"
@@ -513,6 +515,7 @@ public void OnPluginStart()
 	//Register misc bosses
 	SaxtonHale_RegisterBoss("CSeeMan", "CSeeldier");
 	SaxtonHale_RegisterBoss("CBlutarch", "CRedmond");
+	SaxtonHale_RegisterBoss("CScorchedPyromancer", "CScaldedPyromancer");
 	
 	//Register minions
 	SaxtonHale_RegisterBoss("CSeeldierMinion");
