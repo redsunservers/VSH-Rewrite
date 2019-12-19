@@ -607,17 +607,18 @@ public void OnPluginStart()
 	
 	//Register normal bosses
 	SaxtonHale_RegisterClass("CSaxtonHale", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CPainisCupcake", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CVagineer", VSHClassType_Boss);
+	
+	SaxtonHale_RegisterClass("CAnnouncer", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CBonkBoy", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CBrutalSniper", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CDemoPan", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CDemoRobot", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CGentleSpy", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CDemoPan", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CBrutalSniper", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CAnnouncer", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CHorsemann", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CYeti", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CBonkBoy", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CPainisCupcake", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CUberRanger", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CVagineer", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CYeti", VSHClassType_Boss);
 	
 	//Register misc bosses
 	SaxtonHale_RegisterClass("CSeeMan", VSHClassType_Boss);

@@ -21,7 +21,7 @@ methodmap FuncFunctionId < StringMap
 	public SaxtonHaleFunction AddStruct(const char[] sFunction, FuncFunction funcFunction)
 	{
 		funcFunction.nId = g_nFuncFunctionId;
-		if (!g_mFuncFunction.SetArray(sFunction, funcFunction, false))
+		if (!g_mFuncFunction.SetArray(sFunction, funcFunction, sizeof(funcFunction), false))
 			return view_as<SaxtonHaleFunction>(-1);
 		
 		char sBuffer[1];

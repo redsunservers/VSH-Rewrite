@@ -10,11 +10,8 @@ void FuncCall_Start(SaxtonHaleBase boss, FuncStack funcStack)
 	int iParamLength = (funcStack.iParamLength > 0) ? funcStack.iParamLength : 1;
 	int iArraySize = 1;
 	for (int iParam = 0; iParam < funcStack.iParamLength; iParam++)
-	{
-		int iBuffer = funcStack.GetArrayLength(iParam+1);
-		if (iBuffer > iArraySize)
-			iArraySize = iBuffer;
-	}
+		if (iArraySize < funcStack.iArrayLength[iParam])
+			iArraySize = funcStack.iArrayLength[iParam];
 	
 	//Create arrays by reference
 	any[][] array = new any[iParamLength][iArraySize];

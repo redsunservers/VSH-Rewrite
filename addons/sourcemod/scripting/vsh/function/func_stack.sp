@@ -2,10 +2,11 @@ enum struct FuncStack
 {
 	char sFunction[MAX_TYPE_CHAR];	// Function name
 	ExecType nExecType;				// Exec type
-	ParamType nParamType[SP_MAX_EXEC_PARAMS];
 	
+	ParamType nParamType[SP_MAX_EXEC_PARAMS];
 	any cell[SP_MAX_EXEC_PARAMS]; 			// Param_Cell, Param_CellByRef, Param_Float, Param_FloatByRef
 	ArrayList array[SP_MAX_EXEC_PARAMS];	// Param_String, Param_Array
+	int iArrayLength[SP_MAX_EXEC_PARAMS];
 	
 	int iParamLength;				// Number of params passed
 	
@@ -22,17 +23,13 @@ enum struct FuncStack
 	{
 		this.array[this.iParamLength] = new ArrayList(iLength);
 		this.array[this.iParamLength].PushArray(value);
+		this.iArrayLength[this.iParamLength] = iLength;
 		this.nParamType[this.iParamLength++] = nParamType;
 	}
 	
 	any GetCell(int iParam)
 	{
 		return this.cell[iParam-1];
-	}
-	
-	int GetArrayLength(int iParam)
-	{
-		return this.array[iParam-1].BlockSize;
 	}
 	
 	void GetArray(int iParam, any[] buffer)

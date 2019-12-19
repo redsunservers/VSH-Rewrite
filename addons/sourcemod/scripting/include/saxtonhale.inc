@@ -411,7 +411,7 @@ native void SaxtonHale_HookFunction(const char[] sName, SaxtonHaleHookCallback c
 native void SaxtonHale_UnhookFunction(const char[] sName, SaxtonHaleHookCallback callback, SaxtonHaleHookMode hookType = VSHHookMode_Post);
 
 /**
- * Get param from function hook, supported ParamType Param_Cell, Param_CellByRef, Param_Float, and Param_FloatByRef
+ * Get param from function hook, only works on Param_Cell, Param_CellByRef, Param_Float, and Param_FloatByRef
  *
  * @param iParam            Param number to get.
  * @return                  Value of param
@@ -420,7 +420,7 @@ native void SaxtonHale_UnhookFunction(const char[] sName, SaxtonHaleHookCallback
 native any SaxtonHale_GetParam(int iParam);
 
 /**
- * Set param to function hook, supported ParamType Param_CellByRef, and Param_FloatByRef
+ * Set param to function hook, only works on Param_CellByRef, and Param_FloatByRef
  *
  * @param iParam            Param number to set.
  * @param value             Value to set.
@@ -429,7 +429,7 @@ native any SaxtonHale_GetParam(int iParam);
 native void SaxtonHale_SetParam(int iParam, any value);
 
 /**
- * Get string param size from function hook, supported ParamType Param_String, and Param_StringByRef
+ * Get string param size from function hook, used to get Param_String max size buffer and modify it
  *
  * @param iParam            Param number to get.
  * @return                  Length of string
@@ -438,7 +438,7 @@ native void SaxtonHale_SetParam(int iParam, any value);
 native int SaxtonHale_GetParamStringLength(int iParam);
 
 /**
- * Get string param from function hook, supported ParamType Param_String, and Param_StringByRef
+ * Get string param from function hook, only works on Param_String
  *
  * @param iParam            Param number to get.
  * @param value             String value to get.
@@ -448,7 +448,7 @@ native int SaxtonHale_GetParamStringLength(int iParam);
 native void SaxtonHale_GetParamString(int iParam, char[] value, int iLength);
 
 /**
- * Set string param to function hook, supported ParamType Param_StringByRef
+ * Set string param to function hook, only works on Param_String, and not VSHArrayType_Const
  *
  * @param iParam            Param number to set.
  * @param value             String value to set.
@@ -457,7 +457,7 @@ native void SaxtonHale_GetParamString(int iParam, char[] value, int iLength);
 native void SaxtonHale_SetParamString(int iParam, const char[] value);
 
 /**
- * Get array param from function hook, supported ParamType Param_Array, Param_Vector, and Param_Color
+ * Get array param from function hook, only works on Param_Array
  *
  * @param iParam            Param number to get.
  * @param value             Array value to get.
@@ -467,14 +467,13 @@ native void SaxtonHale_SetParamString(int iParam, const char[] value);
 native void SaxtonHale_GetParamArray(int iParam, any[] value, int iLength);
 
 /**
- * Set array param to function hook, supported ParamType Param_Array, Param_Vector, and Param_Color
+ * Set array param to function hook, only works on Param_Array
  *
  * @param iParam            Param number to set.
  * @param value             Array value to set.
- * @param iLength           Length of array
  * @error                   Called while not inside hook, param outside of bounds, or incorrect ParamType
  */
-native void SaxtonHale_SetParamArray(int iParam, const any[] value, int iLength);
+native void SaxtonHale_SetParamArray(int iParam, const any[] value);
 
 /**
  * Forward called when boss got telefraged
