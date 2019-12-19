@@ -116,7 +116,7 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 			g_flClientBossWeighDownTimer[this.iClient] = GetGameTime();
 		}
 		
-		if (g_bRoundStarted && this.iMaxRageDamage != -1)
+		if (g_bRoundStarted && IsPlayerAlive(this.iClient) && this.iMaxRageDamage != -1)
 		{
 			float flRage = (float(this.iRageDamage) / float(this.iMaxRageDamage)) * 100.0;
 			
