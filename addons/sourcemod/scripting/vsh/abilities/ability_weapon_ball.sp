@@ -1,12 +1,73 @@
+#define ATTRIB_MAX_MISC_AMMO	279
+
 static int g_iWeaponBallStunType;
 
+static int g_iWeaponBallMax[TF_MAXPLAYERS+1];
+static float g_flWeaponBallDuration[TF_MAXPLAYERS+1];
+static float g_flWeaponBallRageEnd[TF_MAXPLAYERS+1];
 static float g_flWeaponBallStunTime[TF_MAXPLAYERS+1];
 static int g_iWeaponBallThrower[TF_MAXPLAYERS+1];
 
 methodmap CWeaponBall < SaxtonHaleBase
 {
+	property int iMaxBall
+	{
+		public get()
+		{
+			return g_iWeaponBallMax[this.iClient];
+		}
+		
+		public set(int iVal)
+		{
+			g_iWeaponBallMax[this.iClient] = iVal;
+		}
+	}
+	
+	property float flDuration
+	{
+		public get()
+		{
+			return g_flWeaponBallDuration[this.iClient];
+		}
+		
+		public set(float flVal)
+		{
+			g_flWeaponBallDuration[this.iClient] = flVal;
+		}
+	}
+	
 	public CWeaponBall(CWeaponBall ability)
 	{
+		//Default values
+		ability.iMaxBall = 3;
+		ability.flDuration = 5.0;
+		
+		g_flWeaponBallRageEnd[ability.iClient] = 0.0;
+	}
+	
+	public void OnSpawn()
+	{
+		int iMelee = TF2_GetItemInSlot(this.iClient, WeaponSlot_Melee);
+		if (iMelee > MaxClients)
+		{
+			TF2Attrib_SetByDefIndex(iMelee, ATTRIB_MAX_MISC_AMMO, float(this.iMaxBall));
+			TF2Attrib_ClearCache(iMelee);
+			
+			//Correctly set ammo
+			TF2_SetAmmo(this.iClient, WeaponSlot_Melee, this.iMaxBall);
+		}
+	}
+	
+	public void OnRage()
+	{
+		g_flWeaponBallRageEnd[this.iClient] = GetGameTime() + (this.bSuperRage ? this.flDuration * 2 : this.flDuration);
+	}
+	
+	public void OnThink()
+	{
+		//Unlimited ball during rage
+		if (g_flWeaponBallRageEnd[this.iClient] > GetGameTime())
+			TF2_SetAmmo(this.iClient, WeaponSlot_Melee, this.iMaxBall);
 	}
 	
 	public void OnEntityCreated(int iEntity, const char[] sClassname)

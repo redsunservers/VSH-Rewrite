@@ -1,3 +1,5 @@
+#define ATTRIB_FIRE_RATE	6
+
 static int g_iBonkBoyModelHelmet;
 static int g_iBonkBoyModelMask;
 static int g_iBonkBoyModelShirt;
@@ -64,8 +66,9 @@ methodmap CBonkBoy < SaxtonHaleBase
 		
 		CRageAddCond rageCond = boss.CallFunction("CreateAbility", "CRageAddCond");
 		rageCond.flRageCondDuration = 5.0;
-		rageCond.AddCond(TFCond_CritHype);
-		rageCond.AddCond(TFCond_SpeedBuffAlly);
+		rageCond.AddCond(TFCond_HalloweenSpeedBoost);	//Unlimited jumps
+		rageCond.AddCond(TFCond_CritHype);				//Pink weapon effect
+		rageCond.AddCond(TFCond_SpeedBuffAlly);			//Speed boost effect
 		
 		boss.flSpeed = 400.0;
 		boss.iBaseHealth = 700;
@@ -97,25 +100,20 @@ methodmap CBonkBoy < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- Medium range ball stuns player and building, moonshot instakills");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- Soda Popper jumps and faster speed movement for 5 seconds");
-		StrCat(sInfo, length, "\n- 200%% Rage: Extends duration to 10 seconds");
+		StrCat(sInfo, length, "\n- Unlimited and greater mobility jumps");
+		StrCat(sInfo, length, "\n- Faster movement speed");
+		StrCat(sInfo, length, "\n- Unlimited ball");
+		StrCat(sInfo, length, "\n- 200%% Rage: Extends duration from 5 to 10 seconds");
 	}
 	
 	public void OnSpawn()
 	{
 		char attribs[256];
-		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 38 ; 1.0 ; 278 ; 0.33 ; 279 ; 3.0 ; 524 ; 1.2 ; 551 ; 1.0");
+		Format(attribs, sizeof(attribs), "2 ; 3.54 ; 252 ; 0.5 ; 259 ; 1.0 ; 38 ; 1.0 ; 278 ; 0.33 ; 524 ; 1.2 ; 551 ; 1.0");
 		int iWeapon = this.CallFunction("CreateWeapon", 44, "tf_weapon_bat_wood", 1, TFQual_Collectors, attribs);
 		if (iWeapon > MaxClients)
-		{
 			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
-			
-			//Correctly set ammo to 3
-			int iAmmoType = GetEntProp(iWeapon, Prop_Send, "m_iPrimaryAmmoType");
-			if (iAmmoType > -1)
-				SetEntProp(this.iClient, Prop_Send, "m_iAmmo", 3, 4, iAmmoType);
-		}
-
+		
 		/*
 		Sandman attributes:
 		
@@ -125,7 +123,6 @@ methodmap CBonkBoy < SaxtonHaleBase
 		
 		38: Launches a ball that slows opponents
 		278: increase in recharge rate
-		279: max misc ammo on wearer
 		524: greater jump height when active
 		551: special_taunt
 		*/
@@ -156,6 +153,14 @@ methodmap CBonkBoy < SaxtonHaleBase
 		
 		this.flSpeed *= 1.5;
 		g_bBonkBoyRage[this.iClient] = true;
+		SetEntityMoveType(this.iClient, MOVETYPE_ISOMETRIC);
+		
+		int iMelee = TF2_GetItemInSlot(this.iClient, WeaponSlot_Melee);
+		if (iMelee > MaxClients)
+		{
+			TF2Attrib_SetByDefIndex(iMelee, ATTRIB_FIRE_RATE, 0.4);	//firing speed
+			TF2Attrib_ClearCache(iMelee);
+		}
 	}
 	
 	public void OnThink()
@@ -164,6 +169,14 @@ methodmap CBonkBoy < SaxtonHaleBase
 		{
 			g_bBonkBoyRage[this.iClient] = false;
 			this.flSpeed /= 1.5;
+			SetEntityMoveType(this.iClient, MOVETYPE_WALK);
+			
+			int iMelee = TF2_GetItemInSlot(this.iClient, WeaponSlot_Melee);
+			if (iMelee > MaxClients)
+			{
+				TF2Attrib_RemoveByDefIndex(iMelee, ATTRIB_FIRE_RATE);	//firing speed
+				TF2Attrib_ClearCache(iMelee);
+			}
 		}
 	}
 	
