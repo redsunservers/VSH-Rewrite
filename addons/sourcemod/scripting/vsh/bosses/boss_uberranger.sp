@@ -4,10 +4,14 @@
 
 static int g_iUberRangerPrussianPickelhaube;
 static int g_iUberRangerBlightedBeak;
+static int g_iUberRangerMinionAFKTimeLeft[TF_MAXPLAYERS+1];
 
 static ArrayList g_aUberRangerColorList;
 
+static Handle g_hUberRangerMinionAFKTimer[TF_MAXPLAYERS+1];
+
 static bool g_bUberRangerPlayerWasSummoned[TF_MAXPLAYERS+1];
+static bool g_bUberRangerMinionHasMoved[TF_MAXPLAYERS+1];
 
 static char g_strUberRangerRoundStart[][] = {
 	"vo/medic_battlecry05.mp3"
@@ -52,11 +56,11 @@ methodmap CUberRanger < SaxtonHaleBase
 	public CUberRanger(CUberRanger boss)
 	{
 		CBraveJump abilityJump = boss.CallFunction("CreateAbility", "CBraveJump");
-		abilityJump.iJumpChargeBuild = 1;
+		abilityJump.iJumpChargeBuild /= 4;				//4x slower jump charge rate
 		
 		CRageAddCond rageCond = boss.CallFunction("CreateAbility", "CRageAddCond");
-		rageCond.flRageCondDuration = 6.0;
-		rageCond.flRageCondSuperRageMultiplier = 1.333;	//This is 7.998 seconds, close enough
+		rageCond.flRageCondDuration = 5.0;
+		rageCond.flRageCondSuperRageMultiplier = 1.6;	//8 seconds
 		rageCond.AddCond(TFCond_UberchargedCanteen);
 		
 		boss.iBaseHealth = 650;
@@ -67,8 +71,8 @@ methodmap CUberRanger < SaxtonHaleBase
 		
 		for (int i = 1; i <= MaxClients; i++)
 			g_bUberRangerPlayerWasSummoned[i] = false;
-			
-		UberRangerResetColorList();
+		
+		UberRanger_ResetColorList();
 	}
 	
 	public void GetBossName(char[] sName, int length)
@@ -85,7 +89,7 @@ methodmap CUberRanger < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- Equipped with a Medi Gun");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- Übercharge for 6 seconds");
+		StrCat(sInfo, length, "\n- Übercharge for 5 seconds");
 		StrCat(sInfo, length, "\n- Summons a fellow Über Ranger");
 		StrCat(sInfo, length, "\n- Über Rangers are allowed to heal and über each other");
 		StrCat(sInfo, length, "\n- 200%% Rage: extends über duration to 8 seconds and summons 3 Über Rangers");
@@ -151,8 +155,7 @@ methodmap CUberRanger < SaxtonHaleBase
 		CreateTimer(3.0, Timer_EntityCleanup, TF2_SpawnParticle(TF2_GetClientTeam(this.iClient) == TFTeam_Blue ? "teleportedin_blue" : "teleportedin_red", vecBossPos));
 		EmitSoundToAll(RANGER_RAGESOUND, this.iClient);
 		
-		ArrayList aValidMinions = new ArrayList();
-		GetValidSummonableClients(aValidMinions);
+		ArrayList aValidMinions = GetValidSummonableClients();
 		
 		int iLength = aValidMinions.Length;
 		if (iLength < iTotalSummons)
@@ -162,48 +165,12 @@ methodmap CUberRanger < SaxtonHaleBase
 			
 		//Give priority to players who have the highest scores
 		for (int iSelection = 0; iSelection < iLength; iSelection++)
-		{
-			int iBestClientIndex = -1;
-			int iScoreLength = aValidMinions.Length;
-			int iBestScore = -1;
+		{	
+			//Spawn and teleport the replacement to the boss
+			int iClient = UberRanger_SpawnBestPlayer(aValidMinions);
 			
-			for (int i = 0; i < iScoreLength; i++)
-			{
-				int iClient = aValidMinions.Get(i);
-				if (!g_bUberRangerPlayerWasSummoned[iClient])
-				{
-					int iClientScore = SaxtonHale_GetScore(iClient);
-					if (iClientScore > iBestScore)
-					{
-						iBestScore = iClientScore;
-						iBestClientIndex = i;
-					}
-				}
-			}
-			
-			if (iBestClientIndex != -1)
-			{
-				int iClient = aValidMinions.Get(iBestClientIndex);
-				
-				SaxtonHaleBase boss = SaxtonHaleBase(iClient);
-				if (boss.bValid)
-					boss.CallFunction("Destroy");
-				
-				//Allow them to join the boss team
-				Client_AddFlag(iClient, ClientFlags_BossTeam);
-				TF2_ForceTeamJoin(iClient, TFTeam_Boss);
-				
-				//Mark them as selected to not be included in future rages
-				g_bUberRangerPlayerWasSummoned[iClient] = true;
-				
-				boss.CallFunction("CreateBoss", "CMinionRanger");
-				TF2_RespawnPlayer(iClient);
-				
+			if (iClient > 0)		
 				TF2_TeleportToClient(iClient, this.iClient);
-				TF2_AddCondition(iClient, TFCond_Ubercharged, 2.0);
-				
-				aValidMinions.Erase(iBestClientIndex);
-			}
 		}
 			
 		delete aValidMinions;
@@ -235,7 +202,7 @@ methodmap CUberRanger < SaxtonHaleBase
 	}
 	
 	public void OnThink()
-	{
+	{		
 		Hud_AddText(this.iClient, "Use your Medigun to heal your companions!");
 	}
 	
@@ -282,15 +249,23 @@ methodmap CMinionRanger < SaxtonHaleBase
 {
 	public CMinionRanger(CMinionRanger boss)
 	{
-		boss.iBaseHealth = 600;
-		boss.iHealthPerPlayer = 0;
+		CBraveJump abilityJump = boss.CallFunction("CreateAbility", "CBraveJump");
+		abilityJump.iJumpChargeBuild /= 4;	//4x slower jump charge rate
+		abilityJump.flMaxHeight /= 2;		//Half max height for super jumps
+		
+		boss.iBaseHealth = 400;
+		boss.iHealthPerPlayer = 40;
 		boss.nClass = TFClass_Medic;
 		boss.iMaxRageDamage = -1;
 		boss.flWeighDownTimer = -1.0;
 		boss.bCanBeHealed = true;
 		boss.bMinion = true;
 		
-		EmitSoundToClient(boss.iClient, SOUND_ALERT);	//Alert player as he spawned
+		g_bUberRangerPlayerWasSummoned[boss.iClient] = true;	//Mark the player as summoned so he won't become a miniboss again in this round
+		g_bUberRangerMinionHasMoved[boss.iClient] = false;		//Will check if the player has moved to determine if they're AFK or not
+		g_iUberRangerMinionAFKTimeLeft[boss.iClient] = 6;		//The player has 6 seconds to move after being summoned, else they'll be taken as AFK and replaced by someone else
+		
+		EmitSoundToClient(boss.iClient, SOUND_ALERT);			//Alert player as he spawned
 	}
 	
 	public bool IsBossHidden()
@@ -330,15 +305,20 @@ methodmap CMinionRanger < SaxtonHaleBase
 		
 		//Checking if the list is there at all or has been emptied
 		if (g_aUberRangerColorList == null || g_aUberRangerColorList.Length <= 0)
-			UberRangerResetColorList();
+			UberRanger_ResetColorList();
 			
 		//Assign color
 		int iColor[4];
 		g_aUberRangerColorList.GetArray(0, iColor);
+		g_aUberRangerColorList.Erase(0);
 		iColor[3] = 255;
 		
 		SetEntityRenderColor(this.iClient, iColor[0], iColor[1], iColor[2], iColor[3]);
-		g_aUberRangerColorList.Erase(0);
+		
+		//Add glow for him to be easily recognizable as not the boss during spawn uber
+		//Round started check is there so it doesn't show up when spawning on the next round as well
+		if (g_bRoundStarted)
+			CreateTimer(3.0, Timer_EntityCleanup, TF2_CreateGlow(this.iClient, iColor));
 		
 		int iWearable = -1;
 		
@@ -360,6 +340,21 @@ methodmap CMinionRanger < SaxtonHaleBase
 			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iUberRangerBlightedBeak);
 			SetEntityRenderColor(iWearable, iColor[0], iColor[1], iColor[2], iColor[3]);
 		}
+		
+		g_hUberRangerMinionAFKTimer[this.iClient] = CreateTimer(0.0, Timer_UberRanger_ReplaceMinion, this.iClient);
+	}
+	
+	public void OnButtonPress(int button)
+	{
+		//Check if the player presses anything, thus isn't AFK
+		if (!g_bUberRangerMinionHasMoved[this.iClient])
+		{	
+			//Reset their über spawn protection
+			TF2_RemoveCondition(this.iClient, TFCond_UberchargedCanteen);
+			TF2_AddCondition(this.iClient, TFCond_UberchargedCanteen, 3.0);
+				
+			g_bUberRangerMinionHasMoved[this.iClient] = true;
+		}
 	}
 	
 	public void GetModel(char[] sModel, int length)
@@ -367,18 +362,47 @@ methodmap CMinionRanger < SaxtonHaleBase
 		strcopy(sModel, length, RANGER_MODEL);
 	}
 	
+	public void GetSoundAbility(char[] sSound, int length, const char[] sType)
+	{
+		if (strcmp(sType, "CBraveJump") == 0)
+			strcopy(sSound, length, g_strUberRangerJump[GetRandomInt(0,sizeof(g_strUberRangerJump)-1)]);
+	}
+	
 	public void OnThink()
 	{
-		Hud_AddText(this.iClient, "Use your Medigun to heal your companions!");
+		char sMessage[64];
+		if (!g_bUberRangerMinionHasMoved[this.iClient])
+			Format(sMessage, sizeof(sMessage), "You have %d second%s to move before getting replaced!", g_iUberRangerMinionAFKTimeLeft[this.iClient], g_iUberRangerMinionAFKTimeLeft[this.iClient] != 1 ? "s" : "");
+		else
+			Format(sMessage, sizeof(sMessage), "Use your Medigun to heal your companions!");
+			
+		Hud_AddText(this.iClient, sMessage);
+	}
+	
+	public void OnDeath()
+	{
+		//This is called on death in case people suicide after getting summoned instead of disabling respawn
+		if (!g_bUberRangerMinionHasMoved[this.iClient])
+		{
+			ArrayList aValidMinions = GetValidSummonableClients();
+			
+			//Spawn and teleport the replacement to where this AFK minion is, if valid
+			int iBestClient = UberRanger_SpawnBestPlayer(aValidMinions);	
+			if (iBestClient > 0)
+				TF2_TeleportToClient(iBestClient, this.iClient);
+				
+			delete aValidMinions;
+		}
 	}
 	
 	public void Destroy()
 	{
 		SetEntityRenderColor(this.iClient, 255, 255, 255, 255);
+		g_hUberRangerMinionAFKTimer[this.iClient] = null;
 	}
 };
 
-public void UberRangerResetColorList()
+public void UberRanger_ResetColorList()
 {
 	if (g_aUberRangerColorList == null)
 		g_aUberRangerColorList = new ArrayList(3);
@@ -390,7 +414,6 @@ public void UberRangerResetColorList()
 	
 	//The following colors will have slight deviation from their current values
 	g_aUberRangerColorList.PushArray({ 20, 20, 20 }); 		// A Distinctive Lack of Hue
-	g_aUberRangerColorList.PushArray({ 126, 126, 126 }); 	// Aged Mustache Grey
 	g_aUberRangerColorList.PushArray({ 40, 70, 102 }); 		// An Air of Debonair (BLU) (modified)
 	g_aUberRangerColorList.PushArray({ 255, 202, 59 }); 	// Australium Gold (modified)
 	g_aUberRangerColorList.PushArray({ 255, 157, 126 }); 	// Dark Salmon Injustice (modified)
@@ -402,8 +425,88 @@ public void UberRangerResetColorList()
 	g_aUberRangerColorList.PushArray({ 79, 100, 59 }); 		// Zepheniah's Greed (modified)
 
 	g_aUberRangerColorList.PushArray({ 25, 230, 230 }); 	// Cyan
+	g_aUberRangerColorList.PushArray({ 100, 100, 100 }); 	// Gray
 	g_aUberRangerColorList.PushArray({ 255, 110, 0 }); 		// Orangered
 	g_aUberRangerColorList.PushArray({ 88, 21, 132 }); 		// Purple (dark)
 	
 	g_aUberRangerColorList.Sort(Sort_Random, Sort_Integer);
+}
+
+public int UberRanger_SpawnBestPlayer(ArrayList aClients)
+{
+	int iBestClientIndex = -1;
+	int iLength = aClients.Length;
+	int iBestScore = -1;
+	
+	for (int i = 0; i < iLength; i++)
+	{
+		int iClient = aClients.Get(i);
+		
+		if (!g_bUberRangerPlayerWasSummoned[iClient])
+		{
+			int iClientScore = SaxtonHale_GetScore(iClient);
+			
+			if (iClientScore > iBestScore)
+			{
+				iBestScore = iClientScore;
+				iBestClientIndex = iClient;
+			}
+		}
+	}
+
+	if (iBestClientIndex > 0)
+	{
+		SaxtonHaleBase boss = SaxtonHaleBase(iBestClientIndex);
+		if (boss.bValid)
+			boss.CallFunction("Destroy");
+
+		//Allow them to join the boss team
+		Client_AddFlag(iBestClientIndex, ClientFlags_BossTeam);
+		TF2_ForceTeamJoin(iBestClientIndex, TFTeam_Boss);
+
+		boss.CallFunction("CreateBoss", "CMinionRanger");
+		TF2_RespawnPlayer(iBestClientIndex);
+
+		//Duration of this condition will reset when they move
+		TF2_AddCondition(iBestClientIndex, TFCond_UberchargedCanteen, 7.0);
+	}
+	
+	//Returns index of client who tried to spawn, or -1 if it finds nobody suitable
+	return iBestClientIndex;
+}
+
+public Action Timer_UberRanger_ReplaceMinion(Handle hTimer, int iClient)
+{
+	if (hTimer != g_hUberRangerMinionAFKTimer[iClient])
+		return;
+		
+	if (TF2_GetClientTeam(iClient) <= TFTeam_Spectator || !IsPlayerAlive(iClient) || g_bUberRangerMinionHasMoved[iClient])
+		return;
+	
+	//Adjust the countdown on screen
+	if (g_iUberRangerMinionAFKTimeLeft[iClient] > 0)
+	{
+		g_iUberRangerMinionAFKTimeLeft[iClient]--;
+		g_hUberRangerMinionAFKTimer[iClient] = CreateTimer(1.0, Timer_UberRanger_ReplaceMinion, iClient);
+		return;
+	}
+	
+	//Snap the AFK player. Note that there's no point in killing them if they're the only acceptable client available
+	ArrayList aValidMinions = GetValidSummonableClients();
+	int iLength = aValidMinions.Length;
+	
+	for (int i = 0; i < iLength; i++)
+	{
+		int iCandidate = aValidMinions.Get(i);
+		if (!g_bUberRangerPlayerWasSummoned[iCandidate])
+		{
+			ForcePlayerSuicide(iClient);
+			break;
+		}
+	}
+
+	delete aValidMinions;
+	
+	//Set them as moving again, in case the AFK player wasn't killed
+	g_bUberRangerMinionHasMoved[iClient] = true;
 }

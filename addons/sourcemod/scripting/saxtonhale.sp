@@ -371,6 +371,8 @@ ConVar tf_arena_preround_time;
 #include "vsh/bosses/boss_yeti.sp"
 #include "vsh/bosses/boss_uberranger.sp"
 #include "vsh/bosses/boss_zombie.sp"
+#include "vsh/bosses/boss_pyromancer_scorched.sp"
+#include "vsh/bosses/boss_pyromancer_scalded.sp"
 
 #include "vsh/modifiers/modifiers_speed.sp"
 #include "vsh/modifiers/modifiers_jump.sp"
@@ -622,8 +624,11 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("CBlutarch", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CSeeldier", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CRedmond", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CScorchedPyromancer", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CScaldedPyromancer", VSHClassType_Boss);
 	SaxtonHale_RegisterMultiBoss("CSeeMan", "CSeeldier");
 	SaxtonHale_RegisterMultiBoss("CBlutarch", "CRedmond");
+	SaxtonHale_RegisterMultiBoss("CScorchedPyromancer", "CScaldedPyromancer");
 	
 	//Register minions
 	SaxtonHale_RegisterClass("CSeeldierMinion", VSHClassType_Boss);

@@ -68,8 +68,10 @@ stock int GetMainBoss()
 	return iBoss;
 }
 
-stock ArrayList GetValidSummonableClients(ArrayList aClients, bool bAllowBoss = false)
+stock ArrayList GetValidSummonableClients(bool bAllowBoss = false)
 {
+	ArrayList aClients = new ArrayList();
+	
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
 		if (IsClientInGame(iClient)
@@ -269,6 +271,30 @@ stock void TF2_RemoveItemInSlot(int client, int slot)
 	{
 		SDK_RemoveWearable(client, iWearable);
 		AcceptEntityInput(iWearable, "Kill");
+	}
+}
+
+stock int TF2_GetAmmo(int iClient, int iSlot)
+{
+	int iWeapon = GetPlayerWeaponSlot(iClient, iSlot);
+	if (iWeapon > MaxClients)
+	{
+		int iAmmoType = GetEntProp(iWeapon, Prop_Send, "m_iPrimaryAmmoType");
+		if (iAmmoType > -1)
+			return GetEntProp(iClient, Prop_Send, "m_iAmmo", _, iAmmoType);
+	}
+	
+	return -1;
+}
+
+stock void TF2_SetAmmo(int iClient, int iSlot, int iAmmo)
+{
+	int iWeapon = GetPlayerWeaponSlot(iClient, iSlot);
+	if (iWeapon > MaxClients)
+	{
+		int iAmmoType = GetEntProp(iWeapon, Prop_Send, "m_iPrimaryAmmoType");
+		if (iAmmoType > -1)
+			SetEntProp(iClient, Prop_Send, "m_iAmmo", iAmmo, _, iAmmoType);
 	}
 }
 
