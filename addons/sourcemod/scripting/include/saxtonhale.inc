@@ -119,6 +119,24 @@ native void SaxtonHale_UnregisterClass(const char[] sClass);
 native Handle SaxtonHale_GetPlugin(const char[] sClass);
 
 /**
+ * Gets all registered class name
+ *
+ * @note Returned ArrayList is newly created from calling plugin, so it should be deleted when not needed
+ *
+ * @return                  Newly created ArrayList of registered class name
+ */
+native ArrayList SaxtonHale_GetAllClass();
+
+/**
+ * Gets all registered class name, filtered by class type
+ *
+ * @note Returned ArrayList is newly created from calling plugin, so it should be deleted when not needed
+ *
+ * @return                  Newly created ArrayList of registered class name, filtered by class type
+ */
+native ArrayList SaxtonHale_GetAllClassType(SaxtonHaleClassType nClassType);
+
+/**
  * Registers multi bosses to be played togther
  *
  * @note Make sure SaxtonHale_RegisterClass is used first to register each bosses
@@ -740,6 +758,8 @@ public __pl_saxtonhale_SetNTVOptional()
 	MarkNativeAsOptional("SaxtonHale_RegisterClass");
 	MarkNativeAsOptional("SaxtonHale_UnregisterClass");
 	MarkNativeAsOptional("SaxtonHale_GetPlugin");
+	MarkNativeAsOptional("SaxtonHale_GetAllClass");
+	MarkNativeAsOptional("SaxtonHale_GetAllClassType");
 	MarkNativeAsOptional("SaxtonHale_RegisterMultiBoss");
 	
 	MarkNativeAsOptional("SaxtonHaleBase.CallFunction");

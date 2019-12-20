@@ -17,6 +17,8 @@ void FuncNative_AskLoad()
 	CreateNative("SaxtonHale_RegisterClass", FuncNative_RegisterClass);
 	CreateNative("SaxtonHale_UnregisterClass", FuncNative_UnregisterClass);
 	CreateNative("SaxtonHale_GetPlugin", FuncNative_GetPlugin);
+	CreateNative("SaxtonHale_GetAllClass", FuncNative_GetAllClass);
+	CreateNative("SaxtonHale_GetAllClassType", FuncNative_GetAllClassType);
 	CreateNative("SaxtonHale_RegisterMultiBoss", FuncNative_RegisterMultiBoss);
 	
 	CreateNative("SaxtonHaleBase.CallFunction", FuncNative_CallFunction);
@@ -303,6 +305,28 @@ public any FuncNative_GetPlugin(Handle hPlugin, int iNumParams)
 	GetNativeString(1, sType, sizeof(sType));
 	
 	return FuncClass_GetPlugin(sType);
+}
+
+//ArrayList SaxtonHale_GetAllClass();
+public any FuncNative_GetAllClass(Handle hPlugin, int iNumParams)
+{
+	ArrayList aClass = FuncClass_GetAll();
+	
+	ArrayList aClone = view_as<ArrayList>(CloneHandle(aClass, hPlugin));
+	delete aClass;
+	
+	return aClone;
+}
+
+//ArrayList SaxtonHale_GetAllClassType(SaxtonHaleClassType nClassType);
+public any FuncNative_GetAllClassType(Handle hPlugin, int iNumParams)
+{
+	ArrayList aClass = FuncClass_GetAllType(GetNativeCell(1));
+	
+	ArrayList aClone = view_as<ArrayList>(CloneHandle(aClass, hPlugin));
+	delete aClass;
+	
+	return aClone;
 }
 
 //void SaxtonHale_RegisterMultiBoss(const char[] ...);
