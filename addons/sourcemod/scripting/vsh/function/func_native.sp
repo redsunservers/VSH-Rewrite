@@ -308,7 +308,18 @@ public any FuncNative_GetPlugin(Handle hPlugin, int iNumParams)
 //void SaxtonHale_RegisterMultiBoss(const char[] ...);
 public any FuncNative_RegisterMultiBoss(Handle hPlugin, int iNumParams)
 {
-	//TODO
+	if (iNumParams < 2)
+		ThrowNativeError(SP_ERROR_NATIVE, "There must be atleast 2 bosses for multiboss");
+	
+	ArrayList aBosses = new ArrayList(MAX_TYPE_CHAR);
+	for (int i = 0; i < iNumParams; i++)
+	{
+		char sClass[MAX_TYPE_CHAR];
+		GetNativeString(i, sClass, sizeof(sClass));
+		aBosses.PushString(sClass);
+	}
+	
+	NextBoss_AddMulti(aBosses);
 }
 
 //any SaxtonHaleBase.CallFunction(const char[] sName, any...);
