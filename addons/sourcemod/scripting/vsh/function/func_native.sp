@@ -13,7 +13,6 @@ void FuncNative_AskLoad()
 	CreateNative("SaxtonHaleFunction.AddParam", FuncNative_FunctionAddParam);
 	CreateNative("SaxtonHaleFunction.SetParam", FuncNative_FunctionSetParam);
 	
-	CreateNative("SaxtonHale_InitFunction", FuncNative_InitFunction);
 	CreateNative("SaxtonHale_RegisterClass", FuncNative_RegisterClass);
 	CreateNative("SaxtonHale_UnregisterClass", FuncNative_UnregisterClass);
 	CreateNative("SaxtonHale_GetPlugin", FuncNative_GetPlugin);
@@ -35,13 +34,14 @@ void FuncNative_AskLoad()
 	CreateNative("SaxtonHale_SetParamArray", FuncNative_SetParamArray);
 	
 	// Deprecated functions
+	CreateNative("SaxtonHale_InitFunction", FuncNative_InitFunction);
 	CreateNative("SaxtonHale_RegisterBoss", FuncNative_RegisterBoss);
 	CreateNative("SaxtonHale_UnregisterBoss", FuncNative_UnregisterBoss);
 	CreateNative("SaxtonHale_RegisterModifiers", FuncNative_RegisterModifiers);
 	CreateNative("SaxtonHale_UnregisterModifiers", FuncNative_UnregisterModifiers);
 	CreateNative("SaxtonHale_RegisterAbility", FuncNative_RegisterAbility);
 	CreateNative("SaxtonHale_UnregisterAbility", FuncNative_UnregisterAbility);
-		
+	
 	char sBuffer[256];
 	
 	NATIVE_PROPERTY_REGISTER("bValid",bValid)
@@ -336,7 +336,7 @@ public any FuncNative_RegisterMultiBoss(Handle hPlugin, int iNumParams)
 		ThrowNativeError(SP_ERROR_NATIVE, "There must be atleast 2 bosses for multiboss");
 	
 	ArrayList aBosses = new ArrayList(MAX_TYPE_CHAR);
-	for (int i = 0; i < iNumParams; i++)
+	for (int i = 1; i <= iNumParams; i++)
 	{
 		char sClass[MAX_TYPE_CHAR];
 		GetNativeString(i, sClass, sizeof(sClass));

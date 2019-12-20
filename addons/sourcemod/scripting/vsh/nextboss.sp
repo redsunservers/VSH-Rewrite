@@ -68,7 +68,7 @@ void PickNextBoss()
 				aMultiBoss.GetString(i, sBoss, sizeof(sBoss));
 				
 				NextBoss nextStruct;
-				Format(nextStruct.sBoss, sizeof(nextStruct.sBoss), "CSaxtonHale");
+				Format(nextStruct.sBoss, sizeof(nextStruct.sBoss), sBoss);
 				g_aNextBoss.PushArray(nextStruct);
 			}
 		}
@@ -324,12 +324,12 @@ stock void NextBoss_GetRandomNormal(char[] sBoss, int iLength)
 	
 	//Delet multi boss
 	int iBossLength = g_aNextBossMulti.Length;
-	for (int i = iBossLength; i >= 0; i--)
+	for (int i = 0; i < iBossLength; i++)
 	{
-		ArrayList aMultiBoss = g_aNextBossMulti.Get(0);
+		ArrayList aMultiBoss = g_aNextBossMulti.Get(i);
 		
 		int iMultiLength = aMultiBoss.Length;
-		for (int j = iMultiLength; j >= 0; j--)
+		for (int j = 0; j < iMultiLength; j++)
 		{
 			char sMultiBoss[MAX_TYPE_CHAR];
 			aMultiBoss.GetString(j, sMultiBoss, sizeof(sMultiBoss));
@@ -347,19 +347,19 @@ stock void NextBoss_GetRandomNormal(char[] sBoss, int iLength)
 	
 	//Delet hidden bosses
 	iBossLength = aBosses.Length;
-	for (int i = iBossLength; i >= 0; i++)
+	for (int i = iBossLength-1; i >= 0; i--)
 		if (NextBoss_IsBossHidden(aBosses, i))
 			aBosses.Erase(i);
 	
-	if (aBosses.Length == 0)
+	iBossLength = aBosses.Length;
+	if (iBossLength == 0)
 	{
 		delete aBosses;
 		PluginStop(true, "[VSH] NO BOSS IN LIST TO SELECT RANDOM!!!!");
 		return;
 	}
 	
-	aBosses.Sort(Sort_Random, Sort_Integer);
-	aBosses.GetString(0, sBoss, iLength);
+	aBosses.GetString(GetRandomInt(0, iBossLength-1), sBoss, iLength);
 	delete aBosses;
 }
 
@@ -428,7 +428,7 @@ stock int NextBoss_GetRandomModifiers(char[] sModifiers, int iLength, bool bForc
 		//Get list of every non-hidden modifiers to select random
 		ArrayList aModifiers = FuncClass_GetAllType(VSHClassType_Modifier);
 		int iArrayLength = aModifiers.Length;
-		for (int iModifiers = iArrayLength; iModifiers >= 0; iModifiers--)
+		for (int iModifiers = iArrayLength-1; iModifiers >= 0; iModifiers--)
 		{
 			char sModifiersType[MAX_TYPE_CHAR];
 			aModifiers.GetString(iModifiers, sModifiersType, sizeof(sModifiersType));
@@ -448,7 +448,7 @@ stock int NextBoss_GetRandomModifiers(char[] sModifiers, int iLength, bool bForc
 		}
 		
 		//Randomizer and set modifiers
-		aModifiers.GetString(GetRandomInt(0, iArrayLength - 1), sModifiers, iLength);
+		aModifiers.GetString(GetRandomInt(0, iArrayLength-1), sModifiers, iLength);
 		delete aModifiers;
 	}
 	else

@@ -36,6 +36,7 @@ void MenuBoss_DisplayBossList(int iClient, MenuBossListCallback callback, int iF
 	
 	//Loop through every bosses
 	ArrayList aBosses = FuncClass_GetAllType(VSHClassType_Boss);
+	aBosses.Sort(Sort_Ascending, Sort_String);
 	int iLength = aBosses.Length;
 	for (int i = 0; i < iLength; i++)
 	{
@@ -77,6 +78,7 @@ void MenuBoss_DisplayModifiersList(int iClient, MenuBossListCallback callback, i
 	
 	//Loop through every modifiers
 	ArrayList aModifiers = FuncClass_GetAllType(VSHClassType_Modifier);
+	aModifiers.Sort(Sort_Ascending, Sort_String);
 	int iLength = aModifiers.Length;
 	for (int i = 0; i < iLength; i++)
 	{
