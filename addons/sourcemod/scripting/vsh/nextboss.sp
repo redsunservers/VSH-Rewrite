@@ -295,7 +295,7 @@ stock void NextBoss_RemoveMulti(const char[] sBoss)
 		ArrayList aMultiBoss = g_aNextBossMulti.Get(i);
 		
 		int iMultiLength = aMultiBoss.Length;
-		for (int j = iMultiLength; j >= 0; j--)
+		for (int j = iMultiLength-1; j >= 0; j--)
 		{
 			char sMultiBoss[MAX_TYPE_CHAR];
 			aMultiBoss.GetString(j, sMultiBoss, sizeof(sMultiBoss));
