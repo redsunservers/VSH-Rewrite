@@ -26,7 +26,7 @@
 			{
 				"library"	"server"
 				"linux"		"@_ZN16CObjectDispenser15CouldHealTargetEP11CBaseEntity"
-				//TODO get windows sig
+				"windows"	"\x55\x8B\xEC\x56\x8B\x75\x08\x57\x8B\xF9\x8B\x87\x10\x01\x00\x00"
 			}
 		}
 		"Functions"
