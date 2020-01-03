@@ -337,6 +337,17 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 			action = Plugin_Changed;
 		}
 
+		if (inflictor > MaxClients && !this.bMinion)
+		{
+			char sInflictor[32];
+			GetEdictClassname(inflictor, sInflictor, sizeof(sInflictor));
+			if (strcmp(sInflictor, "tf_projectile_sentryrocket") == 0 || strcmp(sInflictor, "obj_sentrygun") == 0)
+			{
+				damagetype |= DMG_PREVENT_PHYSICS_FORCE;
+				action = Plugin_Changed;
+			}
+		}
+
 		if (MaxClients < attacker)
 		{
 			char strAttacker[32];

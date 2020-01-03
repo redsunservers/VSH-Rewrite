@@ -1305,17 +1305,6 @@ public Action Client_OnTakeDamage(int victim, int &attacker, int &inflictor, flo
 						Forward_TeleportDamage(victim, attacker, iBuilder);
 						finalAction = Plugin_Changed;
 					}
-					
-					if (inflictor > MaxClients)
-					{
-						char strInflictor[32];
-						GetEdictClassname(inflictor, strInflictor, sizeof(strInflictor));
-						if(strcmp(strInflictor, "tf_projectile_sentryrocket") == 0 || strcmp(strInflictor, "obj_sentrygun") == 0)
-						{
-							damagetype |= DMG_PREVENT_PHYSICS_FORCE;
-							finalAction = Plugin_Changed;
-						}
-					}
 				}
 			}
 		}
