@@ -374,12 +374,13 @@ ConVar tf_arena_preround_time;
 #include "vsh/bosses/boss_pyromancer_scorched.sp"
 #include "vsh/bosses/boss_pyromancer_scalded.sp"
 
-#include "vsh/modifiers/modifiers_speed.sp"
-#include "vsh/modifiers/modifiers_jump.sp"
+#include "vsh/modifiers/modifiers_angry.sp"
+#include "vsh/modifiers/modifiers_electric.sp"
 #include "vsh/modifiers/modifiers_hot.sp"
 #include "vsh/modifiers/modifiers_ice.sp"
-#include "vsh/modifiers/modifiers_electric.sp"
-#include "vsh/modifiers/modifiers_angry.sp"
+#include "vsh/modifiers/modifiers_jump.sp"
+#include "vsh/modifiers/modifiers_speed.sp"
+#include "vsh/modifiers/modifiers_vampire.sp"
 
 #include "vsh/tags/tags_params.sp"
 #include "vsh/tags/tags_target.sp"
@@ -658,12 +659,13 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("CWeaponSpells", VSHClassType_Ability);
 	
 	//Register modifiers
-	SaxtonHale_RegisterClass("CModifiersSpeed", VSHClassType_Modifier);
-	SaxtonHale_RegisterClass("CModifiersJump", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("CModifiersAngry", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("CModifiersElectric", VSHClassType_Modifier);
 	SaxtonHale_RegisterClass("CModifiersHot", VSHClassType_Modifier);
 	SaxtonHale_RegisterClass("CModifiersIce", VSHClassType_Modifier);
-	SaxtonHale_RegisterClass("CModifiersElectric", VSHClassType_Modifier);
-	SaxtonHale_RegisterClass("CModifiersAngry", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("CModifiersJump", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("CModifiersSpeed", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("CModifiersVampire", VSHClassType_Modifier);
 	
 	//Init our convars
 	g_ConfigConvar.Create("vsh_force_load", "-1", "Force enable VSH on map start? (-1 for default, 0 for force disable, 1 for force enable)", _, true, -1.0, true, 1.0);
