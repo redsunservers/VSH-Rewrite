@@ -936,6 +936,11 @@ public void OnEntityCreated(int iEntity, const char[] sClassname)
 		SDKHook(iEntity, SDKHook_Touch, Dome_TriggerTouch);
 		SDKHook(iEntity, SDKHook_EndTouch, Dome_TriggerTouch);
 	}
+	else if (StrEqual(sClassname, "game_end"))
+	{
+		//Superceding SetWinningTeam causes some maps to force a map change on capture
+		AcceptEntityInput(iEntity, "Kill");
+	}
 }
 
 public Action ItemPack_OnTouch(int iEntity, int iToucher)
