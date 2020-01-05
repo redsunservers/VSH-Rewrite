@@ -114,7 +114,6 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 	//Play one round of arena
 	if (g_iTotalRoundPlayed <= 0)
 	{
-		GameRules_SetPropFloat("m_flCapturePointEnableTime", 0.0);
 		Dome_SetTeam(TFTeam_Unassigned);
 		Dome_Start();
 		return;

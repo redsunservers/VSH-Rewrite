@@ -35,6 +35,8 @@ public void Command_Init()
 	Command_Create("queue", Command_AddQueuePoints);
 	Command_Create("point", Command_AddQueuePoints);
 	Command_Create("special", Command_ForceSpecialRound);
+	Command_Create("cap", Command_EnableCap);
+	Command_Create("cp", Command_EnableCap);
 	Command_Create("dome", Command_ForceDome);
 	Command_Create("rage", Command_SetRage);
 }
@@ -401,6 +403,29 @@ public Action Command_ForceSpecialRound(int iClient, int iArgs)
 		return Plugin_Handled;
 	}
 
+	ReplyToCommand(iClient, "%s%s You do not have permission to use this command.", TEXT_TAG, TEXT_ERROR);
+	return Plugin_Handled;
+}
+
+public Action Command_EnableCap(int iClient, int iArgs)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+
+	if (Client_HasFlag(iClient, ClientFlags_Admin))
+	{
+		if (GameRules_GetPropFloat("m_flCapturePointEnableTime") > GetGameTime())
+		{
+			GameRules_SetPropFloat("m_flCapturePointEnableTime", 0.0);
+			PrintToChatAll("%s%s %N force unlocked capture point!", TEXT_TAG, TEXT_COLOR, iClient);
+		}
+		else
+		{
+			ReplyToCommand(iClient, "%s%s Capture point is already unlocked", TEXT_TAG, TEXT_ERROR);
+		}
+		
+		return Plugin_Handled;
+	}
+	
 	ReplyToCommand(iClient, "%s%s You do not have permission to use this command.", TEXT_TAG, TEXT_ERROR);
 	return Plugin_Handled;
 }
