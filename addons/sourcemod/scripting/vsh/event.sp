@@ -1,9 +1,9 @@
 void Event_Init()
 {
 	HookEvent("teamplay_round_start", Event_RoundStart, EventHookMode_Pre);
-	HookEvent("teamplay_round_selected", Event_RoundSelected);
 	HookEvent("arena_round_start", Event_RoundArenaStart);
 	HookEvent("teamplay_round_win", Event_RoundEnd);
+	HookEvent("teamplay_point_captured", Event_PointCaptured);
 	HookEvent("player_spawn", Event_PlayerSpawn);
 	HookEvent("player_death", Event_PlayerDeath, EventHookMode_Pre);
 	HookEvent("post_inventory_application", Event_PlayerInventoryUpdate);
@@ -105,16 +105,6 @@ public Action Event_RoundStart(Event event, const char[] sName, bool bDontBroadc
 	Winstreak_RoundStart();
 
 	RequestFrame(Frame_InitVshPreRoundTimer, tf_arena_preround_time.IntValue);
-}
-
-public Action Event_RoundSelected(Event event, const char[] sName, bool bDontBroadcast)
-{
-	if (!g_bEnabled || GameRules_GetProp("m_bInWaitingForPlayers")) return;
-
-	//Play one round of arena
-	if (g_iTotalRoundPlayed <= 0) return;
-
-	Dome_RoundSelected(event);
 }
 
 public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontBroadcast)
@@ -302,8 +292,6 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 		Format(sFormat, sizeof(sFormat), "%s\n================", sFormat);
 		PrintToChat(iNextPlayer, sFormat);
 	}
-
-	GameRules_SetPropFloat("m_flCapturePointEnableTime", 31536000.0+GetGameTime());
 }
 
 public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcast)
@@ -476,6 +464,14 @@ public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcas
 	}	
 }
 
+public void Event_PointCaptured(Event event, const char[] sName, bool bDontBroadcast)
+{
+	int iCP = event.GetInt("cp");
+	TFTeam iTeam = view_as<TFTeam>(event.GetInt("team"));
+	
+	Dome_PointCaptured(iCP, iTeam);
+}
+
 public void Event_BroadcastAudio(Event event, const char[] sName, bool bDontBroadcast)
 {
 	if (!g_bEnabled) return;
@@ -614,8 +610,6 @@ public Action Event_PlayerDeath(Event event, const char[] sName, bool bDontBroad
 	{
 		//Victim who died is still "alive" during this event, so we subtract by 1 to not count victim
 		int iLastAlive = SaxtonHale_GetAliveAttackPlayers() - 1;
-
-		Dome_PlayerDeath(iLastAlive);
 		
 		if (iLastAlive >= 2)
 		{
@@ -781,13 +775,14 @@ public Action Event_PlayerHurt(Event event, const char[] sName, bool bDontBroadc
 	{
 		int iAttacker = GetClientOfUserId(event.GetInt("attacker"));
 		int iDamageAmount = event.GetInt("damageamount");
-		Tags_OnPlayerHurt(iClient, iAttacker, iDamageAmount);
+		Tags_PlayerHurt(iClient, iAttacker, iDamageAmount);
 		
 		if (0 < iAttacker <= MaxClients && IsClientInGame(iAttacker) && iClient != iAttacker)
 		{
 			boss.CallFunction("AddRage", iDamageAmount);
 			
-			if (boss.bMinion) return;
+			if (boss.bMinion)
+				return;
 			
 			g_iPlayerDamage[iAttacker] += iDamageAmount;
 			int iAttackTeam = GetClientTeam(iAttacker);

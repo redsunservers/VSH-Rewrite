@@ -82,6 +82,14 @@ enum Preferences ( <<=1 )
 	Preferences_Revival,
 };
 
+enum WinReason
+{
+	WinReason_PointCaptured = 1, 
+	WinReason_Elimination, 
+	WinReason_AllPointsCaptured = 4, 
+	WinReason_Stalemate
+};
+
 enum
 {
 	WeaponSlot_Primary = 0,
@@ -771,7 +779,6 @@ void Plugin_Cvars(bool toggle)
 		tf_dropped_weapon_lifetime.IntValue = iDroppedWeaponLifetime;
 		tf_damage_disablespread.IntValue = iDamageDisableSpread;
 
-
 		tf_scout_hype_pep_max.FloatValue = flScoutHypePepMax;
 		tf_feign_death_activate_damage_scale.FloatValue = flFeignDeathActiveDamageScale;
 		tf_feign_death_damage_scale.FloatValue = flFeignDeathDamageScale;
@@ -920,6 +927,10 @@ public void OnEntityCreated(int iEntity, const char[] sClassname)
 		|| strcmp(sClassname, "func_regenerate") == 0)
 	{
 		SDKHook(iEntity, SDKHook_Touch, ItemPack_OnTouch);
+	}
+	else if (StrEqual(sClassname, "trigger_capture_area"))
+	{
+		SDKHook(iEntity, SDKHook_Spawn, Dome_TriggerSpawn);
 	}
 }
 

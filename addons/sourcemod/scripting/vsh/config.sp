@@ -352,6 +352,36 @@ methodmap ConfigConvar < StringMap
 	{
 		this.GetString(sName, sValue, sizeof(sValue));
 	}
+	
+	public bool LookupVector(const char[] sName, float vecValue[3])
+	{
+		char sValue[MAXLEN_CONFIG_VALUE];
+		this.GetString(sName, sValue, sizeof(sValue));
+		
+		char sVec[3][12];
+		if (ExplodeString(sValue, " ", sVec, sizeof(sVec), sizeof(sVec[])) != 3)
+			return false;
+		
+		for (int i = 0; i < 3; i++)
+			vecValue[i] = StringToFloat(sVec[i]);
+		
+		return true;
+	}
+	
+	public bool LookupColor(const char[] sName, int iColor[4])
+	{
+		char sValue[MAXLEN_CONFIG_VALUE];
+		this.GetString(sName, sValue, sizeof(sValue));
+		
+		char sColor[4][12];
+		if (ExplodeString(sValue, " ", sColor, sizeof(sColor), sizeof(sColor[])) != 4)
+			return false;
+		
+		for (int i = 0; i < 4; i++)
+			iColor[i] = StringToInt(sColor[i]);
+		
+		return true;
+	}
 };
 
 ConfigClass g_ConfigClass[10][WeaponSlot_BuilderEngie+1];	//Double array of StringMap
@@ -385,7 +415,6 @@ void Config_Refresh()
 	}
 	
 	g_ConfigIndex.Clear();
-	g_ConfigConvar.Clear();
 	TagsCore_Clear();
 	TagsName_Clear();
 	

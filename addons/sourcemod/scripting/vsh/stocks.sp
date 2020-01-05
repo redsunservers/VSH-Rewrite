@@ -403,6 +403,26 @@ stock int TF2_CreateAndEquipWeapon(int iClient, int iIndex, char[] sClassnameTem
 	return iWeapon;
 }
 
+stock int TF2_GetObjectiveResource()
+{
+	static int iRefObj = 0;
+	
+	if (iRefObj != 0)
+	{
+		int iObj = EntRefToEntIndex(iRefObj);
+		if (iObj > MaxClients)
+			return iObj;
+		
+		iRefObj = 0;
+	}
+	
+	int iObj = FindEntityByClassname(MaxClients+1, "tf_objective_resource");
+	if (iObj > MaxClients)
+		iRefObj = EntIndexToEntRef(iObj);
+	
+	return iObj;
+}
+
 stock void CheckForceAttackWin(int iVictim=0)
 {
 	//Check if all main bosses died while minions still alive, if so force make round end
@@ -593,6 +613,29 @@ stock int TF2_CreateLightEntity(float flRadius, int iColor[4], int iBrightness)
 	}
 	
 	return iGlow;
+}
+
+stock bool EmitGameSoundToTeam(TFTeam nTeam,
+				const char[] gameSound,
+				int entity = SOUND_FROM_PLAYER,
+				int flags = SND_NOFLAGS,
+				int speakerentity = -1,
+				const float origin[3] = NULL_VECTOR,
+				const float dir[3] = NULL_VECTOR,
+				bool updatePos = true,
+				float soundtime = 0.0)
+{
+	int[] iClients = new int[MaxClients];
+	int iTotal = 0;
+
+	for (int iClient = 1; iClient <= MaxClients; iClient++)
+		if (IsClientInGame(iClient) && TF2_GetClientTeam(iClient) == nTeam)
+			iClients[iTotal++] = iClient;
+	
+	if (!iTotal)
+		return false;
+	
+	return EmitGameSound(iClients, iTotal, gameSound, entity, flags, speakerentity, origin, dir, updatePos, soundtime);
 }
 
 stock void BroadcastSoundToTeam(TFTeam nTeam, const char[] strSound)
