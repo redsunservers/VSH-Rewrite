@@ -1,3 +1,4 @@
+static Handle g_hHookGetCaptureValueForPlayer;
 static Handle g_hHookSetWinningTeam;
 static Handle g_hHookGetMaxHealth;
 static Handle g_hHookShouldTransmit;
@@ -59,6 +60,14 @@ void SDK_Init()
 
 	hGameData = new GameData("vsh");
 	if (hGameData == null) SetFailState("Could not find vsh gamedata!");
+	
+	// This hook allows to change capture rate
+	iOffset = hGameData.GetOffset("CTFGameRules::GetCaptureValueForPlayer");
+	g_hHookGetCaptureValueForPlayer = DHookCreate(iOffset, HookType_GameRules, ReturnType_Int, ThisPointer_Ignore);
+	if (g_hHookGetCaptureValueForPlayer == null)
+		LogMessage("Failed to create hook: CTFGameRules::GetCaptureValueForPlayer");
+	else
+		DHookAddParam(g_hHookGetCaptureValueForPlayer, HookParamType_CBaseEntity);
 	
 	// This hook allows to prevent round win called
 	iOffset = hGameData.GetOffset("CTFGameRules::SetWinningTeam");
@@ -154,6 +163,12 @@ void SDK_Init()
 	
 	delete hHook;
 	delete hGameData;
+}
+
+void SDK_HookGetCaptureValueForPlayer(DHookCallback callback)
+{
+	if (g_hHookGetCaptureValueForPlayer)
+		DHookGamerules(g_hHookGetCaptureValueForPlayer, true, _, callback);
 }
 
 void SDK_HookSetWinningTeam(DHookCallback callback)

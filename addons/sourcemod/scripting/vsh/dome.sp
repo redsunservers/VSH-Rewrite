@@ -61,7 +61,20 @@ void Dome_MapStart()
 	PrepareSound(DOME_START_SOUND);
 	PrecacheSound(DOME_NEARBY_SOUND);
 	
+	SDK_HookGetCaptureValueForPlayer(Dome_GetCaptureValueForPlayer);
 	SDK_HookSetWinningTeam(Dome_SetWinningTeam);
+}
+
+public MRESReturn Dome_GetCaptureValueForPlayer(Handle hReturn, Handle hParams)
+{
+	int iClient = DHookGetParam(hParams, 1);
+	if (SaxtonHale_IsValidBoss(iClient, false))
+	{
+		DHookSetReturn(hReturn, g_ConfigConvar.LookupInt("vsh_dome_cp_bossrate"));
+		return MRES_Supercede;
+	}
+
+	return MRES_Ignored;
 }
 
 public MRESReturn Dome_SetWinningTeam(Handle hParams)
