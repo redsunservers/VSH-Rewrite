@@ -353,32 +353,32 @@ methodmap ConfigConvar < StringMap
 		this.GetString(sName, sValue, sizeof(sValue));
 	}
 	
-	public bool LookupVector(const char[] sName, float vecValue[3])
+	public bool LookupIntArray(const char[] sName, int[] iArray, int iLength)
 	{
 		char sValue[MAXLEN_CONFIG_VALUE];
 		this.GetString(sName, sValue, sizeof(sValue));
 		
-		char sVec[3][12];
-		if (ExplodeString(sValue, " ", sVec, sizeof(sVec), sizeof(sVec[])) != 3)
+		char[][] sArray = new char[iLength][12];
+		if (ExplodeString(sValue, " ", sArray, iLength, 12) != iLength)
 			return false;
 		
-		for (int i = 0; i < 3; i++)
-			vecValue[i] = StringToFloat(sVec[i]);
+		for (int i = 0; i < iLength; i++)
+			iArray[i] = StringToInt(sArray[i]);
 		
 		return true;
 	}
 	
-	public bool LookupColor(const char[] sName, int iColor[4])
+	public bool LookupFloatArray(const char[] sName, float[] flArray, int iLength)
 	{
 		char sValue[MAXLEN_CONFIG_VALUE];
 		this.GetString(sName, sValue, sizeof(sValue));
 		
-		char sColor[4][12];
-		if (ExplodeString(sValue, " ", sColor, sizeof(sColor), sizeof(sColor[])) != 4)
+		char[][] sArray = new char[iLength][12];
+		if (ExplodeString(sValue, " ", sArray, iLength, 12) != iLength)
 			return false;
 		
-		for (int i = 0; i < 4; i++)
-			iColor[i] = StringToInt(sColor[i]);
+		for (int i = 0; i < iLength; i++)
+			flArray[i] = StringToFloat(sArray[i]);
 		
 		return true;
 	}

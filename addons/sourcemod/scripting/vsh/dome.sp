@@ -122,20 +122,29 @@ void Dome_RoundStart()
 	g_flDomePreviousGameTime = 0.0;
 	g_hDomeTimerBleed = null;
 	
-	for (int i = 1; i <= MaxClients; i++)
+	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
-		g_flDomePlayerTime[i] = 0.0;
-		g_bDomePlayerOutside[i] = false;
+		g_flDomePlayerTime[iClient] = 0.0;
+		g_bDomePlayerOutside[iClient] = false;
 	}
 	
-	float vecCentre[3];
-	if (g_ConfigConvar.LookupVector("vsh_dome_centre", vecCentre))
+	//CP hud is in the way from our VSH hud, move em to better place
+	int iObjectiveRessource = TF2_GetObjectiveResource();
+	if (iObjectiveRessource > MaxClients)
+	{
+		SetEntPropFloat(iObjectiveRessource, Prop_Send, "m_flCustomPositionX", 0.20);
+		SetEntPropFloat(iObjectiveRessource, Prop_Send, "m_flCustomPositionY", -1.0);
+	}
+	
+	if (g_ConfigConvar.LookupFloatArray("vsh_dome_centre", g_vecDomeCP, sizeof(g_vecDomeCP)))
 	{
 		//Find CP to teleport
 		int iCP = FindEntityByClassname(-1, "team_control_point");
-		if (IsValidEntity(iCP))
-			TeleportEntity(iCP, vecCentre, NULL_VECTOR, NULL_VECTOR);
+		if (iCP <= MaxClients)
+			return;
+		
 		g_bDomeCustomPos = true;
+		TeleportEntity(iCP, g_vecDomeCP, NULL_VECTOR, NULL_VECTOR);
 		
 		//Find any CP prop to move aswell
 		int iProp = MaxClients+1;
@@ -151,14 +160,6 @@ void Dome_RoundStart()
 				DispatchKeyValue(iProp, "disableshadows", "1");
 			}
 		}
-	}
-	
-	//CP hud is in the way from our VSH hud, move em to better place
-	int iObjectiveRessource = TF2_GetObjectiveResource();
-	if (iObjectiveRessource > MaxClients)
-	{
-		SetEntPropFloat(iObjectiveRessource, Prop_Send, "m_flCustomPositionX", 0.20);
-		SetEntPropFloat(iObjectiveRessource, Prop_Send, "m_flCustomPositionY", -1.0);
 	}
 }
 
@@ -194,10 +195,10 @@ bool Dome_Start(int iCP = 0)
 	if (g_flDomeStart != 0.0)	//Check if we already have dome enabled, if so return false
 		return false;
 
-	if (iCP < MaxClients)
+	if (iCP <= MaxClients)
 	{
 		iCP = FindEntityByClassname(-1, "team_control_point");
-		if (!IsValidEntity(iCP))
+		if (iCP <= MaxClients)
 			return false;
 	}
 	
@@ -205,7 +206,7 @@ bool Dome_Start(int iCP = 0)
 	
 	//Create dome prop
 	int iDome = CreateEntityByName("prop_dynamic");
-	if (!IsValidEntity(iDome))
+	if (iDome <= MaxClients)
 		return false;
 	
 	g_flDomeRadius = g_ConfigConvar.LookupFloat("vsh_dome_radius_start");
@@ -234,13 +235,15 @@ void Dome_SetTeam(TFTeam nTeam)
 {
 	g_nDomeTeamOwner = nTeam;
 	
+	//Get new dome color
 	switch (nTeam)
 	{
-		case TFTeam_Red: g_ConfigConvar.LookupColor("vsh_dome_color_red", g_iDomeColor);
-		case TFTeam_Blue: g_ConfigConvar.LookupColor("vsh_dome_color_blu", g_iDomeColor);
-		default: g_ConfigConvar.LookupColor("vsh_dome_color_neu", g_iDomeColor);
+		case TFTeam_Red: g_ConfigConvar.LookupIntArray("vsh_dome_color_red", g_iDomeColor, sizeof(g_iDomeColor));
+		case TFTeam_Blue: g_ConfigConvar.LookupIntArray("vsh_dome_color_blu", g_iDomeColor, sizeof(g_iDomeColor));
+		default: g_ConfigConvar.LookupIntArray("vsh_dome_color_neu", g_iDomeColor, sizeof(g_iDomeColor));
 	}
 	
+	//Set dome ent to new color
 	int iDome = EntRefToEntIndex(g_iDomeEntRef);
 	if (iDome > MaxClients)
 	{
@@ -248,6 +251,7 @@ void Dome_SetTeam(TFTeam nTeam)
 		SetEntityRenderColor(iDome, g_iDomeColor[0], g_iDomeColor[1], g_iDomeColor[2], g_iDomeColor[3]);
 	}
 	
+	//Update CP to new owner
 	int iCP = MaxClients+1;
 	while ((iCP = FindEntityByClassname(iCP, "team_control_point")) > MaxClients)
 	{
@@ -352,9 +356,8 @@ public void Dome_Frame_Shrink()
 			
 			if (flDistanceMultiplier > 1.0 && nTeam > TFTeam_Spectator && nTeam != g_nDomeTeamOwner)
 			{
-				//If client is outside of dome, state that player is outside of dome
-				if (!g_bDomePlayerOutside[iClient])
-					g_bDomePlayerOutside[iClient] = true;
+				//Client is outside of dome, state that player is outside of dome
+				g_bDomePlayerOutside[iClient] = true;
 				
 				//Add time on how long player have been outside of dome
 				g_flDomePlayerTime[iClient] += GetGameTime() - g_flDomePreviousGameTime;
@@ -365,7 +368,7 @@ public void Dome_Frame_Shrink()
 			}
 			else if (g_bDomePlayerOutside[iClient])
 			{
-				//If client is not outside of dome, remove bleed
+				//Client is not outside of dome, remove bleed
 				TF2_RemoveCondition(iClient, TFCond_Bleeding);
 				g_bDomePlayerOutside[iClient] = false;
 			}
@@ -485,7 +488,6 @@ void Dome_UpdateRadius()
 
 float Dome_GetDistance(int iEntity)
 {
-	float flDistance = -1.0;
 	float vecPos[3];
 	
 	//Client
@@ -498,6 +500,5 @@ float Dome_GetDistance(int iEntity)
 	
 	else return -1.0;
 	
-	flDistance = GetVectorDistance(vecPos, g_vecDomeCP);
-	return flDistance;
+	return GetVectorDistance(vecPos, g_vecDomeCP);
 }

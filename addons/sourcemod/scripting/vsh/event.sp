@@ -468,9 +468,10 @@ public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcas
 public void Event_PointCaptured(Event event, const char[] sName, bool bDontBroadcast)
 {
 	int iCP = event.GetInt("cp");
-	TFTeam iTeam = view_as<TFTeam>(event.GetInt("team"));
+	TFTeam nTeam = view_as<TFTeam>(event.GetInt("team"));
 	
-	Dome_PointCaptured(iCP, iTeam);
+	Dome_SetTeam(nTeam);
+	Dome_Start(iCP);
 }
 
 public void Event_BroadcastAudio(Event event, const char[] sName, bool bDontBroadcast)
