@@ -190,6 +190,7 @@ bool Dome_Start(int iCP = 0)
 	SetEntityRenderMode(iDome, RENDER_TRANSCOLOR);
 	SetEntityRenderColor(iDome, g_iDomeColor[0], g_iDomeColor[1], g_iDomeColor[2], 0);
 	
+	GameRules_SetPropFloat("m_flCapturePointEnableTime", 0.0);
 	g_flDomeStart = GetGameTime();
 	EmitSoundToAll(DOME_START_SOUND);
 	PrintHintTextToAll("The dome is active. Prepare to move!");
@@ -205,9 +206,9 @@ void Dome_SetTeam(TFTeam nTeam)
 	
 	switch (nTeam)
 	{
-		case TFTeam_Unassigned, TFTeam_Spectator: g_ConfigConvar.LookupColor("vsh_dome_color_neu", g_iDomeColor);
 		case TFTeam_Red: g_ConfigConvar.LookupColor("vsh_dome_color_red", g_iDomeColor);
 		case TFTeam_Blue: g_ConfigConvar.LookupColor("vsh_dome_color_blu", g_iDomeColor);
+		default: g_ConfigConvar.LookupColor("vsh_dome_color_neu", g_iDomeColor);
 	}
 	
 	int iDome = EntRefToEntIndex(g_iDomeEntRef);
@@ -215,6 +216,13 @@ void Dome_SetTeam(TFTeam nTeam)
 	{
 		SetEntityRenderMode(iDome, RENDER_TRANSCOLOR);
 		SetEntityRenderColor(iDome, g_iDomeColor[0], g_iDomeColor[1], g_iDomeColor[2], g_iDomeColor[3]);
+	}
+	
+	int iCP = MaxClients+1;
+	while ((iCP = FindEntityByClassname(iCP, "team_control_point")) > MaxClients)
+	{
+		SetVariantInt(view_as<int>(nTeam));
+		AcceptEntityInput(iCP, "SetOwner", 0, 0);
 	}
 }
 
