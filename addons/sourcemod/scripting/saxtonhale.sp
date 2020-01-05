@@ -931,6 +931,10 @@ public void OnEntityCreated(int iEntity, const char[] sClassname)
 	else if (StrEqual(sClassname, "trigger_capture_area"))
 	{
 		SDKHook(iEntity, SDKHook_Spawn, Dome_TriggerSpawn);
+		
+		SDKHook(iEntity, SDKHook_StartTouch, Dome_TriggerTouch);
+		SDKHook(iEntity, SDKHook_Touch, Dome_TriggerTouch);
+		SDKHook(iEntity, SDKHook_EndTouch, Dome_TriggerTouch);
 	}
 }
 
@@ -1182,6 +1186,7 @@ public void Client_OnThink(int iClient)
 	else
 	{
 		Tags_OnThink(iClient);
+		Dome_OnThink(iClient);
 		
 		TFClassType nClass = TF2_GetPlayerClass(iClient);
 		

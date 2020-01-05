@@ -8,10 +8,15 @@
 #define DOME_NEARBY_SOUND	"ui/medic_alert.wav"
 #define DOME_PERPARE_DURATION 4.5
 
+//CP
+static bool g_bDomeCustomPos;	//Whenever if capture point is in custom pos
+static float g_vecDomeCP[3];	//Pos of CP
+static int g_iDomeTrigger;		//Trigger to control touch
+static bool g_bDomeCapturing[TF_MAXPLAYERS+1];
+
 //Dome prop
 static int g_iDomeEntRef;
 static TFTeam g_nDomeTeamOwner = TFTeam_Unassigned;
-static float g_vecDomeCP[3];
 static int g_iDomeColor[4];
 
 static float g_flDomeStart = 0.0;
@@ -25,6 +30,7 @@ void Dome_Init()
 {
 	g_ConfigConvar.Create("vsh_dome_enable", "1", "Enable dome?", _, true, 0.0, true, 1.0);
 	g_ConfigConvar.Create("vsh_dome_centre", "", "Map centre pos for Dome/CP (blank for CP's default centre)");
+	g_ConfigConvar.Create("vsh_dome_cp_radius", "250", "If vsh_dome_centre specified, new radius from CP to capture");
 	g_ConfigConvar.Create("vsh_dome_cp_unlock", "60", "Time in second to unlock CP on round start", _, true, 0.0);
 	g_ConfigConvar.Create("vsh_dome_cp_unlockplayer", "5", "Time in second to add on every player to unlock CP on round start", _, true, 0.0);
 	g_ConfigConvar.Create("vsh_dome_cp_caprate", "15", "How long to capture CP", _, true, 0.0);
@@ -87,14 +93,27 @@ public MRESReturn Dome_SetWinningTeam(Handle hParams)
 	return MRES_Ignored;
 }
 
-public void Dome_TriggerSpawn(int iEntity)
+public void Dome_TriggerSpawn(int iTrigger)
 {
 	//Set time to cap to whatever in convar
-	DispatchKeyValueFloat(iEntity, "area_time_to_cap", g_ConfigConvar.LookupFloat("vsh_dome_cp_caprate"));
+	DispatchKeyValueFloat(iTrigger, "area_time_to_cap", g_ConfigConvar.LookupFloat("vsh_dome_cp_caprate"));
+	g_iDomeTrigger = iTrigger;
+}
+
+public Action Dome_TriggerTouch(int iTrigger, int iToucher)
+{
+	//If CP is in custom pos and player is not nearby new pos (touching original pos), prevent call
+	if (g_bDomeCustomPos && !g_bDomeCapturing[iToucher])
+		return Plugin_Handled;
+	
+	return Plugin_Continue;
 }
 
 void Dome_RoundStart()
 {
+	g_bDomeCustomPos = false;
+	g_iDomeTrigger = 0;
+	
 	g_iDomeEntRef = 0;
 	g_nDomeTeamOwner = TFTeam_Unassigned;
 	
@@ -116,6 +135,7 @@ void Dome_RoundStart()
 		int iCP = FindEntityByClassname(-1, "team_control_point");
 		if (IsValidEntity(iCP))
 			TeleportEntity(iCP, vecCentre, NULL_VECTOR, NULL_VECTOR);
+		g_bDomeCustomPos = true;
 		
 		//Find any CP prop to move aswell
 		int iProp = MaxClients+1;
@@ -127,7 +147,7 @@ void Dome_RoundStart()
 			if (StrEqual(sModel, "models/props_gameplay/cap_point_base.mdl")
 				|| StrEqual(sModel, "models/props_doomsday/cap_point_small.mdl"))
 			{
-				TeleportEntity(iProp, vecCentre, NULL_VECTOR, NULL_VECTOR);
+				TeleportEntity(iProp, g_vecDomeCP, NULL_VECTOR, NULL_VECTOR);
 				DispatchKeyValue(iProp, "disableshadows", "1");
 			}
 		}
@@ -151,12 +171,22 @@ void Dome_RoundArenaStart()
 	GameRules_SetPropFloat("m_flCapturePointEnableTime", GetGameTime() + flTime);
 }
 
-void Dome_PointCaptured(int iCP, TFTeam nTeam)
+void Dome_OnThink(int iClient)
 {
-	Dome_SetTeam(nTeam);
-	
-	if (g_flDomeStart == 0.0)
-		Dome_Start(iCP);
+	//Call our own StartTouch and EndTouch if CP is in custom pos
+	if (g_bDomeCustomPos && g_iDomeTrigger > MaxClients)
+	{
+		if (IsPlayerAlive(iClient) && TF2_GetClientTeam(iClient) > TFTeam_Spectator && IsClientInRange(iClient, g_vecDomeCP, g_ConfigConvar.LookupFloat("vsh_dome_cp_radius")))
+		{
+			g_bDomeCapturing[iClient] = true;
+			AcceptEntityInput(g_iDomeTrigger, "StartTouch", iClient, iClient);
+		}
+		else if (g_bDomeCapturing[iClient])
+		{
+			AcceptEntityInput(g_iDomeTrigger, "EndTouch", iClient, iClient);
+			g_bDomeCapturing[iClient] = false;
+		}
+	}
 }
 
 bool Dome_Start(int iCP = 0)
@@ -224,6 +254,10 @@ void Dome_SetTeam(TFTeam nTeam)
 		SetVariantInt(view_as<int>(nTeam));
 		AcceptEntityInput(iCP, "SetOwner", 0, 0);
 	}
+	
+	//Reset time player in dome
+	for (int iClient = 1; iClient <= MaxClients; iClient++)
+		g_flDomePlayerTime[iClient] = 0.0;
 }
 
 public void Dome_Frame_Prepare()
