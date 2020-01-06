@@ -20,6 +20,11 @@ methodmap CModifiersVampire < SaxtonHaleBase
 		g_flVampireStartTime[boss.iClient] = 0.0;
 	}
 	
+	public bool IsModifiersHidden()
+	{
+		return true;
+	}
+	
 	public void GetModifiersName(char[] sName, int length)
 	{
 		strcopy(sName, length, "Vampire");
