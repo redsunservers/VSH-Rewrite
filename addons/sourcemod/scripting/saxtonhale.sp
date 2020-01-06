@@ -1000,7 +1000,7 @@ public void OnClientPutInServer(int iClient)
 {
 	SDK_HookGetMaxHealth(iClient);
 	SDKHook(iClient, SDKHook_PreThink, Client_OnThink);
-	SDKHook(iClient, SDKHook_OnTakeDamage, Client_OnTakeDamage);
+	SDKHook(iClient, SDKHook_OnTakeDamageAlive, Client_OnTakeDamageAlive);
 	
 	Cookies_OnClientJoin(iClient);
 }
@@ -1109,7 +1109,7 @@ public void Client_OnThink(int iClient)
 	Hud_Think(iClient);
 }
 
-public Action Client_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action Client_OnTakeDamageAlive(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
