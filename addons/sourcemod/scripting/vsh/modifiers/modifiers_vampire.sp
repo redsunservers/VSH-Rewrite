@@ -1,5 +1,5 @@
 #define VAMPIRE_GAIN	300.0
-#define VAMPIRE_LOSS	35.0
+#define VAMPIRE_LOSS	30.0
 
 static int g_iVampireCount = 0;
 static int g_iVampireStartHealth[TF_MAXPLAYERS+1];
@@ -30,7 +30,7 @@ methodmap CModifiersVampire < SaxtonHaleBase
 		StrCat(sInfo, length, "\nColor: Purple");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\n- Gain 300 health on player death");
-		StrCat(sInfo, length, "\n- Max health decays 35 per second");
+		StrCat(sInfo, length, "\n- Max health decays 30 per second");
 	}
 	
 	public int GetRenderColor(int iColor[4])
