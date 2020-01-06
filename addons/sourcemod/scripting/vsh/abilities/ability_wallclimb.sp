@@ -1,5 +1,6 @@
 static float g_flWallClimbMaxHeight[TF_MAXPLAYERS+1];
 static float g_flWallClimbMaxDistance[TF_MAXPLAYERS+1];
+static float g_flWallClimbHorizontalSpeedMult[TF_MAXPLAYERS+1];
 
 methodmap CWallClimb < SaxtonHaleBase
 {
@@ -25,12 +26,24 @@ methodmap CWallClimb < SaxtonHaleBase
 			g_flWallClimbMaxDistance[this.iClient] = val;
 		}
 	}
+	property float flHorizontalSpeedMult
+	{
+		public get()
+		{
+			return g_flWallClimbHorizontalSpeedMult[this.iClient];
+		}
+		public set(float val)
+		{
+			g_flWallClimbHorizontalSpeedMult[this.iClient] = val;
+		}
+	}
 	
 	public CWallClimb(CWallClimb ability)
 	{
 		//Default values, these can be changed if needed
 		ability.flMaxHeight = 750.0;
 		ability.flMaxDistance = 100.0;
+		ability.flHorizontalSpeedMult = 2.0;	//Horizontal speed multiplier, for better mobility if the boss is trying to go anywhere besides straight up
 	}
 	
 	public Action OnAttackCritical(int iWeapon, bool &bResult)
@@ -66,10 +79,17 @@ methodmap CWallClimb < SaxtonHaleBase
 		
 		if (flDistance >= this.flMaxDistance) return;
 		
-		float fVelocity[3];
-		GetEntPropVector(iClient, Prop_Data, "m_vecVelocity", fVelocity);
-		fVelocity[2] = this.flMaxHeight;
-		TeleportEntity(iClient, NULL_VECTOR, NULL_VECTOR, fVelocity);
+		float vecVelocity[3];
+		GetEntPropVector(iClient, Prop_Data, "m_vecVelocity", vecVelocity);
+		
+		//Increase horizontal velocity
+		vecVelocity[0] *= this.flHorizontalSpeedMult;
+		vecVelocity[1] *= this.flHorizontalSpeedMult;
+		
+		//Set vertical velocity, the main part of this ability
+		vecVelocity[2] = this.flMaxHeight;
+		
+		TeleportEntity(iClient, NULL_VECTOR, NULL_VECTOR, vecVelocity);
 	}
 	
 	public void OnThink()

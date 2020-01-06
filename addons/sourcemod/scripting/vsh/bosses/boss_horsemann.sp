@@ -167,13 +167,13 @@ methodmap CHorsemann < SaxtonHaleBase
 			if (StrContains(sample, "vo/halloween_boss/", false) == 0)
 				return Plugin_Continue;
 			
-			Format(sample, sizeof(sample), g_strHorsemannVoice[GetRandomInt(0, sizeof(g_strHorsemannVoice) - 1)]);
+			Format(sample, sizeof(sample), g_strHorsemannVoice[GetRandomInt(0, sizeof(g_strHorsemannVoice)-1)]);
 			return Plugin_Changed;
 		}
 			
 		if (StrContains(sample, "player/footsteps/", false) == 0)
 		{
-			EmitSoundToAll(g_strHorsemannFootsteps[GetRandomInt(0, sizeof(g_strHorsemannFootsteps) - 1)], this.iClient, _, _, _, 0.4, GetRandomInt(90, 100));
+			EmitSoundToAll(g_strHorsemannFootsteps[GetRandomInt(0, sizeof(g_strHorsemannFootsteps)-1)], this.iClient, _, _, _, 0.4, GetRandomInt(90, 100));
 			return Plugin_Handled;
 		}
 		
