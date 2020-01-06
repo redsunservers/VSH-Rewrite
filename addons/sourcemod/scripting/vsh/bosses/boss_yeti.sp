@@ -48,7 +48,13 @@ methodmap CYeti < SaxtonHaleBase
 	{
 		boss.CallFunction("CreateAbility", "CBraveJump");
 		boss.CallFunction("CreateAbility", "CGroundPound");
-		boss.CallFunction("CreateAbility", "CRageFreeze");
+		CRageFreeze rageFreeze = boss.CallFunction("CreateAbility", "CRageFreeze");
+		
+		//CRageAddCond should last as long as slow + freeze
+		CRageAddCond rageCond = boss.CallFunction("CreateAbility", "CRageAddCond");
+		rageCond.AddCond(TFCond_RuneHaste);
+		rageCond.flRageCondDuration = rageFreeze.flSlowDuration + rageFreeze.flFreezeDuration;
+		rageCond.flRageCondSuperRageMultiplier = rageFreeze.flRageFreezeSuperRageMultiplier;
 		
 		boss.iBaseHealth = 800;
 		boss.iHealthPerPlayer = 850;
