@@ -55,8 +55,6 @@ methodmap CModifiersVampire < SaxtonHaleBase
 			this.iMaxHealth = iHealth;
 			if (this.iHealth > iHealth)
 				this.iHealth = iHealth;
-			
-			
 		}
 	}
 	
