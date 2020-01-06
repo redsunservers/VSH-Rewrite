@@ -1,5 +1,6 @@
 static Handle g_hHookGetMaxHealth;
 static Handle g_hHookShouldTransmit;
+static Handle g_hHookGiveNamedItem;
 static Handle g_hHookBallImpact;
 static Handle g_hHookShouldBallTouch;
 static Handle g_hSDKGetMaxHealth;
@@ -99,6 +100,20 @@ void SDK_Init()
 	else
 		DHookAddParam(g_hHookShouldTransmit, HookParamType_ObjectPtr);
 	
+	iOffset = hGameData.GetOffset("CTFPlayer::GiveNamedItem");
+	g_hHookGiveNamedItem = DHookCreate(iOffset, HookType_Entity, ReturnType_CBaseEntity, ThisPointer_CBaseEntity, Hook_GiveNamedItem);
+	if (g_hHookGiveNamedItem == null)
+	{
+		LogMessage("Failed to create hook: CTFPlayer::GiveNamedItem!");
+	}
+	else
+	{
+		DHookAddParam(g_hHookGiveNamedItem, HookParamType_CharPtr);
+		DHookAddParam(g_hHookGiveNamedItem, HookParamType_Int);
+		DHookAddParam(g_hHookGiveNamedItem, HookParamType_ObjectPtr);
+		DHookAddParam(g_hHookGiveNamedItem, HookParamType_Bool);
+	}
+	
 	// This hook calls when Sandman Ball stuns a player
 	iOffset = hGameData.GetOffset("CTFStunBall::ApplyBallImpactEffectOnVictim");
 	g_hHookBallImpact = DHookCreate(iOffset, HookType_Entity, ReturnType_Void, ThisPointer_CBaseEntity);
@@ -147,6 +162,12 @@ void SDK_AlwaysTransmitEntity(int iEntity)
 		DHookEntity(g_hHookShouldTransmit, true, iEntity);
 }
 
+void SDK_HookGiveNamedItem(int iClient)
+{
+	if (g_hHookGiveNamedItem)
+		DHookEntity(g_hHookGiveNamedItem, false, iClient);
+}
+
 void SDK_HookBallImpact(int iEntity, DHookCallback callback)
 {
 	if (g_hHookBallImpact)
@@ -174,6 +195,32 @@ public MRESReturn Hook_EntityShouldTransmit(int iEntity, Handle hReturn, Handle 
 {
 	DHookSetReturn(hReturn, FL_EDICT_ALWAYS);
 	return MRES_Supercede;
+}
+
+public MRESReturn Hook_GiveNamedItem(int iClient, Handle hReturn, Handle hParams)
+{
+	char sClassname[256];
+	DHookGetParamString(hParams, 1, sClassname, sizeof(sClassname));
+	int iIndex = DHookGetParamObjectPtrVar(hParams, 3, 4, ObjectValueType_Int) & 0xFFFF;
+	
+	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
+	if (boss.bValid)
+	{
+		Action action = boss.CallFunction("OnGiveNamedItem", sClassname, iIndex);
+		if (action == Plugin_Handled)
+		{
+			DHookSetReturn(hReturn, 0);
+			return MRES_Supercede;
+		}
+	}
+	else if (g_ConfigIndex.IsRestricted(iIndex))
+	{
+		// Restrict weapons from config
+		DHookSetReturn(hReturn, 0);
+		return MRES_Supercede;
+	}
+	
+	return MRES_Ignored;
 }
 
 public MRESReturn Hook_AllowedToHealTarget(int iMedigun, Handle hReturn, Handle hParams)
