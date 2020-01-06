@@ -9,7 +9,7 @@ static float g_flAbilityRadius[TF_MAXPLAYERS + 1];
 static float g_flSlowDuration[TF_MAXPLAYERS + 1];
 static float g_flSlowPercentage[TF_MAXPLAYERS + 1];
 static float g_flFreezeDuration[TF_MAXPLAYERS + 1];
-static float g_flRageFreezeSuperRageMultiplier[TF_MAXPLAYERS+1];
+static float g_flRageFreezeSuperRageMultiplier[TF_MAXPLAYERS + 1];
 static bool g_bFreezeAffected[TF_MAXPLAYERS + 1];
 
 methodmap CRageFreeze < SaxtonHaleBase
