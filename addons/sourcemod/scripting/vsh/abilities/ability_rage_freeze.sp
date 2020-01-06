@@ -9,6 +9,7 @@ static float g_flAbilityRadius[TF_MAXPLAYERS + 1];
 static float g_flSlowDuration[TF_MAXPLAYERS + 1];
 static float g_flSlowPercentage[TF_MAXPLAYERS + 1];
 static float g_flFreezeDuration[TF_MAXPLAYERS + 1];
+static float g_flRageFreezeSuperRageMultiplier[TF_MAXPLAYERS+1];
 static bool g_bFreezeAffected[TF_MAXPLAYERS + 1];
 
 methodmap CRageFreeze < SaxtonHaleBase
@@ -61,12 +62,25 @@ methodmap CRageFreeze < SaxtonHaleBase
 		}
 	}
 	
+	property float flRageFreezeSuperRageMultiplier
+	{
+		public set(float flVal)
+		{
+			g_flRageFreezeSuperRageMultiplier[this.iClient] = flVal;
+		}
+		public get()
+		{
+			return g_flRageFreezeSuperRageMultiplier[this.iClient];
+		}
+	}
+	
 	public CRageFreeze(CRageFreeze ability)
 	{
 		ability.flRadius = 800.0;
-		ability.flSlowDuration = 3.0;
+		ability.flSlowDuration = 2.0;
 		ability.flSlowPercentage = 0.5;
 		ability.flFreezeDuration = 4.0;
+		ability.flRageFreezeSuperRageMultiplier = 1.5;
 	}
 	
 	public void OnRage()
@@ -75,9 +89,9 @@ methodmap CRageFreeze < SaxtonHaleBase
 		GetClientAbsOrigin(this.iClient, vecBossOrigin);
 		
 		float flRadius = this.flRadius;
-		if (this.bSuperRage)flRadius *= 1.5;
+		if (this.bSuperRage)flRadius *= this.flRageFreezeSuperRageMultiplier;
 		float flFreezeDuration = this.flFreezeDuration;
-		if (this.bSuperRage)flFreezeDuration *= 1.5;
+		if (this.bSuperRage)flFreezeDuration *= this.flRageFreezeSuperRageMultiplier;
 		
 		for (int iClient = 1; iClient <= MaxClients; iClient++)
 		{
@@ -126,7 +140,7 @@ public Action FreezeClient(Handle hTimer, int iUserId)
 	int iClient = GetClientOfUserId(iUserId);
 	if (0 < iClient <= MaxClients && IsClientInGame(iClient) && g_bFreezeAffected[iClient])
 	{
-		SetEntityMoveType(iClient, MOVETYPE_NONE);
+		TF2_AddCondition(iClient, TFCond_FreezeInput, TFCondDuration_Infinite);
 		SetEntityRenderColor(iClient, 128, 176, 255, 255);
 		float vecOrigin[3];
 		GetClientAbsOrigin(iClient, vecOrigin);
@@ -139,11 +153,10 @@ public Action UnfreezeClient(Handle hTimer, int iUserId)
 	int iClient = GetClientOfUserId(iUserId);
 	if (0 < iClient <= MaxClients && IsClientInGame(iClient))
 	{
-		SetEntityMoveType(iClient, MOVETYPE_WALK);
-		SetEntityRenderColor(iClient, 255, 255, 255, 255);
-		
 		if (IsPlayerAlive(iClient))
 		{
+			TF2_RemoveCondition(iClient, TFCond_FreezeInput);
+			SetEntityRenderColor(iClient, 255, 255, 255, 255);
 			float vecOrigin[3];
 			GetClientAbsOrigin(iClient, vecOrigin);
 			EmitAmbientSound(UNFREEZE_SOUND, vecOrigin);
