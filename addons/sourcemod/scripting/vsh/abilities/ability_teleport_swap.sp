@@ -75,8 +75,8 @@ methodmap CTeleportSwap < SaxtonHaleBase
 		//Default values, these can be changed if needed
 		ability.iMaxCharge = 200;
 		ability.iChargeBuild = 4;
-		ability.flCooldown = 40.0;
-		ability.flStunDuration = 3.0;
+		ability.flCooldown = 30.0;
+		ability.flStunDuration = 1.0;
 		
 		g_iTeleportSwapCharge[ability.iClient] = 0;
 		g_flTeleportSwapCooldownWait[ability.iClient] = GetGameTime() + ability.flCooldown;
