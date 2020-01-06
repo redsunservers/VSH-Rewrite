@@ -201,6 +201,7 @@ public MRESReturn Hook_GiveNamedItem(int iClient, Handle hReturn, Handle hParams
 {
 	if (DHookIsNullParam(hParams, 1) || DHookIsNullParam(hParams, 3))
 		return MRES_Ignored;
+	
 	char sClassname[256];
 	DHookGetParamString(hParams, 1, sClassname, sizeof(sClassname));
 	int iIndex = DHookGetParamObjectPtrVar(hParams, 3, 4, ObjectValueType_Int) & 0xFFFF;
