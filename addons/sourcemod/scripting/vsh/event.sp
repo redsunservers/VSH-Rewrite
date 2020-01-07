@@ -685,42 +685,30 @@ public Action Event_PlayerInventoryUpdate(Event event, const char[] sName, bool 
 	int iClient = GetClientOfUserId(event.GetInt("userid"));
 	if (GetClientTeam(iClient) <= 1) return;
 
-	if (!SaxtonHale_IsValidBoss(iClient))
+	if (SaxtonHale_IsValidAttack(iClient))
 	{
-		/*Balance or restrict specific weapons*/
+		/*Balance specific weapons*/
 		TFClassType nClass = TF2_GetPlayerClass(iClient);
 		for (int iSlot = 0; iSlot <= WeaponSlot_InvisWatch; iSlot++)
 		{
 			int iWeapon = TF2_GetItemInSlot(iClient, iSlot);
-
-			if (IsValidEdict(iWeapon))
+			
+			if (iWeapon <= MaxClients)
 			{
-				int iIndex = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
-				
-				// Restrict weapons, including 1st eound
-				if (g_ConfigIndex.IsRestricted(iIndex))
-				{
-					TF2_RemoveItemInSlot(iClient, iSlot);
-					
-					//Get default weapon index for class and slot
-					iIndex = g_iDefaultWeaponIndex[view_as<int>(nClass)][iSlot];
-					if (iIndex < 0)
-					{
-						char sError[256];
-						Format(sError, sizeof(sError), "[VSH] UNABLE TO GET DEFAULT WEAPON INDEX FOR CLASS %d SLOT %d!!!!", nClass, iSlot);
-						PluginStop(true, sError);
-						return;
-					}
-					
+				//No weapon in this slot, may be removed from GiveNamedItem hook
+				//Generate default weapon index for class and slot
+				int iIndex = g_iDefaultWeaponIndex[view_as<int>(nClass)][iSlot];
+				if (iIndex >= 0)
 					iWeapon = TF2_CreateAndEquipWeapon(iClient, iIndex, .bAttrib = true);
-				}
-
-				if (g_iTotalRoundPlayed <= 0)
-					continue;
-
+			}
+			
+			if (iWeapon > MaxClients)
+			{
 				// Balance weapons, not including 1st round
-				if (SaxtonHale_IsValidAttack(iClient))
+				if (g_iTotalRoundPlayed > 0)
 				{
+					int iIndex = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
+					
 					for (int i = 0; i <= 1; i++)
 					{
 						char sAttrib[255], atts[32][32];

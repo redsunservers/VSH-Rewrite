@@ -538,6 +538,7 @@ public void OnPluginStart()
 	SaxtonHaleFunction("OnThink", ET_Ignore);
 	SaxtonHaleFunction("OnSpawn", ET_Ignore);
 	SaxtonHaleFunction("OnRage", ET_Ignore);
+	SaxtonHaleFunction("OnGiveNamedItem", ET_Single, Param_String, Param_Cell);
 	SaxtonHaleFunction("OnEntityCreated", ET_Ignore, Param_Cell, Param_String);
 	SaxtonHaleFunction("OnCommandKeyValues", ET_Hook, Param_String);
 	SaxtonHaleFunction("OnAttackCritical", ET_Hook, Param_Cell, Param_CellByRef);
@@ -692,6 +693,8 @@ public void OnPluginEnd()
 {
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
+		SDK_UnhookClient(iClient);
+		
 		if (SaxtonHale_IsValidBoss(iClient))
 		{
 			SaxtonHaleBase boss = SaxtonHaleBase(iClient);
@@ -1118,6 +1121,7 @@ public void OnClientConnected(int iClient)
 public void OnClientPutInServer(int iClient)
 {
 	SDK_HookGetMaxHealth(iClient);
+	SDK_HookGiveNamedItem(iClient);
 	SDKHook(iClient, SDKHook_PreThink, Client_OnThink);
 	SDKHook(iClient, SDKHook_OnTakeDamageAlive, Client_OnTakeDamageAlive);
 	
@@ -1155,6 +1159,8 @@ public void OnClientDisconnect(int iClient)
 	Preferences_SetAll(iClient, -1);
 	Queue_SetPlayerPoints(iClient, -1);
 	Winstreak_SetCurrent(iClient, -1);
+	
+	SDK_UnhookClient(iClient);
 }
 
 public void OnClientDisconnect_Post(int iClient)
@@ -1183,7 +1189,7 @@ public void Client_OnThink(int iClient)
 		if (IsValidEntity(iActiveWep))
 		{
 			iIndex = GetEntProp(iActiveWep, Prop_Send, "m_iItemDefinitionIndex");
-			iSlot = TF2_GetSlotInItem(iIndex, nClass);
+			iSlot = TF2_GetItemSlot(iIndex, nClass);
 		}
 
 		if (0 <= iSlot < sizeof(g_ConfigClass[]) && IsValidEntity(iActiveWep) && !TF2_IsPlayerInCondition(iClient, TFCond_Disguised) && !TF2_IsPlayerInCondition(iClient, TFCond_Cloaked))
@@ -1423,7 +1429,7 @@ public Action TF2_CalcIsAttackCritical(int iClient, int iWeapon, char[] sWepClas
 	else
 	{
 		int iIndex = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
-		int iSlot = TF2_GetSlotInItem(iIndex, TF2_GetPlayerClass(iClient));
+		int iSlot = TF2_GetItemSlot(iIndex, TF2_GetPlayerClass(iClient));
 		
 		TagsParams tParams = new TagsParams();
 		TagsCore_CallSlot(iClient, TagsCall_Attack, iSlot, tParams);
