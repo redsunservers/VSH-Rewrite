@@ -691,6 +691,8 @@ public void OnPluginEnd()
 {
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
+		SDK_UnhookClient(iClient);
+		
 		if (SaxtonHale_IsValidBoss(iClient))
 		{
 			SaxtonHaleBase boss = SaxtonHaleBase(iClient);
@@ -1155,6 +1157,8 @@ public void OnClientDisconnect(int iClient)
 	Preferences_SetAll(iClient, -1);
 	Queue_SetPlayerPoints(iClient, -1);
 	Winstreak_SetCurrent(iClient, -1);
+	
+	SDK_UnhookClient(iClient);
 }
 
 public void OnClientDisconnect_Post(int iClient)

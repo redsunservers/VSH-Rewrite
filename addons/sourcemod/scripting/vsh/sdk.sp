@@ -11,6 +11,8 @@ static Handle g_hSDKRemoveWearable;
 static Handle g_hSDKGetEquippedWearable;
 static Handle g_hSDKEquipWearable;
 
+static int g_iHookIdGiveNamedItem[TF_MAXPLAYERS+1] = {-1, ...};
+
 void SDK_Init()
 {
 	GameData hGameData = new GameData("sdkhooks.games");
@@ -101,7 +103,7 @@ void SDK_Init()
 		DHookAddParam(g_hHookShouldTransmit, HookParamType_ObjectPtr);
 	
 	iOffset = hGameData.GetOffset("CTFPlayer::GiveNamedItem");
-	g_hHookGiveNamedItem = DHookCreate(iOffset, HookType_Entity, ReturnType_CBaseEntity, ThisPointer_CBaseEntity, Hook_GiveNamedItem);
+	g_hHookGiveNamedItem = DHookCreate(iOffset, HookType_Entity, ReturnType_CBaseEntity, ThisPointer_CBaseEntity);
 	if (g_hHookGiveNamedItem == null)
 	{
 		LogMessage("Failed to create hook: CTFPlayer::GiveNamedItem!");
@@ -150,6 +152,15 @@ void SDK_Init()
 	delete hGameData;
 }
 
+void SDK_UnhookClient(int iClient)
+{
+	if (g_iHookIdGiveNamedItem[iClient] != -1)
+	{
+		DHookRemoveHookID(g_iHookIdGiveNamedItem[iClient]);
+		g_iHookIdGiveNamedItem[iClient] = -1;	
+	}
+}
+
 void SDK_HookGetMaxHealth(int iClient)
 {
 	if (g_hHookGetMaxHealth)
@@ -165,7 +176,7 @@ void SDK_AlwaysTransmitEntity(int iEntity)
 void SDK_HookGiveNamedItem(int iClient)
 {
 	if (g_hHookGiveNamedItem)
-		DHookEntity(g_hHookGiveNamedItem, false, iClient);
+		g_iHookIdGiveNamedItem[iClient] = DHookEntity(g_hHookGiveNamedItem, false, iClient, Hook_GiveNamedItemRemoved, Hook_GiveNamedItem);
 }
 
 void SDK_HookBallImpact(int iEntity, DHookCallback callback)
@@ -224,6 +235,18 @@ public MRESReturn Hook_GiveNamedItem(int iClient, Handle hReturn, Handle hParams
 	}
 	
 	return MRES_Ignored;
+}
+
+public void Hook_GiveNamedItemRemoved(int iHookId)
+{
+	for (int iClient = 1; iClient <= MaxClients; iClient++)
+	{
+		if (g_iHookIdGiveNamedItem[iClient] == iHookId)
+		{
+			g_iHookIdGiveNamedItem[iClient] = -1;
+			return;
+		}
+	}
 }
 
 public MRESReturn Hook_AllowedToHealTarget(int iMedigun, Handle hReturn, Handle hParams)
