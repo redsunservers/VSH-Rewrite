@@ -77,8 +77,8 @@ stock bool Winstreak_IsAllowed(int iClient)
 
 stock int Winstreak_GetPlayerRequirement(int iClient)
 {
-	int iPlayerRequirement = 10 + Winstreak_GetCurrent(iClient);
-	if (iPlayerRequirement > 24) iPlayerRequirement = 24;
+	int iPlayerRequirement = 5 + Winstreak_GetCurrent(iClient);
+	if (iPlayerRequirement > 20) iPlayerRequirement = 20;
 	
 	return iPlayerRequirement;
 }

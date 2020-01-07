@@ -110,6 +110,15 @@ methodmap CVagineer < SaxtonHaleBase
 		*/
 	}
 	
+	public Action OnGiveNamedItem(const char[] sClassname, int iIndex)
+	{
+		//Allow keep tf_weapon_builder
+		if (StrEqual(sClassname, "tf_weapon_builder"))
+			return Plugin_Continue;
+		
+		return Plugin_Handled;
+	}
+	
 	public void GetModel(char[] sModel, int length)
 	{
 		strcopy(sModel, length, VAGINEER_MODEL);

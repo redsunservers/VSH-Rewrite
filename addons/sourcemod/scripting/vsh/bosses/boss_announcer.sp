@@ -175,7 +175,7 @@ methodmap CAnnouncer < SaxtonHaleBase
 			return Plugin_Continue;
 		
 		int iIndex = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
-		if (TF2_GetSlotInItem(iIndex, TF2_GetPlayerClass(this.iClient)) != WeaponSlot_Primary)
+		if (TF2_GetItemSlot(iIndex, TF2_GetPlayerClass(this.iClient)) != WeaponSlot_Primary)
 			return Plugin_Continue;
 		
 		if (TF2_IsUbercharged(victim))

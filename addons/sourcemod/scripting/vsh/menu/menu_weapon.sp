@@ -37,7 +37,7 @@ void MenuWeapon_Refresh()
 			//Loop through all classes to get slot to add desp if found
 			for (int iClass = 1; iClass < sizeof(g_strClassName); iClass++)
 			{
-				int iSlot = TF2_GetSlotInItem(iIndex, view_as<TFClassType>(iClass));
+				int iSlot = TF2_GetItemSlot(iIndex, view_as<TFClassType>(iClass));
 				
 				if (iSlot >= MENU_MAX_SLOT) iSlot = WeaponSlot_Secondary;
 				if (iSlot >= 0) Format(sClassDesp[iClass][iSlot], sizeof(sClassDesp[][]), "%s \n%s", sClassDesp[iClass][iSlot], sDesp);

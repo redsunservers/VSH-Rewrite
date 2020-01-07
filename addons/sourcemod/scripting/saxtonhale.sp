@@ -382,12 +382,13 @@ ConVar tf_arena_preround_time;
 #include "vsh/bosses/boss_pyromancer_scorched.sp"
 #include "vsh/bosses/boss_pyromancer_scalded.sp"
 
-#include "vsh/modifiers/modifiers_speed.sp"
-#include "vsh/modifiers/modifiers_jump.sp"
+#include "vsh/modifiers/modifiers_angry.sp"
+#include "vsh/modifiers/modifiers_electric.sp"
 #include "vsh/modifiers/modifiers_hot.sp"
 #include "vsh/modifiers/modifiers_ice.sp"
-#include "vsh/modifiers/modifiers_electric.sp"
-#include "vsh/modifiers/modifiers_angry.sp"
+#include "vsh/modifiers/modifiers_jump.sp"
+#include "vsh/modifiers/modifiers_speed.sp"
+#include "vsh/modifiers/modifiers_vampire.sp"
 
 #include "vsh/tags/tags_params.sp"
 #include "vsh/tags/tags_target.sp"
@@ -545,6 +546,7 @@ public void OnPluginStart()
 	SaxtonHaleFunction("OnThink", ET_Ignore);
 	SaxtonHaleFunction("OnSpawn", ET_Ignore);
 	SaxtonHaleFunction("OnRage", ET_Ignore);
+	SaxtonHaleFunction("OnGiveNamedItem", ET_Single, Param_String, Param_Cell);
 	SaxtonHaleFunction("OnEntityCreated", ET_Ignore, Param_Cell, Param_String);
 	SaxtonHaleFunction("OnCommandKeyValues", ET_Hook, Param_String);
 	SaxtonHaleFunction("OnAttackCritical", ET_Hook, Param_Cell, Param_CellByRef);
@@ -666,12 +668,13 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("CWeaponSpells", VSHClassType_Ability);
 	
 	//Register modifiers
-	SaxtonHale_RegisterClass("CModifiersSpeed", VSHClassType_Modifier);
-	SaxtonHale_RegisterClass("CModifiersJump", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("CModifiersAngry", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("CModifiersElectric", VSHClassType_Modifier);
 	SaxtonHale_RegisterClass("CModifiersHot", VSHClassType_Modifier);
 	SaxtonHale_RegisterClass("CModifiersIce", VSHClassType_Modifier);
-	SaxtonHale_RegisterClass("CModifiersElectric", VSHClassType_Modifier);
-	SaxtonHale_RegisterClass("CModifiersAngry", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("CModifiersJump", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("CModifiersSpeed", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("CModifiersVampire", VSHClassType_Modifier);
 	
 	//Init our convars
 	g_ConfigConvar.Create("vsh_force_load", "-1", "Force enable VSH on map start? (-1 for default, 0 for force disable, 1 for force enable)", _, true, -1.0, true, 1.0);
@@ -698,6 +701,8 @@ public void OnPluginEnd()
 {
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
+		SDK_UnhookClient(iClient);
+		
 		if (SaxtonHale_IsValidBoss(iClient))
 		{
 			SaxtonHaleBase boss = SaxtonHaleBase(iClient);
@@ -1136,8 +1141,9 @@ public void OnClientConnected(int iClient)
 public void OnClientPutInServer(int iClient)
 {
 	SDK_HookGetMaxHealth(iClient);
+	SDK_HookGiveNamedItem(iClient);
 	SDKHook(iClient, SDKHook_PreThink, Client_OnThink);
-	SDKHook(iClient, SDKHook_OnTakeDamage, Client_OnTakeDamage);
+	SDKHook(iClient, SDKHook_OnTakeDamageAlive, Client_OnTakeDamageAlive);
 	
 	Cookies_OnClientJoin(iClient);
 }
@@ -1173,6 +1179,8 @@ public void OnClientDisconnect(int iClient)
 	Preferences_SetAll(iClient, -1);
 	Queue_SetPlayerPoints(iClient, -1);
 	Winstreak_SetCurrent(iClient, -1);
+	
+	SDK_UnhookClient(iClient);
 }
 
 public void OnClientDisconnect_Post(int iClient)
@@ -1202,7 +1210,7 @@ public void Client_OnThink(int iClient)
 		if (IsValidEntity(iActiveWep))
 		{
 			iIndex = GetEntProp(iActiveWep, Prop_Send, "m_iItemDefinitionIndex");
-			iSlot = TF2_GetSlotInItem(iIndex, nClass);
+			iSlot = TF2_GetItemSlot(iIndex, nClass);
 		}
 
 		if (0 <= iSlot < sizeof(g_ConfigClass[]) && IsValidEntity(iActiveWep) && !TF2_IsPlayerInCondition(iClient, TFCond_Disguised) && !TF2_IsPlayerInCondition(iClient, TFCond_Cloaked))
@@ -1247,7 +1255,7 @@ public void Client_OnThink(int iClient)
 	Hud_Think(iClient);
 }
 
-public Action Client_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action Client_OnTakeDamageAlive(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
@@ -1325,17 +1333,6 @@ public Action Client_OnTakeDamage(int victim, int &attacker, int &inflictor, flo
 
 						Forward_TeleportDamage(victim, attacker, iBuilder);
 						finalAction = Plugin_Changed;
-					}
-					
-					if (inflictor > MaxClients)
-					{
-						char strInflictor[32];
-						GetEdictClassname(inflictor, strInflictor, sizeof(strInflictor));
-						if(strcmp(strInflictor, "tf_projectile_sentryrocket") == 0 || strcmp(strInflictor, "obj_sentrygun") == 0)
-						{
-							damagetype |= DMG_PREVENT_PHYSICS_FORCE;
-							finalAction = Plugin_Changed;
-						}
 					}
 				}
 			}
@@ -1453,7 +1450,7 @@ public Action TF2_CalcIsAttackCritical(int iClient, int iWeapon, char[] sWepClas
 	else
 	{
 		int iIndex = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
-		int iSlot = TF2_GetSlotInItem(iIndex, TF2_GetPlayerClass(iClient));
+		int iSlot = TF2_GetItemSlot(iIndex, TF2_GetPlayerClass(iClient));
 		
 		TagsParams tParams = new TagsParams();
 		TagsCore_CallSlot(iClient, TagsCall_Attack, iSlot, tParams);
