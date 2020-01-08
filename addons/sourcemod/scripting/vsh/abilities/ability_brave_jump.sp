@@ -92,6 +92,12 @@ methodmap CBraveJump < SaxtonHaleBase
 		}
 		public set(float val)
 		{
+			//Cap value to prevent impossible angle
+			if (val > 89.0)
+				val = 89.0;
+			else if (val < -89.0)
+				val = -89.0;
+			
 			g_flBraveJumpEyeAngleRequirement[this.iClient] = val;
 		}
 	}
@@ -107,7 +113,7 @@ methodmap CBraveJump < SaxtonHaleBase
 		ability.flMaxHeight = 1100.0;
 		ability.flMaxDistance = 0.45;
 		ability.flCooldown = 7.0;
-		ability.flEyeAngleRequirement = -25.0;	//How far up should the boss look for the ability to trigger? Ranges from -90.0 to 90.0
+		ability.flEyeAngleRequirement = -25.0;	//How far up should the boss look for the ability to trigger? Ranges from -89.0 to 89.0
 	}
 	
 	public void OnThink()
@@ -158,15 +164,7 @@ methodmap CBraveJump < SaxtonHaleBase
 			float vecAng[3];
 			GetClientEyeAngles(this.iClient, vecAng);
 			
-			//Cap value to prevent impossible angle
-			float flAngleRequirement = this.flEyeAngleRequirement;
-			if (flAngleRequirement > 90.0)
-				flAngleRequirement = 90.0;
-				
-			else if (flAngleRequirement < -90.0)
-				flAngleRequirement = -90.0;
-			
-			if ((vecAng[0] <= flAngleRequirement) && (this.iJumpCharge > 1))
+			if ((vecAng[0] <= this.flEyeAngleRequirement) && (this.iJumpCharge > 1))
 			{
 				float vecVel[3];
 				GetEntPropVector(this.iClient, Prop_Data, "m_vecVelocity", vecVel);
