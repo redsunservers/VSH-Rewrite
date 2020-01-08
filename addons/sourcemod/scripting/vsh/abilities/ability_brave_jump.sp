@@ -93,9 +93,7 @@ methodmap CBraveJump < SaxtonHaleBase
 		public set(float val)
 		{
 			//Cap value to prevent impossible angle
-			if (val > 89.0)
-				val = 89.0;
-			else if (val < -89.0)
+			if (val < -89.0)
 				val = -89.0;
 			
 			g_flBraveJumpEyeAngleRequirement[this.iClient] = val;
@@ -113,7 +111,7 @@ methodmap CBraveJump < SaxtonHaleBase
 		ability.flMaxHeight = 1100.0;
 		ability.flMaxDistance = 0.45;
 		ability.flCooldown = 7.0;
-		ability.flEyeAngleRequirement = -25.0;	//How far up should the boss look for the ability to trigger? Ranges from -89.0 to 89.0
+		ability.flEyeAngleRequirement = -25.0;	//How far up should the boss look for the ability to trigger? Minimum value is -89.0 (all the way up)
 	}
 	
 	public void OnThink()
