@@ -4,6 +4,7 @@ static int g_iTeleportSwapChargeBuild[TF_MAXPLAYERS+1];
 static float g_flTeleportSwapCooldown[TF_MAXPLAYERS+1];
 static float g_flTeleportSwapStunDuration[TF_MAXPLAYERS+1];
 static float g_flTeleportSwapCooldownWait[TF_MAXPLAYERS+1];
+static float g_flTeleportSwapEyeAngleRequirement[TF_MAXPLAYERS+1];
 static bool g_bTeleportSwapHoldingChargeButton[TF_MAXPLAYERS+1];
 
 methodmap CTeleportSwap < SaxtonHaleBase
@@ -70,6 +71,18 @@ methodmap CTeleportSwap < SaxtonHaleBase
 		}
 	}
 	
+	property float flEyeAngleRequirement
+	{
+		public get()
+		{
+			return g_flTeleportSwapEyeAngleRequirement[this.iClient];
+		}
+		public set(float val)
+		{
+			g_flTeleportSwapEyeAngleRequirement[this.iClient] = val;
+		}
+	}
+	
 	public CTeleportSwap(CTeleportSwap ability)
 	{
 		//Default values, these can be changed if needed
@@ -77,6 +90,7 @@ methodmap CTeleportSwap < SaxtonHaleBase
 		ability.iChargeBuild = 4;
 		ability.flCooldown = 30.0;
 		ability.flStunDuration = 1.0;
+		ability.flEyeAngleRequirement = -60.0;	//How far up should the boss look for the ability to trigger? Ranges from -90.0 to 90.0
 		
 		g_iTeleportSwapCharge[ability.iClient] = 0;
 		g_flTeleportSwapCooldownWait[ability.iClient] = GetGameTime() + ability.flCooldown;
@@ -132,7 +146,16 @@ methodmap CTeleportSwap < SaxtonHaleBase
 			
 			float vecAng[3];
 			GetClientEyeAngles(this.iClient, vecAng);
-			if ((vecAng[0] < -60.0) && (this.iCharge >= this.iMaxCharge))
+			
+			//Cap value to prevent impossible angle
+			float flAngleRequirement = this.flEyeAngleRequirement;
+			if (flAngleRequirement > 90.0)
+				flAngleRequirement = 90.0;
+				
+			else if (flAngleRequirement < -90.0)
+				flAngleRequirement = -90.0;
+			
+			if ((vecAng[0] <= flAngleRequirement) && (this.iCharge > 1))
 			{
 				//get random valid attack player
 				ArrayList aClients = new ArrayList();

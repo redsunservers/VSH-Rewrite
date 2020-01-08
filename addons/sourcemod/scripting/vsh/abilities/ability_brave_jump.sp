@@ -5,6 +5,7 @@ static float g_flBraveJumpMaxHeight[TF_MAXPLAYERS+1];
 static float g_flBraveJumpMaxDistance[TF_MAXPLAYERS+1];
 static float g_flJumpCooldown[TF_MAXPLAYERS+1];
 static float g_flJumpCooldownWait[TF_MAXPLAYERS+1];
+static float g_flBraveJumpEyeAngleRequirement[TF_MAXPLAYERS+1];
 static bool g_bBraveJumpHoldingChargeButton[TF_MAXPLAYERS+1];
 
 methodmap CBraveJump < SaxtonHaleBase
@@ -83,6 +84,18 @@ methodmap CBraveJump < SaxtonHaleBase
 		}
 	}
 	
+	property float flEyeAngleRequirement
+	{
+		public get()
+		{
+			return g_flBraveJumpEyeAngleRequirement[this.iClient];
+		}
+		public set(float val)
+		{
+			g_flBraveJumpEyeAngleRequirement[this.iClient] = val;
+		}
+	}
+	
 	public CBraveJump(CBraveJump ability)
 	{
 		g_iBraveJumpCharge[ability.iClient] = 0;
@@ -94,6 +107,7 @@ methodmap CBraveJump < SaxtonHaleBase
 		ability.flMaxHeight = 1100.0;
 		ability.flMaxDistance = 0.45;
 		ability.flCooldown = 7.0;
+		ability.flEyeAngleRequirement = -25.0;	//How far up should the boss look for the ability to trigger? Ranges from -90.0 to 90.0
 	}
 	
 	public void OnThink()
@@ -143,7 +157,16 @@ methodmap CBraveJump < SaxtonHaleBase
 			
 			float vecAng[3];
 			GetClientEyeAngles(this.iClient, vecAng);
-			if ((vecAng[0] < -25.0) && (this.iJumpCharge > 1))
+			
+			//Cap value to prevent impossible angle
+			float flAngleRequirement = this.flEyeAngleRequirement;
+			if (flAngleRequirement > 90.0)
+				flAngleRequirement = 90.0;
+				
+			else if (flAngleRequirement < -90.0)
+				flAngleRequirement = -90.0;
+			
+			if ((vecAng[0] <= flAngleRequirement) && (this.iJumpCharge > 1))
 			{
 				float vecVel[3];
 				GetEntPropVector(this.iClient, Prop_Data, "m_vecVelocity", vecVel);
