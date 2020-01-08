@@ -155,7 +155,7 @@ methodmap CTeleportSwap < SaxtonHaleBase
 			else if (flAngleRequirement < -90.0)
 				flAngleRequirement = -90.0;
 			
-			if ((vecAng[0] <= flAngleRequirement) && (this.iCharge > >= this.iMaxCharge))
+			if ((vecAng[0] <= flAngleRequirement) && (this.iCharge >= this.iMaxCharge))
 			{
 				//get random valid attack player
 				ArrayList aClients = new ArrayList();
