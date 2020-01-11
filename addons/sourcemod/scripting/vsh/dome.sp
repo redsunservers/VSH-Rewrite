@@ -102,6 +102,9 @@ public void Dome_TriggerSpawn(int iTrigger)
 
 public Action Dome_TriggerTouch(int iTrigger, int iToucher)
 {
+	if (iToucher <= 0 || iToucher > MaxClients)
+		return Plugin_Continue;
+	
 	//If CP is in custom pos and player is not nearby new pos (touching original pos), prevent call
 	if (g_bDomeCustomPos && !g_bDomeCapturing[iToucher])
 		return Plugin_Handled;
