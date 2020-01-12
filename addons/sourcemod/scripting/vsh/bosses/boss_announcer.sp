@@ -556,16 +556,16 @@ public void Frame_Announcer_EnableBuilding(int iBuilding)
 		SetEntProp(iBuilding, Prop_Send, "m_iState", 1);
 }
 
-public void Announcer_ShowAnnotation(int iEntity, char[] sText, float flTime = 3.0)
+public void Announcer_ShowAnnotation(int iTarget, char[] sText, float flTime = 3.0)
 {
 	int iBits = 0;
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
 		SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 		
-		if (boss.bValid && IsPlayerAlive(iClient))
+		if (boss.bValid && iClient != iTarget && IsPlayerAlive(iClient))
 		{
-			char sType[128];
+			char sType[64];
 			boss.CallFunction("GetBossType", sType, sizeof(sType));
 			
 			if (StrContains(sType, "CAnnouncer"))
@@ -574,7 +574,7 @@ public void Announcer_ShowAnnotation(int iEntity, char[] sText, float flTime = 3
 	}
 
 	Event event = CreateEvent("show_annotation");
-	event.SetInt("follow_entindex", iEntity);
+	event.SetInt("follow_entindex", iTarget);
 	event.SetFloat("lifetime", flTime);
 	event.SetString("text", sText);
 	event.SetString("play_sound", ANNOUNCER_NULLSOUND); //This is just done so console doesn't get a non-existent soundfile error
