@@ -27,7 +27,7 @@ static char g_strAnnouncerKill[][] = {
 	"vo/announcer_am_lastmanforfeit03.mp3",
 	"vo/announcer_dec_kill07.mp3",
 	"vo/announcer_dec_kill10.mp3",
-	"vo/announcer_dec_missionbegin30s02.mp3",
+	"vo/announcer_dec_missionbegins30s02.mp3",
 };
 
 static char g_strAnnouncerKillMinion[][] = {
