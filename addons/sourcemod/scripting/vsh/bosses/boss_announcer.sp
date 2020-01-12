@@ -353,12 +353,9 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 		int iBuilding = TF2_GetBuilding(this.iClient, nType, nMode);
 		if (iBuilding != -1)
 		{
-			if (iBuilding > MaxClients)
-			{
-				SetVariantInt(999999);
-				AcceptEntityInput(iBuilding, "RemoveHealth");
-				PrintCenterText(this.iClient, "Your previous %s has been destroyed.", g_strBuildingName[nType][nMode]);
-			}
+			SetVariantInt(999999);
+			AcceptEntityInput(iBuilding, "RemoveHealth");
+			PrintCenterText(this.iClient, "Your previous %s has been destroyed.", g_strBuildingName[nType][nMode]);
 		}
 		
 		return Plugin_Continue;
