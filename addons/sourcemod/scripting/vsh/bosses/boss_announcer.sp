@@ -428,12 +428,18 @@ public Action Timer_AnnouncerChangeTeam(Handle hTimer, int iClient)
 	if (TF2_GetClientTeam(iClient) == TFTeam_Boss || TF2_GetClientTeam(iClient) <= TFTeam_Spectator || !IsPlayerAlive(iClient))
 		return;
 	
+	int iFlags = GetEntityFlags(iClient);
+	
 	if (g_iAnnouncerMinionTimeLeft[iClient] > 0)
 	{
 		//Warning on about to become boss
 		PrintCenterText(iClient, "YOU'RE SWAPPING TEAMS IN %d SECOND%s", g_iAnnouncerMinionTimeLeft[iClient], g_iAnnouncerMinionTimeLeft[iClient] > 1 ? "S" : "");
 		g_iAnnouncerMinionTimeLeft[iClient]--;
 		g_hAnnouncerMinionTimer[iClient] = CreateTimer(1.0, Timer_AnnouncerChangeTeam, iClient);
+		
+		//Make them untargetable by all sentries during the countdown 
+		iFlags |= FL_NOTARGET;
+		SetEntityFlags(iClient, iFlags);
 		return;
 	}
 	
@@ -484,6 +490,10 @@ public Action Timer_AnnouncerChangeTeam(Handle hTimer, int iClient)
 			}
 		}
 	}
+	
+	//Allow sentries to target this fella from now on
+	iFlags &= ~FL_NOTARGET;
+	SetEntityFlags(iClient, iFlags);
 	
 	//Dont give health overheal
 	SetEntProp(iClient, Prop_Send, "m_iHealth", SDK_GetMaxHealth(iClient));
