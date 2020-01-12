@@ -1,5 +1,6 @@
 #define ANNOUNCER_MODEL "models/player/kirillian/boss/sedisocks_administrator.mdl"
 #define ANNOUNCER_THEME "vsh_rewrite/administrator/admin_music.mp3"
+#define ANNOUNCER_NULLSOUND "vo/null.mp3"
 
 static char g_strAnnouncerRoundStart[][] = {
 	"vo/announcer_dec_missionbegins60s01.mp3",
@@ -33,7 +34,7 @@ static char g_strAnnouncerKillMinion[][] = {
 	"vo/mvm_general_destruction02.mp3",
 	"vo/mvm_general_destruction04.mp3",
 	"vo/mvm_general_destruction05.mp3",
-	"vo/mvm_general_destruction028.mp3",
+	"vo/mvm_general_destruction08.mp3",
 };
 
 static char g_strAnnouncerDisguise[][] = {
@@ -50,6 +51,13 @@ static char g_strAnnouncerLastMan[][] = {
 static char g_strAnnouncerBackStabbed[][] = {
 	"vo/compmode/cm_admin_misc_07.mp3",
 	"vo/compmode/cm_admin_misc_09.mp3",
+};
+
+static char g_strAnnouncerHitBuilding[][] = {
+	"weapons/sentry_damage1.wav",
+	"weapons/sentry_damage2.wav",
+	"weapons/sentry_damage3.wav",
+	"weapons/sentry_damage4.wav",
 };
 
 methodmap CAnnouncer < SaxtonHaleBase
@@ -72,11 +80,11 @@ methodmap CAnnouncer < SaxtonHaleBase
 		StrCat(sInfo, length, "\nHealth: Medium");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nAbilities");
-		StrCat(sInfo, length, "\n- Swaps player you shot using Diamondback to your team");
+		StrCat(sInfo, length, "\n- Brings players and buildings shot from your Diamondback to your team");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- Diamondback with ammos added");
-		StrCat(sInfo, length, "\n- 200%% Rage: Double ammo added to Diamondback");
+		StrCat(sInfo, length, "\n- Ammo is added to your Diamondback");
+		StrCat(sInfo, length, "\n- 200%% Rage: Ammo added is doubled");
 	}
 	
 	public void OnSpawn()
@@ -146,7 +154,7 @@ methodmap CAnnouncer < SaxtonHaleBase
 	{
 		//Need to block gun sounds
 		
-		if (strncmp(sample, "vo/", 3) == 0)//Block voicelines
+		if (strncmp(sample, "vo/", 3) == 0 && !(strncmp(sample, "vo/announcer_", 13) == 0 || strncmp(sample, "vo/mvm_", 7) == 0 || strncmp(sample, "vo/compmode/cm_admin_", 21) == 0))	//Block voicelines, except her own's. Cancer pathing btw
 			return Plugin_Handled;
 		return Plugin_Continue;
 	}
@@ -187,12 +195,31 @@ methodmap CAnnouncer < SaxtonHaleBase
 			return Plugin_Changed;
 		}
 		
+		char sMessage[128];
+		Format(sMessage, sizeof(sMessage), "%N is hit!", victim);
+		
+		if (TF2_GetPlayerClass(victim) == TFClass_Engineer)
+		{
+			int iBuilding = MaxClients+1;
+			int iTeam = GetClientTeam(this.iClient);
+			while ((iBuilding = FindEntityByClassname(iBuilding, "obj_*")) > MaxClients)
+			{
+				//In favor of the boss, buildings will not wait for the engie to team switch
+				if (GetEntPropEnt(iBuilding, Prop_Send, "m_hBuilder") == victim && GetEntProp(iBuilding, Prop_Send, "m_iTeamNum") != iTeam)
+				{
+					Format(sMessage, sizeof(sMessage), "%N is hit!\n%N's buildings swapped teams!", victim, victim);
+					Announcer_SetBuilder(iBuilding, this.iClient);
+				}
+			}
+		}
+		
 		SaxtonHaleBase boss = SaxtonHaleBase(victim);
 		if (boss.bValid)
 			boss.CallFunction("Destroy");
 		
 		boss.CallFunction("CreateBoss", "CAnnouncerMinion");
 		
+		Announcer_ShowAnnotation(victim, sMessage, 5.0);
 		EmitSoundToClient(this.iClient, SOUND_BACKSTAB);
 		EmitSoundToClient(victim, SOUND_ALERT);
 		EmitSoundToClient(victim, g_strAnnouncerDisguise[GetRandomInt(0, sizeof(g_strAnnouncerDisguise)-1)]);
@@ -201,10 +228,26 @@ methodmap CAnnouncer < SaxtonHaleBase
 		return Plugin_Stop;
 	}
 	
+	public Action OnAttackBuilding(int &victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+	{
+		if (weapon <= MaxClients)
+			return Plugin_Continue;
+		
+		int iIndex = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
+		if (TF2_GetItemSlot(iIndex, TF2_GetPlayerClass(this.iClient)) != WeaponSlot_Primary)
+			return Plugin_Continue;
+		
+		Announcer_SetBuilder(victim, this.iClient);
+		EmitSoundToClient(this.iClient, g_strAnnouncerHitBuilding[GetRandomInt(0, sizeof(g_strAnnouncerHitBuilding)-1)]);
+		damage = 0.0;
+		return Plugin_Changed;
+	}
+	
 	public void Precache()
 	{
 		PrecacheModel(ANNOUNCER_MODEL);
 		
+		PrecacheSound(ANNOUNCER_NULLSOUND);
 		PrepareSound(ANNOUNCER_THEME);
 		
 		for (int i = 0; i < sizeof(g_strAnnouncerRoundStart); i++) PrecacheSound(g_strAnnouncerRoundStart[i]);
@@ -215,6 +258,7 @@ methodmap CAnnouncer < SaxtonHaleBase
 		for (int i = 0; i < sizeof(g_strAnnouncerDisguise); i++) PrecacheSound(g_strAnnouncerDisguise[i]);
 		for (int i = 0; i < sizeof(g_strAnnouncerLastMan); i++) PrecacheSound(g_strAnnouncerLastMan[i]);
 		for (int i = 0; i < sizeof(g_strAnnouncerBackStabbed); i++) PrecacheSound(g_strAnnouncerBackStabbed[i]);
+		for (int i = 0; i < sizeof(g_strAnnouncerHitBuilding); i++) PrecacheSound(g_strAnnouncerHitBuilding[i]);
 		
 		AddFileToDownloadsTable("materials/models/player/administrator/admin_body.vmt");
 		AddFileToDownloadsTable("materials/models/player/administrator/admin_body.vtf");
@@ -274,6 +318,19 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 		return Plugin_Continue;
 	}
 	
+	public Action OnAttackBuilding(int &victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+	{
+		int iOwner = GetEntPropEnt(victim, Prop_Send, "m_hBuilder");
+		
+		if (TF2_GetClientTeam(iOwner) == TFTeam_Boss)
+		{
+			damage = 0.0;
+			return Plugin_Stop;
+		}
+		
+		return Plugin_Continue;
+	}
+	
 	public Action OnTakeDamage(int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 	{
 		if (attacker <= 0 || attacker > MaxClients)
@@ -302,6 +359,7 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 		for (int iClient = 1; iClient <= MaxClients; iClient++)
 		{
 			SaxtonHaleBase boss = SaxtonHaleBase(iClient);
+			
 			if (boss.bValid && IsPlayerAlive(iClient))
 			{
 				char sType[128];
@@ -380,7 +438,6 @@ public Action Timer_AnnouncerChangeTeam(Handle hTimer, int iClient)
 	}
 	
 	PrintCenterText(iClient, "YOU'RE NOW IN BOSS TEAM");
-	
 	Client_AddFlag(iClient, ClientFlags_BossTeam);
 	SetEntProp(iClient, Prop_Send, "m_lifeState", LifeState_Dead);
 	TF2_ChangeClientTeam(iClient, TFTeam_Boss);
@@ -433,4 +490,94 @@ public Action Timer_AnnouncerChangeTeam(Handle hTimer, int iClient)
 	
 	//TF2_AddCondition(iClient, TFCond_Buffed, TFCondDuration_Infinite);
 	TF2_AddCondition(iClient, TFCond_DefenseBuffed, TFCondDuration_Infinite);
+}
+
+public void Announcer_SetBuilder(int iBuilding, int iClient, bool bDisplay = true)
+{
+	int iTeam = GetClientTeam(iClient);
+	int iBuilder = GetEntPropEnt(iBuilding, Prop_Send, "m_hBuilder");
+	
+	//Remove the building from the original builder so it doesn't explode on team switch
+	SDK_RemoveObject(iBuilder, iBuilding);
+	
+	SetVariantInt(iTeam);
+	AcceptEntityInput(iBuilding, "SetTeam");
+	//SetEntProp(iBuilding, Prop_Send, "m_iTeamNum", iTeam);
+	SetEntProp(iBuilding, Prop_Send, "m_nSkin", iTeam-2);
+	SetEntPropEnt(iBuilding, Prop_Send, "m_hBuilder", iClient);
+	
+	char sClassname[32];
+	GetEntityClassname(iBuilding, sClassname, sizeof(sClassname));
+	
+	//Get building names to display
+	char sBuildingName[16];
+		
+	if (StrEqual(sClassname, "obj_sentrygun"))
+		Format(sBuildingName, sizeof(sBuildingName), "Sentry Gun");
+	
+	if (StrEqual(sClassname, "obj_teleporter"))
+	{
+		Format(sBuildingName, sizeof(sBuildingName), "Teleporter");
+		
+		//This is done to reset the effects' colors
+		SetEntProp(iBuilding, Prop_Send, "m_iState", 0);
+		
+		//It needs a frame to consistently work
+		RequestFrame(Frame_Announcer_EnableBuilding, iBuilding);
+	}
+	
+	else if (StrEqual(sClassname, "obj_dispenser"))
+	{
+		Format(sBuildingName, sizeof(sBuildingName), "Dispenser");
+		
+		//Actually just disable the dispenser's screen, should check up on this later (it'll still show up if it's shot while it's building)
+		int iScreen = MaxClients+1;
+		while ((iScreen = FindEntityByClassname(iScreen, "vgui_screen")) > MaxClients)
+		{
+			if (GetEntPropEnt(iScreen, Prop_Send, "m_hOwnerEntity") == iBuilding)
+			{
+				AcceptEntityInput(iScreen, "SetInactive");
+				SetEntProp(iScreen, Prop_Send, "m_iTeamNum", iTeam);
+			}
+		}
+	}
+	
+	if (bDisplay)
+	{
+		char sMessage[128];
+		Format(sMessage, sizeof(sMessage), "%N's %s is hit!", iBuilder, sBuildingName);
+		Announcer_ShowAnnotation(iBuilding, sMessage);
+	}
+}
+
+public void Frame_Announcer_EnableBuilding(int iBuilding)
+{
+	if (IsValidEdict(iBuilding))
+		SetEntProp(iBuilding, Prop_Send, "m_iState", 1);
+}
+
+public void Announcer_ShowAnnotation(int iEntity, char[] sText, float flTime = 3.0)
+{
+	int iBits = 0;
+	for (int iClient = 1; iClient <= MaxClients; iClient++)
+	{
+		SaxtonHaleBase boss = SaxtonHaleBase(iClient);
+		
+		if (boss.bValid && IsPlayerAlive(iClient))
+		{
+			char sType[128];
+			boss.CallFunction("GetBossType", sType, sizeof(sType));
+			
+			if (StrContains(sType, "CAnnouncer"))
+				iBits |= (1 << iClient);
+		}
+	}
+
+	Event event = CreateEvent("show_annotation");
+	event.SetInt("follow_entindex", iEntity);
+	event.SetFloat("lifetime", flTime);
+	event.SetString("text", sText);
+	event.SetString("play_sound", ANNOUNCER_NULLSOUND); //This is just done so console doesn't get a non-existent soundfile error
+	event.SetInt("visibilityBitfield", (iBits));
+	event.Fire();
 }

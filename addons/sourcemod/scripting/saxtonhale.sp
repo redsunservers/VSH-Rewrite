@@ -553,6 +553,10 @@ public void OnPluginStart()
 	SaxtonHaleFunction("OnPlayerKilled", ET_Ignore, Param_Cell, Param_Cell);
 	SaxtonHaleFunction("OnDeath", ET_Ignore, Param_Cell);
 	
+	func = SaxtonHaleFunction("OnAttackBuilding", ET_Hook, Param_CellByRef, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array, Param_Cell);
+	func.SetParam(6, Param_Array, VSHArrayType_Static, 3);
+	func.SetParam(7, Param_Array, VSHArrayType_Static, 3);
+	
 	func = SaxtonHaleFunction("OnAttackDamage", ET_Hook, Param_CellByRef, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array, Param_Cell);
 	func.SetParam(6, Param_Array, VSHArrayType_Static, 3);
 	func.SetParam(7, Param_Array, VSHArrayType_Static, 3);
@@ -925,6 +929,11 @@ public void OnEntityCreated(int iEntity, const char[] sClassname)
 		|| strcmp(sClassname, "func_regenerate") == 0)
 	{
 		SDKHook(iEntity, SDKHook_Touch, ItemPack_OnTouch);
+	}
+	
+	if (StrContains(sClassname, "obj_") == 0)
+	{
+		SDKHook(iEntity, SDKHook_OnTakeDamage, Building_OnTakeDamage);
 	}
 }
 
@@ -1317,6 +1326,27 @@ public Action Client_OnTakeDamageAlive(int victim, int &attacker, int &inflictor
 			}
 		}
 	}
+	return finalAction;
+}
+
+public Action Building_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
+	if (victim <= MaxClients) return Plugin_Continue;
+	
+	Action finalAction = Plugin_Continue;
+	Action action = Plugin_Continue;
+	
+	SaxtonHaleBase bossAttacker = SaxtonHaleBase(attacker);
+	
+	if (0 < attacker <= MaxClients && bossAttacker.bValid)
+	{
+		action = bossAttacker.CallFunction("OnAttackBuilding", victim, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
+		if (action > finalAction)
+			finalAction = action;
+	}
+
 	return finalAction;
 }
 
