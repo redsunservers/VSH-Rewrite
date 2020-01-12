@@ -515,7 +515,7 @@ public void Announcer_SetBuilder(int iBuilding, int iClient, bool bDisplay = tru
 	if (StrEqual(sClassname, "obj_sentrygun"))
 		Format(sBuildingName, sizeof(sBuildingName), "Sentry Gun");
 	
-	if (StrEqual(sClassname, "obj_teleporter"))
+	else if (StrEqual(sClassname, "obj_teleporter"))
 	{
 		Format(sBuildingName, sizeof(sBuildingName), "Teleporter");
 		
