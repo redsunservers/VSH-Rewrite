@@ -196,7 +196,7 @@ methodmap CAnnouncer < SaxtonHaleBase
 		}
 		
 		char sMessage[128];
-		Format(sMessage, sizeof(sMessage), "%N is hit!", victim);
+		Format(sMessage, sizeof(sMessage), "%N was hit and will switch teams!", victim);
 		
 		if (TF2_GetPlayerClass(victim) == TFClass_Engineer)
 		{
@@ -207,7 +207,7 @@ methodmap CAnnouncer < SaxtonHaleBase
 				//In favor of the boss, buildings will not wait for the engie to team switch
 				if (GetEntPropEnt(iBuilding, Prop_Send, "m_hBuilder") == victim && GetEntProp(iBuilding, Prop_Send, "m_iTeamNum") != iTeam)
 				{
-					Format(sMessage, sizeof(sMessage), "%N is hit!\n%N's buildings swapped teams!", victim, victim);
+					Format(sMessage, sizeof(sMessage), "%N was hit and will switch teams!\n%N's buildings have switched teams!", victim, victim);
 					Announcer_SetBuilder(iBuilding, this.iClient);
 				}
 			}
@@ -545,7 +545,7 @@ public void Announcer_SetBuilder(int iBuilding, int iClient, bool bDisplay = tru
 	if (bDisplay)
 	{
 		char sMessage[128];
-		Format(sMessage, sizeof(sMessage), "%N's %s is hit!", iBuilder, sBuildingName);
+		Format(sMessage, sizeof(sMessage), "%N's %s is hit and has switched teams!", iBuilder, sBuildingName);
 		Announcer_ShowAnnotation(iBuilding, sMessage);
 	}
 }
