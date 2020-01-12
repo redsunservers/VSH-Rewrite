@@ -25,8 +25,6 @@ static char g_strAnnouncerLose[][] = {
 static char g_strAnnouncerKill[][] = {
 	"vo/announcer_am_lastmanforfeit01.mp3",
 	"vo/announcer_am_lastmanforfeit03.mp3",
-	"vo/announcer_dec_kill07.mp3",
-	"vo/announcer_dec_kill10.mp3",
 	"vo/announcer_dec_missionbegins30s02.mp3",
 };
 
@@ -35,6 +33,8 @@ static char g_strAnnouncerKillMinion[][] = {
 	"vo/mvm_general_destruction04.mp3",
 	"vo/mvm_general_destruction05.mp3",
 	"vo/mvm_general_destruction08.mp3",
+	"vo/announcer_dec_kill07.mp3",
+	"vo/announcer_dec_kill10.mp3",
 };
 
 static char g_strAnnouncerDisguise[][] = {
@@ -44,8 +44,9 @@ static char g_strAnnouncerDisguise[][] = {
 };
 
 static char g_strAnnouncerLastMan[][] = {
-	"vo/taunts/announcer_am_lastmanalive02.mp3",
-	"vo/taunts/announcer_am_lastmanalive03.mp3",
+	"vo/announcer_am_lastmanalive01.mp3"
+	"vo/announcer_am_lastmanalive03.mp3",
+	"vo/announcer_am_lastmanalive04.mp3",
 };
 
 static char g_strAnnouncerBackStabbed[][] = {
