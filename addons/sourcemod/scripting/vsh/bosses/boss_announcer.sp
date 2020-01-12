@@ -44,7 +44,7 @@ static char g_strAnnouncerDisguise[][] = {
 };
 
 static char g_strAnnouncerLastMan[][] = {
-	"vo/announcer_am_lastmanalive01.mp3"
+	"vo/announcer_am_lastmanalive01.mp3",
 	"vo/announcer_am_lastmanalive03.mp3",
 	"vo/announcer_am_lastmanalive04.mp3",
 };
@@ -52,6 +52,7 @@ static char g_strAnnouncerLastMan[][] = {
 static char g_strAnnouncerBackStabbed[][] = {
 	"vo/compmode/cm_admin_misc_07.mp3",
 	"vo/compmode/cm_admin_misc_09.mp3",
+	"vo/announcer_sd_monkeynaut_end_crash02.mp3",
 };
 
 static char g_strAnnouncerHitBuilding[][] = {
@@ -196,31 +197,17 @@ methodmap CAnnouncer < SaxtonHaleBase
 			return Plugin_Changed;
 		}
 		
-		char sMessage[128];
-		Format(sMessage, sizeof(sMessage), "%N was hit and will switch teams!", victim);
-		
-		if (TF2_GetPlayerClass(victim) == TFClass_Engineer)
-		{
-			int iBuilding = MaxClients+1;
-			int iTeam = GetClientTeam(this.iClient);
-			while ((iBuilding = FindEntityByClassname(iBuilding, "obj_*")) > MaxClients)
-			{
-				//In favor of the boss, buildings will not wait for the engie to team switch
-				if (GetEntPropEnt(iBuilding, Prop_Send, "m_hBuilder") == victim && GetEntProp(iBuilding, Prop_Send, "m_iTeamNum") != iTeam)
-				{
-					Format(sMessage, sizeof(sMessage), "%N was hit and will switch teams!\n%N's buildings have switched teams!", victim, victim);
-					Announcer_SetBuilder(iBuilding, this.iClient);
-				}
-			}
-		}
-		
 		SaxtonHaleBase boss = SaxtonHaleBase(victim);
 		if (boss.bValid)
 			boss.CallFunction("Destroy");
 		
 		boss.CallFunction("CreateBoss", "CAnnouncerMinion");
 		
-		Announcer_ShowAnnotation(victim, sMessage, 5.0);
+		TFClassType nClass = TF2_GetPlayerClass(victim);
+		char sMessage[128];
+		Format(sMessage, sizeof(sMessage), "A%s %s was hit and will switch teams!", (nClass == TFClass_Engineer ? "n" : ""), g_strClassName[nClass]);
+		Announcer_ShowAnnotation(victim, sMessage, 6.0);
+		
 		EmitSoundToClient(this.iClient, SOUND_BACKSTAB);
 		EmitSoundToClient(victim, SOUND_ALERT);
 		EmitSoundToClient(victim, g_strAnnouncerDisguise[GetRandomInt(0, sizeof(g_strAnnouncerDisguise)-1)]);
@@ -238,7 +225,15 @@ methodmap CAnnouncer < SaxtonHaleBase
 		if (TF2_GetItemSlot(iIndex, TF2_GetPlayerClass(this.iClient)) != WeaponSlot_Primary)
 			return Plugin_Continue;
 		
-		Announcer_SetBuilder(victim, this.iClient);
+		//Display a message
+		TFObjectType nType = view_as<TFObjectType>(GetEntProp(victim, Prop_Send, "m_iObjectType"));
+		TFObjectMode nMode = view_as<TFObjectMode>(GetEntProp(victim, Prop_Send, "m_iObjectMode"));
+		
+		char sMessage[128];
+		Format(sMessage, sizeof(sMessage), "A %s was hit and has switched teams!", g_strBuildingName[nType][nMode]);
+		Announcer_ShowAnnotation(victim, sMessage);
+		
+		Announcer_SetBuildingTeam(victim, TF2_GetClientTeam(this.iClient), this.iClient);
 		EmitSoundToClient(this.iClient, g_strAnnouncerHitBuilding[GetRandomInt(0, sizeof(g_strAnnouncerHitBuilding)-1)]);
 		damage = 0.0;
 		return Plugin_Changed;
@@ -247,7 +242,6 @@ methodmap CAnnouncer < SaxtonHaleBase
 	public void Precache()
 	{
 		PrecacheModel(ANNOUNCER_MODEL);
-		
 		PrecacheSound(ANNOUNCER_NULLSOUND);
 		PrepareSound(ANNOUNCER_THEME);
 		
@@ -300,6 +294,10 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 		
 		g_iAnnouncerMinionTimeLeft[boss.iClient] = 6;	//6 seconds before swapping to boss team
 		g_hAnnouncerMinionTimer[boss.iClient] = CreateTimer(0.0, Timer_AnnouncerChangeTeam, boss.iClient);
+		
+		//Make minions untargetable by all sentries until the team-swapping countdown ends
+		int iFlags = (GetEntityFlags(boss.iClient) | FL_NOTARGET);
+		SetEntityFlags(boss.iClient, iFlags);
 	}
 	
 	public bool IsBossHidden()
@@ -351,7 +349,18 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 	
 	public Action OnBuild(TFObjectType nType, TFObjectMode nMode)
 	{
-		//Allow Engineer build anything
+		//Let engineers build, but auto-destroy the buildings they built, but no longer own, if there are any
+		int iBuilding = TF2_GetBuilding(this.iClient, nType, nMode);
+		if (iBuilding != -1)
+		{
+			if (iBuilding > MaxClients)
+			{
+				SetVariantInt(999999);
+				AcceptEntityInput(iBuilding, "RemoveHealth");
+				PrintCenterText(this.iClient, "Your previous %s has been destroyed.", g_strBuildingName[nType][nMode]);
+			}
+		}
+		
 		return Plugin_Continue;
 	}
 	
@@ -360,7 +369,6 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 		for (int iClient = 1; iClient <= MaxClients; iClient++)
 		{
 			SaxtonHaleBase boss = SaxtonHaleBase(iClient);
-			
 			if (boss.bValid && IsPlayerAlive(iClient))
 			{
 				char sType[128];
@@ -418,6 +426,10 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 	public void Destroy()
 	{
 		g_hAnnouncerMinionTimer[this.iClient] = null;
+		
+		//Make them targetable by sentries, just in case
+		int iFlags = (GetEntityFlags(this.iClient) & ~FL_NOTARGET);
+		SetEntityFlags(this.iClient, iFlags);
 	}
 };
 
@@ -429,19 +441,25 @@ public Action Timer_AnnouncerChangeTeam(Handle hTimer, int iClient)
 	if (TF2_GetClientTeam(iClient) == TFTeam_Boss || TF2_GetClientTeam(iClient) <= TFTeam_Spectator || !IsPlayerAlive(iClient))
 		return;
 	
-	int iFlags = GetEntityFlags(iClient);
-	
 	if (g_iAnnouncerMinionTimeLeft[iClient] > 0)
 	{
 		//Warning on about to become boss
 		PrintCenterText(iClient, "YOU'RE SWAPPING TEAMS IN %d SECOND%s", g_iAnnouncerMinionTimeLeft[iClient], g_iAnnouncerMinionTimeLeft[iClient] > 1 ? "S" : "");
 		g_iAnnouncerMinionTimeLeft[iClient]--;
 		g_hAnnouncerMinionTimer[iClient] = CreateTimer(1.0, Timer_AnnouncerChangeTeam, iClient);
-		
-		//Make them untargetable by all sentries during the countdown 
-		iFlags |= FL_NOTARGET;
-		SetEntityFlags(iClient, iFlags);
 		return;
+	}
+	
+	//Need to detach buildings from engineers before switching teams so they don't explode
+	if (TF2_GetPlayerClass(iClient) == TFClass_Engineer)
+	{
+		int iBuilding = MaxClients+1;
+		while ((iBuilding = FindEntityByClassname(iBuilding, "obj_*")) > MaxClients)
+		{
+			//Even when keeping the same builder, the "original builder" will be detached from the building
+			if (GetEntPropEnt(iBuilding, Prop_Send, "m_hBuilder") == iClient)
+				Announcer_SetBuildingTeam(iBuilding, TFTeam_Boss);
+		}
 	}
 	
 	PrintCenterText(iClient, "YOU'RE NOW IN BOSS TEAM");
@@ -449,6 +467,17 @@ public Action Timer_AnnouncerChangeTeam(Handle hTimer, int iClient)
 	SetEntProp(iClient, Prop_Send, "m_lifeState", LifeState_Dead);
 	TF2_ChangeClientTeam(iClient, TFTeam_Boss);
 	SetEntProp(iClient, Prop_Send, "m_lifeState", LifeState_Alive);
+	
+	//...and add them all back (windows sig does nothing right now)
+	if (TF2_GetPlayerClass(iClient) == TFClass_Engineer)
+	{
+		int iBuilding = MaxClients+1;
+		while ((iBuilding = FindEntityByClassname(iBuilding, "obj_*")) > MaxClients)
+		{
+			if (GetEntPropEnt(iBuilding, Prop_Send, "m_hBuilder") == iClient)
+				SDK_AddObject(iClient, iBuilding);
+		}
+	}
 	
 	//Restore weapons, health, ammo and cosmetics after changing teams
 	TF2_RegeneratePlayer(iClient);
@@ -493,7 +522,7 @@ public Action Timer_AnnouncerChangeTeam(Handle hTimer, int iClient)
 	}
 	
 	//Allow sentries to target this fella from now on
-	iFlags &= ~FL_NOTARGET;
+	int iFlags = (GetEntityFlags(iClient) & ~FL_NOTARGET);
 	SetEntityFlags(iClient, iFlags);
 	
 	//Dont give health overheal
@@ -503,73 +532,54 @@ public Action Timer_AnnouncerChangeTeam(Handle hTimer, int iClient)
 	TF2_AddCondition(iClient, TFCond_DefenseBuffed, TFCondDuration_Infinite);
 }
 
-public void Announcer_SetBuilder(int iBuilding, int iClient, bool bDisplay = true)
+public void Announcer_SetBuildingTeam(int iBuilding, TFTeam nTeam, int iNewBuilder = -1)
 {
-	int iTeam = GetClientTeam(iClient);
 	int iBuilder = GetEntPropEnt(iBuilding, Prop_Send, "m_hBuilder");
 	
 	//Remove the building from the original builder so it doesn't explode on team switch
 	SDK_RemoveObject(iBuilder, iBuilding);
 	
+	int iTeam = view_as<int>(nTeam);
 	SetVariantInt(iTeam);
 	AcceptEntityInput(iBuilding, "SetTeam");
-	//SetEntProp(iBuilding, Prop_Send, "m_iTeamNum", iTeam);
-	SetEntProp(iBuilding, Prop_Send, "m_nSkin", iTeam-2);
-	SetEntPropEnt(iBuilding, Prop_Send, "m_hBuilder", iClient);
+	
+	//You can set the server as the builder if you want, I'm not stopping you
+	if (iNewBuilder > -1)
+		SetEntPropEnt(iBuilding, Prop_Send, "m_hBuilder", iNewBuilder);
+	
+	//Mini-sentries use different skins, adjust accordingly
+	if (GetEntProp(iBuilding, Prop_Send, "m_bMiniBuilding"))
+		SetEntProp(iBuilding, Prop_Send, "m_nSkin", iTeam);
+	else
+		SetEntProp(iBuilding, Prop_Send, "m_nSkin", iTeam-2);
 	
 	char sClassname[32];
 	GetEntityClassname(iBuilding, sClassname, sizeof(sClassname));
 	
-	//Get building names to display
-	char sBuildingName[16];
-		
-	if (StrEqual(sClassname, "obj_sentrygun"))
-		Format(sBuildingName, sizeof(sBuildingName), "Sentry Gun");
+	//Disable teleporters for a little bit to reset the effects' colors
+	if (StrEqual(sClassname, "obj_teleporter"))
+		TF2_StunBuilding(iBuilding, 0.1);
 	
-	else if (StrEqual(sClassname, "obj_teleporter"))
-	{
-		Format(sBuildingName, sizeof(sBuildingName), "Teleporter");
-		
-		//This is done to reset the effects' colors
-		SetEntProp(iBuilding, Prop_Send, "m_iState", 0);
-		
-		//It needs a frame to consistently work
-		RequestFrame(Frame_Announcer_EnableBuilding, iBuilding);
-	}
-	
+	//Actually just disable the dispenser's screen, should check up on this later
 	else if (StrEqual(sClassname, "obj_dispenser"))
 	{
-		Format(sBuildingName, sizeof(sBuildingName), "Dispenser");
-		
-		//Actually just disable the dispenser's screen, should check up on this later (it'll still show up if it's shot while it's building)
 		int iScreen = MaxClients+1;
 		while ((iScreen = FindEntityByClassname(iScreen, "vgui_screen")) > MaxClients)
 		{
 			if (GetEntPropEnt(iScreen, Prop_Send, "m_hOwnerEntity") == iBuilding)
-			{
-				AcceptEntityInput(iScreen, "SetInactive");
-				SetEntProp(iScreen, Prop_Send, "m_iTeamNum", iTeam);
-			}
+				AcceptEntityInput(iScreen, "Kill");
 		}
 	}
-	
-	if (bDisplay)
-	{
-		char sMessage[128];
-		Format(sMessage, sizeof(sMessage), "%N's %s is hit and has switched teams!", iBuilder, sBuildingName);
-		Announcer_ShowAnnotation(iBuilding, sMessage);
-	}
-}
-
-public void Frame_Announcer_EnableBuilding(int iBuilding)
-{
-	if (IsValidEdict(iBuilding))
-		SetEntProp(iBuilding, Prop_Send, "m_iState", 1);
 }
 
 public void Announcer_ShowAnnotation(int iTarget, char[] sText, float flTime = 3.0)
 {
-	int iBits = 0;
+	Event event = CreateEvent("show_annotation");
+	event.SetInt("follow_entindex", iTarget);
+	event.SetFloat("lifetime", flTime);
+	event.SetString("text", sText);
+	event.SetString("play_sound", ANNOUNCER_NULLSOUND); //This is just done so console doesn't get a non-existent soundfile error
+	
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
 		SaxtonHaleBase boss = SaxtonHaleBase(iClient);
@@ -579,16 +589,10 @@ public void Announcer_ShowAnnotation(int iTarget, char[] sText, float flTime = 3
 			char sType[64];
 			boss.CallFunction("GetBossType", sType, sizeof(sType));
 			
-			if (StrContains(sType, "CAnnouncer"))
-				iBits |= (1 << iClient);
+			if (StrEqual(sType, "CAnnouncer") || StrEqual(sType, "CAnnouncerMinion"))
+				event.FireToClient(iClient);
 		}
 	}
-
-	Event event = CreateEvent("show_annotation");
-	event.SetInt("follow_entindex", iTarget);
-	event.SetFloat("lifetime", flTime);
-	event.SetString("text", sText);
-	event.SetString("play_sound", ANNOUNCER_NULLSOUND); //This is just done so console doesn't get a non-existent soundfile error
-	event.SetInt("visibilityBitfield", (iBits));
-	event.Fire();
+	
+	delete event;
 }

@@ -232,6 +232,14 @@ char g_strSlotName[][] = {
 	"Building"
 };
 
+// TF2 Building names
+char g_strBuildingName[TFObjectType][TFObjectMode][] = {
+    {"Dispenser", ""},
+    {"Teleporter Entrance", "Teleporter Exit"},
+    {"Sentry Gun", ""},
+    {"Sapper", ""},
+};
+
 // Color Tag
 char g_strColorTag[][] = {
 	"{positive}",

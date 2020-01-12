@@ -10,6 +10,7 @@ static Handle g_hSDKGetMaxClip;
 static Handle g_hSDKRemoveWearable;
 static Handle g_hSDKGetEquippedWearable;
 static Handle g_hSDKEquipWearable;
+static Handle g_hSDKAddObject;
 static Handle g_hSDKRemoveObject;
 
 static int g_iHookIdGiveNamedItem[TF_MAXPLAYERS+1] = {-1, ...};
@@ -94,6 +95,14 @@ void SDK_Init()
 	g_hSDKGetMaxClip = EndPrepSDKCall();
 	if (g_hSDKGetMaxClip == null)
 		LogMessage("Failed to create call: CTFWeaponBase::GetMaxClip1!");
+
+	//This call is used to give an owner to a building
+	StartPrepSDKCall(SDKCall_Player);
+	PrepSDKCall_SetFromConf(hGameData, SDKConf_Signature, "CTFPlayer::AddObject");
+	PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer);
+	g_hSDKAddObject = EndPrepSDKCall();
+	if (g_hSDKAddObject == null)
+		LogMessage("Failed to create call: CTFPlayer::AddObject!");
 
 	//This call is used to remove a building's owner
 	StartPrepSDKCall(SDKCall_Player);
@@ -365,7 +374,13 @@ void SDK_EquipWearable(int client, int iWearable)
 		SDKCall(g_hSDKEquipWearable, client, iWearable);
 }
 
-int SDK_RemoveObject(int iClient, int iEntity)
+void SDK_AddObject(int iClient, int iEntity)
+{
+	if(g_hSDKAddObject != null)
+		SDKCall(g_hSDKAddObject, iClient, iEntity);
+}
+
+void SDK_RemoveObject(int iClient, int iEntity)
 {
 	if(g_hSDKRemoveObject != null)
 		SDKCall(g_hSDKRemoveObject, iClient, iEntity);
