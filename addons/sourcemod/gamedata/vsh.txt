@@ -32,6 +32,7 @@
 			{
 				"library"	"server"
 				"linux"		"@_ZN9CTFPlayer9AddObjectEP11CBaseObject"
+				//TODO: get windows sig
 			}
 			"CTFPlayer::RemoveObject"
 			{
