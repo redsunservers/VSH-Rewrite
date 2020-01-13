@@ -156,7 +156,7 @@ methodmap CAnnouncer < SaxtonHaleBase
 	{
 		//Need to block gun sounds
 		
-		if (strncmp(sample, "vo/", 3) == 0 && !(strncmp(sample, "vo/announcer_", 13) == 0 || strncmp(sample, "vo/mvm_", 7) == 0 || strncmp(sample, "vo/compmode/cm_admin_", 21) == 0))	//Block voicelines, except her own's. Cancer pathing btw
+		if (strncmp(sample, "vo/", 3) == 0 && !(strncmp(sample, "vo/announcer_", 13) == 0 || strncmp(sample, "vo/mvm_", 7) == 0 || strncmp(sample, "vo/compmode/cm_admin_", 21) == 0))	//Block voicelines, except her own's
 			return Plugin_Handled;
 		return Plugin_Continue;
 	}
@@ -296,8 +296,7 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 		g_hAnnouncerMinionTimer[boss.iClient] = CreateTimer(0.0, Timer_AnnouncerChangeTeam, boss.iClient);
 		
 		//Make minions untargetable by all sentries until the team-swapping countdown ends
-		int iFlags = (GetEntityFlags(boss.iClient) | FL_NOTARGET);
-		SetEntityFlags(boss.iClient, iFlags);
+		SetEntityFlags(boss.iClient, (GetEntityFlags(boss.iClient) | FL_NOTARGET));
 	}
 	
 	public bool IsBossHidden()
@@ -349,7 +348,8 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 	
 	public Action OnBuild(TFObjectType nType, TFObjectMode nMode)
 	{
-		//Let engineers build, but auto-destroy the buildings they built, but no longer own, if there are any
+		//Let engineers build, but auto-destroy the same building they're attempting to build if there's one active from before they were converted
+		//This is a backup mechanic in case the CTFPlayer:AddObject hook isn't loaded
 		int iBuilding = TF2_GetBuilding(this.iClient, nType, nMode);
 		if (iBuilding != -1)
 		{
@@ -425,8 +425,7 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 		g_hAnnouncerMinionTimer[this.iClient] = null;
 		
 		//Make them targetable by sentries, just in case
-		int iFlags = (GetEntityFlags(this.iClient) & ~FL_NOTARGET);
-		SetEntityFlags(this.iClient, iFlags);
+		SetEntityFlags(this.iClient, (GetEntityFlags(this.iClient) & ~FL_NOTARGET));
 	}
 };
 
@@ -519,8 +518,7 @@ public Action Timer_AnnouncerChangeTeam(Handle hTimer, int iClient)
 	}
 	
 	//Allow sentries to target this fella from now on
-	int iFlags = (GetEntityFlags(iClient) & ~FL_NOTARGET);
-	SetEntityFlags(iClient, iFlags);
+	SetEntityFlags(iClient, (GetEntityFlags(iClient) & ~FL_NOTARGET));
 	
 	//Dont give health overheal
 	SetEntProp(iClient, Prop_Send, "m_iHealth", SDK_GetMaxHealth(iClient));
