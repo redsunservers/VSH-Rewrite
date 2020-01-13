@@ -41,6 +41,7 @@
 #define SOUND_METERFULL		"player/recharged.wav"
 #define SOUND_BACKSTAB		"player/spy_shield_break.wav"
 #define SOUND_DOUBLEDONK	"player/doubledonk.wav"
+#define SOUND_NULL			"vo/null.mp3"
 
 #define PARTICLE_GHOST 		"ghost_appearation"
 
@@ -868,6 +869,7 @@ public void OnMapStart()
 		PrecacheSound(SOUND_METERFULL);
 		PrecacheSound(SOUND_BACKSTAB);
 		PrecacheSound(SOUND_DOUBLEDONK);
+		PrecacheSound(SOUND_NULL);
 		
 		g_iSpritesLaserbeam = PrecacheModel("materials/sprites/laserbeam.vmt", true);
 		g_iSpritesGlow = PrecacheModel("materials/sprites/glow01.vmt", true);
@@ -938,8 +940,7 @@ public void OnEntityCreated(int iEntity, const char[] sClassname)
 	{
 		SDKHook(iEntity, SDKHook_Touch, ItemPack_OnTouch);
 	}
-	
-	if (StrContains(sClassname, "obj_") == 0)
+	else if (StrContains(sClassname, "obj_") == 0)
 	{
 		SDKHook(iEntity, SDKHook_OnTakeDamage, Building_OnTakeDamage);
 	}
@@ -1337,25 +1338,17 @@ public Action Client_OnTakeDamageAlive(int victim, int &attacker, int &inflictor
 	return finalAction;
 }
 
-public Action Building_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action Building_OnTakeDamage(int building, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
-	if (victim <= MaxClients) return Plugin_Continue;
-	
-	Action finalAction = Plugin_Continue;
-	Action action = Plugin_Continue;
 	
 	SaxtonHaleBase bossAttacker = SaxtonHaleBase(attacker);
 	
 	if (0 < attacker <= MaxClients && bossAttacker.bValid)
-	{
-		action = bossAttacker.CallFunction("OnAttackBuilding", victim, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
-		if (action > finalAction)
-			finalAction = action;
-	}
-
-	return finalAction;
+		return bossAttacker.CallFunction("OnAttackBuilding", building, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
+		
+	return Plugin_Continue;
 }
 
 public bool BossTargetFilter(char[] sPattern, ArrayList aClients)

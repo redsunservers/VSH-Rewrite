@@ -1,6 +1,5 @@
 #define ANNOUNCER_MODEL "models/player/kirillian/boss/sedisocks_administrator.mdl"
 #define ANNOUNCER_THEME "vsh_rewrite/administrator/admin_music.mp3"
-#define ANNOUNCER_NULLSOUND "vo/null.mp3"
 
 static char g_strAnnouncerRoundStart[][] = {
 	"vo/announcer_dec_missionbegins60s01.mp3",
@@ -216,7 +215,7 @@ methodmap CAnnouncer < SaxtonHaleBase
 		return Plugin_Stop;
 	}
 	
-	public Action OnAttackBuilding(int &victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+	public Action OnAttackBuilding(int &building, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 	{
 		if (weapon <= MaxClients)
 			return Plugin_Continue;
@@ -226,14 +225,14 @@ methodmap CAnnouncer < SaxtonHaleBase
 			return Plugin_Continue;
 		
 		//Display a message
-		TFObjectType nType = view_as<TFObjectType>(GetEntProp(victim, Prop_Send, "m_iObjectType"));
-		TFObjectMode nMode = view_as<TFObjectMode>(GetEntProp(victim, Prop_Send, "m_iObjectMode"));
+		TFObjectType nType = view_as<TFObjectType>(GetEntProp(building, Prop_Send, "m_iObjectType"));
+		TFObjectMode nMode = view_as<TFObjectMode>(GetEntProp(building, Prop_Send, "m_iObjectMode"));
 		
 		char sMessage[128];
 		Format(sMessage, sizeof(sMessage), "A %s was hit and has switched teams!", g_strBuildingName[nType][nMode]);
-		Announcer_ShowAnnotation(victim, sMessage);
+		Announcer_ShowAnnotation(building, sMessage);
 		
-		Announcer_SetBuildingTeam(victim, TF2_GetClientTeam(this.iClient), this.iClient);
+		Announcer_SetBuildingTeam(building, TF2_GetClientTeam(this.iClient), this.iClient);
 		EmitSoundToClient(this.iClient, g_strAnnouncerHitBuilding[GetRandomInt(0, sizeof(g_strAnnouncerHitBuilding)-1)]);
 		damage = 0.0;
 		return Plugin_Changed;
@@ -242,7 +241,7 @@ methodmap CAnnouncer < SaxtonHaleBase
 	public void Precache()
 	{
 		PrecacheModel(ANNOUNCER_MODEL);
-		PrecacheSound(ANNOUNCER_NULLSOUND);
+		
 		PrepareSound(ANNOUNCER_THEME);
 		
 		for (int i = 0; i < sizeof(g_strAnnouncerRoundStart); i++) PrecacheSound(g_strAnnouncerRoundStart[i]);
@@ -316,12 +315,20 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 		return Plugin_Continue;
 	}
 	
-	public Action OnAttackBuilding(int &victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+	public Action OnAttackBuilding(int &building, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 	{
-		int iOwner = GetEntPropEnt(victim, Prop_Send, "m_hBuilder");
+		//Stop minions from damaging buildings of other minions in opposite teams or players in the boss team
+		int iBuilder = GetEntPropEnt(building, Prop_Send, "m_hBuilder");
+		SaxtonHaleBase boss = SaxtonHaleBase(iBuilder);
+		char sType[MAX_TYPE_CHAR];
 		
-		if (TF2_GetClientTeam(iOwner) == TFTeam_Boss)
+		if (boss.bValid)
+			boss.CallFunction("GetBossType", sType, sizeof(sType));
+		
+		PrintToChatAll("we here? type: %s", sType);
+		if (TF2_GetClientTeam(iBuilder) == TFTeam_Boss || StrEqual(sType, "CAnnouncerMinion"))
 		{
+			PrintToChatAll("how about here?");
 			damage = 0.0;
 			return Plugin_Stop;
 		}
@@ -369,7 +376,7 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 			SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 			if (boss.bValid && IsPlayerAlive(iClient))
 			{
-				char sType[128];
+				char sType[MAX_TYPE_CHAR];
 				boss.CallFunction("GetBossType", sType, sizeof(sType));
 				if (StrEqual(sType, "CAnnouncer"))
 				{
@@ -448,15 +455,12 @@ public Action Timer_AnnouncerChangeTeam(Handle hTimer, int iClient)
 	}
 	
 	//Need to detach buildings from engineers before switching teams so they don't explode
-	if (TF2_GetPlayerClass(iClient) == TFClass_Engineer)
+	int iBuilding = MaxClients+1;
+	while ((iBuilding = FindEntityByClassname(iBuilding, "obj_*")) > MaxClients)
 	{
-		int iBuilding = MaxClients+1;
-		while ((iBuilding = FindEntityByClassname(iBuilding, "obj_*")) > MaxClients)
-		{
-			//Even when keeping the same builder, the "original builder" will be detached from the building
-			if (GetEntPropEnt(iBuilding, Prop_Send, "m_hBuilder") == iClient)
-				Announcer_SetBuildingTeam(iBuilding, TFTeam_Boss);
-		}
+		//Even when keeping the same builder, the "original builder" will be detached from the building
+		if (GetEntPropEnt(iBuilding, Prop_Send, "m_hBuilder") == iClient)
+			Announcer_SetBuildingTeam(iBuilding, TFTeam_Boss);
 	}
 	
 	PrintCenterText(iClient, "YOU'RE NOW IN BOSS TEAM");
@@ -466,16 +470,13 @@ public Action Timer_AnnouncerChangeTeam(Handle hTimer, int iClient)
 	SetEntProp(iClient, Prop_Send, "m_lifeState", LifeState_Alive);
 	
 	//...and add them all back (windows signature for this is missing)
-	if (TF2_GetPlayerClass(iClient) == TFClass_Engineer)
+	iBuilding = MaxClients+1;
+	while ((iBuilding = FindEntityByClassname(iBuilding, "obj_*")) > MaxClients)
 	{
-		int iBuilding = MaxClients+1;
-		while ((iBuilding = FindEntityByClassname(iBuilding, "obj_*")) > MaxClients)
-		{
-			if (GetEntPropEnt(iBuilding, Prop_Send, "m_hBuilder") == iClient)
-				SDK_AddObject(iClient, iBuilding);
-		}
+		if (GetEntPropEnt(iBuilding, Prop_Send, "m_hBuilder") == iClient)
+			SDK_AddObject(iClient, iBuilding);
 	}
-	
+
 	//Restore weapons, health, ammo and cosmetics after changing teams
 	TF2_RegeneratePlayer(iClient);
 	
@@ -554,7 +555,9 @@ public void Announcer_SetBuildingTeam(int iBuilding, TFTeam nTeam, int iNewBuild
 	
 	//Disable teleporters for a little bit to reset the effects' colors
 	if (StrEqual(sClassname, "obj_teleporter"))
+	{
 		TF2_StunBuilding(iBuilding, 0.1);
+	}
 	
 	//Actually just disable the dispenser's screen, should check up on this later
 	else if (StrEqual(sClassname, "obj_dispenser"))
@@ -574,18 +577,19 @@ public void Announcer_ShowAnnotation(int iTarget, char[] sText, float flTime = 3
 	event.SetInt("follow_entindex", iTarget);
 	event.SetFloat("lifetime", flTime);
 	event.SetString("text", sText);
-	event.SetString("play_sound", ANNOUNCER_NULLSOUND); //This is just done so console doesn't get a non-existent soundfile error
+	event.SetString("play_sound", SOUND_NULL); //This is just done so console doesn't get a non-existent soundfile error
 	
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
-		SaxtonHaleBase boss = SaxtonHaleBase(iClient);
-		
-		if (boss.bValid && iClient != iTarget && IsPlayerAlive(iClient))
+		if (IsClientInGame(iClient))
 		{
-			char sType[64];
-			boss.CallFunction("GetBossType", sType, sizeof(sType));
+			SaxtonHaleBase boss = SaxtonHaleBase(iClient);
+			char sType[MAX_TYPE_CHAR];
+		
+			if (boss.bValid)
+				boss.CallFunction("GetBossType", sType, sizeof(sType));
 			
-			if (StrEqual(sType, "CAnnouncer") || StrEqual(sType, "CAnnouncerMinion"))
+			if (iClient != iTarget && (TF2_GetClientTeam(iClient) != TFTeam_Attack || StrEqual(sType, "CAnnouncerMinion")))
 				event.FireToClient(iClient);
 		}
 	}
