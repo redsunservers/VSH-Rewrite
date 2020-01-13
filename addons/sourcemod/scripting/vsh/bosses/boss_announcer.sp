@@ -325,10 +325,8 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 		if (boss.bValid)
 			boss.CallFunction("GetBossType", sType, sizeof(sType));
 		
-		PrintToChatAll("we here? type: %s", sType);
 		if (TF2_GetClientTeam(iBuilder) == TFTeam_Boss || StrEqual(sType, "CAnnouncerMinion"))
 		{
-			PrintToChatAll("how about here?");
 			damage = 0.0;
 			return Plugin_Stop;
 		}
