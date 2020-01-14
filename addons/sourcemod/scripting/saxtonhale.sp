@@ -562,11 +562,11 @@ public void OnPluginStart()
 	SaxtonHaleFunction("OnPlayerKilled", ET_Ignore, Param_Cell, Param_Cell);
 	SaxtonHaleFunction("OnDeath", ET_Ignore, Param_Cell);
 	
-	func = SaxtonHaleFunction("OnAttackBuilding", ET_Hook, Param_CellByRef, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array, Param_Cell);
+	func = SaxtonHaleFunction("OnAttackBuilding", ET_Hook, Param_Cell, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array, Param_Cell);
 	func.SetParam(6, Param_Array, VSHArrayType_Static, 3);
 	func.SetParam(7, Param_Array, VSHArrayType_Static, 3);
 	
-	func = SaxtonHaleFunction("OnAttackDamage", ET_Hook, Param_CellByRef, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array, Param_Cell);
+	func = SaxtonHaleFunction("OnAttackDamage", ET_Hook, Param_Cell, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array, Param_Cell);
 	func.SetParam(6, Param_Array, VSHArrayType_Static, 3);
 	func.SetParam(7, Param_Array, VSHArrayType_Static, 3);
 	

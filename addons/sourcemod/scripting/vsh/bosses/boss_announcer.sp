@@ -178,7 +178,7 @@ methodmap CAnnouncer < SaxtonHaleBase
 		}
 	}
 	
-	public Action OnAttackDamage(int &victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+	public Action OnAttackDamage(int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 	{
 		if (weapon <= MaxClients)
 			return Plugin_Continue;
@@ -215,7 +215,7 @@ methodmap CAnnouncer < SaxtonHaleBase
 		return Plugin_Stop;
 	}
 	
-	public Action OnAttackBuilding(int &building, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+	public Action OnAttackBuilding(int building, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 	{
 		if (weapon <= MaxClients)
 			return Plugin_Continue;
@@ -303,7 +303,7 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 		return true;
 	}
 	
-	public Action OnAttackDamage(int &victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+	public Action OnAttackDamage(int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 	{
 		//Don't allow minion attack boss team
 		if (this.iClient != victim && TF2_GetClientTeam(victim) == TFTeam_Boss)
@@ -315,7 +315,7 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 		return Plugin_Continue;
 	}
 	
-	public Action OnAttackBuilding(int &building, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+	public Action OnAttackBuilding(int building, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 	{
 		//Stop minions from damaging buildings of other minions in opposite teams or players in the boss team
 		int iBuilder = GetEntPropEnt(building, Prop_Send, "m_hBuilder");
