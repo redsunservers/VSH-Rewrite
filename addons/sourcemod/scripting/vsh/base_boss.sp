@@ -99,7 +99,7 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 		strcopy(type, length, g_sClientBossType[this.iClient]);
 	}
 	
-	public bool IsBossType(char[] type)
+	public bool IsBossType(const char[] type)
 	{
 		return StrEqual(g_sClientBossType[this.iClient], type);
 	}

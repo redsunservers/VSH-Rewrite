@@ -66,7 +66,9 @@
 
 const TFTeam TFTeam_Boss = TFTeam_Blue;
 const TFTeam TFTeam_Attack = TFTeam_Red;
+
 const TFObjectType TFObject_Invalid = view_as<TFObjectType>(-1);
+const TFObjectMode TFObjectMode_Invalid = view_as<TFObjectMode>(-1);
 
 enum ClientFlags ( <<=1 )
 {
@@ -236,10 +238,10 @@ char g_strSlotName[][] = {
 
 // TF2 Building names
 char g_strBuildingName[TFObjectType][TFObjectMode][] = {
-    {"Dispenser", ""},
-    {"Teleporter Entrance", "Teleporter Exit"},
-    {"Sentry Gun", ""},
-    {"Sapper", ""},
+	{"Dispenser", ""},
+	{"Teleporter Entrance", "Teleporter Exit"},
+	{"Sentry Gun", ""},
+	{"Sapper", ""},
 };
 
 // Color Tag

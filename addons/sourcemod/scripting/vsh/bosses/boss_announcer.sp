@@ -321,12 +321,8 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 		//Stop minions from damaging buildings of other minions in opposite teams or players in the boss team
 		int iBuilder = TF2_GetBuildingOwner(building);
 		SaxtonHaleBase boss = SaxtonHaleBase(iBuilder);
-		char sType[MAX_TYPE_CHAR];
 		
-		if (boss.bValid)
-			boss.CallFunction("GetBossType", sType, sizeof(sType));
-		
-		if (TF2_GetClientTeam(iBuilder) == TFTeam_Boss || StrEqual(sType, "CAnnouncerMinion"))
+		if (TF2_GetClientTeam(iBuilder) == TFTeam_Boss || (boss.bValid && boss.CallFunction("IsBossType", "CAnnouncerMinion")))
 		{
 			damage = 0.0;
 			return Plugin_Stop;
@@ -375,12 +371,8 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 			SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 			if (boss.bValid && IsPlayerAlive(iClient))
 			{
-				char sType[MAX_TYPE_CHAR];
-				boss.CallFunction("GetBossType", sType, sizeof(sType));
-				if (StrEqual(sType, "CAnnouncer"))
-				{
+				if (boss.CallFunction("IsBossType", "CAnnouncer"))
 					EmitSoundToAll(g_strAnnouncerKillMinion[GetRandomInt(0,sizeof(g_strAnnouncerKillMinion)-1)], iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
-				}
 			}
 		}
 	}
@@ -535,11 +527,11 @@ public void Announcer_ShowAnnotation(int iTarget, char[] sMessage, float flDurat
 	
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
-		if (IsClientInGame(iClient))
+		if (IsClientInGame(iClient) && iClient != iTarget)
 		{
 			SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 			
-			if (iClient != iTarget && (TF2_GetClientTeam(iClient) != TFTeam_Attack || boss.CallFunction("IsBossType", "CAnnouncerMinion")))
+			if (TF2_GetClientTeam(iClient) != TFTeam_Attack || (boss.bValid && boss.CallFunction("IsBossType", "CAnnouncerMinion")))
 				iClients[iCount++] = iClient;
 		}
 	}

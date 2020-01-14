@@ -375,7 +375,7 @@ stock TFObjectMode TF2_GetBuildingMode(int iBuilding)
 	if (iBuilding > MaxClients)
 		return view_as<TFObjectMode>(GetEntProp(iBuilding, Prop_Send, "m_iObjectMode"));
 		
-	return TFObjectMode_None;
+	return TFObjectMode_Invalid;
 }
 
 stock void TF2_StunBuilding(int iBuilding, float flDuration)
@@ -412,22 +412,23 @@ stock void TF2_SetBuildingTeam(int iBuilding, TFTeam nTeam, int iNewBuilder = -1
 	else
 		SetEntProp(iBuilding, Prop_Send, "m_nSkin", iTeam-2);
 	
-	TFObjectType nType = TF2_GetBuildingType(iBuilding);
-	
-	if (nType == TFObject_Dispenser)
+	switch (TF2_GetBuildingType(iBuilding))
 	{
-		//Disable the dispenser's screen, it's better than having it not change team color
-		int iScreen = MaxClients+1;
-		while ((iScreen = FindEntityByClassname(iScreen, "vgui_screen")) > MaxClients)
+		case TFObject_Dispenser:
 		{
-			if (GetEntPropEnt(iScreen, Prop_Send, "m_hOwnerEntity") == iBuilding)
-				AcceptEntityInput(iScreen, "Kill");
+			//Disable the dispenser's screen, it's better than having it not change team color
+			int iScreen = MaxClients+1;
+			while ((iScreen = FindEntityByClassname(iScreen, "vgui_screen")) > MaxClients)
+			{
+				if (GetEntPropEnt(iScreen, Prop_Send, "m_hOwnerEntity") == iBuilding)
+					AcceptEntityInput(iScreen, "Kill");
+			}
 		}
-	}
-	else if (nType == TFObject_Teleporter)
-	{
-		//Disable teleporters for a little bit to reset the effects' colors
-		TF2_StunBuilding(iBuilding, 0.1);
+		case TFObject_Teleporter:
+		{
+			//Disable teleporters for a little bit to reset the effects' colors
+			TF2_StunBuilding(iBuilding, 0.1);
+		}
 	}
 }
 
@@ -682,7 +683,7 @@ stock int TF2_CreateLightEntity(float flRadius, int iColor[4], int iBrightness)
 	return iGlow;
 }
 
-stock void TF2_ShowAnnotation(int[] iClients, int iCount, int iTarget, char[] sMessage, float flDuration = 5.0, char[] sSound = SOUND_NULL)
+stock void TF2_ShowAnnotation(int[] iClients, int iCount, int iTarget, const char[] sMessage, float flDuration = 5.0, const char[] sSound = SOUND_NULL)
 {
 	//Create an annotation and show it to a specified array of clients
 	Event event = CreateEvent("show_annotation");
@@ -697,28 +698,29 @@ stock void TF2_ShowAnnotation(int[] iClients, int iCount, int iTarget, char[] sM
 	delete event;
 }
 
-stock void TF2_ShowAnnotationToAll(int iTarget, char[] sMessage, float flDuration = 5.0, char[] sSound = SOUND_NULL)
+stock void TF2_ShowAnnotationToAll(int iTarget, const char[] sMessage, float flDuration = 5.0, const char[] sSound = SOUND_NULL)
 {
-	//Create an annotation and show it to everyone. event.Fire() closes the handle on its own, so we don't need to do that here
-	Event event = CreateEvent("show_annotation");
-	event.SetInt("follow_entindex", iTarget);
-	event.SetFloat("lifetime", flDuration);
-	event.SetString("text", sMessage);
-	event.SetString("play_sound", sSound);
-	event.Fire();
+	int[] iClients = new int[MaxClients];
+	int iCount = 0;
+
+	for (int iClient = 1; iClient <= MaxClients; iClient++)
+	{
+		if (IsClientInGame(iClient))
+			iClients[iCount++] = iClient;
+	}
+	
+	if (iCount <= 0)
+		return;
+	
+	TF2_ShowAnnotation(iClients, iCount, iTarget, sMessage, flDuration, sSound);
 }
 
-stock void TF2_ShowAnnotationToClient(int iClient, int iTarget, char[] sMessage, float flDuration = 5.0, char[] sSound = SOUND_NULL)
+stock void TF2_ShowAnnotationToClient(int iClient, int iTarget, const char[] sMessage, float flDuration = 5.0, const char[] sSound = SOUND_NULL)
 {
-	//Create an annotation and show it to a single client
-	Event event = CreateEvent("show_annotation");
-	event.SetInt("follow_entindex", iTarget);
-	event.SetFloat("lifetime", flDuration);
-	event.SetString("text", sMessage);
-	event.SetString("play_sound", sSound);
-	event.FireToClient(iClient);
+	int iClients[1];
+	iClients[0] = iClient;
 	
-	delete event;
+	TF2_ShowAnnotation(iClients, 1, iTarget, sMessage, flDuration, sSound);
 }
 
 stock void BroadcastSoundToTeam(TFTeam nTeam, const char[] strSound)
