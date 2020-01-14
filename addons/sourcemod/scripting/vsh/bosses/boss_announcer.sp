@@ -350,17 +350,7 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 	
 	public Action OnBuild(TFObjectType nType, TFObjectMode nMode)
 	{	
-		//As a backup mechanic in case CTFPlayer:AddObject isn't hooked...
-		//Let engineers build, but auto-destroy the same building they're attempting to build if there's one active from before they were converted
-		//This is done so engies can't have more than one of the same building, which can happen as a result of old buildings lacking a "true" owner
-		int iBuilding = TF2_GetBuilding(this.iClient, nType, nMode);
-		if (iBuilding != -1)
-		{
-			SetVariantInt(999999);
-			AcceptEntityInput(iBuilding, "RemoveHealth");
-			PrintCenterText(this.iClient, "Your previous %s has been destroyed.", g_strBuildingName[nType][nMode]);
-		}
-		
+		//Let them build normally		
 		return Plugin_Continue;
 	}
 	
@@ -460,7 +450,7 @@ public Action Timer_AnnouncerChangeTeam(Handle hTimer, int iClient)
 	TF2_ChangeClientTeam(iClient, TFTeam_Boss);
 	SetEntProp(iClient, Prop_Send, "m_lifeState", LifeState_Alive);
 	
-	//...and add them all back (windows signature for this is missing)
+	//...and add them all back
 	iBuilding = MaxClients+1;
 	while ((iBuilding = FindEntityByClassname(iBuilding, "obj_*")) > MaxClients)
 	{
