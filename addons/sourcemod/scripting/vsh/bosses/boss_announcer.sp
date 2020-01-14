@@ -350,7 +350,7 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 	
 	public Action OnBuild(TFObjectType nType, TFObjectMode nMode)
 	{	
-		//Let them build normally		
+		//Let them build normally
 		return Plugin_Continue;
 	}
 	
