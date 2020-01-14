@@ -98,6 +98,11 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 	{
 		strcopy(type, length, g_sClientBossType[this.iClient]);
 	}
+	
+	public bool IsBossType(char[] type)
+	{
+		return StrEqual(g_sClientBossType[this.iClient], type);
+	}
 
 	public int CalculateMaxHealth()
 	{

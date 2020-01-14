@@ -66,6 +66,7 @@
 
 const TFTeam TFTeam_Boss = TFTeam_Blue;
 const TFTeam TFTeam_Attack = TFTeam_Red;
+const TFObjectType TFObject_Invalid = view_as<TFObjectType>(-1);
 
 enum ClientFlags ( <<=1 )
 {
@@ -512,6 +513,7 @@ public void OnPluginStart()
 	//Boss functions
 	SaxtonHaleFunction("CreateBoss", ET_Single, Param_String);
 	SaxtonHaleFunction("IsBossHidden", ET_Single);
+	SaxtonHaleFunction("IsBossType", ET_Single, Param_String);
 	SaxtonHaleFunction("SetBossType", ET_Ignore, Param_String);
 	
 	func = SaxtonHaleFunction("GetBossType", ET_Ignore, Param_String, Param_Cell);
