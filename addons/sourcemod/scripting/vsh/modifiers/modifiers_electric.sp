@@ -1,4 +1,4 @@
-#define ELECTRIC_BEAM	"sprites/laserbeam.vmt"
+#define ELECTRIC_BEAM	"sprites/laserbeam.spr"
 
 static bool g_bElectricDamage[TF_MAXPLAYERS+1];	//Whenever if client is currently being damaged or not
 
@@ -73,7 +73,7 @@ methodmap CModifiersElectric < SaxtonHaleBase
 					int iLaser = CreateEntityByName("env_laser");
 					if (iLaser > MaxClients)
 					{
-						SetEntityModel(iLaser, ELECTRIC_BEAM);
+						DispatchKeyValue(iLaser, "texture", ELECTRIC_BEAM);
 						DispatchKeyValue(iLaser, "renderamt", "100");		//Brightness
 						DispatchKeyValue(iLaser, "rendermode", "0");
 						DispatchKeyValue(iLaser, "rendercolor", "255 192 0");	//Color
@@ -101,10 +101,5 @@ methodmap CModifiersElectric < SaxtonHaleBase
 		g_bElectricDamage[victim] = false;
 		
 		return Plugin_Changed;
-	}
-	
-	public void Precache()
-	{
-		PrecacheGeneric(ELECTRIC_BEAM);
 	}
 };
