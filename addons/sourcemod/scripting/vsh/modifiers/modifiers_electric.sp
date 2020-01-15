@@ -8,11 +8,6 @@ methodmap CModifiersElectric < SaxtonHaleBase
 	{
 	}
 	
-	public bool IsModifiersHidden()
-	{
-		return true;
-	}
-	
 	public void GetModifiersName(char[] sName, int length)
 	{
 		strcopy(sName, length, "Electric");
