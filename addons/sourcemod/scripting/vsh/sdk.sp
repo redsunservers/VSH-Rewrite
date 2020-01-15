@@ -237,8 +237,6 @@ public MRESReturn Hook_EntityShouldTransmit(int iEntity, Handle hReturn, Handle 
 
 public MRESReturn Hook_GiveNamedItem(int iClient, Handle hReturn, Handle hParams)
 {
-	PrintToServer("Hook_GiveNamedItem %N", iClient);
-	
 	if (DHookIsNullParam(hParams, 1) || DHookIsNullParam(hParams, 3))
 		return MRES_Ignored;
 	
