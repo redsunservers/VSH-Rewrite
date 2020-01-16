@@ -22,7 +22,7 @@
 
 #include "include/saxtonhale.inc"
 
-#define PLUGIN_VERSION 					"1.3.0"
+#define PLUGIN_VERSION 					"1.3.1"
 #define PLUGIN_VERSION_REVISION 		"manual"
 
 #if !defined SP_MAX_EXEC_PARAMS
@@ -89,6 +89,14 @@ enum Preferences ( <<=1 )
 	Preferences_MultiBoss,
 	Preferences_Music,
 	Preferences_Revival,
+};
+
+enum WinReason
+{
+	WinReason_PointCaptured = 1, 
+	WinReason_Elimination, 
+	WinReason_AllPointsCaptured = 4, 
+	WinReason_Stalemate
 };
 
 enum
@@ -823,7 +831,6 @@ void Plugin_Cvars(bool toggle)
 		tf_dropped_weapon_lifetime.IntValue = iDroppedWeaponLifetime;
 		tf_damage_disablespread.IntValue = iDamageDisableSpread;
 
-
 		tf_scout_hype_pep_max.FloatValue = flScoutHypePepMax;
 		tf_feign_death_activate_damage_scale.FloatValue = flFeignDeathActiveDamageScale;
 		tf_feign_death_damage_scale.FloatValue = flFeignDeathDamageScale;
@@ -973,6 +980,19 @@ public void OnEntityCreated(int iEntity, const char[] sClassname)
 		|| strcmp(sClassname, "func_regenerate") == 0)
 	{
 		SDKHook(iEntity, SDKHook_Touch, ItemPack_OnTouch);
+	}
+	else if (StrEqual(sClassname, "trigger_capture_area"))
+	{
+		SDKHook(iEntity, SDKHook_Spawn, Dome_TriggerSpawn);
+		
+		SDKHook(iEntity, SDKHook_StartTouch, Dome_TriggerTouch);
+		SDKHook(iEntity, SDKHook_Touch, Dome_TriggerTouch);
+		SDKHook(iEntity, SDKHook_EndTouch, Dome_TriggerTouch);
+	}
+	else if (StrEqual(sClassname, "game_end"))
+	{
+		//Superceding SetWinningTeam causes some maps to force a map change on capture
+		AcceptEntityInput(iEntity, "Kill");
 	}
 	else if (StrContains(sClassname, "obj_") == 0)
 	{
@@ -1223,8 +1243,11 @@ public void OnClientDisconnect_Post(int iClient)
 public void Client_OnThink(int iClient)
 {
 	if (!g_bEnabled) return;
+	
+	Dome_OnThink(iClient);
+	
 	if (g_iTotalRoundPlayed <= 0) return;
-
+	
 	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 	if (boss.bValid)
 		boss.CallFunction("OnThink");

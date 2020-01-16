@@ -195,7 +195,7 @@ void Tags_OnThink(int iClient)
 	}
 }
 
-void Tags_OnPlayerHurt(int iVictim, int iAttacker, int iDamage)
+void Tags_PlayerHurt(int iVictim, int iAttacker, int iDamage)
 {
 	if (SaxtonHale_IsValidBoss(iVictim) && SaxtonHale_IsValidAttack(iAttacker))
 	{

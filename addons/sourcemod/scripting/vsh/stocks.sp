@@ -491,6 +491,26 @@ stock int TF2_CreateAndEquipWeapon(int iClient, int iIndex, char[] sClassnameTem
 	return iWeapon;
 }
 
+stock int TF2_GetObjectiveResource()
+{
+	static int iRefObj = 0;
+	
+	if (iRefObj != 0)
+	{
+		int iObj = EntRefToEntIndex(iRefObj);
+		if (iObj > MaxClients)
+			return iObj;
+		
+		iRefObj = 0;
+	}
+	
+	int iObj = FindEntityByClassname(MaxClients+1, "tf_objective_resource");
+	if (iObj > MaxClients)
+		iRefObj = EntIndexToEntRef(iObj);
+	
+	return iObj;
+}
+
 stock void CheckForceAttackWin(int iVictim=0)
 {
 	//Check if all main bosses died while minions still alive, if so force make round end

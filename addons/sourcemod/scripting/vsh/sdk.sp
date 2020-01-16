@@ -1,3 +1,5 @@
+static Handle g_hHookGetCaptureValueForPlayer;
+static Handle g_hHookSetWinningTeam;
 static Handle g_hHookGetMaxHealth;
 static Handle g_hHookShouldTransmit;
 static Handle g_hHookGiveNamedItem;
@@ -18,12 +20,14 @@ static int g_iHookIdGiveNamedItem[TF_MAXPLAYERS+1];
 void SDK_Init()
 {
 	GameData hGameData = new GameData("sdkhooks.games");
-	if (hGameData == null) SetFailState("Could not find sdkhooks.games gamedata!");
+	if (hGameData == null)
+		SetFailState("Could not find sdkhooks.games gamedata!");
 
 	//This function is used to control player's max health
 	int iOffset = hGameData.GetOffset("GetMaxHealth");
 	g_hHookGetMaxHealth = DHookCreate(iOffset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity, Hook_GetMaxHealth);
-	if (g_hHookGetMaxHealth == null) LogMessage("Failed to create hook: CTFPlayer::GetMaxHealth!");
+	if (g_hHookGetMaxHealth == null)
+		LogMessage("Failed to create hook: CTFPlayer::GetMaxHealth!");
 
 	//This function is used to retreive player's max health
 	StartPrepSDKCall(SDKCall_Player);
@@ -36,7 +40,8 @@ void SDK_Init()
 	delete hGameData;
 
 	hGameData = new GameData("sm-tf2.games");
-	if (hGameData == null) SetFailState("Could not find sm-tf2.games gamedata!");
+	if (hGameData == null)
+		SetFailState("Could not find sm-tf2.games gamedata!");
 
 	int iRemoveWearableOffset = hGameData.GetOffset("RemoveWearable");
 
@@ -60,7 +65,32 @@ void SDK_Init()
 
 	hGameData = new GameData("vsh");
 	if (hGameData == null) SetFailState("Could not find vsh gamedata!");
-
+	
+	// This hook allows to change capture rate
+	iOffset = hGameData.GetOffset("CTFGameRules::GetCaptureValueForPlayer");
+	g_hHookGetCaptureValueForPlayer = DHookCreate(iOffset, HookType_GameRules, ReturnType_Int, ThisPointer_Ignore);
+	if (g_hHookGetCaptureValueForPlayer == null)
+		LogMessage("Failed to create hook: CTFGameRules::GetCaptureValueForPlayer");
+	else
+		DHookAddParam(g_hHookGetCaptureValueForPlayer, HookParamType_CBaseEntity);
+	
+	// This hook allows to prevent round win called
+	iOffset = hGameData.GetOffset("CTFGameRules::SetWinningTeam");
+	g_hHookSetWinningTeam = DHookCreate(iOffset, HookType_GameRules, ReturnType_Void, ThisPointer_Ignore);
+	if (g_hHookSetWinningTeam == null)
+	{
+		LogMessage("Failed to create hook: CTFGameRules::SetWinningTeam");
+	}
+	else
+	{
+		DHookAddParam(g_hHookSetWinningTeam, HookParamType_Int);
+		DHookAddParam(g_hHookSetWinningTeam, HookParamType_Int);
+		DHookAddParam(g_hHookSetWinningTeam, HookParamType_Bool);
+		DHookAddParam(g_hHookSetWinningTeam, HookParamType_Bool);
+		DHookAddParam(g_hHookSetWinningTeam, HookParamType_Bool);
+		DHookAddParam(g_hHookSetWinningTeam, HookParamType_Bool);
+	}
+	
 	// This call gets the weapon max ammo
 	StartPrepSDKCall(SDKCall_Player);
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Signature, "CTFPlayer::GetMaxAmmo");
@@ -95,7 +125,7 @@ void SDK_Init()
 	g_hSDKGetMaxClip = EndPrepSDKCall();
 	if (g_hSDKGetMaxClip == null)
 		LogMessage("Failed to create call: CTFWeaponBase::GetMaxClip1!");
-
+	
 	//This call is used to give an owner to a building
 	StartPrepSDKCall(SDKCall_Player);
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Signature, "CTFPlayer::AddObject");
@@ -111,7 +141,7 @@ void SDK_Init()
 	g_hSDKRemoveObject = EndPrepSDKCall();
 	if (g_hSDKRemoveObject == null)
 		LogMessage("Failed to create call: CTFPlayer::RemoveObject!");
-
+	
 	// This hook allows entity to always transmit
 	iOffset = hGameData.GetOffset("CBaseEntity::ShouldTransmit");
 	g_hHookShouldTransmit = DHookCreate(iOffset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity, Hook_EntityShouldTransmit);
@@ -150,8 +180,17 @@ void SDK_Init()
 	else
 		DHookAddParam(g_hHookShouldBallTouch, HookParamType_CBaseEntity);
 	
+	// This hook allows to change capture time remaining
+	Handle hHook = DHookCreateFromConf(hGameData, "CTriggerAreaCapture::SetCapTimeRemaining");
+	if (hHook == null)
+		LogMessage("Failed to create hook: CTriggerAreaCapture::SetCapTimeRemaining!");
+	else
+		DHookEnableDetour(hHook, false, Hook_SetCapTimeRemaining);
+	
+	delete hHook;
+	
 	// This hook allows to allow/block medigun heals
-	Handle hHook = DHookCreateFromConf(hGameData, "CWeaponMedigun::AllowedToHealTarget");
+	hHook = DHookCreateFromConf(hGameData, "CWeaponMedigun::AllowedToHealTarget");
 	if (hHook == null)
 		LogMessage("Failed to create hook: CWeaponMedigun::AllowedToHealTarget!");
 	else
@@ -192,6 +231,18 @@ bool SDK_IsGiveNamedItemActive()
 			return true;
 	
 	return false;
+}
+
+void SDK_HookGetCaptureValueForPlayer(DHookCallback callback)
+{
+	if (g_hHookGetCaptureValueForPlayer)
+		DHookGamerules(g_hHookGetCaptureValueForPlayer, true, _, callback);
+}
+
+void SDK_HookSetWinningTeam(DHookCallback callback)
+{
+	if (g_hHookSetWinningTeam)
+		DHookGamerules(g_hHookSetWinningTeam, false, _, callback);
 }
 
 void SDK_HookGetMaxHealth(int iClient)
@@ -266,6 +317,20 @@ public void Hook_GiveNamedItemRemoved(int iHookId)
 	}
 }
 
+public MRESReturn Hook_SetCapTimeRemaining(int iTrigger, Handle hParams)
+{
+	float flTime = DHookGetParam(hParams, 1);
+	
+	Action action = Dome_SetCapTimeRemaining(iTrigger, flTime);
+	if (action >= Plugin_Changed)
+	{
+		DHookSetParam(hParams, 1, flTime);
+		return MRES_ChangedHandled;
+	}
+	
+	return MRES_Ignored;
+}
+
 public MRESReturn Hook_AllowedToHealTarget(int iMedigun, Handle hReturn, Handle hParams)
 {
 	if (!g_bEnabled) return MRES_Ignored;
@@ -329,7 +394,7 @@ public MRESReturn Hook_CouldHealTarget(int iDispenser, Handle hReturn, Handle hP
 
 int SDK_GetMaxAmmo(int iClient, int iSlot)
 {
-	if(g_hSDKGetMaxAmmo != null)
+	if (g_hSDKGetMaxAmmo != null)
 		return SDKCall(g_hSDKGetMaxAmmo, iClient, iSlot, -1);
 	return -1;
 }
@@ -342,7 +407,7 @@ void SDK_SendWeaponAnim(int weapon, int anim)
 
 int SDK_GetMaxClip(int iWeapon)
 {
-	if(g_hSDKGetMaxClip != null)
+	if (g_hSDKGetMaxClip != null)
 		return SDKCall(g_hSDKGetMaxClip, iWeapon);
 	return -1;
 }
