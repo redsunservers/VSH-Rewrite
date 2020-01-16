@@ -13,7 +13,7 @@ static Handle g_hSDKEquipWearable;
 static Handle g_hSDKAddObject;
 static Handle g_hSDKRemoveObject;
 
-static int g_iHookIdGiveNamedItem[TF_MAXPLAYERS+1] = {-1, ...};
+static int g_iHookIdGiveNamedItem[TF_MAXPLAYERS+1];
 
 void SDK_Init()
 {
@@ -170,13 +170,28 @@ void SDK_Init()
 	delete hGameData;
 }
 
-void SDK_UnhookClient(int iClient)
+void SDK_HookGiveNamedItem(int iClient)
 {
-	if (g_iHookIdGiveNamedItem[iClient] != -1)
+	if (g_hHookGiveNamedItem && !g_bTF2Items)
+		g_iHookIdGiveNamedItem[iClient] = DHookEntity(g_hHookGiveNamedItem, false, iClient, Hook_GiveNamedItemRemoved, Hook_GiveNamedItem);
+}
+
+void SDK_UnhookGiveNamedItem(int iClient)
+{
+	if (g_iHookIdGiveNamedItem[iClient])
 	{
 		DHookRemoveHookID(g_iHookIdGiveNamedItem[iClient]);
-		g_iHookIdGiveNamedItem[iClient] = -1;	
+		g_iHookIdGiveNamedItem[iClient] = 0;	
 	}
+}
+
+bool SDK_IsGiveNamedItemActive()
+{
+	for (int iClient = 1; iClient <= MaxClients; iClient++)
+		if (g_iHookIdGiveNamedItem[iClient])
+			return true;
+	
+	return false;
 }
 
 void SDK_HookGetMaxHealth(int iClient)
@@ -189,12 +204,6 @@ void SDK_AlwaysTransmitEntity(int iEntity)
 {
 	if (g_hHookShouldTransmit)
 		DHookEntity(g_hHookShouldTransmit, true, iEntity);
-}
-
-void SDK_HookGiveNamedItem(int iClient)
-{
-	if (g_hHookGiveNamedItem)
-		g_iHookIdGiveNamedItem[iClient] = DHookEntity(g_hHookGiveNamedItem, false, iClient, Hook_GiveNamedItemRemoved, Hook_GiveNamedItem);
 }
 
 void SDK_HookBallImpact(int iEntity, DHookCallback callback)
@@ -235,19 +244,9 @@ public MRESReturn Hook_GiveNamedItem(int iClient, Handle hReturn, Handle hParams
 	DHookGetParamString(hParams, 1, sClassname, sizeof(sClassname));
 	int iIndex = DHookGetParamObjectPtrVar(hParams, 3, 4, ObjectValueType_Int) & 0xFFFF;
 	
-	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
-	if (boss.bValid)
+	Action action = GiveNamedItem(iClient, sClassname, iIndex);
+	if (action >= Plugin_Handled)
 	{
-		Action action = boss.CallFunction("OnGiveNamedItem", sClassname, iIndex);
-		if (action == Plugin_Handled)
-		{
-			DHookSetReturn(hReturn, 0);
-			return MRES_Supercede;
-		}
-	}
-	else if (g_ConfigIndex.IsRestricted(iIndex))
-	{
-		// Restrict weapons from config
 		DHookSetReturn(hReturn, 0);
 		return MRES_Supercede;
 	}
@@ -261,7 +260,7 @@ public void Hook_GiveNamedItemRemoved(int iHookId)
 	{
 		if (g_iHookIdGiveNamedItem[iClient] == iHookId)
 		{
-			g_iHookIdGiveNamedItem[iClient] = -1;
+			g_iHookIdGiveNamedItem[iClient] = 0;
 			return;
 		}
 	}
