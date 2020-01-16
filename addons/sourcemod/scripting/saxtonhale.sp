@@ -12,10 +12,15 @@
 #include <tf2attributes>
 #include <tf_econ_data>
 #include <dhooks>
-#include "include/saxtonhale.inc"
+
+#undef REQUIRE_EXTENSIONS
+#tryinclude <tf2items>
+#define REQUIRE_EXTENSIONS
 
 #pragma semicolon 1
 #pragma newdecls required
+
+#include "include/saxtonhale.inc"
 
 #define PLUGIN_VERSION 					"1.3.1"
 #define PLUGIN_VERSION_REVISION 		"manual"
@@ -302,8 +307,9 @@ TFClassType g_nClassDisplay[sizeof(g_strClassName)] = {
 
 bool g_bEnabled;
 bool g_bRoundStarted;
-
 bool g_bSpecialRound;
+bool g_bTF2Items;
+
 TFClassType g_nSpecialRoundNextClass;
 
 int g_iSpritesLaserbeam;
@@ -465,6 +471,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public void OnPluginStart()
 {
+	//OnLibraryAdded dont always call TF2Items on plugin start
+	g_bTF2Items = LibraryExists("TF2Items");
+	
 	AddMultiTargetFilter("@hale", BossTargetFilter, "all bosses", false);
 	AddMultiTargetFilter("@boss", BossTargetFilter, "all bosses", false);
 	AddMultiTargetFilter("@!hale", BossTargetFilter, "all non-bosses", false);
@@ -512,10 +521,10 @@ public void OnPluginStart()
 	FuncStack_Init();
 	Menu_Init();
 	NextBoss_Init();
+	SDK_Init();
 	TagsCall_Init();
 	TagsCore_Init();
 	TagsName_Init();
-	SDK_Init();
 	Winstreak_Init();
 	
 	SaxtonHaleFunction func;
@@ -698,8 +707,6 @@ public void OnPluginStart()
 	g_ConfigConvar.Create("vsh_boss_ping_limit", "200", "Max ping/latency to allow player to play as boss (-1 for no limit)", _, true, -1.0);
 	g_ConfigConvar.Create("vsh_telefrag_damage", "9001.0", "Damage amount to boss from telefrag", _, true, 0.0);
 	
-	Config_Refresh();
-	
 	//Incase of lateload, call client join functions
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
@@ -714,12 +721,35 @@ public void OnPluginStart()
 	}
 }
 
+public void OnLibraryAdded(const char[] sName)
+{
+	if (StrEqual(sName, "TF2Items"))
+	{
+		g_bTF2Items = true;
+		
+		//We cant allow TF2Items load while GiveNamedItem already hooked due to crash
+		if (SDK_IsGiveNamedItemActive())
+			PluginStop(true, "[VSH] DO NOT LOAD TF2ITEMS MIDGAME WHILE VSH IS ALREADY LOADED!!!!");
+	}
+}
+
+public void OnLibraryRemoved(const char[] sName)
+{
+	if (StrEqual(sName, "TF2Items"))
+	{
+		g_bTF2Items = false;
+		
+		//TF2Items unloaded with GiveNamedItem unhooked, we can now safely hook GiveNamedItem ourself
+		for (int iClient = 1; iClient <= MaxClients; iClient++)
+			if (IsClientInGame(iClient))
+				SDK_HookGiveNamedItem(iClient);
+	}
+}
+
 public void OnPluginEnd()
 {
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
-		SDK_UnhookClient(iClient);
-		
 		if (SaxtonHale_IsValidBoss(iClient))
 		{
 			SaxtonHaleBase boss = SaxtonHaleBase(iClient);
@@ -1195,14 +1225,14 @@ public void OnClientDisconnect(int iClient)
 
 	g_iClientFlags[iClient] = 0;
 
+	SDK_UnhookGiveNamedItem(iClient);
+
 	ClassLimit_SetMainClass(iClient, TFClass_Unknown);
 	ClassLimit_SetDesiredClass(iClient, TFClass_Unknown);
 	
 	Preferences_SetAll(iClient, -1);
 	Queue_SetPlayerPoints(iClient, -1);
 	Winstreak_SetCurrent(iClient, -1);
-	
-	SDK_UnhookClient(iClient);
 }
 
 public void OnClientDisconnect_Post(int iClient)
@@ -1512,6 +1542,22 @@ public Action NormalSoundHook(int clients[MAXPLAYERS], int &numClients, char sam
 		if (boss.bValid)
 			return boss.CallFunction("OnSoundPlayed", clients, numClients, sample, channel, volume, level, pitch, flags, soundEntry, seed);
 	}
+	return Plugin_Continue;
+}
+
+public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int itemDefIndex, Handle &item)
+{
+	return GiveNamedItem(client, classname, itemDefIndex);
+}
+
+Action GiveNamedItem(int iClient, const char[] sClassname, int iIndex)
+{
+	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
+	if (boss.bValid)
+		return boss.CallFunction("OnGiveNamedItem", sClassname, iIndex);
+	else if (g_ConfigIndex.IsRestricted(iIndex))
+		return Plugin_Handled;
+	
 	return Plugin_Continue;
 }
 

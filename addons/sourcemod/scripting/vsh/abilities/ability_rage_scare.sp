@@ -132,7 +132,12 @@ methodmap CScareRage < SaxtonHaleBase
 				float flDistance = GetVectorDistance(vecTargetPos, vecPos);
 				
 				if (flDistance <= flRadius)
-					TF2_StunPlayer(iVictim, flDuration, 0.1, iStunFlags, 0);
+				{
+					if (TF2_IsPlayerInCondition(iVictim, TFCond_Dazed))
+						TF2_RemoveCondition(iVictim, TFCond_Dazed);
+						
+					TF2_StunPlayer(iVictim, flDuration, 0.0, iStunFlags, 0);
+				}
 			}
 		}
 		
