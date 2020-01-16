@@ -506,8 +506,6 @@ void Dome_UpdateRadius()
 	
 	//Update global variable
 	g_flDomeRadius = flRadius;
-	
-	//PrintToConsoleAll("flSpeedAverage (%.2f) flSpeedMultiplier (%.2f) flSpeed (%.2f)", flSpeedAverage, flSpeedMultiplier, flSpeed);
 }
 
 float Dome_GetDistance(int iEntity)
