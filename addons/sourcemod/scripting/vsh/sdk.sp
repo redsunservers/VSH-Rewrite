@@ -180,8 +180,17 @@ void SDK_Init()
 	else
 		DHookAddParam(g_hHookShouldBallTouch, HookParamType_CBaseEntity);
 	
+	// This hook allows to change capture time remaining
+	Handle hHook = DHookCreateFromConf(hGameData, "CTriggerAreaCapture::SetCapTimeRemaining");
+	if (hHook == null)
+		LogMessage("Failed to create hook: CTriggerAreaCapture::SetCapTimeRemaining!");
+	else
+		DHookEnableDetour(hHook, false, Hook_SetCapTimeRemaining);
+	
+	delete hHook;
+	
 	// This hook allows to allow/block medigun heals
-	Handle hHook = DHookCreateFromConf(hGameData, "CWeaponMedigun::AllowedToHealTarget");
+	hHook = DHookCreateFromConf(hGameData, "CWeaponMedigun::AllowedToHealTarget");
 	if (hHook == null)
 		LogMessage("Failed to create hook: CWeaponMedigun::AllowedToHealTarget!");
 	else
@@ -306,6 +315,20 @@ public void Hook_GiveNamedItemRemoved(int iHookId)
 			return;
 		}
 	}
+}
+
+public MRESReturn Hook_SetCapTimeRemaining(int iTrigger, Handle hParams)
+{
+	float flTime = DHookGetParam(hParams, 1);
+	
+	Action action = Dome_SetCapTimeRemaining(iTrigger, flTime);
+	if (action >= Plugin_Changed)
+	{
+		DHookSetParam(hParams, 1, flTime);
+		return MRES_ChangedHandled;
+	}
+	
+	return MRES_Ignored;
 }
 
 public MRESReturn Hook_AllowedToHealTarget(int iMedigun, Handle hReturn, Handle hParams)

@@ -16,18 +16,6 @@
 				"linux"		"@_ZN9CTFPlayer33GetEquippedWearableForLoadoutSlotEi"
 				"windows"	"\x55\x8B\xEC\x83\xEC\x2A\x8B\xC1\x53\x56\x33\xF6\x89\x45\xF8\x8B\x88\x2A\x2A\x2A\x2A\x57\x89\x4D\xFC"
 			}
-			"CWeaponMedigun::AllowedToHealTarget"
-			{
-				"library"	"server"
-				"linux"		"@_ZN14CWeaponMedigun19AllowedToHealTargetEP11CBaseEntity"
-				"windows"	"\x55\x8B\xEC\x53\x8B\xD9\x56\x57\x8B\xB3\xE8\x01\x00\x00"
-			}
-			"CObjectDispenser::CouldHealTarget"
-			{
-				"library"	"server"
-				"linux"		"@_ZN16CObjectDispenser15CouldHealTargetEP11CBaseEntity"
-				"windows"	"\x55\x8B\xEC\x56\x8B\x75\x08\x57\x8B\xF9\x8B\x87\x10\x01\x00\x00"
-			}
 			"CTFPlayer::AddObject"
 			{
 				"library"	"server"
@@ -40,9 +28,41 @@
 				"linux"		"@_ZN9CTFPlayer12RemoveObjectEP11CBaseObject"
 				"windows"	"\x55\x8B\xEC\x8B\xD1\x56\x8B\xB2\x7C\x21\x00\x00"
 			}
+			"CTriggerAreaCapture::SetCapTimeRemaining"
+			{
+				"library"	"server"
+				"linux"		"@_ZN19CTriggerAreaCapture19SetCapTimeRemainingEf"
+				"windows"	"\x55\x8B\xEC\xF3\x0F\x10\x45\x08\x56\x8B\xF1\xC7\x45\x08\x00\x00\x00\x00"
+			}
+			"CWeaponMedigun::AllowedToHealTarget"
+			{
+				"library"	"server"
+				"linux"		"@_ZN14CWeaponMedigun19AllowedToHealTargetEP11CBaseEntity"
+				"windows"	"\x55\x8B\xEC\x53\x8B\xD9\x56\x57\x8B\xB3\xE8\x01\x00\x00"
+			}
+			"CObjectDispenser::CouldHealTarget"
+			{
+				"library"	"server"
+				"linux"		"@_ZN16CObjectDispenser15CouldHealTargetEP11CBaseEntity"
+				"windows"	"\x55\x8B\xEC\x56\x8B\x75\x08\x57\x8B\xF9\x8B\x87\x10\x01\x00\x00"
+			}
 		}
 		"Functions"
 		{
+			"CTriggerAreaCapture::SetCapTimeRemaining"
+			{
+				"signature"	"CTriggerAreaCapture::SetCapTimeRemaining"
+				"callconv"	"thiscall"
+				"return"	"void"
+				"this"		"entity"
+				"arguments"
+				{
+					"flTime"
+					{
+						"type"	"float"
+					}
+				}
+			}
 			"CWeaponMedigun::AllowedToHealTarget"
 			{
 				"signature"	"CWeaponMedigun::AllowedToHealTarget"
