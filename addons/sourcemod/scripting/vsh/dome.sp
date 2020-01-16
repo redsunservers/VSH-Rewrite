@@ -11,7 +11,7 @@
 //CP
 static bool g_bDomeCustomPos;	//Whenever if capture point is in custom pos
 static float g_vecDomeCP[3];	//Pos of CP
-static int g_iDomeTrigger;		//Trigger to control touch
+static int g_iDomeTriggerRef;	//Trigger to control touch
 static bool g_bDomeCapturing[TF_MAXPLAYERS+1];
 
 //Dome prop
@@ -97,7 +97,7 @@ public void Dome_TriggerSpawn(int iTrigger)
 {
 	//Set time to cap to whatever in convar
 	DispatchKeyValueFloat(iTrigger, "area_time_to_cap", g_ConfigConvar.LookupFloat("vsh_dome_cp_caprate"));
-	g_iDomeTrigger = iTrigger;
+	g_iDomeTriggerRef = EntIndexToEntRef(iTrigger);
 }
 
 public Action Dome_TriggerTouch(int iTrigger, int iToucher)
@@ -115,7 +115,6 @@ public Action Dome_TriggerTouch(int iTrigger, int iToucher)
 void Dome_RoundStart()
 {
 	g_bDomeCustomPos = false;
-	g_iDomeTrigger = 0;
 	
 	g_iDomeEntRef = 0;
 	g_nDomeTeamOwner = TFTeam_Unassigned;
@@ -178,18 +177,25 @@ void Dome_RoundArenaStart()
 void Dome_OnThink(int iClient)
 {
 	//Call our own StartTouch and EndTouch if CP is in custom pos
-	if (g_bDomeCustomPos && g_iDomeTrigger > MaxClients)
+	if (!g_bDomeCustomPos)
+		return;
+	
+	int iTrigger = EntRefToEntIndex(g_iDomeTriggerRef);
+	if (iTrigger <= MaxClients)
+		return;
+	
+	float vecOrigin[3];
+	GetClientAbsOrigin(iClient, vecOrigin);
+	
+	if (IsPlayerAlive(iClient) && TF2_GetClientTeam(iClient) > TFTeam_Spectator && IsClientInRange(iClient, g_vecDomeCP, g_ConfigConvar.LookupFloat("vsh_dome_cp_radius")))
 	{
-		if (IsPlayerAlive(iClient) && TF2_GetClientTeam(iClient) > TFTeam_Spectator && IsClientInRange(iClient, g_vecDomeCP, g_ConfigConvar.LookupFloat("vsh_dome_cp_radius")))
-		{
-			g_bDomeCapturing[iClient] = true;
-			AcceptEntityInput(g_iDomeTrigger, "StartTouch", iClient, iClient);
-		}
-		else if (g_bDomeCapturing[iClient])
-		{
-			AcceptEntityInput(g_iDomeTrigger, "EndTouch", iClient, iClient);
-			g_bDomeCapturing[iClient] = false;
-		}
+		g_bDomeCapturing[iClient] = true;
+		AcceptEntityInput(iTrigger, "StartTouch", iClient, iClient);
+	}
+	else if (g_bDomeCapturing[iClient])
+	{
+		AcceptEntityInput(iTrigger, "EndTouch", iClient, iClient);
+		g_bDomeCapturing[iClient] = false;
 	}
 }
 
