@@ -41,6 +41,7 @@
 #define SOUND_METERFULL		"player/recharged.wav"
 #define SOUND_BACKSTAB		"player/spy_shield_break.wav"
 #define SOUND_DOUBLEDONK	"player/doubledonk.wav"
+#define SOUND_NULL			"vo/null.mp3"
 
 #define PARTICLE_GHOST 		"ghost_appearation"
 
@@ -65,6 +66,9 @@
 
 const TFTeam TFTeam_Boss = TFTeam_Blue;
 const TFTeam TFTeam_Attack = TFTeam_Red;
+
+const TFObjectType TFObject_Invalid = view_as<TFObjectType>(-1);
+const TFObjectMode TFObjectMode_Invalid = view_as<TFObjectMode>(-1);
 
 enum ClientFlags ( <<=1 )
 {
@@ -238,6 +242,14 @@ char g_strSlotName[][] = {
 	"PDA1",
 	"PDA2",
 	"Building"
+};
+
+// TF2 Building names
+char g_strBuildingName[TFObjectType][TFObjectMode][] = {
+	{"Dispenser", ""},
+	{"Teleporter Entrance", "Teleporter Exit"},
+	{"Sentry Gun", ""},
+	{"Sapper", ""},
 };
 
 // Color Tag
@@ -511,6 +523,7 @@ public void OnPluginStart()
 	//Boss functions
 	SaxtonHaleFunction("CreateBoss", ET_Single, Param_String);
 	SaxtonHaleFunction("IsBossHidden", ET_Single);
+	SaxtonHaleFunction("IsBossType", ET_Single, Param_String);
 	SaxtonHaleFunction("SetBossType", ET_Ignore, Param_String);
 	
 	func = SaxtonHaleFunction("GetBossType", ET_Ignore, Param_String, Param_Cell);
@@ -561,7 +574,11 @@ public void OnPluginStart()
 	SaxtonHaleFunction("OnPlayerKilled", ET_Ignore, Param_Cell, Param_Cell);
 	SaxtonHaleFunction("OnDeath", ET_Ignore, Param_Cell);
 	
-	func = SaxtonHaleFunction("OnAttackDamage", ET_Hook, Param_CellByRef, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array, Param_Cell);
+	func = SaxtonHaleFunction("OnAttackBuilding", ET_Hook, Param_Cell, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array, Param_Cell);
+	func.SetParam(6, Param_Array, VSHArrayType_Static, 3);
+	func.SetParam(7, Param_Array, VSHArrayType_Static, 3);
+	
+	func = SaxtonHaleFunction("OnAttackDamage", ET_Hook, Param_Cell, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array, Param_Cell);
 	func.SetParam(6, Param_Array, VSHArrayType_Static, 3);
 	func.SetParam(7, Param_Array, VSHArrayType_Static, 3);
 	
@@ -863,6 +880,7 @@ public void OnMapStart()
 		PrecacheSound(SOUND_METERFULL);
 		PrecacheSound(SOUND_BACKSTAB);
 		PrecacheSound(SOUND_DOUBLEDONK);
+		PrecacheSound(SOUND_NULL);
 		
 		g_iSpritesLaserbeam = PrecacheModel("materials/sprites/laserbeam.vmt", true);
 		g_iSpritesGlow = PrecacheModel("materials/sprites/glow01.vmt", true);
@@ -945,6 +963,10 @@ public void OnEntityCreated(int iEntity, const char[] sClassname)
 	{
 		//Superceding SetWinningTeam causes some maps to force a map change on capture
 		AcceptEntityInput(iEntity, "Kill");
+	}
+	else if (StrContains(sClassname, "obj_") == 0)
+	{
+		SDKHook(iEntity, SDKHook_OnTakeDamage, Building_OnTakeDamage);
 	}
 }
 
@@ -1339,6 +1361,19 @@ public Action Client_OnTakeDamageAlive(int victim, int &attacker, int &inflictor
 		}
 	}
 	return finalAction;
+}
+
+public Action Building_OnTakeDamage(int building, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
+	
+	SaxtonHaleBase bossAttacker = SaxtonHaleBase(attacker);
+	
+	if (0 < attacker <= MaxClients && bossAttacker.bValid)
+		return bossAttacker.CallFunction("OnAttackBuilding", building, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
+		
+	return Plugin_Continue;
 }
 
 public bool BossTargetFilter(char[] sPattern, ArrayList aClients)

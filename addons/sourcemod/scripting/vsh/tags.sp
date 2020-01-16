@@ -568,7 +568,11 @@ public void Tags_AddHealth(int iClient, int iTarget, TagsParams tParams)
 		return;
 	
 	int iAmount = tParams.GetInt("amount");
-	Client_AddHealth(iTarget, iAmount, iAmount);
+	float flMaxOverheal = tParams.GetFloat("overheal", 1.5);
+	
+	int iMaxHealth = SDK_GetMaxHealth(iTarget);
+	
+	Client_AddHealth(iTarget, iAmount, RoundToNearest(float(iMaxHealth) * (flMaxOverheal - 1.0)));
 }
 
 public void Tags_AddHealthBase(int iClient, int iTarget, TagsParams tParams)
@@ -577,9 +581,11 @@ public void Tags_AddHealthBase(int iClient, int iTarget, TagsParams tParams)
 		return;
 	
 	float flAmount = tParams.GetFloat("amount");
+	float flMaxOverheal = tParams.GetFloat("overheal", 1.5);
+	
 	int iMaxHealth = SDK_GetMaxHealth(iTarget);
 	
-	Client_AddHealth(iTarget, RoundToNearest(float(iMaxHealth) * flAmount), RoundToNearest(float(iMaxHealth) * 0.5));
+	Client_AddHealth(iTarget, RoundToNearest(float(iMaxHealth) * flAmount), RoundToNearest(float(iMaxHealth) * (flMaxOverheal - 1.0)));
 }
 
 public void Tags_DropHealth(int iClient, int iTarget, TagsParams tParams)

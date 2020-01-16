@@ -98,6 +98,11 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 	{
 		strcopy(type, length, g_sClientBossType[this.iClient]);
 	}
+	
+	public bool IsBossType(const char[] type)
+	{
+		return StrEqual(g_sClientBossType[this.iClient], type);
+	}
 
 	public int CalculateMaxHealth()
 	{
@@ -317,7 +322,7 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 		return Plugin_Continue;
 	}
 	
-	public Action OnAttackDamage(int &victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+	public Action OnAttackDamage(int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 	{
 		if (damagecustom == TF_CUSTOM_BOOTS_STOMP)
 		{
