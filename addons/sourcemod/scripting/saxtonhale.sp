@@ -445,6 +445,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/network.sp"
 #include "vsh/nextboss.sp"
 #include "vsh/preferences.sp"
+#include "vsh/property.sp"
 #include "vsh/queue.sp"
 #include "vsh/sdk.sp"
 #include "vsh/stocks.sp"
@@ -462,8 +463,10 @@ public Plugin myinfo =
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	Forward_AskLoad();
-	Native_AskLoad();
 	FuncNative_AskLoad();
+	Native_AskLoad();
+	Property_AskLoad();
+	
 	RegPluginLibrary("saxtonhale");
 	
 	return APLRes_Success;
