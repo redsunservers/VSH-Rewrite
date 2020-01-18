@@ -10,6 +10,7 @@ enum TagsFilterType			//List of possible filters
 	TagsFilterType_DamageCustom,
 	TagsFilterType_BackstabCount,
 	TagsFilterType_FeignDeath,
+	TagsFilterType_VictimUber,
 }
 
 enum struct TagsFilterStruct
@@ -34,7 +35,7 @@ enum struct TagsFilterStruct
 				this.nValue = TagsTarget_GetType(sValue);
 				return !(this.nValue == TagsTarget_Invalid);
 			}
-			case TagsFilterType_Aim, TagsFilterType_SentryTarget, TagsFilterType_FeignDeath:
+			case TagsFilterType_Aim, TagsFilterType_SentryTarget, TagsFilterType_FeignDeath, TagsFilterType_VictimUber:
 			{
 				this.nValue = !!StringToInt(sValue);	//Turn into boolean
 				return true;
@@ -123,6 +124,12 @@ enum struct TagsFilterStruct
 				bool bFegin = !!GetEntProp(iClient, Prop_Send, "m_bFeignDeathReady");
 				return (this.nValue ? bFegin : !bFegin);
 			}
+			case TagsFilterType_VictimUber:
+			{
+				int iVictim = tParams.GetInt("victim");
+				bool bUbered = TF2_IsUbercharged(iVictim);
+				return (this.nValue ? bUbered : !bUbered);
+			}
 		}
 		
 		return false;
@@ -201,6 +208,7 @@ TagsFilterType TagsFilter_GetType(const char[] sTarget)
 		mFilterType.SetValue("damagecustom", TagsFilterType_DamageCustom);
 		mFilterType.SetValue("backstabcount", TagsFilterType_BackstabCount);
 		mFilterType.SetValue("feigndeath", TagsFilterType_FeignDeath);
+		mFilterType.SetValue("victimuber", TagsFilterType_VictimUber);
 	}
 	
 	TagsFilterType nFilterType = TagsFilterType_Invalid;
