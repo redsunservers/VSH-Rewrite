@@ -1,5 +1,4 @@
 static Handle g_hHookGetCaptureValueForPlayer;
-static Handle g_hHookSetWinningTeam;
 static Handle g_hHookGetMaxHealth;
 static Handle g_hHookShouldTransmit;
 static Handle g_hHookGiveNamedItem;
@@ -73,23 +72,6 @@ void SDK_Init()
 		LogMessage("Failed to create hook: CTFGameRules::GetCaptureValueForPlayer");
 	else
 		DHookAddParam(g_hHookGetCaptureValueForPlayer, HookParamType_CBaseEntity);
-	
-	// This hook allows to prevent round win called
-	iOffset = hGameData.GetOffset("CTFGameRules::SetWinningTeam");
-	g_hHookSetWinningTeam = DHookCreate(iOffset, HookType_GameRules, ReturnType_Void, ThisPointer_Ignore);
-	if (g_hHookSetWinningTeam == null)
-	{
-		LogMessage("Failed to create hook: CTFGameRules::SetWinningTeam");
-	}
-	else
-	{
-		DHookAddParam(g_hHookSetWinningTeam, HookParamType_Int);
-		DHookAddParam(g_hHookSetWinningTeam, HookParamType_Int);
-		DHookAddParam(g_hHookSetWinningTeam, HookParamType_Bool);
-		DHookAddParam(g_hHookSetWinningTeam, HookParamType_Bool);
-		DHookAddParam(g_hHookSetWinningTeam, HookParamType_Bool);
-		DHookAddParam(g_hHookSetWinningTeam, HookParamType_Bool);
-	}
 	
 	// This call gets the weapon max ammo
 	StartPrepSDKCall(SDKCall_Player);
@@ -237,12 +219,6 @@ void SDK_HookGetCaptureValueForPlayer(DHookCallback callback)
 {
 	if (g_hHookGetCaptureValueForPlayer)
 		DHookGamerules(g_hHookGetCaptureValueForPlayer, true, _, callback);
-}
-
-void SDK_HookSetWinningTeam(DHookCallback callback)
-{
-	if (g_hHookSetWinningTeam)
-		DHookGamerules(g_hHookSetWinningTeam, false, _, callback);
 }
 
 void SDK_HookGetMaxHealth(int iClient)

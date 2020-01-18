@@ -69,7 +69,6 @@ void Dome_MapStart()
 	PrecacheSound(DOME_NEARBY_SOUND);
 	
 	SDK_HookGetCaptureValueForPlayer(Dome_GetCaptureValueForPlayer);
-	SDK_HookSetWinningTeam(Dome_SetWinningTeam);
 }
 
 public MRESReturn Dome_GetCaptureValueForPlayer(Handle hReturn, Handle hParams)
@@ -84,14 +83,10 @@ public MRESReturn Dome_GetCaptureValueForPlayer(Handle hReturn, Handle hParams)
 	return MRES_Ignored;
 }
 
-public MRESReturn Dome_SetWinningTeam(Handle hParams)
+public void Dome_MasterSpawn(int iMaster)
 {
-	//This function is called on every frame when suppose to end a round. Prevent round ending from capture
-	WinReason nReason = DHookGetParam(hParams, 2);
-	if (nReason == WinReason_PointCaptured || nReason == WinReason_AllPointsCaptured)
-		return MRES_Supercede;
-	
-	return MRES_Ignored;
+	//Prevent round win from capture
+	DispatchKeyValue(iMaster, "cpm_restrict_team_cap_win", "1");
 }
 
 public void Dome_TriggerSpawn(int iTrigger)
