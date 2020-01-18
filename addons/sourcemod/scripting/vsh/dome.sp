@@ -83,12 +83,6 @@ public MRESReturn Dome_GetCaptureValueForPlayer(Handle hReturn, Handle hParams)
 	return MRES_Ignored;
 }
 
-public void Dome_MasterSpawn(int iMaster)
-{
-	//Prevent round win from capture
-	DispatchKeyValue(iMaster, "cpm_restrict_team_cap_win", "1");
-}
-
 public void Dome_TriggerSpawn(int iTrigger)
 {
 	//Set time to cap to whatever in convar
