@@ -1,10 +1,3 @@
-//Macro to register every properties to set and get
-#define NATIVE_PROPERTY_REGISTER(%1,%2)\
-Format(sBuffer, sizeof(sBuffer), "SaxtonHaleBase.%s.set", %1); \
-CreateNative(sBuffer, FuncNative_Property_%2_Set); \
-Format(sBuffer, sizeof(sBuffer), "SaxtonHaleBase.%s.get", %1); \
-CreateNative(sBuffer, FuncNative_Property_%2_Get);
-
 static FuncFunctionId g_mFuncFunctionId;
 
 void FuncNative_AskLoad()
@@ -41,30 +34,6 @@ void FuncNative_AskLoad()
 	CreateNative("SaxtonHale_UnregisterModifiers", FuncNative_UnregisterModifiers);
 	CreateNative("SaxtonHale_RegisterAbility", FuncNative_RegisterAbility);
 	CreateNative("SaxtonHale_UnregisterAbility", FuncNative_UnregisterAbility);
-	
-	char sBuffer[256];
-	
-	NATIVE_PROPERTY_REGISTER("bValid",bValid)
-	NATIVE_PROPERTY_REGISTER("bModifiers",bModifiers)
-	NATIVE_PROPERTY_REGISTER("bMinion",bMinion)
-	NATIVE_PROPERTY_REGISTER("bSuperRage",bSuperRage)
-	NATIVE_PROPERTY_REGISTER("bModel",bModel)
-	NATIVE_PROPERTY_REGISTER("bCanBeHealed",bCanBeHealed)
-	NATIVE_PROPERTY_REGISTER("flSpeed",flSpeed)
-	NATIVE_PROPERTY_REGISTER("flSpeedMult",flSpeedMult)
-	NATIVE_PROPERTY_REGISTER("flEnvDamageCap",flEnvDamageCap)
-	NATIVE_PROPERTY_REGISTER("flWeighDownTimer",flWeighDownTimer)
-	NATIVE_PROPERTY_REGISTER("flWeighDownForce",flWeighDownForce)
-	NATIVE_PROPERTY_REGISTER("flGlowTime",flGlowTime)
-	NATIVE_PROPERTY_REGISTER("flRageLastTime",flRageLastTime)
-	NATIVE_PROPERTY_REGISTER("flMaxRagePercentage",flMaxRagePercentage)
-	NATIVE_PROPERTY_REGISTER("flHealthMultiplier",flHealthMultiplier)
-	NATIVE_PROPERTY_REGISTER("iMaxHealth",iMaxHealth)
-	NATIVE_PROPERTY_REGISTER("iBaseHealth",iBaseHealth)
-	NATIVE_PROPERTY_REGISTER("iHealthPerPlayer",iHealthPerPlayer)
-	NATIVE_PROPERTY_REGISTER("iRageDamage",iRageDamage)
-	NATIVE_PROPERTY_REGISTER("iMaxRageDamage",iMaxRageDamage)
-	NATIVE_PROPERTY_REGISTER("nClass",nClass)
 }
 
 void FuncNative_Init()
@@ -720,37 +689,3 @@ int FuncNative_GetFuncStack(FuncStack funcStack, ParamType &nParamType)
 	nParamType = funcStack.nParamType[iParam - 1];
 	return iParam;
 }
-
-//Macro to setup natives for every properties
-#define NATIVE_PROPERTY(%1) \
-static any g_clientBoss%1[TF_MAXPLAYERS+1]; \
-public any FuncNative_Property_%1_Set(Handle hPlugin, int iNumParams) \
-{ \
-	g_clientBoss%1[GetNativeCell(1)] = GetNativeCell(2); \
-} \
-public any FuncNative_Property_%1_Get(Handle hPlugin, int iNumParams) \
-{ \
-	return g_clientBoss%1[GetNativeCell(1)]; \
-}
-
-NATIVE_PROPERTY(bValid)
-NATIVE_PROPERTY(bModifiers)
-NATIVE_PROPERTY(bMinion)
-NATIVE_PROPERTY(bSuperRage)
-NATIVE_PROPERTY(bModel)
-NATIVE_PROPERTY(bCanBeHealed)
-NATIVE_PROPERTY(flSpeed)
-NATIVE_PROPERTY(flSpeedMult)
-NATIVE_PROPERTY(flEnvDamageCap)
-NATIVE_PROPERTY(flWeighDownTimer)
-NATIVE_PROPERTY(flWeighDownForce)
-NATIVE_PROPERTY(flGlowTime)
-NATIVE_PROPERTY(flRageLastTime)
-NATIVE_PROPERTY(flMaxRagePercentage)
-NATIVE_PROPERTY(flHealthMultiplier)
-NATIVE_PROPERTY(iMaxHealth)
-NATIVE_PROPERTY(iBaseHealth)
-NATIVE_PROPERTY(iHealthPerPlayer)
-NATIVE_PROPERTY(iRageDamage)
-NATIVE_PROPERTY(iMaxRageDamage)
-NATIVE_PROPERTY(nClass)
