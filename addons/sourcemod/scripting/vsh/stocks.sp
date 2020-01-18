@@ -402,18 +402,27 @@ stock void TF2_SetBuildingTeam(int iBuilding, TFTeam nTeam, int iNewBuilder = -1
 	int iTeam = view_as<int>(nTeam);
 	SetVariantInt(iTeam);
 	AcceptEntityInput(iBuilding, "SetTeam");
+	SetEntProp(iBuilding, Prop_Send, "m_nSkin", iTeam-2);
 	
 	//Set a new builder and give them the building, if specified
 	TF2_SetBuildingOwner(iBuilding, iNewBuilder);
 	
-	//Mini-sentries use different skins, adjust accordingly
-	if (GetEntProp(iBuilding, Prop_Send, "m_bMiniBuilding"))
-		SetEntProp(iBuilding, Prop_Send, "m_nSkin", iTeam);
-	else
-		SetEntProp(iBuilding, Prop_Send, "m_nSkin", iTeam-2);
-	
 	switch (TF2_GetBuildingType(iBuilding))
 	{
+		case TFObject_Sentry:
+		{
+			//Mini-sentries use different skins, adjust accordingly
+			if (GetEntProp(iBuilding, Prop_Send, "m_bMiniBuilding"))
+				SetEntProp(iBuilding, Prop_Send, "m_nSkin", iTeam);
+			
+			//Reset wrangler shield and player-controlled status to change team colors
+			//If the sentry is still being wrangled, the values will automatically adjust themselves next frame
+			if (GetEntProp(iBuilding, Prop_Send, "m_nShieldLevel") > 0)
+			{
+				SetEntProp(iBuilding, Prop_Send, "m_bPlayerControlled", false);
+				SetEntProp(iBuilding, Prop_Send, "m_nShieldLevel", 0);
+			}
+		}
 		case TFObject_Dispenser:
 		{
 			//Disable the dispenser's screen, it's better than having it not change team color
