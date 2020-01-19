@@ -91,14 +91,6 @@ enum Preferences ( <<=1 )
 	Preferences_Revival,
 };
 
-enum WinReason
-{
-	WinReason_PointCaptured = 1, 
-	WinReason_Elimination, 
-	WinReason_AllPointsCaptured = 4, 
-	WinReason_Stalemate
-};
-
 enum
 {
 	WeaponSlot_Primary = 0,
@@ -983,6 +975,11 @@ public void OnEntityCreated(int iEntity, const char[] sClassname)
 		|| strcmp(sClassname, "func_regenerate") == 0)
 	{
 		SDKHook(iEntity, SDKHook_Touch, ItemPack_OnTouch);
+	}
+	else if (StrEqual(sClassname, "team_control_point_master"))
+	{
+		//Prevent round win from capture
+		DispatchKeyValue(iEntity, "cpm_restrict_team_cap_win", "1");
 	}
 	else if (StrEqual(sClassname, "trigger_capture_area"))
 	{
