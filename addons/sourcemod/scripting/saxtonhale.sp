@@ -1484,6 +1484,8 @@ void Client_OnButton(int iClient, int &buttons)
 	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 	if (boss.bValid)
 		boss.CallFunction("OnButton", buttons);
+	else
+		Tags_OnButton(iClient, buttons);
 }
 
 void Client_OnButtonPress(int iClient, int button)
