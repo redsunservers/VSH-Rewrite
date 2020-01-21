@@ -494,6 +494,75 @@ native void SaxtonHale_GetParamArray(int iParam, any[] value, int iLength);
 native void SaxtonHale_SetParamArray(int iParam, const any[] value);
 
 /**
+ * Methodmap to force set next boss
+ */
+methodmap SaxtonHaleNextBoss
+{
+	//Creates new SaxtonHaleNextBoss to set boss, modifier and special round for next match in the list
+	//
+	// @note If valid client index, client's existing next boss is passed. Otherwise if client index is 0, new Next Boss is made.
+	//
+	// @param iClient       Client to specify, or 0 for next client in queue
+	// @return              Next Boss Methodmap to get and set next boss
+	public native SaxtonHaleNextBoss(int iClient = 0);
+	
+	//Gets current boss type
+	//
+	// @param sBossType     String value to get, NULL_STRING if not specified yet
+	// @param iLength       Size of string
+	public native void GetBoss(char[] sBossType, int iLength);
+	
+	//Sets new boss type
+	//
+	// @param sBossType     String value to set, NULL_STRING for random boss
+	public native void SetBoss(const char[] sBossType);
+	
+	//Gets current modifier type
+	//
+	// @param sModifierType String value to get, NULL_STRING if not specified yet
+	// @param iLength       Size of string
+	public native void GetModifier(char[] sModifierType, int iLength);
+	
+	//Sets new modifier type
+	//
+	// @param sModifierType String value to set, NULL_STRING for random modifier
+	public native void SetModifier(const char[] sModifierType);
+	
+	//Gets name to display in chat with client, boss and modifier
+	//
+	// @param sBuffer       String value to get
+	// @param iLength       Size of string
+	public native void GetName(char[] sBuffer, int iLength);
+	
+	// Retrieve client index to play as this boss
+	property int iClient
+	{
+		public native get();
+	}
+	
+	// Retrieve/Set this boss to force play next round
+	property bool bForceNext
+	{
+		public native get();
+		public native set(bool val);
+	}
+	
+	// Retrieve/Set this boss round to be a special class
+	property bool bSpecialClass
+	{
+		public native get();
+		public native set(bool val);
+	}
+	
+	// Retrieve/Set this boss to play class if bSpecialClass is true, random class if TFClass_Unknown
+	property TFClassType nSpecialClass
+	{
+		public native get();
+		public native set(TFClassType val);
+	}
+}
+
+/**
  * Forward called when boss got telefraged
  *
  * @param iBoss				Client boss whose got telefraged
@@ -574,15 +643,6 @@ native int SaxtonHale_GetDamage(int iClient);
  * @error                   Invalid client index or client not in game
  */
 native int SaxtonHale_GetAssistDamage(int iClient);
-
-/**
- * Force a special round on client next turn as boss
- *
- * @param iClient	        Client to force special round, 0 for next client in queue
- * @param nClass	        Class to force special round, TFClass_Unknown for random class
- * @return		        	True on success, false on fail
- */
-native bool SaxtonHale_ForceSpecialRound(int iClient = 0, TFClassType nClass = TFClass_Unknown);
 
 /**
  * Set whoever client all preferences
@@ -737,6 +797,9 @@ native void SaxtonHale_RegisterAbility(const char[] sAbilityType);
 #pragma deprecated Use SaxtonHale_UnregisterClass instead!
 native void SaxtonHale_UnregisterAbility(const char[] sAbilityType);
 
+#pragma deprecated Use SaxtonHaleNextBoss property bSpecialClass and nSpecialClass instead!
+native bool SaxtonHale_ForceSpecialRound(int iClient = 0, TFClassType nClass = TFClass_Unknown);
+
 public SharedPlugin __pl_saxtonhale =
 {
 	name = "saxtonhale",
@@ -818,12 +881,25 @@ public __pl_saxtonhale_SetNTVOptional()
 	MarkNativeAsOptional("SaxtonHale_GetParamArray");
 	MarkNativeAsOptional("SaxtonHale_SetParamArray");
 	
+	MarkNativeAsOptional("SaxtonHaleNextBoss.SaxtonHaleNextBoss");
+	MarkNativeAsOptional("SaxtonHaleNextBoss.GetBoss");
+	MarkNativeAsOptional("SaxtonHaleNextBoss.SetBoss");
+	MarkNativeAsOptional("SaxtonHaleNextBoss.GetModifier");
+	MarkNativeAsOptional("SaxtonHaleNextBoss.SetModifier");
+	MarkNativeAsOptional("SaxtonHaleNextBoss.GetName");
+	MarkNativeAsOptional("SaxtonHaleNextBoss.iClient.get");
+	MarkNativeAsOptional("SaxtonHaleNextBoss.bForceNext.get");
+	MarkNativeAsOptional("SaxtonHaleNextBoss.bForceNext.set");
+	MarkNativeAsOptional("SaxtonHaleNextBoss.bSpecialClass.get");
+	MarkNativeAsOptional("SaxtonHaleNextBoss.bSpecialClass.set");
+	MarkNativeAsOptional("SaxtonHaleNextBoss.nSpecialClass.get");
+	MarkNativeAsOptional("SaxtonHaleNextBoss.nSpecialClass.set");
+	
 	MarkNativeAsOptional("SaxtonHale_GetBossTeam");
 	MarkNativeAsOptional("SaxtonHale_GetAttackTeam");
 	MarkNativeAsOptional("SaxtonHale_GetMainClass");
 	MarkNativeAsOptional("SaxtonHale_GetDamage");
 	MarkNativeAsOptional("SaxtonHale_GetAssistDamage");
-	MarkNativeAsOptional("SaxtonHale_ForceSpecialRound");
 	MarkNativeAsOptional("SaxtonHale_SetPreferences");
 	MarkNativeAsOptional("SaxtonHale_SetQueue");
 	MarkNativeAsOptional("SaxtonHale_SetWinstreak");
@@ -838,5 +914,6 @@ public __pl_saxtonhale_SetNTVOptional()
 	MarkNativeAsOptional("SaxtonHale_UnregisterModifiers");
 	MarkNativeAsOptional("SaxtonHale_RegisterAbility");
 	MarkNativeAsOptional("SaxtonHale_UnregisterAbility");
+	MarkNativeAsOptional("SaxtonHale_ForceSpecialRound");
 }
 #endif

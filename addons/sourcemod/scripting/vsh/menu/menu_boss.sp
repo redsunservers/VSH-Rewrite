@@ -5,13 +5,20 @@ enum ( <<=1 )
 	MenuBossFlags_None
 }
 
+enum struct MenuBossSelect
+{
+	int iClient;
+	char sBossType[MAX_TYPE_CHAR];
+	char sModifierType[MAX_TYPE_CHAR];
+}
+
 //Callback when selecting boss/modifiers list
 typedef MenuBossListCallback = function void (int iClient, const char[] sType);
 
 static MenuBossListCallback g_fMenuBossCallback[TF_MAXPLAYERS+1];	//Callback function to use once client selected boss/modifiers
 
 static StringMap g_mMenuInfo; 		//Menu handles of boss/modifers info
-static NextBoss g_nextMenuSelectBoss[TF_MAXPLAYERS+1];
+static MenuBossSelect g_menuBossSelect[TF_MAXPLAYERS+1];
 
 void MenuBoss_Init()
 {
@@ -237,25 +244,27 @@ void MenuBoss_DisplayNextList(int iClient)
 	char sBuffer[512];
 	Format(sBuffer, sizeof(sBuffer), "Next Boss List\n---");
 	
-	int iLength = g_aNextBoss.Length;
-	if (iLength == 0)
+	bool bEmpty = true;
+	int iLength = g_aNextBoss.Length;	
+	for (int iBossCount = 0; iBossCount < iLength; iBossCount++)
 	{
+		//Get struct
+		NextBoss nextStruct;
+		g_aNextBoss.GetArray(iBossCount, nextStruct);
+		if (!nextStruct.bForceNext)
+			continue;
+		
+		//Get boss name and add to list
+		char sNextBoss[256];
+		SaxtonHaleNextBoss nextBoss = view_as<SaxtonHaleNextBoss>(nextStruct.iId);
+		nextBoss.GetName(sNextBoss, sizeof(sNextBoss));
+		Format(sBuffer, sizeof(sBuffer), "%s\n%s", sBuffer, sNextBoss);
+		
+		bEmpty = false;
+	}
+	
+	if (bEmpty)
 		Format(sBuffer, sizeof(sBuffer), "%s\nThe list is empty", sBuffer);
-	}
-	else
-	{
-		for (int iBossCount = 0; iBossCount < iLength; iBossCount++)
-		{
-			//Get struct
-			NextBoss nextStruct;
-			g_aNextBoss.GetArray(iBossCount, nextStruct);
-			
-			//Get boss name and add to list
-			char sNextBoss[256];
-			GetNextBossName(nextStruct, sNextBoss, sizeof(sNextBoss));
-			Format(sBuffer, sizeof(sBuffer), "%s\n%s", sBuffer, sNextBoss);
-		}
-	}
 	
 	//Set title and display
 	Format(sBuffer, sizeof(sBuffer), "%s\n---", sBuffer);
@@ -312,27 +321,27 @@ void MenuBoss_DisplayNextClient(int iClient)
 		if (IsClientInGame(i))
 		{
 			//Check client not already in list
-			int iUserId = GetClientUserId(i);
+			bool bSkip;
 			int iLength = g_aNextBoss.Length;
 			for (int iBossCount = 0; iBossCount < iLength; iBossCount++)
 			{
-				NextBoss nextStruct;
-				g_aNextBoss.GetArray(iBossCount, nextStruct);
-				if (iUserId == nextStruct.iUserId)
+				NextBoss nextBoss;
+				g_aNextBoss.GetArray(iBossCount, nextBoss);
+				if (i == nextBoss.iClient && nextBoss.bForceNext)
 				{
-					iUserId = -1;
+					bSkip = true;
 					break;
 				}
 			}
 			
-			if (iUserId == -1)
-				continue;
-			
-			char sUserId[4], sName[64];
-			IntToString(iUserId, sUserId, sizeof(sUserId));
-			GetClientName(i, sName, sizeof(sName));
-			
-			hAdminNextBoss_Client.AddItem(sUserId, sName);
+			if (!bSkip)
+			{
+				char sClient[4], sName[64];
+				IntToString(i, sClient, sizeof(sClient));
+				GetClientName(i, sName, sizeof(sName));
+				
+				hAdminNextBoss_Client.AddItem(sClient, sName);
+			}
 		}
 	}
 	
@@ -358,12 +367,11 @@ public int MenuBoss_SelectNextClient(Menu hMenu, MenuAction action, int iClient,
 	}
 	else
 	{
-		int iUserId = StringToInt(sSelect);
-		int iPlayer = GetClientOfUserId(iUserId);
+		int iPlayer = StringToInt(sSelect);
 		if (0 < iPlayer <= MaxClients && IsClientInGame(iPlayer))
-			g_nextMenuSelectBoss[iClient].iUserId = iUserId;
+			g_menuBossSelect[iClient].iClient = iPlayer;
 		else
-			g_nextMenuSelectBoss[iClient].iUserId = 0;
+			g_menuBossSelect[iClient].iClient = 0;
 		
 		MenuBoss_DisplayBossList(iClient, MenuBoss_CallbackNextBoss, MenuBossFlags_Hidden|MenuBossFlags_Random);
 	}
@@ -378,11 +386,11 @@ public void MenuBoss_CallbackNextBoss(int iClient, const char[] sType)
 	}
 	else if (StrEqual(sType, "random"))
 	{
-		Format(g_nextMenuSelectBoss[iClient].sBoss, sizeof(g_nextMenuSelectBoss[].sBoss), "");
+		g_menuBossSelect[iClient].sBossType = NULL_STRING;
 	}
 	else
 	{
-		Format(g_nextMenuSelectBoss[iClient].sBoss, sizeof(g_nextMenuSelectBoss[].sBoss), sType);
+		Format(g_menuBossSelect[iClient].sBossType, sizeof(g_menuBossSelect[].sBossType), sType);
 	}
 	
 	MenuBoss_DisplayModifiersList(iClient, MenuBoss_CallbackNextModifiers, MenuBossFlags_Hidden|MenuBossFlags_Random|MenuBossFlags_None);
@@ -397,29 +405,32 @@ public void MenuBoss_CallbackNextModifiers(int iClient, const char[] sType)
 	}
 	else if (StrEqual(sType, "random"))
 	{
-		Format(g_nextMenuSelectBoss[iClient].sModifiers, sizeof(g_nextMenuSelectBoss[].sModifiers), "");
+		g_menuBossSelect[iClient].sModifierType = NULL_STRING;
 	}
 	else if (StrEqual(sType, "none"))
 	{
-		Format(g_nextMenuSelectBoss[iClient].sModifiers, sizeof(g_nextMenuSelectBoss[].sModifiers), "CModifiersNone");
+		g_menuBossSelect[iClient].sModifierType = "CModifiersNone";
 	}
 	else
 	{
-		Format(g_nextMenuSelectBoss[iClient].sModifiers, sizeof(g_nextMenuSelectBoss[].sModifiers), sType);
+		Format(g_menuBossSelect[iClient].sModifierType, sizeof(g_menuBossSelect[].sModifierType), sType);
 	}
 	
-	//Push NextBoss to ArrayList
-	g_aNextBoss.PushArray(g_nextMenuSelectBoss[iClient]);
+	//Add to list
+	SaxtonHaleNextBoss nextBoss = SaxtonHaleNextBoss(g_menuBossSelect[iClient].iClient);
+	nextBoss.SetBoss(g_menuBossSelect[iClient].sBossType);
+	nextBoss.SetModifier(g_menuBossSelect[iClient].sModifierType);
+	nextBoss.bForceNext = true;
 	
 	//Print chat boss been set
 	char sBuffer[256];
-	GetNextBossName(g_nextMenuSelectBoss[iClient], sBuffer, sizeof(sBuffer));
+	nextBoss.GetName(sBuffer, sizeof(sBuffer));
 	PrintToChatAll("%s%s %N added next boss %s", TEXT_TAG, TEXT_COLOR, iClient, sBuffer);
 	
 	//Clear stuffs
-	g_nextMenuSelectBoss[iClient].iUserId = 0;
-	g_nextMenuSelectBoss[iClient].sBoss = "";
-	g_nextMenuSelectBoss[iClient].sModifiers = "";
+	g_menuBossSelect[iClient].iClient = 0;
+	g_menuBossSelect[iClient].sBossType = NULL_STRING;
+	g_menuBossSelect[iClient].sModifierType = NULL_STRING;
 	
 	MenuBoss_DisplayNextList(iClient);
 }

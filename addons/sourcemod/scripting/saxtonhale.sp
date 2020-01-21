@@ -22,7 +22,7 @@
 
 #include "include/saxtonhale.inc"
 
-#define PLUGIN_VERSION 					"1.3.1"
+#define PLUGIN_VERSION 					"1.3.2"
 #define PLUGIN_VERSION_REVISION 		"manual"
 
 #if !defined SP_MAX_EXEC_PARAMS
@@ -305,25 +305,27 @@ TFClassType g_nClassDisplay[sizeof(g_strClassName)] = {
 	TFClass_Spy,
 };
 
+enum struct NextBoss
+{
+	int iId;							//Id, must be at top of this struct
+	int iClient;						//Client to have those values, must be at 2nd top of this struct
+	char sBossType[MAX_TYPE_CHAR];		//Boss to play on next turn
+	char sModifierType[MAX_TYPE_CHAR];	//Modifier to play on next turn
+	bool bForceNext;					//This client will be boss next round
+	bool bSpecialClass;					//All-Class on next turn
+	TFClassType nSpecialClass;			//If bSpecialClass, class to force, or TFClass_Unknown for random all-class
+}
+
+ArrayList g_aNextBoss;	//Arrays of NextBoss struct
+int g_iNextBossId;		//Newest created id
+
 bool g_bEnabled;
 bool g_bRoundStarted;
-bool g_bSpecialRound;
 bool g_bTF2Items;
-
-TFClassType g_nSpecialRoundNextClass;
 
 int g_iSpritesLaserbeam;
 int g_iSpritesGlow;
 
-//Main boss data
-enum struct NextBoss
-{
-	int iUserId;
-	char sBoss[MAX_TYPE_CHAR];
-	char sModifiers[MAX_TYPE_CHAR];
-}
-
-ArrayList g_aNextBoss;			//ArrayList of NextBoss struct
 Handle g_hTimerBossMusic;
 char g_sBossMusic[PLATFORM_MAX_PATH];
 int g_iHealthBarHealth;
@@ -333,7 +335,6 @@ int g_iHealthBarMaxHealth;
 int g_iPlayerLastButtons[TF_MAXPLAYERS+1];
 int g_iPlayerDamage[TF_MAXPLAYERS+1];
 int g_iPlayerAssistDamage[TF_MAXPLAYERS+1];
-bool g_bPlayerTriggerSpecialRound[TF_MAXPLAYERS+1];
 int g_iClientOwner[TF_MAXPLAYERS+1];
 
 int g_iClientFlags[TF_MAXPLAYERS+1];
@@ -503,8 +504,6 @@ public void OnPluginStart()
 	//Modifiers should always be enabled, so modifiers function can be called
 	SaxtonHaleBase boss = SaxtonHaleBase(0);
 	boss.bModifiers = true;
-	
-	g_aNextBoss = new ArrayList(sizeof(NextBoss));
 	
 	Config_Init();
 	
@@ -1178,7 +1177,6 @@ public void OnClientConnected(int iClient)
 	g_iPlayerDamage[iClient] = 0;
 	g_iPlayerAssistDamage[iClient] = 0;
 	g_iClientFlags[iClient] = 0;
-	g_bPlayerTriggerSpecialRound[iClient] = false;
 	g_iClientOwner[iClient] = 0;
 
 	ClassLimit_SetMainClass(iClient, TFClass_Unknown);
@@ -1233,6 +1231,8 @@ public void OnClientDisconnect(int iClient)
 	Preferences_SetAll(iClient, -1);
 	Queue_SetPlayerPoints(iClient, -1);
 	Winstreak_SetCurrent(iClient, -1);
+	
+	NextBoss_DeleteClient(iClient);
 }
 
 public void OnClientDisconnect_Post(int iClient)
