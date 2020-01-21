@@ -978,8 +978,7 @@ public void OnEntityCreated(int iEntity, const char[] sClassname)
 	}
 	else if (StrEqual(sClassname, "team_control_point_master"))
 	{
-		//Prevent round win from capture
-		DispatchKeyValue(iEntity, "cpm_restrict_team_cap_win", "1");
+		SDKHook(iEntity, SDKHook_Spawn, Dome_MasterSpawn);
 	}
 	else if (StrEqual(sClassname, "trigger_capture_area"))
 	{
