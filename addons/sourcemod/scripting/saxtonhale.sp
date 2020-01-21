@@ -338,10 +338,12 @@ ConVar tf_arena_preround_time;
 #include "vsh/abilities/ability_body_eat.sp"
 #include "vsh/abilities/ability_brave_jump.sp"
 #include "vsh/abilities/ability_dash_jump.sp"
+#include "vsh/abilities/ability_float_jump.sp"
 #include "vsh/abilities/ability_drop_model.sp"
 #include "vsh/abilities/ability_groundpound.sp"
 #include "vsh/abilities/ability_model_override.sp"
 #include "vsh/abilities/ability_rage_bomb.sp"
+#include "vsh/abilities/ability_rage_hop.sp"
 #include "vsh/abilities/ability_rage_conditions.sp"
 #include "vsh/abilities/ability_rage_freeze.sp"
 #include "vsh/abilities/ability_rage_ghost.sp"
@@ -353,6 +355,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/abilities/ability_weapon_charge.sp"
 #include "vsh/abilities/ability_weapon_fists.sp"
 #include "vsh/abilities/ability_weapon_spells.sp"
+#include "vsh/abilities/ability_force_forward.sp"
 
 #include "vsh/bosses/boss_hale.sp"
 #include "vsh/bosses/boss_painiscupcakes.sp"
@@ -373,6 +376,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/bosses/boss_zombie.sp"
 #include "vsh/bosses/boss_pyromancer_scorched.sp"
 #include "vsh/bosses/boss_pyromancer_scalded.sp"
+#include "vsh/bosses/boss_pyrocar.sp"
 
 #include "vsh/modifiers/modifiers_speed.sp"
 #include "vsh/modifiers/modifiers_jump.sp"
@@ -616,6 +620,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("CGentleSpy", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CHorsemann", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CPainisCupcake", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CPyroCar", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CUberRanger", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CVagineer", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CYeti", VSHClassType_Boss);
@@ -635,12 +640,14 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("CSeeldierMinion", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CAnnouncerMinion", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CMinionRanger", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CPyrocarMinion", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CZombie", VSHClassType_Boss);
 	
 	//Register ability
 	SaxtonHale_RegisterClass("CBodyEat", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CBraveJump", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CDashJump", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CFloatJump", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CDropModel", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CBomb", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CGroundPound", VSHClassType_Ability);
@@ -648,6 +655,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("CRageAddCond", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CRageFreeze", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CRageGhost", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CRageHop", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CLightRage", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CScareRage", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CTeleportSwap", VSHClassType_Ability);
@@ -656,6 +664,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("CWeaponCharge", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CWeaponFists", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CWeaponSpells", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CForceForward", VSHClassType_Ability);
 	
 	//Register modifiers
 	SaxtonHale_RegisterClass("CModifiersSpeed", VSHClassType_Modifier);
