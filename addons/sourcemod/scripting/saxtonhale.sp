@@ -312,8 +312,8 @@ enum struct NextBoss
 	char sBossType[MAX_TYPE_CHAR];		//Boss to play on next turn
 	char sModifierType[MAX_TYPE_CHAR];	//Modifier to play on next turn
 	bool bForceNext;					//This client will be boss next round
-	bool bSpecialClass;					//All-Class on next turn
-	TFClassType nSpecialClass;			//If bSpecialClass, class to force, or TFClass_Unknown for random all-class
+	bool bSpecialClassRound;			//All-Class on next turn
+	TFClassType nSpecialClassType;		//If bSpecialClassRound, class to force, or TFClass_Unknown for random all-class
 }
 
 ArrayList g_aNextBoss;	//Arrays of NextBoss struct

@@ -278,12 +278,12 @@ void NextBoss_SetBoss(SaxtonHaleNextBoss nextBoss, ArrayList aClients)
 	MenuBoss_DisplayInfo(nextBoss.iClient, sBossType, 10);
 	
 	//Enable special round if triggered
-	if (nextBoss.bSpecialClass)
+	if (nextBoss.bSpecialClassRound)
 	{
-		if (nextBoss.nSpecialClass == TFClass_Unknown && g_nNextBossSpecialClass == TFClass_Unknown)
+		if (nextBoss.nSpecialClassType == TFClass_Unknown && g_nNextBossSpecialClass == TFClass_Unknown)
 			g_nNextBossSpecialClass = view_as<TFClassType>(GetRandomInt(1, sizeof(g_strClassName)-1));
-		else if (nextBoss.nSpecialClass != TFClass_Unknown)
-			g_nNextBossSpecialClass = nextBoss.nSpecialClass;
+		else if (nextBoss.nSpecialClassType != TFClass_Unknown)
+			g_nNextBossSpecialClass = nextBoss.nSpecialClassType;
 	}
 
 	//Reset player queue

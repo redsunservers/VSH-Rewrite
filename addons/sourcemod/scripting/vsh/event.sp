@@ -283,7 +283,7 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 		
 		SaxtonHaleNextBoss nextBoss = SaxtonHaleNextBoss(iNextPlayer);
 		
-		if (nextBoss.bSpecialClass)
+		if (nextBoss.bSpecialClassRound)
 			Format(sFormat, sizeof(sFormat), "%sYour round will be a special class round", sFormat);
 		else if (!Preferences_Get(iNextPlayer, Preferences_Winstreak))
 			Format(sFormat, sizeof(sFormat), "%sYour winstreak preference is currently disabled", sFormat);

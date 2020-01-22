@@ -548,14 +548,14 @@ methodmap SaxtonHaleNextBoss
 	}
 	
 	// Retrieve/Set this boss round to be a special class
-	property bool bSpecialClass
+	property bool bSpecialClassRound
 	{
 		public native get();
 		public native set(bool val);
 	}
 	
 	// Retrieve/Set this boss to play class if bSpecialClass is true, random class if TFClass_Unknown
-	property TFClassType nSpecialClass
+	property TFClassType nSpecialClassType
 	{
 		public native get();
 		public native set(TFClassType val);
@@ -890,10 +890,10 @@ public __pl_saxtonhale_SetNTVOptional()
 	MarkNativeAsOptional("SaxtonHaleNextBoss.iClient.get");
 	MarkNativeAsOptional("SaxtonHaleNextBoss.bForceNext.get");
 	MarkNativeAsOptional("SaxtonHaleNextBoss.bForceNext.set");
-	MarkNativeAsOptional("SaxtonHaleNextBoss.bSpecialClass.get");
-	MarkNativeAsOptional("SaxtonHaleNextBoss.bSpecialClass.set");
-	MarkNativeAsOptional("SaxtonHaleNextBoss.nSpecialClass.get");
-	MarkNativeAsOptional("SaxtonHaleNextBoss.nSpecialClass.set");
+	MarkNativeAsOptional("SaxtonHaleNextBoss.bSpecialClassRound.get");
+	MarkNativeAsOptional("SaxtonHaleNextBoss.bSpecialClassRound.set");
+	MarkNativeAsOptional("SaxtonHaleNextBoss.nSpecialClassType.get");
+	MarkNativeAsOptional("SaxtonHaleNextBoss.nSpecialClassType.set");
 	
 	MarkNativeAsOptional("SaxtonHale_GetBossTeam");
 	MarkNativeAsOptional("SaxtonHale_GetAttackTeam");

@@ -9,10 +9,10 @@ void Native_AskLoad()
 	CreateNative("SaxtonHaleNextBoss.iClient.get", Native_NextBoss_GetClient);
 	CreateNative("SaxtonHaleNextBoss.bForceNext.get", Native_NextBoss_GetForceNext);
 	CreateNative("SaxtonHaleNextBoss.bForceNext.set", Native_NextBoss_SetForceNext);
-	CreateNative("SaxtonHaleNextBoss.bSpecialClass.get", Native_NextBoss_GetSpecialClass);
-	CreateNative("SaxtonHaleNextBoss.bSpecialClass.set", Native_NextBoss_SetSpecialClass);
-	CreateNative("SaxtonHaleNextBoss.nSpecialClass.get", Native_NextBoss_GetClass);
-	CreateNative("SaxtonHaleNextBoss.nSpecialClass.set", Native_NextBoss_SetClass);
+	CreateNative("SaxtonHaleNextBoss.bSpecialClassRound.get", Native_NextBoss_GetSpecialClassRound);
+	CreateNative("SaxtonHaleNextBoss.bSpecialClassRound.set", Native_NextBoss_SetSpecialClassRound);
+	CreateNative("SaxtonHaleNextBoss.nSpecialClassType.get", Native_NextBoss_GetSpecialClassType);
+	CreateNative("SaxtonHaleNextBoss.nSpecialClassType.set", Native_NextBoss_SetSpecialClassType);
 	
 	CreateNative("SaxtonHale_GetBossTeam", Native_GetBossTeam);
 	CreateNative("SaxtonHale_GetAttackTeam", Native_GetAttackTeam);
@@ -148,45 +148,45 @@ public any Native_NextBoss_SetForceNext(Handle hPlugin, int iNumParams)
 	NextBoss_SetStruct(nextBoss);
 }
 
-//bool SaxtonHaleNextBoss.bSpecialClass.get();
-public any Native_NextBoss_GetSpecialClass(Handle hPlugin, int iNumParams)
+//bool SaxtonHaleNextBoss.bSpecialClassRound.get();
+public any Native_NextBoss_GetSpecialClassRound(Handle hPlugin, int iNumParams)
 {
 	NextBoss nextBoss;
 	if (!NextBoss_GetStruct(GetNativeCell(1), nextBoss))
 		ThrowNativeError(SP_ERROR_NATIVE, "Invalid id passed, id may be already used");
 	
-	return nextBoss.bSpecialClass;
+	return nextBoss.bSpecialClassRound;
 }
 
-//void SaxtonHaleNextBoss.bSpecialClass.set(bool val);
-public any Native_NextBoss_SetSpecialClass(Handle hPlugin, int iNumParams)
+//void SaxtonHaleNextBoss.bSpecialClassRound.set(bool val);
+public any Native_NextBoss_SetSpecialClassRound(Handle hPlugin, int iNumParams)
 {
 	NextBoss nextBoss;
 	if (!NextBoss_GetStruct(GetNativeCell(1), nextBoss))
 		ThrowNativeError(SP_ERROR_NATIVE, "Invalid id passed, id may be already used");
 	
-	nextBoss.bSpecialClass = GetNativeCell(2);
+	nextBoss.bSpecialClassRound = GetNativeCell(2);
 	NextBoss_SetStruct(nextBoss);
 }
 
-//TFClassType SaxtonHaleNextBoss.nSpecialClass.get();
-public any Native_NextBoss_GetClass(Handle hPlugin, int iNumParams)
+//TFClassType SaxtonHaleNextBoss.nSpecialClassType.get();
+public any Native_NextBoss_GetSpecialClassType(Handle hPlugin, int iNumParams)
 {
 	NextBoss nextBoss;
 	if (!NextBoss_GetStruct(GetNativeCell(1), nextBoss))
 		ThrowNativeError(SP_ERROR_NATIVE, "Invalid id passed, id may be already used");
 	
-	return nextBoss.nSpecialClass;
+	return nextBoss.nSpecialClassType;
 }
 
-//void SaxtonHaleNextBoss.nSpecialClass.set(bool val);
-public any Native_NextBoss_SetClass(Handle hPlugin, int iNumParams)
+//void SaxtonHaleNextBoss.nSpecialClassType.set(bool val);
+public any Native_NextBoss_SetSpecialClassType(Handle hPlugin, int iNumParams)
 {
 	NextBoss nextBoss;
 	if (!NextBoss_GetStruct(GetNativeCell(1), nextBoss))
 		ThrowNativeError(SP_ERROR_NATIVE, "Invalid id passed, id may be already used");
 	
-	nextBoss.nSpecialClass = GetNativeCell(2);
+	nextBoss.nSpecialClassType = GetNativeCell(2);
 	NextBoss_SetStruct(nextBoss);
 }
 
@@ -335,11 +335,11 @@ public any Native_ForceSpecialRound(Handle hPlugin, int iNumParams)
 	if (0 < iClient <= MaxClients && IsClientInGame(iClient))
 	{
 		SaxtonHaleNextBoss nextBoss = SaxtonHaleNextBoss(iClient);
-		if (nextBoss.bSpecialClass)
+		if (nextBoss.bSpecialClassRound)
 			return false;
 		
-		nextBoss.bSpecialClass = true;
-		nextBoss.nSpecialClass = nClass;
+		nextBoss.bSpecialClassRound = true;
+		nextBoss.nSpecialClassType = nClass;
 		return true;
 	}
 	
