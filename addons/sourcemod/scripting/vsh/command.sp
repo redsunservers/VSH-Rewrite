@@ -380,8 +380,7 @@ public Action Command_ForceSpecialRound(int iClient, int iArgs)
 		if (iArgs < 1)
 		{
 			Format(sClass, sizeof(sClass), "random");
-			g_bSpecialRound = true;
-			g_nSpecialRoundNextClass = TFClass_Unknown;
+			NextBoss_SetSpecialClass(TFClass_Unknown);
 		}
 		else
 		{
@@ -395,8 +394,7 @@ public Action Command_ForceSpecialRound(int iClient, int iArgs)
 			}
 			
 			Format(sClass, sizeof(sClass), g_strClassName[nClass]);
-			g_bSpecialRound = true;
-			g_nSpecialRoundNextClass = nClass;
+			NextBoss_SetSpecialClass(nClass);
 		}
 		
 		PrintToChatAll("%s%s %N force set next round a %s special round!", TEXT_TAG, TEXT_COLOR, iClient, sClass);

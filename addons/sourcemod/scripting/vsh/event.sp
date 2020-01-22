@@ -98,7 +98,7 @@ public Action Event_RoundStart(Event event, const char[] sName, bool bDontBroadc
 		TF2_ForceTeamJoin(iClient, TFTeam_Attack);
 	}
 
-	PickNextBoss();	//Set boss
+	NextBoss_SetNextBoss();	//Set boss
 
 	g_iTotalAttackCount = SaxtonHale_GetAliveAttackPlayers();	//Update amount of attack players
 
@@ -280,9 +280,11 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 	{
 		char sFormat[512];
 		Format(sFormat, sizeof(sFormat), "%s================\nYou are about to be the next boss!\n", TEXT_COLOR);
-
-		if (g_bPlayerTriggerSpecialRound[iNextPlayer])
-			Format(sFormat, sizeof(sFormat), "%sYour round will be a special round", sFormat);
+		
+		SaxtonHaleNextBoss nextBoss = SaxtonHaleNextBoss(iNextPlayer);
+		
+		if (nextBoss.bSpecialClassRound)
+			Format(sFormat, sizeof(sFormat), "%sYour round will be a special class round", sFormat);
 		else if (!Preferences_Get(iNextPlayer, Preferences_Winstreak))
 			Format(sFormat, sizeof(sFormat), "%sYour winstreak preference is currently disabled", sFormat);
 		else if (Winstreak_IsAllowed(iNextPlayer))
