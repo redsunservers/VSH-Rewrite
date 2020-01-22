@@ -91,14 +91,6 @@ enum Preferences ( <<=1 )
 	Preferences_Revival,
 };
 
-enum WinReason
-{
-	WinReason_PointCaptured = 1, 
-	WinReason_Elimination, 
-	WinReason_AllPointsCaptured = 4, 
-	WinReason_Stalemate
-};
-
 enum
 {
 	WeaponSlot_Primary = 0,
@@ -446,6 +438,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/network.sp"
 #include "vsh/nextboss.sp"
 #include "vsh/preferences.sp"
+#include "vsh/property.sp"
 #include "vsh/queue.sp"
 #include "vsh/sdk.sp"
 #include "vsh/stocks.sp"
@@ -463,8 +456,10 @@ public Plugin myinfo =
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	Forward_AskLoad();
-	Native_AskLoad();
 	FuncNative_AskLoad();
+	Native_AskLoad();
+	Property_AskLoad();
+	
 	RegPluginLibrary("saxtonhale");
 	
 	return APLRes_Success;
@@ -980,6 +975,10 @@ public void OnEntityCreated(int iEntity, const char[] sClassname)
 	{
 		SDKHook(iEntity, SDKHook_Touch, ItemPack_OnTouch);
 	}
+	else if (StrEqual(sClassname, "team_control_point_master"))
+	{
+		SDKHook(iEntity, SDKHook_Spawn, Dome_MasterSpawn);
+	}
 	else if (StrEqual(sClassname, "trigger_capture_area"))
 	{
 		SDKHook(iEntity, SDKHook_Spawn, Dome_TriggerSpawn);
@@ -1481,6 +1480,8 @@ void Client_OnButton(int iClient, int &buttons)
 	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 	if (boss.bValid)
 		boss.CallFunction("OnButton", buttons);
+	else
+		Tags_OnButton(iClient, buttons);
 }
 
 void Client_OnButtonPress(int iClient, int button)

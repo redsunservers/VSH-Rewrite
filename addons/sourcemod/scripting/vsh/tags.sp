@@ -221,6 +221,18 @@ void Tags_PlayerHurt(int iVictim, int iAttacker, int iDamage)
 	}
 }
 
+void Tags_OnButton(int iClient, int &iButtons)
+{
+	//Prevent clients holding m2 while airblast in cooldown
+	if (iButtons & IN_ATTACK2 && g_iTagsAirblastRequirement[iClient] > 0 && g_iTagsAirblastDamage[iClient] < g_iTagsAirblastRequirement[iClient])
+	{
+		int iPrimary = TF2_GetItemInSlot(iClient, WeaponSlot_Primary);
+		int iActiveWep = GetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon");
+		if (iActiveWep > MaxClients && iPrimary == iActiveWep)
+			iButtons &= ~IN_ATTACK2;
+	}
+}
+
 public Action Tags_OnProjectileTouch(int iProjectile, int iToucher)
 {
 	if (!g_bEnabled) return Plugin_Continue;

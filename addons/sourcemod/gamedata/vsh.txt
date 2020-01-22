@@ -99,11 +99,6 @@
 				"linux"		"154"
 				"windows"	"153"
 			}
-			"CTFGameRules::SetWinningTeam"
-			{
-				"linux"		"161"
-				"windows"	"160"
-			}
 			"CBaseEntity::ShouldTransmit"
 			{
 				"linux"		"19"
