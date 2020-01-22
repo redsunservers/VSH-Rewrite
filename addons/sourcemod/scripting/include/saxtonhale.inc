@@ -547,14 +547,14 @@ methodmap SaxtonHaleNextBoss
 		public native set(bool val);
 	}
 	
-	// Retrieve/Set this boss round to be a special class
+	// Retrieve/Set this boss round to be a special class round
 	property bool bSpecialClassRound
 	{
 		public native get();
 		public native set(bool val);
 	}
 	
-	// Retrieve/Set this boss to play class if bSpecialClass is true, random class if TFClass_Unknown
+	// Retrieve/Set this boss to play class if bSpecialClassRound is true, random class if TFClass_Unknown
 	property TFClassType nSpecialClassType
 	{
 		public native get();
