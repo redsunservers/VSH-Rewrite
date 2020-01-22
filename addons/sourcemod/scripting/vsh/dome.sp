@@ -12,7 +12,6 @@
 static bool g_bDomeCustomPos;	//Whenever if capture point is in custom pos
 static float g_vecDomeCP[3];	//Pos of CP
 static int g_iDomeTriggerRef;	//Trigger to control touch
-static float g_flDomeCPTimeRemaining;	//Time left to capture this CP
 static bool g_bDomeCapturing[TF_MAXPLAYERS+1];
 
 //Dome prop
@@ -92,22 +91,11 @@ public void Dome_MasterSpawn(int iMaster)
 public void Dome_TriggerSpawn(int iTrigger)
 {
 	//Set time to cap to whatever in convar
-	DispatchKeyValueFloat(iTrigger, "area_time_to_cap", g_ConfigConvar.LookupFloat("vsh_dome_cp_caprate") / 2.0);
+	DispatchKeyValueFloat(iTrigger, "area_time_to_cap", g_ConfigConvar.LookupFloat("vsh_dome_cp_captime") / 2.0);
+	//If mp_capstyle is set to 1, team_numcap_ keyvalues are used in the captime calculations
+	DispatchKeyValue(iTrigger, "team_numcap_2", "1");
+	DispatchKeyValue(iTrigger, "team_numcap_3", "1");
 	g_iDomeTriggerRef = EntIndexToEntRef(iTrigger);
-}
-
-public Action Dome_SetCapTimeRemaining(int iTrigger, float &flTime)
-{
-	//CTriggerAreaCapture::SetCapTimeRemaining sometimes start capture time incorrectly, set it properly
-	if (g_flDomeCPTimeRemaining == 0.0 && flTime > 0.0)
-	{
-		flTime = g_ConfigConvar.LookupFloat("vsh_dome_cp_caprate");
-		g_flDomeCPTimeRemaining = flTime;
-		return Plugin_Changed;
-	}
-	
-	g_flDomeCPTimeRemaining = flTime;
-	return Plugin_Continue;
 }
 
 public Action Dome_TriggerTouch(int iTrigger, int iToucher)
