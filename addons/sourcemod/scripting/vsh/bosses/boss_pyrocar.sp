@@ -55,7 +55,7 @@ static int g_iCosmetics[] =  {
 	321
 };
 
-static int g_iPrecacheCosmetics[5];
+static int g_iPyrocarCosmetics[sizeof(g_iPrecacheCosmetics)];
 
 methodmap CPyroCar < SaxtonHaleBase
 {
@@ -120,10 +120,10 @@ methodmap CPyroCar < SaxtonHaleBase
 		*/
 		
 		
-		int rnd = GetRandomInt(0, sizeof(g_iPrecacheCosmetics)-1);
-		int iWearable = this.CallFunction("CreateWeapon", g_iCosmetics[rnd], "tf_wearable", 1, TFQual_Collectors, "");
+		int iRandom = GetRandomInt(0, sizeof(g_iPrecacheCosmetics)-1);
+		int iWearable = this.CallFunction("CreateWeapon", g_iCosmetics[iRandom], "tf_wearable", 1, TFQual_Collectors, "");
 		if (iWearable > MaxClients)
-			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iPrecacheCosmetics[rnd]);
+			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iPrecacheCosmetics[iRandom]);
 	}
 	
 	public Action OnTakeDamage(int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)

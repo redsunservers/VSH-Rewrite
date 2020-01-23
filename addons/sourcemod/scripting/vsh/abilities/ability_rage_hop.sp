@@ -160,6 +160,7 @@ methodmap CRageHop < SaxtonHaleBase
 			
 			g_bStompEnabled[this.iClient] = false;
 		}
+		
 		if (g_flFloatEndTime[this.iClient] > GetGameTime() && (GetEntityFlags(this.iClient) & FL_ONGROUND) && !g_bStompEnabled[this.iClient])
 		{
 			float vecVel[3];
@@ -176,9 +177,9 @@ methodmap CRageHop < SaxtonHaleBase
 		}
 		else
 		{
-		int iWeapon = GetPlayerWeaponSlot(this.iClient, WeaponSlot_Primary);
-		if(iWeapon > MaxClients)
-			TF2Attrib_SetByDefIndex(iWeapon, 252, 0.5);
+			int iWeapon = GetPlayerWeaponSlot(this.iClient, WeaponSlot_Primary);
+			if(iWeapon > MaxClients)
+				TF2Attrib_SetByDefIndex(iWeapon, 252, 0.5);
 		}
 	}
 	
