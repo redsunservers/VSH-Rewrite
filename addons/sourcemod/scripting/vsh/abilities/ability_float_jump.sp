@@ -1,8 +1,7 @@
 static int g_iFloatJumpCharge[TF_MAXPLAYERS+1];
 static int g_iFloatJumpMaxCharge[TF_MAXPLAYERS+1];
 static int g_iFloatJumpChargeBuild[TF_MAXPLAYERS+1];
-static float g_flFloatJumpMaxHeight[TF_MAXPLAYERS+1];
-static float g_flFloatJumpMaxDistance[TF_MAXPLAYERS+1];
+static float g_flFloatJumpHeightMultiplier[TF_MAXPLAYERS+1];
 static float g_flJumpCooldown[TF_MAXPLAYERS+1];
 static float g_flJumpCooldownWait[TF_MAXPLAYERS+1];
 static float g_flFloatEndTime[TF_MAXPLAYERS+1];
@@ -60,27 +59,15 @@ methodmap CFloatJump < SaxtonHaleBase
 		}
 	}
 	
-	property float flMaxHeight
+	property float flHeightMultiplier
 	{
 		public get()
 		{
-			return g_flFloatJumpMaxHeight[this.iClient];
+			return g_flFloatJumpHeightMultiplier[this.iClient];
 		}
 		public set(float val)
 		{
-			g_flFloatJumpMaxHeight[this.iClient] = val;
-		}
-	}
-	
-	property float flMaxDistance
-	{
-		public get()
-		{
-			return g_flFloatJumpMaxDistance[this.iClient];
-		}
-		public set(float val)
-		{
-			g_flFloatJumpMaxDistance[this.iClient] = val;
+			g_flFloatJumpHeightMultiplier[this.iClient] = val;
 		}
 	}
 	
@@ -92,8 +79,7 @@ methodmap CFloatJump < SaxtonHaleBase
 		//Default values, these can be changed if needed
 		ability.iMaxJumpCharge = 160;
 		ability.iJumpChargeBuild = 4;
-		ability.flMaxHeight = 1400.0;
-		ability.flMaxDistance = 0.5;
+		ability.flHeightMultiplier = 4.0;
 		ability.flCooldown = 8.0;
 	}
 	
@@ -117,7 +103,7 @@ methodmap CFloatJump < SaxtonHaleBase
 			
 			vecVel[0] = Cosine(DegToRad(vecAng[0])) * Cosine(DegToRad(vecAng[1])) * 600.0;
 			vecVel[1] = Cosine(DegToRad(vecAng[0])) * Sine(DegToRad(vecAng[1])) * 600.0;
-			vecVel[2] = (((-vecAng[0]) * 1.5) + 90.0) * 4.0;
+			vecVel[2] = (((-vecAng[0]) * 1.5) + 90.0) * this.flHeightMultiplier;
 			
 			SetEntProp(this.iClient, Prop_Send, "m_bJumping", true);
 			
