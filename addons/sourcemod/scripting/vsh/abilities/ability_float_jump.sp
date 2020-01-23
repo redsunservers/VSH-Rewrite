@@ -90,11 +90,11 @@ methodmap CFloatJump < SaxtonHaleBase
 		g_flJumpCooldownWait[ability.iClient] = 0.0;
 		
 		//Default values, these can be changed if needed
-		ability.iMaxJumpCharge = 600;
-		ability.iJumpChargeBuild = 10;
+		ability.iMaxJumpCharge = 160;
+		ability.iJumpChargeBuild = 4;
 		ability.flMaxHeight = 1400.0;
 		ability.flMaxDistance = 0.5;
-		ability.flCooldown = 7.0;
+		ability.flCooldown = 8.0;
 	}
 	
 	public void OnThink()
@@ -153,7 +153,7 @@ methodmap CFloatJump < SaxtonHaleBase
 	{
 		if (GameRules_GetRoundState() == RoundState_Preround) return;
 		
-		if (button == IN_ATTACK2)
+		if (button == IN_ATTACK2 && this.iJumpCharge >= this.iMaxJumpCharge)
 		{
 			if (TF2_IsPlayerInCondition(this.iClient, TFCond_Dazed))//Can't jump if stunned
 				return;
@@ -161,9 +161,7 @@ methodmap CFloatJump < SaxtonHaleBase
 			g_bFloatJumpHoldingChargeButton[this.iClient] = false;
 			if (g_flJumpCooldownWait[this.iClient] != 0.0 && g_flJumpCooldownWait[this.iClient] > GetGameTime()) return;
 			
-			float flCooldownTime = (this.flCooldown*(float(this.iJumpCharge)/float(this.iMaxJumpCharge)));
-			if (flCooldownTime < 2.5) flCooldownTime = 2.5;
-			g_flJumpCooldownWait[this.iClient] = GetGameTime()+flCooldownTime;
+			g_flJumpCooldownWait[this.iClient] = GetGameTime()+this.flCooldown;
 			
 			g_flFloatEndTime[this.iClient] = GetGameTime() + 2.0;
 			this.iJumpCharge = 0;
@@ -173,7 +171,7 @@ methodmap CFloatJump < SaxtonHaleBase
 			char sSound[PLATFORM_MAX_PATH];
 			this.CallFunction("GetSoundAbility", sSound, sizeof(sSound), "CFloatJump");
 			if (!StrEmpty(sSound))
-			EmitSoundToAll(sSound, this.iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
+				EmitSoundToAll(sSound, this.iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
 			
 		}
 	}

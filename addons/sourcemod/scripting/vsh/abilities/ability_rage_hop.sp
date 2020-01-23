@@ -2,6 +2,7 @@ static int g_iRageHopMaxCharge[TF_MAXPLAYERS+1];
 static float g_flRageHopMaxHeight[TF_MAXPLAYERS+1];
 static float g_flRageHopMaxDistance[TF_MAXPLAYERS+1];
 static float g_flBombDamage[TF_MAXPLAYERS+1];
+static float g_flBombDamageSuper[TF_MAXPLAYERS+1];
 static float g_flBombRadius[TF_MAXPLAYERS+1];
 static float g_flFloatEndTime[TF_MAXPLAYERS+1];
 static bool g_bStompEnabled[TF_MAXPLAYERS+1];
@@ -46,30 +47,6 @@ methodmap CRageHop < SaxtonHaleBase
 		}
 	}
 	
-	property float flMaxHeight
-	{
-		public get()
-		{
-			return g_flRageHopMaxHeight[this.iClient];
-		}
-		public set(float val)
-		{
-			g_flRageHopMaxHeight[this.iClient] = val;
-		}
-	}
-	
-	property float flMaxDistance
-	{
-		public get()
-		{
-			return g_flRageHopMaxDistance[this.iClient];
-		}
-		public set(float val)
-		{
-			g_flRageHopMaxDistance[this.iClient] = val;
-		}
-	}
-	
 	property float flBombDamage
 	{
 		public get()
@@ -82,7 +59,19 @@ methodmap CRageHop < SaxtonHaleBase
 		}
 	}
 	
-		property float flBombRadius
+	property float flBombDamageSuper
+	{
+		public get()
+		{
+			return g_flBombDamageSuper[this.iClient];
+		}
+		public set(float val)
+		{
+			g_flBombDamageSuper[this.iClient] = val;
+		}
+	}
+	
+	property float flBombRadius
 	{
 		public get()
 		{
@@ -94,18 +83,45 @@ methodmap CRageHop < SaxtonHaleBase
 		}
 	}
 	
+	property float flRageHopMaxDistance
+	{
+		public get()
+		{
+			return g_flRageHopMaxDistance[this.iClient];
+		}
+		public set(float val)
+		{
+			g_flRageHopMaxDistance[this.iClient] = val;
+		}
+	}
+	
+	property float flRageHopMaxHeight
+	{
+		public get()
+		{
+			return g_flRageHopMaxHeight[this.iClient];
+		}
+		public set(float val)
+		{
+			g_flRageHopMaxHeight[this.iClient] = val;
+		}
+	}
+	
 	public CRageHop(CRageHop ability)
 	{
 		//Default values, these can be changed if needed
 		ability.iMaxJumpCharge = 1200;
-		ability.flMaxHeight = 600.0;
-		ability.flMaxDistance = 4.5;
 		
-		ability.flBombDamage = 10.0;
+		ability.flRageHopMaxHeight = 500.0;
+		ability.flRageHopMaxDistance = 4.5;
+		
+		ability.flBombDamage = 30.0;
 		ability.flBombRadius = 200.0;
 		
-		ability.flDuration = 45.0;
-		ability.flDurationSuper = 16.0;
+		ability.flBombDamageSuper = 45.0;
+		
+		ability.flDuration = 10.0;
+		ability.flDurationSuper = 15.0;
 		
 	}
 	
@@ -118,23 +134,22 @@ methodmap CRageHop < SaxtonHaleBase
 		
 		if(g_bStompEnabled[this.iClient])
 		{
-			float vecExplosionPos[3], vecExplosionOrigin[3];
+			float vecExplosionOrigin[3];
 			GetClientAbsOrigin(this.iClient, vecExplosionOrigin);
 			
-			vecExplosionPos = vecExplosionOrigin;
-			
-			char sSound[255];
+			char sSound[PLATFORM_MAX_PATH];
 			Format(sSound, sizeof(sSound), "weapons/airstrike_small_explosion_0%i.wav", GetRandomInt(1,3));
-			TF2_Explode(this.iClient, vecExplosionPos, this.flBombDamage, this.flBombRadius, "heavy_ring_of_fire", sSound);
+			
+			if(this.bSuperRage)
+				TF2_Explode(this.iClient, vecExplosionOrigin, this.flBombDamage, this.flBombRadius, "heavy_ring_of_fire", sSound);
+			else
+				TF2_Explode(this.iClient, vecExplosionOrigin, this.flBombDamageSuper, this.flBombRadius, "heavy_ring_of_fire", sSound);
 			
 			for (int i = 1; i <= MaxClients; i++)
 			{
 				if (IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i) > 1 && GetClientTeam(i) != iTeam)
 				{
-					float vecTargetPos[3];
-					GetClientAbsOrigin(i, vecTargetPos);
-					
-					if (GetVectorDistance(vecExplosionOrigin, vecTargetPos) < 200.0)
+					if (IsClientInRange(i, vecExplosionOrigin, 200.0))
 					{
 						TF2_IgnitePlayer(i, this.iClient);
 						TF2_AddCondition(i, TFCond_Gas, 10.0, this.iClient);
@@ -150,9 +165,9 @@ methodmap CRageHop < SaxtonHaleBase
 			float vecVel[3];
 			GetEntPropVector(this.iClient, Prop_Data, "m_vecVelocity", vecVel);
 			
-			vecVel[2] = 500.0;
-			vecVel[0] *= (1.0+Sine((float(600)/float(this.iMaxJumpCharge)) * FLOAT_PI * this.flMaxDistance));
-			vecVel[1] *= (1.0+Sine((float(600)/float(this.iMaxJumpCharge)) * FLOAT_PI * this.flMaxDistance));
+			vecVel[2] = this.flRageHopMaxHeight;
+			vecVel[0] *= (1.0+Sine((float(600)/float(this.iMaxJumpCharge)) * FLOAT_PI * this.flRageHopMaxDistance));
+			vecVel[1] *= (1.0+Sine((float(600)/float(this.iMaxJumpCharge)) * FLOAT_PI * this.flRageHopMaxDistance));
 			SetEntProp(this.iClient, Prop_Send, "m_bJumping", true);
 			
 			TeleportEntity(this.iClient, NULL_VECTOR, NULL_VECTOR, vecVel);
@@ -162,7 +177,8 @@ methodmap CRageHop < SaxtonHaleBase
 		else
 		{
 		int iWeapon = GetPlayerWeaponSlot(this.iClient, WeaponSlot_Primary);
-		TF2Attrib_SetByName(iWeapon, "damage force reduction", 0.5);
+		if(iWeapon > MaxClients)
+			TF2Attrib_SetByDefIndex(iWeapon, 252, 0.5);
 		}
 	}
 	
@@ -179,6 +195,7 @@ methodmap CRageHop < SaxtonHaleBase
 		EmitSoundToAll(sSound, this.iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
 		
 		int iWeapon = GetPlayerWeaponSlot(this.iClient, WeaponSlot_Primary);
-		TF2Attrib_SetByName(iWeapon, "damage force reduction", 0.0);
+		if(iWeapon > MaxClients)
+			TF2Attrib_SetByDefIndex(iWeapon, 252, 1.0);
 	}
 };
