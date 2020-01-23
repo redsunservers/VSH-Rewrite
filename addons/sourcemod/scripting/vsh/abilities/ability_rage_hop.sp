@@ -193,7 +193,7 @@ methodmap CRageHop < SaxtonHaleBase
 		char sSound[PLATFORM_MAX_PATH];
 		this.CallFunction("GetSoundAbility", sSound, sizeof(sSound), "CRageHop");
 		if (!StrEmpty(sSound))
-		EmitSoundToAll(sSound, this.iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
+			EmitSoundToAll(sSound, this.iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
 		
 		int iWeapon = GetPlayerWeaponSlot(this.iClient, WeaponSlot_Primary);
 		if(iWeapon > MaxClients)
