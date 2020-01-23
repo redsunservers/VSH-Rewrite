@@ -146,7 +146,7 @@ methodmap CFloatJump < SaxtonHaleBase
 			
 			g_bFloatJumpHoldingChargeButton[this.iClient] = false;
 			
-			if (g_flJumpCooldownWait[this.iClient] != 0.0 && g_flJumpCooldownWait[this.iClient] > GetGameTime() || this.iJumpCharge < this.iMaxJumpCharge) return;
+			if ((g_flJumpCooldownWait[this.iClient] != 0.0 && g_flJumpCooldownWait[this.iClient] > GetGameTime()) || this.iJumpCharge < this.iMaxJumpCharge) return;
 			
 			g_flJumpCooldownWait[this.iClient] = GetGameTime()+this.flCooldown;
 			
