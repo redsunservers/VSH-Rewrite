@@ -55,7 +55,7 @@ static int g_iCosmetics[] =  {
 	394 //Connoisseur's Cap
 };
 
-static int g_iPyrocarCosmetics[sizeof(g_iPrecacheCosmetics)];
+static int g_iPyrocarCosmetics[sizeof(g_iCosmetics)];
 
 methodmap CPyroCar < SaxtonHaleBase
 {
@@ -120,10 +120,10 @@ methodmap CPyroCar < SaxtonHaleBase
 		*/
 		
 		
-		int iRandom = GetRandomInt(0, sizeof(g_iPrecacheCosmetics)-1);
+		int iRandom = GetRandomInt(0, sizeof(g_iCosmetics)-1);
 		int iWearable = this.CallFunction("CreateWeapon", g_iCosmetics[iRandom], "tf_wearable", 1, TFQual_Collectors, "");
 		if (iWearable > MaxClients)
-			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iPrecacheCosmetics[iRandom]);
+			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iPyrocarCosmetics[iRandom]);
 	}
 	
 	public Action OnTakeDamage(int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
@@ -171,7 +171,7 @@ methodmap CPyroCar < SaxtonHaleBase
 	public void Precache()
 	{
 		for (int i = 0; i < sizeof(g_iCosmetics); i++)
-			g_iPrecacheCosmetics[i] = PrecacheModel(g_strPrecacheCosmetics[i]);
+			g_iPyrocarCosmetics[i] = PrecacheModel(g_strPrecacheCosmetics[i]);
 			
 		for (int i = 0; i < sizeof(g_strPyrocarRoundStart); i++) PrepareSound(g_strPyrocarRoundStart[i]);
 		for (int i = 0; i < sizeof(g_strPyrocarWin); i++) PrepareSound(g_strPyrocarWin[i]);
