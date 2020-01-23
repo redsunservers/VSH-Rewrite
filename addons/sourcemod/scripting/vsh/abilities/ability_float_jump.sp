@@ -91,7 +91,7 @@ methodmap CFloatJump < SaxtonHaleBase
 		if (this.iJumpCharge > 0)
 			Format(sMessage, sizeof(sMessage), "Float charge: %0.2f%%.", (float(this.iJumpCharge)/float(this.iMaxJumpCharge))*100.0);
 		else
-			Format(sMessage, sizeof(sMessage), "Hold right click to use your super-jump!");
+			Format(sMessage, sizeof(sMessage), "Hold right click to use your float jump!");
 		
 		if (g_flFloatEndTime[this.iClient] > GetGameTime())
 		{
@@ -139,13 +139,14 @@ methodmap CFloatJump < SaxtonHaleBase
 	{
 		if (GameRules_GetRoundState() == RoundState_Preround) return;
 		
-		if (button == IN_ATTACK2 && this.iJumpCharge >= this.iMaxJumpCharge)
+		if (button == IN_ATTACK2)
 		{
 			if (TF2_IsPlayerInCondition(this.iClient, TFCond_Dazed))//Can't jump if stunned
 				return;
 			
 			g_bFloatJumpHoldingChargeButton[this.iClient] = false;
-			if (g_flJumpCooldownWait[this.iClient] != 0.0 && g_flJumpCooldownWait[this.iClient] > GetGameTime()) return;
+			
+			if (g_flJumpCooldownWait[this.iClient] != 0.0 && g_flJumpCooldownWait[this.iClient] > GetGameTime() && this.iJumpCharge >= this.iMaxJumpCharge) return;
 			
 			g_flJumpCooldownWait[this.iClient] = GetGameTime()+this.flCooldown;
 			
