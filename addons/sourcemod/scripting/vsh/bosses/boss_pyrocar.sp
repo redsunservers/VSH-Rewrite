@@ -41,18 +41,18 @@ static char g_strPyrocarLastMan[][] =  {
 static char g_strPrecacheCosmetics[][] =  {
 	"models/player/items/pyro/pyro_hat.mdl",
 	"models/player/items/pyro/fireman_helmet.mdl",
-	"models/player/items/pyro/pyro_chef_hat.mdl",
 	"models/player/items/all_class/ghostly_gibus_pyro.mdl",
-	"models/player/items/pyro/pyro_madame_dixie.mdl"
+	"models/player/items/pyro/pyro_madame_dixie.mdl",
+	"models/player/items/pyro/pyro_chef_hat.mdl"
 	
 };
 
 static int g_iCosmetics[] =  {
-	51,
-	105,
-	394,
-	116,
-	321
+	51, //Pyro's Beanie
+	105, //Brigade Helm
+	116, //Ghastly Gibus
+	321, //Madame Dixie
+	394 //Connoisseur's Cap
 };
 
 static int g_iPyrocarCosmetics[sizeof(g_iPrecacheCosmetics)];
