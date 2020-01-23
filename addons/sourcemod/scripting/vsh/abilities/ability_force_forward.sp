@@ -63,7 +63,7 @@ methodmap CForceForward < SaxtonHaleBase
 		ability.flRageBonusDurationSuper = 15.0;
 		
 		ability.flSpeedRageBonusMultValue = 1.3;
-		ability.flSpeedRageBonusMultValue = 1.45;
+		ability.flSpeedRageBonusMultValueSuper = 1.45;
 	
 	}
 	
