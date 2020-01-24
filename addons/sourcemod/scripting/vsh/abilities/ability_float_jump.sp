@@ -75,6 +75,8 @@ methodmap CFloatJump < SaxtonHaleBase
 	{
 		g_iFloatJumpCharge[ability.iClient] = 0;
 		g_flJumpCooldownWait[ability.iClient] = 0.0;
+		g_bFloatJumpHoldingChargeButton[ability.iClient] = false;
+		g_flFloatEndTime[ability.iClient] = 0.0;
 		
 		//Default values, these can be changed if needed
 		ability.iMaxJumpCharge = 160;
@@ -99,7 +101,6 @@ methodmap CFloatJump < SaxtonHaleBase
 			GetClientEyeAngles(this.iClient, vecAng);
 			
 			float vecVel[3];
-			GetEntPropVector(this.iClient, Prop_Data, "m_vecVelocity", vecVel);
 			
 			vecVel[0] = Cosine(DegToRad(vecAng[0])) * Cosine(DegToRad(vecAng[1])) * 600.0;
 			vecVel[1] = Cosine(DegToRad(vecAng[0])) * Sine(DegToRad(vecAng[1])) * 600.0;
@@ -129,7 +130,7 @@ methodmap CFloatJump < SaxtonHaleBase
 			this.iJumpCharge -= this.iJumpChargeBuild*2;
 	}
 	
-	public void OnButtonHold(int button)
+	public void OnButtonPress(int button)
 	{
 		if (button == IN_ATTACK2)
 			g_bFloatJumpHoldingChargeButton[this.iClient] = true;

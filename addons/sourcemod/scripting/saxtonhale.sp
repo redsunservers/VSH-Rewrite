@@ -344,10 +344,10 @@ ConVar tf_arena_preround_time;
 #include "vsh/abilities/ability_groundpound.sp"
 #include "vsh/abilities/ability_model_override.sp"
 #include "vsh/abilities/ability_rage_bomb.sp"
-#include "vsh/abilities/ability_rage_hop.sp"
 #include "vsh/abilities/ability_rage_conditions.sp"
 #include "vsh/abilities/ability_rage_freeze.sp"
 #include "vsh/abilities/ability_rage_ghost.sp"
+#include "vsh/abilities/ability_rage_hop.sp"
 #include "vsh/abilities/ability_rage_light.sp"
 #include "vsh/abilities/ability_rage_scare.sp"
 #include "vsh/abilities/ability_teleport_swap.sp"
@@ -640,16 +640,16 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("CSeeldierMinion", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CAnnouncerMinion", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CMinionRanger", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CPyrocarMinion", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CZombie", VSHClassType_Boss);
 	
 	//Register ability
 	SaxtonHale_RegisterClass("CBodyEat", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CBomb", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CBraveJump", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CDashJump", VSHClassType_Ability);
-	SaxtonHale_RegisterClass("CFloatJump", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CDropModel", VSHClassType_Ability);
-	SaxtonHale_RegisterClass("CBomb", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CFloatJump", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CForceForward", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CGroundPound", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CModelOverride", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CRageAddCond", VSHClassType_Ability);
@@ -664,7 +664,6 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("CWeaponCharge", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CWeaponFists", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CWeaponSpells", VSHClassType_Ability);
-	SaxtonHale_RegisterClass("CForceForward", VSHClassType_Ability);
 	
 	//Register modifiers
 	SaxtonHale_RegisterClass("CModifiersSpeed", VSHClassType_Modifier);

@@ -176,8 +176,8 @@ methodmap CPyroCar < SaxtonHaleBase
 		for (int i = 0; i < sizeof(g_strPyrocarRoundStart); i++) PrepareSound(g_strPyrocarRoundStart[i]);
 		for (int i = 0; i < sizeof(g_strPyrocarWin); i++) PrepareSound(g_strPyrocarWin[i]);
 		for (int i = 0; i < sizeof(g_strPyrocarLose); i++) PrepareSound(g_strPyrocarLose[i]);
-		for (int i = 0; i < sizeof(g_strPyrocarRage); i++) PrepareSound(g_strPyrocarRage[i]);
-		for (int i = 0; i < sizeof(g_strPyrocarJump); i++) PrepareSound(g_strPyrocarJump[i]);
+		for (int i = 0; i < sizeof(g_strPyrocarRage); i++) PrecacheSound(g_strPyrocarRage[i]);
+		for (int i = 0; i < sizeof(g_strPyrocarJump); i++) PrecacheSound(g_strPyrocarJump[i]);
 		for (int i = 0; i < sizeof(g_strPyrocarKill); i++) PrepareSound(g_strPyrocarKill[i]);
 		for (int i = 0; i < sizeof(g_strPyrocarKillBuilding); i++) PrepareSound(g_strPyrocarKillBuilding[i]);
 		for (int i = 0; i < sizeof(g_strPyrocarLastMan); i++) PrepareSound(g_strPyrocarLastMan[i]);

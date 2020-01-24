@@ -2,13 +2,11 @@ static float g_flRageBonusEndTime[TF_MAXPLAYERS+1];
 static float g_flSpeedRageBonusMultiplier[TF_MAXPLAYERS+1];
 static float g_flRageBonusDuration[TF_MAXPLAYERS+1];
 static float g_flSpeedRageBonusMultValue[TF_MAXPLAYERS+1];
-static float g_flRageBonusDurationSuper[TF_MAXPLAYERS+1];
-static float g_flSpeedRageBonusMultValueSuper[TF_MAXPLAYERS+1];
 
 methodmap CForceForward < SaxtonHaleBase
 {
 	
-	property float flRageBonusDuration
+	property float flRageDuration
 	{
 		public get()
 		{
@@ -20,7 +18,7 @@ methodmap CForceForward < SaxtonHaleBase
 		}
 	}
 	
-	property float flSpeedRageBonusMultValue
+	property float flSpeedRageMultValue
 	{
 		public get()
 		{
@@ -32,39 +30,10 @@ methodmap CForceForward < SaxtonHaleBase
 		}
 	}
 	
-	property float flRageBonusDurationSuper
-	{
-		public get()
-		{
-			return g_flRageBonusDurationSuper[this.iClient];
-		}
-		public set(float val)
-		{
-			g_flRageBonusDurationSuper[this.iClient] = val;
-		}
-	}
-	
-	property float flSpeedRageBonusMultValueSuper
-	{
-		public get()
-		{
-			return g_flSpeedRageBonusMultValueSuper[this.iClient];
-		}
-		public set(float val)
-		{
-			g_flSpeedRageBonusMultValueSuper[this.iClient] = val;
-		}
-	}
-	
 	public CForceForward(CForceForward ability)
 	{
-	
-		ability.flRageBonusDuration = 10.0;
-		ability.flRageBonusDurationSuper = 15.0;
-		
-		ability.flSpeedRageBonusMultValue = 1.3;
-		ability.flSpeedRageBonusMultValueSuper = 1.45;
-	
+		ability.flRageDuration = 10.0;
+		ability.flSpeedRageMultValue = 1.3;
 	}
 	
 	public void OnThink()
@@ -88,7 +57,7 @@ methodmap CForceForward < SaxtonHaleBase
 		vecVel[0] = Cosine(DegToRad(vecAng[0])) * Cosine(DegToRad(vecAng[1])) * flMaxSpeed * g_flSpeedRageBonusMultiplier[this.iClient];
 		vecVel[1] = Cosine(DegToRad(vecAng[0])) * Sine(DegToRad(vecAng[1])) * flMaxSpeed * g_flSpeedRageBonusMultiplier[this.iClient];
 		
-		SetEntPropVector(this.iClient, Prop_Data, "m_vecAbsVelocity", vecVel);
+		TeleportEntity(this.iClient, NULL_VECTOR, NULL_VECTOR, vecVel);
 		
 	}
 	
@@ -96,13 +65,13 @@ methodmap CForceForward < SaxtonHaleBase
 	{
 		if (this.bSuperRage)
 		{
-			g_flRageBonusEndTime[this.iClient] = GetGameTime() + this.flRageBonusDurationSuper;
-			g_flSpeedRageBonusMultiplier[this.iClient] = this.flSpeedRageBonusMultValueSuper;
+			g_flRageBonusEndTime[this.iClient] = GetGameTime() + this.flRageDuration * 1.5;
+			g_flSpeedRageBonusMultiplier[this.iClient] = 1 + (this.flSpeedRageMultValue-1) * 1.5;
 		}
 		else
 		{
-			g_flRageBonusEndTime[this.iClient] = GetGameTime() + this.flRageBonusDuration;
-			g_flSpeedRageBonusMultiplier[this.iClient] = this.flSpeedRageBonusMultValue;
+			g_flRageBonusEndTime[this.iClient] = GetGameTime() + this.flRageDuration;
+			g_flSpeedRageBonusMultiplier[this.iClient] = this.flSpeedRageMultValue;
 		}
 	}
 };
