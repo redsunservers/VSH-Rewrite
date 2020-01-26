@@ -130,7 +130,7 @@ void NextBoss_SetNextBoss()
 						SaxtonHaleNextBoss nextBoss = SaxtonHaleNextBoss(iClient);
 						
 						char sBossType[MAX_TYPE_CHAR];
-						aMultiBoss.GetString(0, sBossType, sizeof(sBossType));
+						aMultiBoss.GetString(i, sBossType, sizeof(sBossType));
 						
 						nextBoss.SetBoss(sBossType);
 						NextBoss_SetBoss(nextBoss, aClients);
