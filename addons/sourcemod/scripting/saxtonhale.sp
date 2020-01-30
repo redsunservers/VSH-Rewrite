@@ -700,7 +700,7 @@ public void OnPluginStart()
 	g_ConfigConvar.Create("vsh_force_load", "-1", "Force enable VSH on map start? (-1 for default, 0 for force disable, 1 for force enable)", _, true, -1.0, true, 1.0);
 	g_ConfigConvar.Create("vsh_boss_ping_limit", "200", "Max ping/latency to allow player to play as boss (-1 for no limit)", _, true, -1.0);
 	g_ConfigConvar.Create("vsh_telefrag_damage", "9001.0", "Damage amount to boss from telefrag", _, true, 0.0);
-	g_ConfigConvar.Create("vsh_rps_enable", "1.0", "Allow everyone use Rock Paper Scissors Taunt?", _, true, 0.0, true, 1.0);
+	g_ConfigConvar.Create("vsh_rps_enable", "1", "Allow everyone use Rock Paper Scissors Taunt?", _, true, 0.0, true, 1.0);
 	
 	//Incase of lateload, call client join functions
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
