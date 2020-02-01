@@ -41,6 +41,15 @@ void Dome_Init()
 	g_ConfigConvar.Create("vsh_dome_radius_start", "3500", "Start radius of dome", _, true, 0.0);
 	g_ConfigConvar.Create("vsh_dome_radius_end", "0", "End radius of dome", _, true, 0.0);
 	g_ConfigConvar.Create("vsh_dome_speed_duration", "120", "How long it takes in second for dome to fully shrink, without any slowdown", _, true, 0.0);
+	
+	HookEntityOutput("team_control_point", "OnOwnerChangedToTeam1", Dome_BlockOutput);
+	HookEntityOutput("team_control_point", "OnOwnerChangedToTeam2", Dome_BlockOutput);
+	HookEntityOutput("team_control_point", "OnCapReset", Dome_BlockOutput);
+	HookEntityOutput("team_control_point", "OnCapTeam1", Dome_BlockOutput);
+	HookEntityOutput("team_control_point", "OnCapTeam2", Dome_BlockOutput);
+	HookEntityOutput("trigger_capture_area", "OnCapTeam1", Dome_BlockOutput);
+	HookEntityOutput("trigger_capture_area", "OnCapTeam2", Dome_BlockOutput);
+	HookEntityOutput("trigger_capture_area", "OnEndCap", Dome_BlockOutput);
 }
 
 void Dome_MapStart()
@@ -108,6 +117,12 @@ public Action Dome_TriggerTouch(int iTrigger, int iToucher)
 		return Plugin_Handled;
 	
 	return Plugin_Continue;
+}
+
+public Action Dome_BlockOutput(const char[] output, int caller, int activator, float delay)
+{
+	//Always block this function, maps may assume round ended
+	return Plugin_Handled;
 }
 
 void Dome_RoundStart()
@@ -264,6 +279,25 @@ void Dome_SetTeam(TFTeam nTeam)
 	{
 		SetVariantInt(view_as<int>(nTeam));
 		AcceptEntityInput(iCP, "SetOwner", 0, 0);
+	}
+	
+	//Update CP model skin
+	int iProp = MaxClients+1;
+	while ((iProp = FindEntityByClassname(iProp, "prop_dynamic")) > MaxClients)
+	{
+		char sModel[128];
+		GetEntPropString(iProp, Prop_Data, "m_ModelName", sModel, sizeof(sModel));
+		
+		if (StrEqual(sModel, "models/props_gameplay/cap_point_base.mdl")
+			|| StrEqual(sModel, "models/props_doomsday/cap_point_small.mdl"))
+		{
+			switch (nTeam)
+			{
+				case TFTeam_Red: SetEntProp(iProp, Prop_Send, "m_nSkin", 1);
+				case TFTeam_Blue: SetEntProp(iProp, Prop_Send, "m_nSkin", 2);
+				default: SetEntProp(iProp, Prop_Send, "m_nSkin", 0);
+			}
+		}
 	}
 	
 	//Reset time player in dome
