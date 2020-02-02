@@ -230,6 +230,19 @@ methodmap CVagineer < SaxtonHaleBase
 		}
 	}
 	
+	public void Destroy()
+	{
+		int iSentry = MaxClients+1;
+		while((iSentry = FindEntityByClassname(iSentry, "obj_sentrygun")) > MaxClients)
+		{
+			if (GetEntPropEnt(iSentry, Prop_Send, "m_hBuilder") == this.iClient)
+			{
+				SetVariantInt(999999);
+				AcceptEntityInput(iSentry, "RemoveHealth");
+			}
+		}
+	}
+		
 	public void Precache()
 	{
 		PrepareSound(VAGINEER_KILL_SOUND);
