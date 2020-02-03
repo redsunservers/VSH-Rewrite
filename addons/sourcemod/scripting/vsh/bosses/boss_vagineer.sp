@@ -187,6 +187,7 @@ methodmap CVagineer < SaxtonHaleBase
 		
 		SetVariantInt(iSentryHealth);
 		AcceptEntityInput(iEntity, "SetHealth");	//Sets sentry health
+		SDK_RemoveObject(this.iClient, iEntity);	//Make the boss not the sentry's original owner so he gets to potentially build more of them
 		
 		return Plugin_Continue;
 	}
@@ -203,21 +204,20 @@ methodmap CVagineer < SaxtonHaleBase
 	
 	public void OnRage()
 	{
-		FakeClientCommand(this.iClient, "destroy 2 0");
 		SetEntProp(this.iClient, Prop_Send, "m_iAmmo", 130, 4, 3);
 		FakeClientCommand(this.iClient, "build 2 0");
 	}
 	
 	public void OnThink()
-	{		
+	{
 		Hud_AddText(this.iClient, "Use your rage to build sentry at a safe place!");
 		
-		int iSentry = MaxClients+1;
-		while((iSentry = FindEntityByClassname(iSentry, "obj_sentrygun")) > MaxClients)
+		if (g_flVagineerSentryHealthDecay[this.iClient] < GetGameTime() - 0.01)
 		{
-			if (GetEntPropEnt(iSentry, Prop_Send, "m_hBuilder") == this.iClient)
-			{				
-				if (g_flVagineerSentryHealthDecay[this.iClient] < GetGameTime() - 0.01)
+			int iSentry = MaxClients+1;
+			while((iSentry = FindEntityByClassname(iSentry, "obj_sentrygun")) > MaxClients)
+			{
+				if (GetEntPropEnt(iSentry, Prop_Send, "m_hBuilder") == this.iClient)
 				{
 					SetVariantInt(1);
 					AcceptEntityInput(iSentry, "RemoveHealth");
@@ -230,6 +230,19 @@ methodmap CVagineer < SaxtonHaleBase
 		}
 	}
 	
+	public void Destroy()
+	{
+		int iSentry = MaxClients+1;
+		while((iSentry = FindEntityByClassname(iSentry, "obj_sentrygun")) > MaxClients)
+		{
+			if (GetEntPropEnt(iSentry, Prop_Send, "m_hBuilder") == this.iClient)
+			{
+				SetVariantInt(999999);
+				AcceptEntityInput(iSentry, "RemoveHealth");
+			}
+		}
+	}
+		
 	public void Precache()
 	{
 		PrepareSound(VAGINEER_KILL_SOUND);
