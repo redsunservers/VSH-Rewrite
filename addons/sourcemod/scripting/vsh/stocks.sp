@@ -719,12 +719,12 @@ stock void TF2_ShowAnnotation(int[] iClients, int iCount, int iTarget, const cha
 	event.SetInt("follow_entindex", iTarget);
 	event.SetFloat("lifetime", flDuration);
 	event.SetString("text", sMessage);
-	event.SetString("play_sound", sSound);	//If this is missing, it'll try to play a sound with an empty soundpath
+	event.SetString("play_sound", sSound);	//If this is missing, it'll try to play a sound with an empty filepath
 	
 	for (int i = 0; i < iCount; i++)
 		event.FireToClient(iClients[i]);
 	
-	delete event;
+	event.Cancel();
 }
 
 stock void TF2_ShowAnnotationToAll(int iTarget, const char[] sMessage, float flDuration = 5.0, const char[] sSound = SOUND_NULL)
