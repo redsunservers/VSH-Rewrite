@@ -12,7 +12,7 @@ methodmap TagsParams < StringMap
 		
 		do	//Loop through every params
 		{
-			char sParamName[MAXLEN_CONFIG_VALUE], sParamValue[MAXLEN_CONFIG_ALLVALUES], sBuffer[MAXLEN_CONFIG_ALLVALUES];
+			char sParamName[MAXLEN_CONFIG_VALUE], sParamValue[MAXLEN_CONFIG_VALUEARRAY], sBuffer[MAXLEN_CONFIG_VALUEARRAY];
 			kv.GetSectionName(sParamName, sizeof(sParamName));
 			kv.GetString(NULL_STRING, sParamValue, sizeof(sParamValue));
 			StrToLower(sParamName);	//Convert string to lowercase, KeyValues rarely read 1st letter as uppercase...
@@ -50,11 +50,11 @@ methodmap TagsParams < StringMap
 	{
 		if (this == null) return false;
 		
-		char sValue[MAXLEN_CONFIG_ALLVALUES];
+		char sValue[MAXLEN_CONFIG_VALUEARRAY];
 		if (!this.GetString(sKey, sValue, sizeof(sValue)))
 			return false;
 		
-		char sValues[16][MAXLEN_CONFIG_VALUE];
+		char sValues[MAX_CONFIG_ARRAY][MAXLEN_CONFIG_VALUE];
 		int iCount = ExplodeString(sValue, " ; ", sValues, sizeof(sValues), sizeof(sValues[]));
 		if (iCount == 0) return false;
 		
@@ -67,11 +67,11 @@ methodmap TagsParams < StringMap
 	{
 		if (this == null) return null;
 		
-		char sValue[MAXLEN_CONFIG_ALLVALUES];
+		char sValue[MAXLEN_CONFIG_VALUEARRAY];
 		if (!this.GetString(sKey, sValue, sizeof(sValue)))
 			return null;
 		
-		char sValues[16][MAXLEN_CONFIG_VALUE];
+		char sValues[MAX_CONFIG_ARRAY][MAXLEN_CONFIG_VALUE];
 		int iCount = ExplodeString(sValue, " ; ", sValues, sizeof(sValues), sizeof(sValues[]));
 		if (iCount == 0) return null;
 		
@@ -87,11 +87,11 @@ methodmap TagsParams < StringMap
 	{
 		if (this == null) return false;
 		
-		char sValue[MAXLEN_CONFIG_ALLVALUES];
+		char sValue[MAXLEN_CONFIG_VALUEARRAY];
 		if (!this.GetString(sKey, sValue, sizeof(sValue)))
 			return false;
 		
-		char sValues[16][MAXLEN_CONFIG_VALUE];
+		char sValues[MAX_CONFIG_ARRAY][MAXLEN_CONFIG_VALUE];
 		int iCount = ExplodeString(sValue, " ; ", sValues, sizeof(sValues), sizeof(sValues[]));
 		if (iCount == 0) return false;
 		
@@ -126,11 +126,11 @@ methodmap TagsParams < StringMap
 	{
 		if (this == null) return null;
 		
-		char sValue[MAXLEN_CONFIG_ALLVALUES];
+		char sValue[MAXLEN_CONFIG_VALUEARRAY];
 		if (!this.GetString(sKey, sValue, sizeof(sValue)))
 			return null;
 		
-		char sValues[16][12];
+		char sValues[MAX_CONFIG_ARRAY][12];
 		int iCount = ExplodeString(sValue, " ; ", sValues, sizeof(sValues), sizeof(sValues[]));
 		if (iCount == 0) return null;
 		
@@ -168,11 +168,11 @@ methodmap TagsParams < StringMap
 	{
 		if (this == null) return null;
 		
-		char sValue[MAXLEN_CONFIG_ALLVALUES];
+		char sValue[MAXLEN_CONFIG_VALUEARRAY];
 		if (!this.GetString(sKey, sValue, sizeof(sValue)))
 			return null;
 		
-		char sValues[16][12];
+		char sValues[MAX_CONFIG_ARRAY][12];
 		int iCount = ExplodeString(sValue, " ; ", sValues, sizeof(sValues), sizeof(sValues[]));
 		if (iCount == 0) return null;
 		
@@ -217,11 +217,11 @@ methodmap TagsParams < StringMap
 			snapshot.GetKey(i, sKey, ikeyLength);
 			
 			//Get key value
-			char sValue[MAXLEN_CONFIG_ALLVALUES];
+			char sValue[MAXLEN_CONFIG_VALUEARRAY];
 			this.GetString(sKey, sValue, sizeof(sValue));
 			
 			//If already exists, add as an "array"
-			char sBuffer[MAXLEN_CONFIG_ALLVALUES];
+			char sBuffer[MAXLEN_CONFIG_VALUEARRAY];
 			if (tParams.GetString(sKey, sBuffer, sizeof(sBuffer)))
 				Format(sValue, sizeof(sValue), "%s ; %s", sBuffer, sValue);
 			

@@ -791,7 +791,7 @@ public void Tags_Explode(int iClient, int iTarget, TagsParams tParams)
 	//If no sounds were specified, pick a generic explosion sound. If multiple sounds were specified, pick a random one
 	char sSound[MAXLEN_CONFIG_VALUE];
 	if (!tParams.GetStringRandom("sound", sSound, sizeof(sSound)))
-		Format(sSound, sizeof(sSound), "weapons/airstrike_small_explosion_0%i.wav", GetRandomInt(1,3));
+		Format(sSound, sizeof(sSound), "weapons/airstrike_small_explosion_0%d.wav", GetRandomInt(1, 3));
 	
 	float vecPos[3];
 	GetEntPropVector(iTarget, Prop_Send, "m_vecOrigin", vecPos);
