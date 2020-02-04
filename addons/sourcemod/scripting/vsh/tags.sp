@@ -783,11 +783,19 @@ public void Tags_Explode(int iClient, int iTarget, TagsParams tParams)
 	float flDamage = tParams.GetFloat("damage");
 	float flRadius = tParams.GetFloat("radius");
 	
+	//If no particle was specified, pick a generic explosion particle
+	char sParticle[MAXLEN_CONFIG_VALUE];
+	if (!tParams.GetString("particle", sParticle, sizeof(sParticle)))
+		Format(sParticle, sizeof(sParticle), "ExplosionCore_MidAir");
+	
+	//If no sounds were specified, pick a generic explosion sound. If multiple sounds were specified, pick a random one
+	char sSound[MAXLEN_CONFIG_VALUE];
+	if (!tParams.GetStringRandom("sound", sSound, sizeof(sSound)))
+		Format(sSound, sizeof(sSound), "weapons/airstrike_small_explosion_0%i.wav", GetRandomInt(1,3));
+	
 	float vecPos[3];
 	GetEntPropVector(iTarget, Prop_Send, "m_vecOrigin", vecPos);
-	char sSound[255];
-	Format(sSound, sizeof(sSound), "weapons/airstrike_small_explosion_0%i.wav", GetRandomInt(1,3));
-	TF2_Explode(iClient, vecPos, flDamage, flRadius, "ExplosionCore_MidAir", sSound);
+	TF2_Explode(iClient, vecPos, flDamage, flRadius, sParticle, sSound);
 }
 
 public void Tags_KillWeapon(int iClient, int iTarget, TagsParams tParams)
@@ -805,6 +813,15 @@ public void Tags_KillWeapon(int iClient, int iTarget, TagsParams tParams)
 			return;
 		}
 	}
+}
+
+public void Tags_ForceSuicide(int iClient, int iTarget, TagsParams tParams)
+{
+	if (iTarget <= 0 || iTarget > MaxClients || !IsClientInGame(iTarget) || !IsPlayerAlive(iTarget))
+		return;
+	
+	//Pretty straight-forward, isn't it?
+	ForcePlayerSuicide(iTarget);
 }
 
 //---------------------------

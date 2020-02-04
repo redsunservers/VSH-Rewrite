@@ -32,6 +32,7 @@
 #define MAX_BUTTONS 					26
 #define MAX_TYPE_CHAR					32		//Max char size of methodmaps name
 #define MAXLEN_CONFIG_VALUE 			256		//Max config string buffer size
+#define MAXLEN_CONFIG_ALLVALUES			1024	//Max config buffer size for groups of values
 
 #define TF_MAXPLAYERS					32
 
