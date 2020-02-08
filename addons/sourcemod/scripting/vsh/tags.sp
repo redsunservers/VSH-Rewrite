@@ -777,7 +777,7 @@ public void Tags_Airblast(int iClient, int iTarget, TagsParams tParams)
 
 public void Tags_Explode(int iClient, int iTarget, TagsParams tParams)
 {
-	if (iTarget <= 0 || !IsValidEdict(iTarget))
+	if (iTarget <= 0 || !IsValidEdict(iTarget) || GameRules_GetRoundState() == RoundState_Preround)
 		return;
 	
 	float flDamage = tParams.GetFloat("damage");
