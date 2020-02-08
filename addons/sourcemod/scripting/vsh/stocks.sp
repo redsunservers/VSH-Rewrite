@@ -716,13 +716,18 @@ stock void TF2_ShowAnnotation(int[] iClients, int iCount, int iTarget, const cha
 {
 	//Create an annotation and show it to a specified array of clients
 	Event event = CreateEvent("show_annotation");
+	event.SetInt("id", iTarget);				//Make its ID match the target, just so it's assigned to something unique
 	event.SetInt("follow_entindex", iTarget);
 	event.SetFloat("lifetime", flDuration);
 	event.SetString("text", sMessage);
-	event.SetString("play_sound", sSound);	//If this is missing, it'll try to play a sound with an empty filepath
+	event.SetString("play_sound", sSound);		//If this is missing, it'll try to play a sound with an empty filepath
 	
 	for (int i = 0; i < iCount; i++)
-		event.FireToClient(iClients[i]);
+	{
+		//No point in showing the annotation to the target
+		if (iClients[i] != iTarget)
+			event.FireToClient(iClients[i]);
+	}
 	
 	event.Cancel();
 }
