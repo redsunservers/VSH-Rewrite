@@ -149,7 +149,7 @@ void NextBoss_SetNextBoss()
 	{
 		//Fill any boss for next round, but with missing client
 		int iLength = g_aNextBoss.Length;
-		for (int i = 0; i < iLength; i++)
+		for (int i = iLength-1; i >= 0; i--)	//Removing bosses in ArrayList during this loop
 		{
 			NextBoss nextStruct;
 			g_aNextBoss.GetArray(i, nextStruct);

@@ -498,7 +498,7 @@ public Action Crossbow_OnTouch(int iEntity, int iToucher)
 	
 	int iClient = GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity");
 	SaxtonHaleBase boss = SaxtonHaleBase(iToucher);
-	if (!boss.bCanBeHealed && GetClientTeam(iClient) == GetClientTeam(iToucher))
+	if (!boss.bCanBeHealed && IsClientInGame(iClient) && GetClientTeam(iClient) == GetClientTeam(iToucher))
 	{
 		//Dont allow crossbows heal boss, kill arrow
 		AcceptEntityInput(iEntity, "Kill");
