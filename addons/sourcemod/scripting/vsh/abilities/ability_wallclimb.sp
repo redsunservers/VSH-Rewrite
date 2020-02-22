@@ -1,6 +1,7 @@
 static float g_flWallClimbMaxHeight[TF_MAXPLAYERS+1];
 static float g_flWallClimbMaxDistance[TF_MAXPLAYERS+1];
 static float g_flWallClimbHorizontalSpeedMult[TF_MAXPLAYERS+1];
+static int g_iWallClimbAmount[TF_MAXPLAYERS+1];
 
 methodmap CWallClimb < SaxtonHaleBase
 {
@@ -44,6 +45,8 @@ methodmap CWallClimb < SaxtonHaleBase
 		ability.flMaxHeight = 750.0;
 		ability.flMaxDistance = 100.0;
 		ability.flHorizontalSpeedMult = 2.0;	//Horizontal speed multiplier, for better mobility if the boss is trying to go anywhere besides straight up
+		
+		g_iWallClimbAmount[ability.iClient] = 0;
 	}
 	
 	public Action OnAttackCritical(int iWeapon, bool &bResult)
@@ -82,18 +85,26 @@ methodmap CWallClimb < SaxtonHaleBase
 		float vecVelocity[3];
 		GetEntPropVector(iClient, Prop_Data, "m_vecVelocity", vecVelocity);
 		
-		//Increase horizontal velocity
-		vecVelocity[0] *= this.flHorizontalSpeedMult;
-		vecVelocity[1] *= this.flHorizontalSpeedMult;
+		//If it's the first hit, multiply horizontal velocity
+		if (g_iWallClimbAmount[iClient] <= 0)
+		{
+			vecVelocity[0] *= this.flHorizontalSpeedMult;
+			vecVelocity[1] *= this.flHorizontalSpeedMult;
+		}
 		
 		//Set vertical velocity, the main part of this ability
 		vecVelocity[2] = this.flMaxHeight;
 		
+		g_iWallClimbAmount[iClient]++;
+		SetEntityFlags(iClient, (GetEntityFlags(iClient) & ~FL_ONGROUND));
 		TeleportEntity(iClient, NULL_VECTOR, NULL_VECTOR, vecVelocity);
 	}
 	
 	public void OnThink()
 	{
 		Hud_AddText(this.iClient, "Climb walls by hitting them with your melee weapon!");
+		
+		if (GetEntityFlags(this.iClient) & FL_ONGROUND)
+			g_iWallClimbAmount[this.iClient] = 0;
 	}
 };
