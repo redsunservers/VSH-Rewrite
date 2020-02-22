@@ -56,7 +56,7 @@ methodmap CWallClimb < SaxtonHaleBase
 		ability.flMaxHeight = 750.0;
 		ability.flMaxDistance = 100.0;
 		ability.flHorizontalSpeedMult = 2.0;  //Horizontal speed multiplier, for better mobility if the boss is trying to go anywhere besides straight up
-		ability.flMaxHorizontalVelocity = 600.0;  //Horizontal speed limit because we don't want the boss to fly around the map at light speed
+		ability.flMaxHorizontalVelocity = 700.0;  //Horizontal speed limit because we don't want the boss to fly around the map at light speed
 	}
 	
 	public Action OnAttackCritical(int iWeapon, bool &bResult)
