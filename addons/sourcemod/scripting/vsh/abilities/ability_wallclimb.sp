@@ -103,8 +103,8 @@ methodmap CWallClimb < SaxtonHaleBase
 		float flSpeed = SquareRoot(vecVelocity[0] * vecVelocity[0] + vecVelocity[1] * vecVelocity[1]);
 		if (flSpeed > this.flMaxHorizontalVelocity)
 		{
-			vecVelocity[0] = vecVelocity[0] * this.flMaxHorizontalVelocity / flSpeed;
-			vecVelocity[1] = vecVelocity[1] * this.flMaxHorizontalVelocity / flSpeed;
+			vecVelocity[0] *= this.flMaxHorizontalVelocity / flSpeed;
+			vecVelocity[1] *= this.flMaxHorizontalVelocity / flSpeed;
 		}
 		
 		//Set vertical velocity, the main part of this ability
