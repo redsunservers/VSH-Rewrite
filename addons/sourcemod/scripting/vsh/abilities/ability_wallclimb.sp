@@ -1,6 +1,7 @@
 static float g_flWallClimbMaxHeight[TF_MAXPLAYERS+1];
 static float g_flWallClimbMaxDistance[TF_MAXPLAYERS+1];
 static float g_flWallClimbHorizontalSpeedMult[TF_MAXPLAYERS+1];
+static float g_flWallClimbMaxHorizontalVelocity[TF_MAXPLAYERS+1];
 
 methodmap CWallClimb < SaxtonHaleBase
 {
@@ -37,13 +38,25 @@ methodmap CWallClimb < SaxtonHaleBase
 			g_flWallClimbHorizontalSpeedMult[this.iClient] = val;
 		}
 	}
+	property float flMaxHorizontalVelocity
+	{
+		public get()
+		{
+			return g_flWallClimbMaxHorizontalVelocity[this.iClient];
+		}
+		public set(float val)
+		{
+			g_flWallClimbMaxHorizontalVelocity[this.iClient] = val;
+		}
+	}
 	
 	public CWallClimb(CWallClimb ability)
 	{
 		//Default values, these can be changed if needed
 		ability.flMaxHeight = 750.0;
 		ability.flMaxDistance = 100.0;
-		ability.flHorizontalSpeedMult = 2.0;	//Horizontal speed multiplier, for better mobility if the boss is trying to go anywhere besides straight up
+		ability.flHorizontalSpeedMult = 2.0;  //Horizontal speed multiplier, for better mobility if the boss is trying to go anywhere besides straight up
+		ability.flMaxHorizontalVelocity = 700.0;  //Horizontal speed limit because we don't want the boss to fly around the map at light speed
 	}
 	
 	public Action OnAttackCritical(int iWeapon, bool &bResult)
@@ -85,6 +98,14 @@ methodmap CWallClimb < SaxtonHaleBase
 		//Increase horizontal velocity
 		vecVelocity[0] *= this.flHorizontalSpeedMult;
 		vecVelocity[1] *= this.flHorizontalSpeedMult;
+		
+		//Limit max speed
+		float flSpeed = SquareRoot(vecVelocity[0] * vecVelocity[0] + vecVelocity[1] * vecVelocity[1]);
+		if (flSpeed > this.flMaxHorizontalVelocity)
+		{
+			vecVelocity[0] *= this.flMaxHorizontalVelocity / flSpeed;
+			vecVelocity[1] *= this.flMaxHorizontalVelocity / flSpeed;
+		}
 		
 		//Set vertical velocity, the main part of this ability
 		vecVelocity[2] = this.flMaxHeight;
