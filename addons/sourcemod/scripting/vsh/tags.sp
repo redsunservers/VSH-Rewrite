@@ -230,6 +230,20 @@ void Tags_OnButton(int iClient, int &iButtons)
 		int iActiveWep = GetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon");
 		if (iActiveWep > MaxClients && iPrimary == iActiveWep)
 			iButtons &= ~IN_ATTACK2;
+		
+		if (g_nTagsAirblastState[iClient] == FlamethrowerState_Airblast)
+		{
+			if (iButtons & IN_ATTACK)
+			{
+				g_nTagsAirblastState[iClient] = FlamethrowerState_Firing;
+				SetEntProp(iPrimary, Prop_Send, "m_iWeaponState", FlamethrowerState_Firing);
+			}
+			else
+			{
+				g_nTagsAirblastState[iClient] = FlamethrowerState_Idle;
+				SetEntProp(iPrimary, Prop_Send, "m_iWeaponState", FlamethrowerState_Idle);
+			}
+		}
 	}
 }
 
