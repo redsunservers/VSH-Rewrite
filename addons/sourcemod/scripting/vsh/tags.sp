@@ -231,6 +231,7 @@ void Tags_OnButton(int iClient, int &iButtons)
 		if (iActiveWep > MaxClients && iPrimary == iActiveWep)
 			iButtons &= ~IN_ATTACK2;
 		
+		//Change the m_iWeaponState to a proper value after the airblast to prevent the visual bug
 		if (g_nTagsAirblastState[iClient] == FlamethrowerState_Airblast)
 		{
 			if (iButtons & IN_ATTACK)
