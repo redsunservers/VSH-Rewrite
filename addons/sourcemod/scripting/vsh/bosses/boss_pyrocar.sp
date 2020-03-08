@@ -44,7 +44,6 @@ static char g_strPrecacheCosmetics[][] =  {
 	"models/player/items/all_class/ghostly_gibus_pyro.mdl",
 	"models/player/items/pyro/pyro_madame_dixie.mdl",
 	"models/player/items/pyro/pyro_chef_hat.mdl"
-	
 };
 
 static int g_iCosmetics[] =  {
@@ -65,11 +64,16 @@ methodmap CPyroCar < SaxtonHaleBase
 		boss.CallFunction("CreateAbility", "CRageHop");
 		boss.CallFunction("CreateAbility", "CForceForward");
 		
-		boss.iBaseHealth = 800;
-		boss.iHealthPerPlayer = 800;
+		boss.iBaseHealth = 750;
+		boss.iHealthPerPlayer = 750;
 		boss.nClass = TFClass_Pyro;
-		boss.flSpeed = 320.0;
-		boss.iMaxRageDamage = 2500;
+		boss.flSpeed = 350.0;
+		boss.iMaxRageDamage = 2000;
+	}
+	
+	public bool IsBossHidden()
+	{
+		return true;
 	}
 	
 	public void GetBossName(char[] sName, int length)
@@ -79,7 +83,7 @@ methodmap CPyroCar < SaxtonHaleBase
 	
 	public void GetBossInfo(char[] sInfo, int length)
 	{
-		StrCat(sInfo, length, "\nHealth: Medium");
+		StrCat(sInfo, length, "\nHealth: Low");
 		StrCat(sInfo, length, "\nYou are forced to go forward");
 		StrCat(sInfo, length, "\nYou have the same speed as the medic");
 		StrCat(sInfo, length, "\n ");
@@ -94,7 +98,7 @@ methodmap CPyroCar < SaxtonHaleBase
 	public void OnSpawn()
 	{
 		char attribs[128];
-		Format(attribs, sizeof(attribs), "24 ; 1.0 ; 59 ; 1.0 ; 112 ; 1.0 ; 181 ; 1.0 ; 252 ; 0.5 ; 356 ; 1.0 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 2450 ; 862 ; 0.6 ; 863 ; 0.1 ; 865 ; 50 ; 259 ; 1.0 ; 356 ; 1.0 ; 214 ; %d", GetRandomInt(9999, 99999));
+		Format(attribs, sizeof(attribs), "3 ; 0.2 ; 24 ; 1.0 ; 59 ; 1.0 ; 112 ; 0.5 ; 181 ; 1.0 ; 252 ; 0.75 ; 356 ; 1.0 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 2450 ; 862 ; 0.6 ; 863 ; 0.1 ; 865 ; 50 ; 259 ; 1.0 ; 356 ; 1.0 ; 214 ; %d", GetRandomInt(9999, 99999));
 		int iWeapon = this.CallFunction("CreateWeapon", 40, "tf_weapon_flamethrower", 100, TFQual_Strange, attribs);
 		if (iWeapon > MaxClients)
 			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
@@ -102,6 +106,7 @@ methodmap CPyroCar < SaxtonHaleBase
 		/*
 		Backburner attributes:
 		
+		3: clip size penalty
 		24: allow crits from behind
 		59: self dmg push force decreased
 		112: ammo regen

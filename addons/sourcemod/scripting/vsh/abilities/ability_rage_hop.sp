@@ -109,7 +109,7 @@ methodmap CRageHop < SaxtonHaleBase
 		
 		int iTeam = GetClientTeam(this.iClient);
 		
-		if(g_bStompEnabled[this.iClient])
+		if (g_bStompEnabled[this.iClient])
 		{
 			float vecExplosionOrigin[3];
 			GetClientAbsOrigin(this.iClient, vecExplosionOrigin);
@@ -155,14 +155,14 @@ methodmap CRageHop < SaxtonHaleBase
 		else
 		{
 			int iWeapon = GetPlayerWeaponSlot(this.iClient, WeaponSlot_Primary);
-			if(iWeapon > MaxClients)
+			if (iWeapon > MaxClients)
 				TF2Attrib_SetByDefIndex(iWeapon, ATTRIB_PUSHRESISTANCE, 0.5);
 		}
 	}
 	
 	public void OnRage()
 	{
-		if(this.bSuperRage)
+		if (this.bSuperRage)
 			g_flHopEndTime[this.iClient] = GetGameTime() + g_flDuration[this.iClient] * 1.5;
 		else
 			g_flHopEndTime[this.iClient] = GetGameTime() + g_flDuration[this.iClient];
@@ -173,7 +173,7 @@ methodmap CRageHop < SaxtonHaleBase
 			EmitSoundToAll(sSound, this.iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
 		
 		int iWeapon = GetPlayerWeaponSlot(this.iClient, WeaponSlot_Primary);
-		if(iWeapon > MaxClients)
+		if (iWeapon > MaxClients)
 			TF2Attrib_SetByDefIndex(iWeapon, ATTRIB_PUSHRESISTANCE, 1.0);
 	}
 };
