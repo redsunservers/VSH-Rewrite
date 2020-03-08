@@ -27,7 +27,7 @@ static char g_strUberRangerLose[][] = {
 	"vo/medic_paincrticialdeath01.mp3",
 	"vo/medic_paincrticialdeath02.mp3",
 	"vo/medic_paincrticialdeath03.mp3",
-	"vo/medic_paincrticialdeath04.mp3",
+	"vo/medic_paincrticialdeath04.mp3"
 };
 
 static char g_strUberRangerRage[][] = {
@@ -55,8 +55,7 @@ methodmap CUberRanger < SaxtonHaleBase
 {
 	public CUberRanger(CUberRanger boss)
 	{
-		CBraveJump abilityJump = boss.CallFunction("CreateAbility", "CBraveJump");
-		abilityJump.iJumpChargeBuild /= 4;				//4x slower jump charge rate
+		boss.CallFunction("CreateAbility", "CBraveJump");
 		
 		CRageAddCond rageCond = boss.CallFunction("CreateAbility", "CRageAddCond");
 		rageCond.flRageCondDuration = 5.0;
@@ -85,7 +84,7 @@ methodmap CUberRanger < SaxtonHaleBase
 		StrCat(sInfo, length, "\nHealth: Very Low");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nAbilities");
-		StrCat(sInfo, length, "\n- Brave Jump (slower charge rate)");
+		StrCat(sInfo, length, "\n- Brave Jump");
 		StrCat(sInfo, length, "\n- Equipped with a Medi Gun");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
@@ -106,7 +105,7 @@ methodmap CUberRanger < SaxtonHaleBase
 		this.CallFunction("CreateWeapon", 211, "tf_weapon_medigun", 100, TFQual_Collectors, "");
 		
 		char sAttribs[128];
-		Format(sAttribs, sizeof(sAttribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0"); 
+		Format(sAttribs, sizeof(sAttribs), "2 ; 2.80 ; 69 ; 0.5 ; 252 ; 0.5 ; 259 ; 1.0");
 		int iWeapon = this.CallFunction("CreateWeapon", 173, "tf_weapon_bonesaw", 100, TFQual_Collectors, sAttribs);
 		if (iWeapon > MaxClients)
 			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
@@ -115,6 +114,7 @@ methodmap CUberRanger < SaxtonHaleBase
 		Vitasaw attributes:
 		
 		2: damage bonus
+		69: health from healers reduced
 		252: reduction in push force taken from damage
 		259: Deals 3x falling damage to the player you land on
 		*/
@@ -250,8 +250,7 @@ methodmap CMinionRanger < SaxtonHaleBase
 	public CMinionRanger(CMinionRanger boss)
 	{
 		CBraveJump abilityJump = boss.CallFunction("CreateAbility", "CBraveJump");
-		abilityJump.iJumpChargeBuild /= 4;	//4x slower jump charge rate
-		abilityJump.flMaxHeight /= 2;		//Half max height for super jumps
+		abilityJump.flMaxHeight *= 0.65;	//Lower max height for super jumps
 		
 		boss.iBaseHealth = 400;
 		boss.iHealthPerPlayer = 40;
@@ -276,14 +275,8 @@ methodmap CMinionRanger < SaxtonHaleBase
 	public void OnSpawn()
 	{
 		char sMedigunAttribs[128];
-		Format(sMedigunAttribs, sizeof(sMedigunAttribs), "7 ; 0.4");
+		Format(sMedigunAttribs, sizeof(sMedigunAttribs), "");
 		this.CallFunction("CreateWeapon", 211, "tf_weapon_medigun", 10, TFQual_Collectors, sMedigunAttribs);
-		
-		/*
-		Medigun attributes:
-		
-		7: slower heal rate
-		*/
 		
 		char sSawAttribs[128];
 		Format(sSawAttribs, sizeof(sSawAttribs), "2 ; 1.25 ; 5 ; 1.2 ; 17 ; 0.25 ; 252 ; 0.5 ; 259 ; 1.0");
@@ -301,9 +294,7 @@ methodmap CMinionRanger < SaxtonHaleBase
 		259: Deals 3x falling damage to the player you land on
 		*/
 		
-		//We're selecting their color from a preset list
-		
-		//Checking if the list is there at all or has been emptied
+		//We're selecting their color from a preset list, so check if it is there at all or has been emptied
 		if (g_aUberRangerColorList == null || g_aUberRangerColorList.Length <= 0)
 			UberRanger_ResetColorList();
 			
@@ -312,20 +303,18 @@ methodmap CMinionRanger < SaxtonHaleBase
 		g_aUberRangerColorList.GetArray(0, iColor);
 		g_aUberRangerColorList.Erase(0);
 		iColor[3] = 255;
-		
 		SetEntityRenderColor(this.iClient, iColor[0], iColor[1], iColor[2], iColor[3]);
 		
 		//Add glow for him to be easily recognizable as not the boss during spawn uber
 		//Round started check is there so it doesn't show up when spawning on the next round as well
-		if (g_bRoundStarted)
+		if (GameRules_GetRoundState() != RoundState_Preround)
 			CreateTimer(3.0, Timer_EntityCleanup, TF2_CreateGlow(this.iClient, iColor));
-		
-		int iWearable = -1;
 		
 		//Another interesting thing: SetEntityRenderColor applies a color on top of the color it's already set for paintable models
 		//So for the color of the cosmetics to match the color of the Medic, we paint them white via an attribute then apply the random color
 		char sWhitePaint[16];
 		Format(sWhitePaint, sizeof(sWhitePaint), "142 ; 15132390");
+		int iWearable = -1;
 		
 		iWearable = this.CallFunction("CreateWeapon", 50, "tf_wearable", GetRandomInt(1, 100), TFQual_Normal, sWhitePaint);		//Prussian Pickelhaube
 		if (iWearable > MaxClients)
@@ -409,14 +398,10 @@ public void UberRanger_ResetColorList()
 	else
 		g_aUberRangerColorList.Clear();
 	
-	//Hand-picked colors
-	//These colors are mostly based out of TF2 paint colors, but brightened up so they stand out more
-	
-	//The following colors will have slight deviation from their current values
+	//Hand-picked colors mostly based out of TF2 paint colors, but brightened up so they stand out more
 	g_aUberRangerColorList.PushArray({ 20, 20, 20 }); 		// A Distinctive Lack of Hue
 	g_aUberRangerColorList.PushArray({ 40, 70, 102 }); 		// An Air of Debonair (BLU) (modified)
 	g_aUberRangerColorList.PushArray({ 255, 202, 59 }); 	// Australium Gold (modified)
-	g_aUberRangerColorList.PushArray({ 255, 157, 126 }); 	// Dark Salmon Injustice (modified)
 	g_aUberRangerColorList.PushArray({ 255, 115, 200 }); 	// Pink as Hell (modified)
 	g_aUberRangerColorList.PushArray({ 105, 77, 58 }); 		// Radigan Conagher Brown (modified)
 	g_aUberRangerColorList.PushArray({ 88, 160, 187 }); 	// Team Spirit (BLU) (modified)
