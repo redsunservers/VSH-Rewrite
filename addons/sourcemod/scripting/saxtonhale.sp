@@ -361,12 +361,15 @@ ConVar tf_arena_preround_time;
 #include "vsh/abilities/ability_brave_jump.sp"
 #include "vsh/abilities/ability_dash_jump.sp"
 #include "vsh/abilities/ability_drop_model.sp"
+#include "vsh/abilities/ability_float_jump.sp"
+#include "vsh/abilities/ability_force_forward.sp"
 #include "vsh/abilities/ability_groundpound.sp"
 #include "vsh/abilities/ability_model_override.sp"
 #include "vsh/abilities/ability_rage_bomb.sp"
 #include "vsh/abilities/ability_rage_conditions.sp"
 #include "vsh/abilities/ability_rage_freeze.sp"
 #include "vsh/abilities/ability_rage_ghost.sp"
+#include "vsh/abilities/ability_rage_hop.sp"
 #include "vsh/abilities/ability_rage_light.sp"
 #include "vsh/abilities/ability_rage_scare.sp"
 #include "vsh/abilities/ability_teleport_swap.sp"
@@ -376,25 +379,26 @@ ConVar tf_arena_preround_time;
 #include "vsh/abilities/ability_weapon_fists.sp"
 #include "vsh/abilities/ability_weapon_spells.sp"
 
-#include "vsh/bosses/boss_hale.sp"
-#include "vsh/bosses/boss_painiscupcakes.sp"
-#include "vsh/bosses/boss_vagineer.sp"
+#include "vsh/bosses/boss_announcer.sp"
+#include "vsh/bosses/boss_blutarch.sp"
+#include "vsh/bosses/boss_bonkboy.sp"
+#include "vsh/bosses/boss_brutalsniper.sp"
+#include "vsh/bosses/boss_demopan.sp"
 #include "vsh/bosses/boss_demorobot.sp"
 #include "vsh/bosses/boss_gentlespy.sp"
-#include "vsh/bosses/boss_demopan.sp"
-#include "vsh/bosses/boss_brutalsniper.sp"
-#include "vsh/bosses/boss_announcer.sp"
+#include "vsh/bosses/boss_hale.sp"
 #include "vsh/bosses/boss_horsemann.sp"
-#include "vsh/bosses/boss_bonkboy.sp"
-#include "vsh/bosses/boss_seeman.sp"
-#include "vsh/bosses/boss_seeldier.sp"
-#include "vsh/bosses/boss_blutarch.sp"
-#include "vsh/bosses/boss_redmond.sp"
-#include "vsh/bosses/boss_yeti.sp"
-#include "vsh/bosses/boss_uberranger.sp"
-#include "vsh/bosses/boss_zombie.sp"
+#include "vsh/bosses/boss_painiscupcakes.sp"
+#include "vsh/bosses/boss_pyrocar.sp"
 #include "vsh/bosses/boss_pyromancer_scorched.sp"
 #include "vsh/bosses/boss_pyromancer_scalded.sp"
+#include "vsh/bosses/boss_redmond.sp"
+#include "vsh/bosses/boss_seeldier.sp"
+#include "vsh/bosses/boss_seeman.sp"
+#include "vsh/bosses/boss_uberranger.sp"
+#include "vsh/bosses/boss_vagineer.sp"
+#include "vsh/bosses/boss_yeti.sp"
+#include "vsh/bosses/boss_zombie.sp"
 
 #include "vsh/modifiers/modifiers_angry.sp"
 #include "vsh/modifiers/modifiers_electric.sp"
@@ -649,6 +653,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("CGentleSpy", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CHorsemann", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CPainisCupcake", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CPyroCar", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CUberRanger", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CVagineer", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CYeti", VSHClassType_Boss);
@@ -672,15 +677,18 @@ public void OnPluginStart()
 	
 	//Register ability
 	SaxtonHale_RegisterClass("CBodyEat", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CBomb", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CBraveJump", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CDashJump", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CDropModel", VSHClassType_Ability);
-	SaxtonHale_RegisterClass("CBomb", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CFloatJump", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CForceForward", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CGroundPound", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CModelOverride", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CRageAddCond", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CRageFreeze", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CRageGhost", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CRageHop", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CLightRage", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CScareRage", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CTeleportSwap", VSHClassType_Ability);
