@@ -1,5 +1,7 @@
+static Handle g_hHookGetCaptureValueForPlayer;
 static Handle g_hHookGetMaxHealth;
 static Handle g_hHookShouldTransmit;
+static Handle g_hHookGiveNamedItem;
 static Handle g_hHookBallImpact;
 static Handle g_hHookShouldBallTouch;
 static Handle g_hSDKGetMaxHealth;
@@ -9,16 +11,22 @@ static Handle g_hSDKGetMaxClip;
 static Handle g_hSDKRemoveWearable;
 static Handle g_hSDKGetEquippedWearable;
 static Handle g_hSDKEquipWearable;
+static Handle g_hSDKAddObject;
+static Handle g_hSDKRemoveObject;
+
+static int g_iHookIdGiveNamedItem[TF_MAXPLAYERS+1];
 
 void SDK_Init()
 {
 	GameData hGameData = new GameData("sdkhooks.games");
-	if (hGameData == null) SetFailState("Could not find sdkhooks.games gamedata!");
+	if (hGameData == null)
+		SetFailState("Could not find sdkhooks.games gamedata!");
 
 	//This function is used to control player's max health
 	int iOffset = hGameData.GetOffset("GetMaxHealth");
 	g_hHookGetMaxHealth = DHookCreate(iOffset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity, Hook_GetMaxHealth);
-	if (g_hHookGetMaxHealth == null) LogMessage("Failed to create hook: CTFPlayer::GetMaxHealth!");
+	if (g_hHookGetMaxHealth == null)
+		LogMessage("Failed to create hook: CTFPlayer::GetMaxHealth!");
 
 	//This function is used to retreive player's max health
 	StartPrepSDKCall(SDKCall_Player);
@@ -31,7 +39,8 @@ void SDK_Init()
 	delete hGameData;
 
 	hGameData = new GameData("sm-tf2.games");
-	if (hGameData == null) SetFailState("Could not find sm-tf2.games gamedata!");
+	if (hGameData == null)
+		SetFailState("Could not find sm-tf2.games gamedata!");
 
 	int iRemoveWearableOffset = hGameData.GetOffset("RemoveWearable");
 
@@ -55,7 +64,15 @@ void SDK_Init()
 
 	hGameData = new GameData("vsh");
 	if (hGameData == null) SetFailState("Could not find vsh gamedata!");
-
+	
+	// This hook allows to change capture rate
+	iOffset = hGameData.GetOffset("CTFGameRules::GetCaptureValueForPlayer");
+	g_hHookGetCaptureValueForPlayer = DHookCreate(iOffset, HookType_GameRules, ReturnType_Int, ThisPointer_Ignore);
+	if (g_hHookGetCaptureValueForPlayer == null)
+		LogMessage("Failed to create hook: CTFGameRules::GetCaptureValueForPlayer");
+	else
+		DHookAddParam(g_hHookGetCaptureValueForPlayer, HookParamType_CBaseEntity);
+	
 	// This call gets the weapon max ammo
 	StartPrepSDKCall(SDKCall_Player);
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Signature, "CTFPlayer::GetMaxAmmo");
@@ -90,7 +107,23 @@ void SDK_Init()
 	g_hSDKGetMaxClip = EndPrepSDKCall();
 	if (g_hSDKGetMaxClip == null)
 		LogMessage("Failed to create call: CTFWeaponBase::GetMaxClip1!");
+	
+	//This call is used to give an owner to a building
+	StartPrepSDKCall(SDKCall_Player);
+	PrepSDKCall_SetFromConf(hGameData, SDKConf_Signature, "CTFPlayer::AddObject");
+	PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer);
+	g_hSDKAddObject = EndPrepSDKCall();
+	if (g_hSDKAddObject == null)
+		LogMessage("Failed to create call: CTFPlayer::AddObject!");
 
+	//This call is used to remove a building's owner
+	StartPrepSDKCall(SDKCall_Player);
+	PrepSDKCall_SetFromConf(hGameData, SDKConf_Signature, "CTFPlayer::RemoveObject");
+	PrepSDKCall_AddParameter(SDKType_CBaseEntity, SDKPass_Pointer);
+	g_hSDKRemoveObject = EndPrepSDKCall();
+	if (g_hSDKRemoveObject == null)
+		LogMessage("Failed to create call: CTFPlayer::RemoveObject!");
+	
 	// This hook allows entity to always transmit
 	iOffset = hGameData.GetOffset("CBaseEntity::ShouldTransmit");
 	g_hHookShouldTransmit = DHookCreate(iOffset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity, Hook_EntityShouldTransmit);
@@ -98,6 +131,20 @@ void SDK_Init()
 		LogMessage("Failed to create hook: CBaseEntity::ShouldTransmit!");
 	else
 		DHookAddParam(g_hHookShouldTransmit, HookParamType_ObjectPtr);
+	
+	iOffset = hGameData.GetOffset("CTFPlayer::GiveNamedItem");
+	g_hHookGiveNamedItem = DHookCreate(iOffset, HookType_Entity, ReturnType_CBaseEntity, ThisPointer_CBaseEntity);
+	if (g_hHookGiveNamedItem == null)
+	{
+		LogMessage("Failed to create hook: CTFPlayer::GiveNamedItem!");
+	}
+	else
+	{
+		DHookAddParam(g_hHookGiveNamedItem, HookParamType_CharPtr);
+		DHookAddParam(g_hHookGiveNamedItem, HookParamType_Int);
+		DHookAddParam(g_hHookGiveNamedItem, HookParamType_ObjectPtr);
+		DHookAddParam(g_hHookGiveNamedItem, HookParamType_Bool);
+	}
 	
 	// This hook calls when Sandman Ball stuns a player
 	iOffset = hGameData.GetOffset("CTFStunBall::ApplyBallImpactEffectOnVictim");
@@ -133,6 +180,36 @@ void SDK_Init()
 	
 	delete hHook;
 	delete hGameData;
+}
+
+void SDK_HookGiveNamedItem(int iClient)
+{
+	if (g_hHookGiveNamedItem && !g_bTF2Items)
+		g_iHookIdGiveNamedItem[iClient] = DHookEntity(g_hHookGiveNamedItem, false, iClient, Hook_GiveNamedItemRemoved, Hook_GiveNamedItem);
+}
+
+void SDK_UnhookGiveNamedItem(int iClient)
+{
+	if (g_iHookIdGiveNamedItem[iClient])
+	{
+		DHookRemoveHookID(g_iHookIdGiveNamedItem[iClient]);
+		g_iHookIdGiveNamedItem[iClient] = 0;	
+	}
+}
+
+bool SDK_IsGiveNamedItemActive()
+{
+	for (int iClient = 1; iClient <= MaxClients; iClient++)
+		if (g_iHookIdGiveNamedItem[iClient])
+			return true;
+	
+	return false;
+}
+
+void SDK_HookGetCaptureValueForPlayer(DHookCallback callback)
+{
+	if (g_hHookGetCaptureValueForPlayer)
+		DHookGamerules(g_hHookGetCaptureValueForPlayer, true, _, callback);
 }
 
 void SDK_HookGetMaxHealth(int iClient)
@@ -174,6 +251,37 @@ public MRESReturn Hook_EntityShouldTransmit(int iEntity, Handle hReturn, Handle 
 {
 	DHookSetReturn(hReturn, FL_EDICT_ALWAYS);
 	return MRES_Supercede;
+}
+
+public MRESReturn Hook_GiveNamedItem(int iClient, Handle hReturn, Handle hParams)
+{
+	if (DHookIsNullParam(hParams, 1) || DHookIsNullParam(hParams, 3))
+		return MRES_Ignored;
+	
+	char sClassname[256];
+	DHookGetParamString(hParams, 1, sClassname, sizeof(sClassname));
+	int iIndex = DHookGetParamObjectPtrVar(hParams, 3, 4, ObjectValueType_Int) & 0xFFFF;
+	
+	Action action = GiveNamedItem(iClient, sClassname, iIndex);
+	if (action >= Plugin_Handled)
+	{
+		DHookSetReturn(hReturn, 0);
+		return MRES_Supercede;
+	}
+	
+	return MRES_Ignored;
+}
+
+public void Hook_GiveNamedItemRemoved(int iHookId)
+{
+	for (int iClient = 1; iClient <= MaxClients; iClient++)
+	{
+		if (g_iHookIdGiveNamedItem[iClient] == iHookId)
+		{
+			g_iHookIdGiveNamedItem[iClient] = 0;
+			return;
+		}
+	}
 }
 
 public MRESReturn Hook_AllowedToHealTarget(int iMedigun, Handle hReturn, Handle hParams)
@@ -239,7 +347,7 @@ public MRESReturn Hook_CouldHealTarget(int iDispenser, Handle hReturn, Handle hP
 
 int SDK_GetMaxAmmo(int iClient, int iSlot)
 {
-	if(g_hSDKGetMaxAmmo != null)
+	if (g_hSDKGetMaxAmmo != null)
 		return SDKCall(g_hSDKGetMaxAmmo, iClient, iSlot, -1);
 	return -1;
 }
@@ -252,7 +360,7 @@ void SDK_SendWeaponAnim(int weapon, int anim)
 
 int SDK_GetMaxClip(int iWeapon)
 {
-	if(g_hSDKGetMaxClip != null)
+	if (g_hSDKGetMaxClip != null)
 		return SDKCall(g_hSDKGetMaxClip, iWeapon);
 	return -1;
 }
@@ -281,4 +389,16 @@ void SDK_EquipWearable(int client, int iWearable)
 {
 	if(g_hSDKEquipWearable != null)
 		SDKCall(g_hSDKEquipWearable, client, iWearable);
+}
+
+void SDK_AddObject(int iClient, int iEntity)
+{
+	if(g_hSDKAddObject != null)
+		SDKCall(g_hSDKAddObject, iClient, iEntity);
+}
+
+void SDK_RemoveObject(int iClient, int iEntity)
+{
+	if(g_hSDKRemoveObject != null)
+		SDKCall(g_hSDKRemoveObject, iClient, iEntity);
 }

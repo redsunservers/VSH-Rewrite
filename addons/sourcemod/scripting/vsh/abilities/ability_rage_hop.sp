@@ -97,6 +97,9 @@ methodmap CRageHop < SaxtonHaleBase
 		
 		ability.flBombDamage = 50.0;
 		ability.flBombRadius = 225.0;
+
+		ability.flBombDamage = 40.0;
+		ability.flBombRadius = 200.0;
 		
 		ability.flDuration = 10.0;
 		
@@ -126,7 +129,7 @@ methodmap CRageHop < SaxtonHaleBase
 			{
 				if (IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i) > 1 && GetClientTeam(i) != iTeam)
 				{
-					if (IsClientInRange(i, vecExplosionOrigin, this.flBombRadius))
+					if (IsClientInRange(i, vecExplosionOrigin, this.flBombRadius) || (IsClientInRange(i, vecExplosionOrigin, this.flBombRadius * 1.25) && this.bSuperRage))
 					{
 						TF2_IgnitePlayer(i, this.iClient);
 						TF2_AddCondition(i, TFCond_Gas, 10.0, this.iClient);

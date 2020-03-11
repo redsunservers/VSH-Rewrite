@@ -41,10 +41,15 @@ public Action Console_KillCommand(int iClient, const char[] sCommand, int iArgs)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
-
-	if (g_bRoundStarted && SaxtonHale_IsValidBoss(iClient, false))
+	
+	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
+	if (boss.bValid && g_bRoundStarted)
 	{
-		PrintToChat(iClient, "%s%s Do not suicide and waste round as Boss. Use !vshbosstoggle instead.", TEXT_TAG, TEXT_ERROR);
+		if (!boss.bMinion)
+			PrintToChat(iClient, "%s%s Do not suicide and waste round as Boss. Use !vshbosstoggle instead.", TEXT_TAG, TEXT_ERROR);
+		else
+			PrintToChat(iClient, "%s%s Do not suicide and play abnormally as Minion. Use !vshrevival instead if possible.", TEXT_TAG, TEXT_ERROR);
+		
 		return Plugin_Handled;
 	}
 
@@ -65,13 +70,15 @@ public Action Console_JoinTeamCommand(int iClient, const char[] sCommand, int iA
 	
 	if (strcmp(sTeam, "spectate") == 0)
 	{
-		if (SaxtonHale_IsValidBoss(iClient, false))
+		SaxtonHaleBase boss = SaxtonHaleBase(iClient);
+		if (boss.bValid && (g_bRoundStarted || GameRules_GetRoundState() == RoundState_Preround))
 		{
-			if (g_bRoundStarted || GameRules_GetRoundState() == RoundState_Preround)
-			{
+			if (!boss.bMinion)
 				PrintToChat(iClient, "%s%s Do not suicide and waste round as Boss. Use !vshbosstoggle instead.", TEXT_TAG, TEXT_ERROR);
-				return Plugin_Handled;
-			}
+			else
+				PrintToChat(iClient, "%s%s Do not suicide and play abnormally as Minion. Use !vshrevival instead if possible.", TEXT_TAG, TEXT_ERROR);
+			
+			return Plugin_Handled;
 		}
 		
 		return Plugin_Continue;

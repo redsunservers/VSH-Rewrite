@@ -1,174 +1,188 @@
 static ArrayList g_aNextBossMulti;
+static bool g_bNextBossSpecialClass;
+static TFClassType g_nNextBossSpecialClass;
 
 void NextBoss_Init()
 {
+	g_aNextBoss = new ArrayList(sizeof(NextBoss));
 	g_aNextBossMulti = new ArrayList();
 	
-	g_ConfigConvar.Create("vsh_boss_chance_saxton", "0.25", "% chance for next boss to be Saxton Hale (0.0 - 1.0)", _, true, 0.0, true, 1.0);
-	g_ConfigConvar.Create("vsh_boss_chance_multi", "0.20", "% chance for next boss to be multiple bosses (after Saxton Hale roll) (0.0 - 1.0)", _, true, 0.0, true, 1.0);
+	g_ConfigConvar.Create("vsh_boss_chance_saxton", "0.25", "% chance for next boss to be Saxton Hale from normal bosses pool (0.0 - 1.0)", _, true, 0.0, true, 1.0);
+	g_ConfigConvar.Create("vsh_boss_chance_multi", "0.20", "% chance for next boss to be multiple bosses (0.0 - 1.0)", _, true, 0.0, true, 1.0);
 	g_ConfigConvar.Create("vsh_boss_chance_modifiers", "0.15", "% chance for next boss to have random modifiers (0.0 - 1.0)", _, true, 0.0, true, 1.0);
 }
 
-void PickNextBoss()
+int NextBoss_CreateStruct(int iClient)
 {
-	//Get every non-specs
-	ArrayList aClients = new ArrayList();
-	for (int iClient = 1; iClient <= MaxClients; iClient++)
-		if (IsClientInGame(iClient) && GetClientTeam(iClient) > 1)
-			aClients.Push(iClient);
-	
-	//Randomize incase we have to pick random player
-	aClients.Sort(Sort_Random, Sort_Integer);
-	
-	//Find main boss
-	int iMainBoss = 0;
-	int iArray = 0;
-	while (g_aNextBoss.Length > iArray && iMainBoss == 0)
+	//Don't want to create another NextBoss if client specified already have one, return existing one instead
+	if (0 < iClient <= MaxClients)
 	{
-		//Get "main" boss
-		NextBoss nextStruct;
-		g_aNextBoss.GetArray(iArray, nextStruct);
-		iMainBoss = GetClientOfUserId(nextStruct.iUserId);	//Should return 0 if invalid userid
-		
-		iArray++;
-	}
-	
-	//If next player not force set as boss, get one from queue
-	if (iMainBoss <= 0 || iMainBoss > MaxClients || !IsClientInGame(iMainBoss))
-	{
-		iMainBoss = Queue_GetPlayerFromRank(1);
-		if (iMainBoss <= 0 || iMainBoss > MaxClients || !IsClientInGame(iMainBoss))
+		int iIndex = g_aNextBoss.FindValue(iClient, 1);	//assuming iClient is at 1 pos of struct
+		if (iIndex >= 0)
 		{
-			PrintToChatAll("%s%s Unable to find player in queue to become boss! %sPicking random player...", TEXT_TAG, TEXT_ERROR, TEXT_COLOR);
-			iMainBoss = aClients.Get(0);
+			NextBoss nextBoss;
+			g_aNextBoss.GetArray(iIndex, nextBoss);
+			return nextBoss.iId;
 		}
 	}
 	
-	//Check if next boss is not force set
-	if (g_aNextBoss.Length == 0)
+	g_iNextBossId++;
+	
+	NextBoss nextBoss;
+	nextBoss.iId = g_iNextBossId;
+	nextBoss.iClient = iClient;
+	nextBoss.sBossType = NULL_STRING;
+	nextBoss.sModifierType = NULL_STRING;
+	
+	g_aNextBoss.PushArray(nextBoss);
+	return g_iNextBossId;
+}
+
+bool NextBoss_GetStruct(int iId, NextBoss nextBoss)
+{
+	int iIndex = g_aNextBoss.FindValue(iId, 0);	//assuming iId is at 0 pos of struct
+	if (iIndex < 0)
+		return false;
+	
+	g_aNextBoss.GetArray(iIndex, nextBoss);
+	return true;
+}
+
+void NextBoss_SetStruct(NextBoss nextBoss)
+{
+	int iIndex = g_aNextBoss.FindValue(nextBoss.iId, 0);	//assuming iId is at 0 pos of struct
+	if (iIndex >= 0)
+		g_aNextBoss.SetArray(iIndex, nextBoss);
+}
+
+void NextBoss_Delete(SaxtonHaleNextBoss nextBoss)
+{
+	int iIndex = g_aNextBoss.FindValue(nextBoss, 0);	//assuming iId is at 0 pos of struct
+	if (iIndex >= 0)
+		g_aNextBoss.Erase(iIndex);
+}
+
+void NextBoss_DeleteClient(int iClient)
+{
+	int iIndex = g_aNextBoss.FindValue(iClient, 1);	//assuming iClient is at 1 pos of struct
+	if (iIndex >= 0)
+		g_aNextBoss.Erase(iIndex);
+}
+
+void NextBoss_SetSpecialClass(TFClassType nClass)
+{
+	g_bNextBossSpecialClass = true;
+	g_nNextBossSpecialClass = nClass;
+}
+
+void NextBoss_SetNextBoss()
+{
+	//Get every non-specs, clients who has not been selected as boss yet
+	ArrayList aNonBosses = new ArrayList();
+	for (int iClient = 1; iClient <= MaxClients; iClient++)
+		if (IsClientInGame(iClient) && TF2_GetClientTeam(iClient) > TFTeam_Spectator)
+			aNonBosses.Push(iClient);
+	
+	aNonBosses.Sort(Sort_Random, Sort_Integer);
+	
+	bool bForceSet;
+	int iMainBoss;
+	
+	//Check if there any client bosses force set for this round
+	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
-		char sBoss[MAX_TYPE_CHAR];
+		if (IsClientInGame(iClient))
+		{
+			SaxtonHaleNextBoss nextBoss = SaxtonHaleNextBoss(iClient);
+			if (nextBoss.bForceNext)
+			{
+				NextBoss_SetBoss(nextBoss, aNonBosses);
+				bForceSet = true;
+			}
+		}
+	}
+	
+	//Check if there any other bosses force set, but with missing client
+	bool bBossSet;
+	do
+	{
+		bBossSet = false;
+		int iLength = g_aNextBoss.Length;
+		for (int i = 0; i < iLength; i++)
+		{
+			NextBoss nextStruct;
+			g_aNextBoss.GetArray(i, nextStruct);
+			
+			if (!nextStruct.bForceNext)
+				continue;
+			
+			//We want to make sure same client can only have 1 NextBoss in array,
+			//delete client's existing NextBoss and assign client to new NextBoss
+			
+			nextStruct.iClient = NextBoss_GetNextClient(aNonBosses);	//Get client in queue
+			SaxtonHaleNextBoss nextBoss = SaxtonHaleNextBoss(nextStruct.iClient);	//Get existing client in NextBoss
+			
+			g_aNextBoss.SetArray(i, nextStruct);	//Set new client and infos to array
+			NextBoss_Delete(nextBoss);	//Delete previous NextBoss after setting new client, otherwise array indexs get changed
+			
+			//Set boss
+			nextBoss = SaxtonHaleNextBoss(nextStruct.iClient);
+			NextBoss_SetBoss(nextBoss, aNonBosses);
+			bForceSet = true;
+			bBossSet = true;
+			break;	//Break 'for' loop to start 'while' loop again, with updated NextBoss array
+		}
+	}
+	while (bBossSet);
+	
+	//If there no force set, pick one from highest queue
+	if (!bForceSet)
+	{
+		iMainBoss = NextBoss_GetNextClient(aNonBosses);
 		ArrayList aMultiBoss;
 		
-		if (GetRandomFloat(0.0, 1.0) <= g_ConfigConvar.LookupFloat("vsh_boss_chance_saxton"))
-		{
-			//Saxton Hale
-			NextBoss nextStruct;
-			Format(nextStruct.sBoss, sizeof(nextStruct.sBoss), "CSaxtonHale");
-			g_aNextBoss.PushArray(nextStruct);
-		}
-		else if (Preferences_Get(iMainBoss, Preferences_MultiBoss)
+		//Roll for multi boss
+		if (Preferences_Get(iMainBoss, Preferences_MultiBoss)
 			&& GetRandomFloat(0.0, 1.0) <= g_ConfigConvar.LookupFloat("vsh_boss_chance_multi")
 			&& (aMultiBoss = NextBoss_GetRandomMulti()))
 		{
-			//Random multiple bosses
-			int iLength = aMultiBoss.Length;
-			for (int i = 0; i < iLength; i++)
+			int iMultiBossLength = aMultiBoss.Length;
+			for (int i = 0; i < iMultiBossLength; i++)
 			{
-				aMultiBoss.GetString(i, sBoss, sizeof(sBoss));
+				int iClient = NextBoss_GetNextClient(aNonBosses, true);
 				
-				NextBoss nextStruct;
-				Format(nextStruct.sBoss, sizeof(nextStruct.sBoss), sBoss);
-				g_aNextBoss.PushArray(nextStruct);
+				//Set client to play as multi boss
+				SaxtonHaleNextBoss nextBoss = SaxtonHaleNextBoss(iClient);
+				
+				char sBossType[MAX_TYPE_CHAR];
+				aMultiBoss.GetString(i, sBossType, sizeof(sBossType));
+				
+				nextBoss.SetBoss(sBossType);
+				NextBoss_SetBoss(nextBoss, aNonBosses);
 			}
 		}
 		else
 		{
-			NextBoss_GetRandomNormal(sBoss, sizeof(sBoss));
-			
-			NextBoss nextStruct;
-			Format(nextStruct.sBoss, sizeof(nextStruct.sBoss), sBoss);
-			g_aNextBoss.PushArray(nextStruct);
+			//Set client to play as normal boss
+			SaxtonHaleNextBoss nextBoss = SaxtonHaleNextBoss(iMainBoss);
+			NextBoss_SetBoss(nextBoss, aNonBosses);
 		}
 	}
 	
-	int iRank = 1;
-	int iBossCount = g_aNextBoss.Length;
-	//Loop though and check if all client, boss and modifiers has been set
-	for (int i = 0; i < iBossCount; i++)
-	{
-		NextBoss nextStruct;
-		g_aNextBoss.GetArray(i, nextStruct);
-		
-		//Check if client has been selected yet, and still in game
-		int iClient = GetClientOfUserId(nextStruct.iUserId);
-		if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient))
-		{
-			iClient = -1;
-			while (iClient == -1 && aClients.Length > 0)
-			{
-				iClient = Queue_GetPlayerFromRank(iRank);
-				
-				//If cant find in list, get player from array sorted at random
-				if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient))
-					iClient = aClients.Get(0);
-				
-				//If were not at first boss to set, we assume there duo boss going on, dont select one with pref disabled
-				else if (i > 0 && !Preferences_Get(iClient, Preferences_MultiBoss))
-					iClient = -1;
-				
-				if (0 < iClient <= MaxClients && IsClientInGame(iClient))
-				{
-					nextStruct.iUserId = GetClientUserId(iClient);
-					
-					//Erase client in list
-					int iIndex = aClients.FindValue(iClient);
-					if (iIndex >= 0) aClients.Erase(iIndex);
-				}
-				
-				iRank++;
-			}
-		}
-		
-		//Get random non-duo boss
-		if (StrEmpty(nextStruct.sBoss))
-			NextBoss_GetRandomNormal(nextStruct.sBoss, sizeof(nextStruct.sBoss));
-		
-		//Get random modifiers
-		if (StrEmpty(nextStruct.sModifiers))
-			NextBoss_GetRandomModifiers(nextStruct.sModifiers, sizeof(nextStruct.sModifiers));
-		
-		g_aNextBoss.SetArray(i, nextStruct);
-	}
-	
-	//Loop again to actually set boss
-	for (int i = 0; i < iBossCount; i++)
-	{
-		NextBoss nextStruct;
-		g_aNextBoss.GetArray(i, nextStruct);
-		
-		int iClient = GetClientOfUserId(nextStruct.iUserId);
-		if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient))
-		{
-			char sError[256];
-			Format(sError, sizeof(sError), "[VSH] INVALID NEXT BOSS CLIENT %d, USERID %d", iClient, nextStruct.iUserId);
-			PluginStop(true, sError);
-			return;
-		}
-		
-		//Set boss
-		SetBoss(iClient, nextStruct.sBoss, nextStruct.sModifiers);
-		
-		// Reset their points
-		Queue_ResetPlayer(iClient);
-		
-		// Enable special round if triggered
-		if (g_bPlayerTriggerSpecialRound[iClient])
-		{
-			g_bSpecialRound = true;
-			g_bPlayerTriggerSpecialRound[iClient] = false;
-		}
-	}
-	
-	//Whipe all next boss data
-	g_aNextBoss.Clear();
-	delete aClients;
+	delete aNonBosses;
 	
 	//Get amount of valid bosses after set
 	int iBosses = 0;
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
+	{
 		if (SaxtonHale_IsValidBoss(iClient, false))
+		{
 			iBosses++;
+			
+			if (!iMainBoss)
+				iMainBoss = iClient;
+		}
+	}
 	
 	if (iBosses == 0)
 	{
@@ -191,21 +205,16 @@ void PickNextBoss()
 		}
 	}
 	
-	// Check if special round is set after setting boss
-	if (g_bSpecialRound || g_nSpecialRoundNextClass != TFClass_Unknown)
+	if (g_bNextBossSpecialClass || g_nNextBossSpecialClass != TFClass_Unknown)
 	{
+		if (g_nNextBossSpecialClass == TFClass_Unknown)
+			g_nNextBossSpecialClass = view_as<TFClassType>(GetRandomInt(1, sizeof(g_strClassName)-1));
 		
-		TFClassType nSpecialRoundClass;
-		if (g_nSpecialRoundNextClass != TFClass_Unknown)
-			nSpecialRoundClass = g_nSpecialRoundNextClass;
-		else
-			nSpecialRoundClass = view_as<TFClassType>(GetRandomInt(1, sizeof(g_strClassName)-1));
+		ClassLimit_SetSpecialRound(g_nNextBossSpecialClass);
+		PrintToChatAll("%s%s SPECIAL ROUND: %N versus %s", TEXT_TAG, TEXT_COLOR, iMainBoss, g_strClassName[g_nNextBossSpecialClass]);
 		
-		ClassLimit_SetSpecialRound(nSpecialRoundClass);
-		PrintToChatAll("%s%s SPECIAL ROUND: %N versus %s", TEXT_TAG, TEXT_COLOR, iMainBoss, g_strClassName[nSpecialRoundClass]);
-		
-		g_bSpecialRound = false;
-		g_nSpecialRoundNextClass = TFClass_Unknown;
+		g_bNextBossSpecialClass = false;
+		g_nNextBossSpecialClass = TFClass_Unknown;
 	}
 	else	//If not, disable special round
 	{
@@ -218,68 +227,108 @@ void PickNextBoss()
 	CreateTimer(flPickBossTime, Timer_RoundStartSound, iMainBoss);
 }
 
-void SetBoss(int iClient, char[] sBossType, char[] sModifiersType)
+int NextBoss_GetNextClient(ArrayList aNonBosses, bool bMultiBoss = false)
 {
-	if (0 < iClient <= MaxClients && IsClientInGame(iClient))
+	if (aNonBosses.Length <= 0)
 	{
-		SaxtonHaleBase boss = SaxtonHaleBase(iClient);
-		
-		// Allow them to join the boss team
-		Client_AddFlag(iClient, ClientFlags_BossTeam);
-		TF2_ForceTeamJoin(iClient, TFTeam_Boss);
-
-		boss.CallFunction("CreateBoss", sBossType);
-		
-		//Give every bosses able to scare scout by default
-		CScareRage scareAbility = boss.CallFunction("FindAbility", "CScareRage");
-		if (scareAbility == INVALID_ABILITY) //If boss don't have scare rage ability, give him one
-			scareAbility = boss.CallFunction("CreateAbility", "CScareRage");
-		scareAbility.nSetClass = TFClass_Scout;
-		scareAbility.flRadiusClass = 800.0;
-		scareAbility.iStunFlagsClass = TF_STUNFLAGS_SMALLBONK;
-		
-		//Select Modifiers
-		if (!StrEqual(sModifiersType, "CModifiersNone") && !StrEmpty(sModifiersType))
-			boss.CallFunction("CreateModifiers", sModifiersType);
-		
-		TF2_RespawnPlayer(iClient);
-		
-		//Display to client what boss you are for 10 seconds
-		MenuBoss_DisplayInfo(iClient, sBossType, 10);
+		PluginStop(true, "[VSH] NO MORE AVAILABLE CLIENTS TO SET AS BOSS!!!!");
+		return 0;
 	}
+	
+	int iRank = 1;
+	while (iRank > 0)	//Forever loop
+	{
+		int iClient = Queue_GetPlayerFromRank(iRank);
+		
+		if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient))
+		{
+			//No more available clients from queue, pick one random
+			return aNonBosses.Get(0);
+		}
+		else if (aNonBosses.FindValue(iClient) < 0)
+		{
+			//If client not in aNonBosses, client should already be boss, skip
+			iRank++;
+		}
+		else if (bMultiBoss && !Preferences_Get(iClient, Preferences_MultiBoss))
+		{
+			//We want to skip players not wanting to play as multi boss
+			iRank++;
+		}
+		else
+		{
+			//Should be safe to use client from queue
+			return iClient;
+		}
+	}
+	
+	//We should never reach this line
+	PluginStop(true, "[VSH] ESCAPED FOREVER LOOP!!!!");
+	return 0;
 }
 
-stock void GetNextBossName(NextBoss nextStruct, char[] sBuffer, int iLength)
+void NextBoss_SetBoss(SaxtonHaleNextBoss nextBoss, ArrayList aNonBosses)
 {
-	char sBossName[256], sModifiersName[256];
+	//Fill random boss and not modifier if not set
+	char sBossType[MAX_TYPE_CHAR], sModifierType[MAX_TYPE_CHAR];
+	nextBoss.GetBoss(sBossType, sizeof(sBossType));
+	nextBoss.GetModifier(sModifierType, sizeof(sModifierType));
 	
-	int iClient = GetClientOfUserId(nextStruct.iUserId);
-	if (0 < iClient <= MaxClients && IsClientInGame(iClient))
-		Format(sBuffer, iLength, "%s%N as ", sBuffer, iClient);
+	if (StrEmpty(sBossType))
+		NextBoss_GetRandomNormal(sBossType, sizeof(sBossType));
 	
-	//If boss not set, display as "random (modifiers) boss"
-	if (StrEmpty(nextStruct.sBoss))
-	{
-		Format(sBuffer, iLength, "%sRandom ", sBuffer);
-		Format(sBossName, sizeof(sBossName), "Boss");
-	}
-	else
-	{
-		SaxtonHaleBase boss = SaxtonHaleBase(0);
-		boss.CallFunction("SetBossType", nextStruct.sBoss);
-		boss.CallFunction("GetBossName", sBossName, sizeof(sBossName));
-	}
+	if (StrEmpty(sModifierType))
+		NextBoss_GetRandomModifiers(sModifierType, sizeof(sModifierType));
 	
-	if (!StrEmpty(nextStruct.sModifiers) && !StrEqual(nextStruct.sModifiers, "CModifiersNone"))
+	// Allow them to join the boss team
+	Client_AddFlag(nextBoss.iClient, ClientFlags_BossTeam);
+	TF2_ForceTeamJoin(nextBoss.iClient, TFTeam_Boss);
+	
+	SaxtonHaleBase boss = SaxtonHaleBase(nextBoss.iClient);
+	if (boss.bValid)
 	{
-		SaxtonHaleBase boss = SaxtonHaleBase(0);
-		boss.CallFunction("SetModifiersType", nextStruct.sModifiers);
-		boss.CallFunction("GetModifiersName", sModifiersName, sizeof(sModifiersName));
-		
-		Format(sBuffer, iLength, "%s%s ", sBuffer, sModifiersName);
+		//We should never get valid boss here
+		PluginStop(true, "[VSH] CLIENT SELECTED TO BE BOSS IS ALREADY BOSS!!!!");
+		return;
 	}
 	
-	Format(sBuffer, iLength, "%s%s", sBuffer, sBossName);
+	boss.CallFunction("CreateBoss", sBossType);
+	
+	//Give every bosses able to scare scout by default
+	CScareRage scareAbility = boss.CallFunction("FindAbility", "CScareRage");
+	if (scareAbility == INVALID_ABILITY) //If boss don't have scare rage ability, give him one
+		scareAbility = boss.CallFunction("CreateAbility", "CScareRage");
+	
+	scareAbility.nSetClass = TFClass_Scout;
+	scareAbility.flRadiusClass = 800.0;
+	scareAbility.iStunFlagsClass = TF_STUNFLAGS_SMALLBONK;
+	
+	//Select Modifiers
+	if (!StrEqual(sModifierType, "CModifiersNone") && !StrEmpty(sModifierType))
+		boss.CallFunction("CreateModifiers", sModifierType);
+	
+	TF2_RespawnPlayer(nextBoss.iClient);
+	
+	//Display to client what boss you are for 10 seconds
+	MenuBoss_DisplayInfo(nextBoss.iClient, sBossType, 10);
+	
+	//Enable special round if triggered
+	if (nextBoss.bSpecialClassRound)
+	{
+		if (nextBoss.nSpecialClassType == TFClass_Unknown && g_nNextBossSpecialClass == TFClass_Unknown)
+			g_nNextBossSpecialClass = view_as<TFClassType>(GetRandomInt(1, sizeof(g_strClassName)-1));
+		else if (nextBoss.nSpecialClassType != TFClass_Unknown)
+			g_nNextBossSpecialClass = nextBoss.nSpecialClassType;
+	}
+
+	//Reset player queue
+	Queue_ResetPlayer(nextBoss.iClient);
+	int iIndex = aNonBosses.FindValue(nextBoss.iClient);
+	if (iIndex >= 0)
+		aNonBosses.Erase(iIndex);
+	
+	//Clear next boss data
+	NextBoss_Delete(nextBoss);
 }
 
 stock void NextBoss_AddMulti(ArrayList aBosses)
@@ -319,6 +368,13 @@ stock void NextBoss_RemoveMulti(const char[] sBoss)
 
 stock void NextBoss_GetRandomNormal(char[] sBoss, int iLength)
 {
+	//Saxton Hale get higher chance to appear
+	if (GetRandomFloat(0.0, 1.0) <= g_ConfigConvar.LookupFloat("vsh_boss_chance_saxton"))
+	{
+		Format(sBoss, iLength, "CSaxtonHale");
+		return;
+	}
+	
 	//Get list of all bosses
 	ArrayList aBosses = FuncClass_GetAllType(VSHClassType_Boss);
 	

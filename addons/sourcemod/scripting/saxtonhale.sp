@@ -12,12 +12,17 @@
 #include <tf2attributes>
 #include <tf_econ_data>
 #include <dhooks>
-#include "include/saxtonhale.inc"
+
+#undef REQUIRE_EXTENSIONS
+#tryinclude <tf2items>
+#define REQUIRE_EXTENSIONS
 
 #pragma semicolon 1
 #pragma newdecls required
 
-#define PLUGIN_VERSION 					"1.3.0"
+#include "include/saxtonhale.inc"
+
+#define PLUGIN_VERSION 					"1.3.2"
 #define PLUGIN_VERSION_REVISION 		"manual"
 
 #if !defined SP_MAX_EXEC_PARAMS
@@ -26,7 +31,10 @@
 
 #define MAX_BUTTONS 					26
 #define MAX_TYPE_CHAR					32		//Max char size of methodmaps name
-#define MAXLEN_CONFIG_VALUE 			256		//Max config string buffer size
+
+#define MAX_CONFIG_ARRAY				16		//Config: Max array size for multiple values of a single parameter
+#define MAXLEN_CONFIG_VALUE 			256		//Config: Max string buffer size for individual values
+#define MAXLEN_CONFIG_VALUEARRAY		1024	//Config: Max string buffer size for groups of values
 
 #define TF_MAXPLAYERS					32
 
@@ -41,6 +49,7 @@
 #define SOUND_METERFULL		"player/recharged.wav"
 #define SOUND_BACKSTAB		"player/spy_shield_break.wav"
 #define SOUND_DOUBLEDONK	"player/doubledonk.wav"
+#define SOUND_NULL			"vo/null.mp3"
 
 #define PARTICLE_GHOST 		"ghost_appearation"
 
@@ -65,6 +74,9 @@
 
 const TFTeam TFTeam_Boss = TFTeam_Blue;
 const TFTeam TFTeam_Attack = TFTeam_Red;
+
+const TFObjectType TFObject_Invalid = view_as<TFObjectType>(-1);
+const TFObjectMode TFObjectMode_Invalid = view_as<TFObjectMode>(-1);
 
 enum ClientFlags ( <<=1 )
 {
@@ -232,6 +244,14 @@ char g_strSlotName[][] = {
 	"Building"
 };
 
+// TF2 Building names
+char g_strBuildingName[TFObjectType][TFObjectMode][] = {
+	{"Dispenser", ""},
+	{"Teleporter Entrance", "Teleporter Exit"},
+	{"Sentry Gun", ""},
+	{"Sapper", ""},
+};
+
 // Color Tag
 char g_strColorTag[][] = {
 	"{positive}",
@@ -280,24 +300,27 @@ TFClassType g_nClassDisplay[sizeof(g_strClassName)] = {
 	TFClass_Spy,
 };
 
+enum struct NextBoss
+{
+	int iId;							//Id, must be at top of this struct
+	int iClient;						//Client to have those values, must be at 2nd top of this struct
+	char sBossType[MAX_TYPE_CHAR];		//Boss to play on next turn
+	char sModifierType[MAX_TYPE_CHAR];	//Modifier to play on next turn
+	bool bForceNext;					//This client will be boss next round
+	bool bSpecialClassRound;			//All-Class on next turn
+	TFClassType nSpecialClassType;		//If bSpecialClassRound, class to force, or TFClass_Unknown for random all-class
+}
+
+ArrayList g_aNextBoss;	//Arrays of NextBoss struct
+int g_iNextBossId;		//Newest created id
+
 bool g_bEnabled;
 bool g_bRoundStarted;
-
-bool g_bSpecialRound;
-TFClassType g_nSpecialRoundNextClass;
+bool g_bTF2Items;
 
 int g_iSpritesLaserbeam;
 int g_iSpritesGlow;
 
-//Main boss data
-enum struct NextBoss
-{
-	int iUserId;
-	char sBoss[MAX_TYPE_CHAR];
-	char sModifiers[MAX_TYPE_CHAR];
-}
-
-ArrayList g_aNextBoss;			//ArrayList of NextBoss struct
 Handle g_hTimerBossMusic;
 char g_sBossMusic[PLATFORM_MAX_PATH];
 int g_iHealthBarHealth;
@@ -307,7 +330,6 @@ int g_iHealthBarMaxHealth;
 int g_iPlayerLastButtons[TF_MAXPLAYERS+1];
 int g_iPlayerDamage[TF_MAXPLAYERS+1];
 int g_iPlayerAssistDamage[TF_MAXPLAYERS+1];
-bool g_bPlayerTriggerSpecialRound[TF_MAXPLAYERS+1];
 int g_iClientOwner[TF_MAXPLAYERS+1];
 
 int g_iClientFlags[TF_MAXPLAYERS+1];
@@ -378,12 +400,13 @@ ConVar tf_arena_preround_time;
 #include "vsh/bosses/boss_yeti.sp"
 #include "vsh/bosses/boss_zombie.sp"
 
-#include "vsh/modifiers/modifiers_speed.sp"
-#include "vsh/modifiers/modifiers_jump.sp"
+#include "vsh/modifiers/modifiers_angry.sp"
+#include "vsh/modifiers/modifiers_electric.sp"
 #include "vsh/modifiers/modifiers_hot.sp"
 #include "vsh/modifiers/modifiers_ice.sp"
-#include "vsh/modifiers/modifiers_electric.sp"
-#include "vsh/modifiers/modifiers_angry.sp"
+#include "vsh/modifiers/modifiers_jump.sp"
+#include "vsh/modifiers/modifiers_speed.sp"
+#include "vsh/modifiers/modifiers_vampire.sp"
 
 #include "vsh/tags/tags_params.sp"
 #include "vsh/tags/tags_target.sp"
@@ -422,6 +445,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/network.sp"
 #include "vsh/nextboss.sp"
 #include "vsh/preferences.sp"
+#include "vsh/property.sp"
 #include "vsh/queue.sp"
 #include "vsh/sdk.sp"
 #include "vsh/stocks.sp"
@@ -439,8 +463,10 @@ public Plugin myinfo =
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
 	Forward_AskLoad();
-	Native_AskLoad();
 	FuncNative_AskLoad();
+	Native_AskLoad();
+	Property_AskLoad();
+	
 	RegPluginLibrary("saxtonhale");
 	
 	return APLRes_Success;
@@ -448,6 +474,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 
 public void OnPluginStart()
 {
+	//OnLibraryAdded dont always call TF2Items on plugin start
+	g_bTF2Items = LibraryExists("TF2Items");
+	
 	AddMultiTargetFilter("@hale", BossTargetFilter, "all bosses", false);
 	AddMultiTargetFilter("@boss", BossTargetFilter, "all bosses", false);
 	AddMultiTargetFilter("@!hale", BossTargetFilter, "all non-bosses", false);
@@ -478,8 +507,6 @@ public void OnPluginStart()
 	SaxtonHaleBase boss = SaxtonHaleBase(0);
 	boss.bModifiers = true;
 	
-	g_aNextBoss = new ArrayList(sizeof(NextBoss));
-	
 	Config_Init();
 	
 	ClassLimit_Init();
@@ -495,10 +522,10 @@ public void OnPluginStart()
 	FuncStack_Init();
 	Menu_Init();
 	NextBoss_Init();
+	SDK_Init();
 	TagsCall_Init();
 	TagsCore_Init();
 	TagsName_Init();
-	SDK_Init();
 	Winstreak_Init();
 	
 	SaxtonHaleFunction func;
@@ -506,6 +533,7 @@ public void OnPluginStart()
 	//Boss functions
 	SaxtonHaleFunction("CreateBoss", ET_Single, Param_String);
 	SaxtonHaleFunction("IsBossHidden", ET_Single);
+	SaxtonHaleFunction("IsBossType", ET_Single, Param_String);
 	SaxtonHaleFunction("SetBossType", ET_Ignore, Param_String);
 	
 	func = SaxtonHaleFunction("GetBossType", ET_Ignore, Param_String, Param_Cell);
@@ -541,6 +569,7 @@ public void OnPluginStart()
 	SaxtonHaleFunction("OnThink", ET_Ignore);
 	SaxtonHaleFunction("OnSpawn", ET_Ignore);
 	SaxtonHaleFunction("OnRage", ET_Ignore);
+	SaxtonHaleFunction("OnGiveNamedItem", ET_Single, Param_String, Param_Cell);
 	SaxtonHaleFunction("OnEntityCreated", ET_Ignore, Param_Cell, Param_String);
 	SaxtonHaleFunction("OnCommandKeyValues", ET_Hook, Param_String);
 	SaxtonHaleFunction("OnAttackCritical", ET_Hook, Param_Cell, Param_CellByRef);
@@ -555,7 +584,11 @@ public void OnPluginStart()
 	SaxtonHaleFunction("OnPlayerKilled", ET_Ignore, Param_Cell, Param_Cell);
 	SaxtonHaleFunction("OnDeath", ET_Ignore, Param_Cell);
 	
-	func = SaxtonHaleFunction("OnAttackDamage", ET_Hook, Param_CellByRef, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array, Param_Cell);
+	func = SaxtonHaleFunction("OnAttackBuilding", ET_Hook, Param_Cell, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array, Param_Cell);
+	func.SetParam(6, Param_Array, VSHArrayType_Static, 3);
+	func.SetParam(7, Param_Array, VSHArrayType_Static, 3);
+	
+	func = SaxtonHaleFunction("OnAttackDamage", ET_Hook, Param_Cell, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array, Param_Cell);
 	func.SetParam(6, Param_Array, VSHArrayType_Static, 3);
 	func.SetParam(7, Param_Array, VSHArrayType_Static, 3);
 	
@@ -666,19 +699,19 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("CWeaponSpells", VSHClassType_Ability);
 	
 	//Register modifiers
-	SaxtonHale_RegisterClass("CModifiersSpeed", VSHClassType_Modifier);
-	SaxtonHale_RegisterClass("CModifiersJump", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("CModifiersAngry", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("CModifiersElectric", VSHClassType_Modifier);
 	SaxtonHale_RegisterClass("CModifiersHot", VSHClassType_Modifier);
 	SaxtonHale_RegisterClass("CModifiersIce", VSHClassType_Modifier);
-	SaxtonHale_RegisterClass("CModifiersElectric", VSHClassType_Modifier);
-	SaxtonHale_RegisterClass("CModifiersAngry", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("CModifiersJump", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("CModifiersSpeed", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("CModifiersVampire", VSHClassType_Modifier);
 	
 	//Init our convars
 	g_ConfigConvar.Create("vsh_force_load", "-1", "Force enable VSH on map start? (-1 for default, 0 for force disable, 1 for force enable)", _, true, -1.0, true, 1.0);
 	g_ConfigConvar.Create("vsh_boss_ping_limit", "200", "Max ping/latency to allow player to play as boss (-1 for no limit)", _, true, -1.0);
 	g_ConfigConvar.Create("vsh_telefrag_damage", "9001.0", "Damage amount to boss from telefrag", _, true, 0.0);
-	
-	Config_Refresh();
+	g_ConfigConvar.Create("vsh_rps_enable", "1", "Allow everyone use Rock Paper Scissors Taunt?", _, true, 0.0, true, 1.0);
 	
 	//Incase of lateload, call client join functions
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
@@ -691,6 +724,31 @@ public void OnPluginStart()
 			OnClientPutInServer(iClient);
 			OnClientPostAdminCheck(iClient);
 		}
+	}
+}
+
+public void OnLibraryAdded(const char[] sName)
+{
+	if (StrEqual(sName, "TF2Items"))
+	{
+		g_bTF2Items = true;
+		
+		//We cant allow TF2Items load while GiveNamedItem already hooked due to crash
+		if (SDK_IsGiveNamedItemActive())
+			PluginStop(true, "[VSH] DO NOT LOAD TF2ITEMS MIDGAME WHILE VSH IS ALREADY LOADED!!!!");
+	}
+}
+
+public void OnLibraryRemoved(const char[] sName)
+{
+	if (StrEqual(sName, "TF2Items"))
+	{
+		g_bTF2Items = false;
+		
+		//TF2Items unloaded with GiveNamedItem unhooked, we can now safely hook GiveNamedItem ourself
+		for (int iClient = 1; iClient <= MaxClients; iClient++)
+			if (IsClientInGame(iClient))
+				SDK_HookGiveNamedItem(iClient);
 	}
 }
 
@@ -779,7 +837,6 @@ void Plugin_Cvars(bool toggle)
 		tf_dropped_weapon_lifetime.IntValue = iDroppedWeaponLifetime;
 		tf_damage_disablespread.IntValue = iDamageDisableSpread;
 
-
 		tf_scout_hype_pep_max.FloatValue = flScoutHypePepMax;
 		tf_feign_death_activate_damage_scale.FloatValue = flFeignDeathActiveDamageScale;
 		tf_feign_death_damage_scale.FloatValue = flFeignDeathDamageScale;
@@ -859,6 +916,7 @@ public void OnMapStart()
 		PrecacheSound(SOUND_METERFULL);
 		PrecacheSound(SOUND_BACKSTAB);
 		PrecacheSound(SOUND_DOUBLEDONK);
+		PrecacheSound(SOUND_NULL);
 		
 		g_iSpritesLaserbeam = PrecacheModel("materials/sprites/laserbeam.vmt", true);
 		g_iSpritesGlow = PrecacheModel("materials/sprites/glow01.vmt", true);
@@ -928,6 +986,27 @@ public void OnEntityCreated(int iEntity, const char[] sClassname)
 		|| strcmp(sClassname, "func_regenerate") == 0)
 	{
 		SDKHook(iEntity, SDKHook_Touch, ItemPack_OnTouch);
+	}
+	else if (StrEqual(sClassname, "team_control_point_master"))
+	{
+		SDKHook(iEntity, SDKHook_Spawn, Dome_MasterSpawn);
+	}
+	else if (StrEqual(sClassname, "trigger_capture_area"))
+	{
+		SDKHook(iEntity, SDKHook_Spawn, Dome_TriggerSpawn);
+		
+		SDKHook(iEntity, SDKHook_StartTouch, Dome_TriggerTouch);
+		SDKHook(iEntity, SDKHook_Touch, Dome_TriggerTouch);
+		SDKHook(iEntity, SDKHook_EndTouch, Dome_TriggerTouch);
+	}
+	else if (StrEqual(sClassname, "game_end"))
+	{
+		//Superceding SetWinningTeam causes some maps to force a map change on capture
+		AcceptEntityInput(iEntity, "Kill");
+	}
+	else if (StrContains(sClassname, "obj_") == 0)
+	{
+		SDKHook(iEntity, SDKHook_OnTakeDamage, Building_OnTakeDamage);
 	}
 }
 
@@ -1035,11 +1114,13 @@ public void TF2_OnConditionAdded(int iClient, TFCond nCond)
 	if (!g_bEnabled) return;
 	if (g_iTotalRoundPlayed <= 0) return;
 	
-	int iTaunt = GetEntProp(iClient, Prop_Send, "m_iTauntItemDefIndex");
-	if (iTaunt == ITEM_ROCK_PAPER_SCISSORS)		//Disable this taunt due to possible stall in last man and easy 999 damage from that taunt
+	if (!g_ConfigConvar.LookupInt("vsh_rps_enable"))
 	{
-		TF2_RemoveCondition(iClient, TFCond_Taunting);
-		PrintToChat(iClient, "%s%s Rock, Paper, Scissors taunt is disabled in this gamemode", TEXT_TAG, TEXT_ERROR);
+		if (GetEntProp(iClient, Prop_Send, "m_iTauntItemDefIndex") == ITEM_ROCK_PAPER_SCISSORS)
+		{
+			TF2_RemoveCondition(iClient, TFCond_Taunting);
+			PrintToChat(iClient, "%s%s Rock, Paper, Scissors taunt is disabled in this gamemode", TEXT_TAG, TEXT_ERROR);
+		}
 	}
 }
 
@@ -1109,7 +1190,6 @@ public void OnClientConnected(int iClient)
 	g_iPlayerDamage[iClient] = 0;
 	g_iPlayerAssistDamage[iClient] = 0;
 	g_iClientFlags[iClient] = 0;
-	g_bPlayerTriggerSpecialRound[iClient] = false;
 	g_iClientOwner[iClient] = 0;
 
 	ClassLimit_SetMainClass(iClient, TFClass_Unknown);
@@ -1124,8 +1204,9 @@ public void OnClientConnected(int iClient)
 public void OnClientPutInServer(int iClient)
 {
 	SDK_HookGetMaxHealth(iClient);
+	SDK_HookGiveNamedItem(iClient);
 	SDKHook(iClient, SDKHook_PreThink, Client_OnThink);
-	SDKHook(iClient, SDKHook_OnTakeDamage, Client_OnTakeDamage);
+	SDKHook(iClient, SDKHook_OnTakeDamageAlive, Client_OnTakeDamageAlive);
 	
 	Cookies_OnClientJoin(iClient);
 }
@@ -1155,12 +1236,16 @@ public void OnClientDisconnect(int iClient)
 
 	g_iClientFlags[iClient] = 0;
 
+	SDK_UnhookGiveNamedItem(iClient);
+
 	ClassLimit_SetMainClass(iClient, TFClass_Unknown);
 	ClassLimit_SetDesiredClass(iClient, TFClass_Unknown);
 	
 	Preferences_SetAll(iClient, -1);
 	Queue_SetPlayerPoints(iClient, -1);
 	Winstreak_SetCurrent(iClient, -1);
+	
+	NextBoss_DeleteClient(iClient);
 }
 
 public void OnClientDisconnect_Post(int iClient)
@@ -1171,8 +1256,11 @@ public void OnClientDisconnect_Post(int iClient)
 public void Client_OnThink(int iClient)
 {
 	if (!g_bEnabled) return;
+	
+	Dome_OnThink(iClient);
+	
 	if (g_iTotalRoundPlayed <= 0) return;
-
+	
 	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 	if (boss.bValid)
 		boss.CallFunction("OnThink");
@@ -1189,7 +1277,7 @@ public void Client_OnThink(int iClient)
 		if (IsValidEntity(iActiveWep))
 		{
 			iIndex = GetEntProp(iActiveWep, Prop_Send, "m_iItemDefinitionIndex");
-			iSlot = TF2_GetSlotInItem(iIndex, nClass);
+			iSlot = TF2_GetItemSlot(iIndex, nClass);
 		}
 
 		if (0 <= iSlot < sizeof(g_ConfigClass[]) && IsValidEntity(iActiveWep) && !TF2_IsPlayerInCondition(iClient, TFCond_Disguised) && !TF2_IsPlayerInCondition(iClient, TFCond_Cloaked))
@@ -1234,7 +1322,7 @@ public void Client_OnThink(int iClient)
 	Hud_Think(iClient);
 }
 
-public Action Client_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action Client_OnTakeDamageAlive(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
@@ -1320,6 +1408,19 @@ public Action Client_OnTakeDamage(int victim, int &attacker, int &inflictor, flo
 	return finalAction;
 }
 
+public Action Building_OnTakeDamage(int building, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
+	
+	SaxtonHaleBase bossAttacker = SaxtonHaleBase(attacker);
+	
+	if (0 < attacker <= MaxClients && bossAttacker.bValid)
+		return bossAttacker.CallFunction("OnAttackBuilding", building, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
+		
+	return Plugin_Continue;
+}
+
 public bool BossTargetFilter(char[] sPattern, ArrayList aClients)
 {
 	bool bTargetBoss = StrContains(sPattern, "@!") == -1;
@@ -1393,6 +1494,8 @@ void Client_OnButton(int iClient, int &buttons)
 	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 	if (boss.bValid)
 		boss.CallFunction("OnButton", buttons);
+	else
+		Tags_OnButton(iClient, buttons);
 }
 
 void Client_OnButtonPress(int iClient, int button)
@@ -1429,7 +1532,7 @@ public Action TF2_CalcIsAttackCritical(int iClient, int iWeapon, char[] sWepClas
 	else
 	{
 		int iIndex = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
-		int iSlot = TF2_GetSlotInItem(iIndex, TF2_GetPlayerClass(iClient));
+		int iSlot = TF2_GetItemSlot(iIndex, TF2_GetPlayerClass(iClient));
 		
 		TagsParams tParams = new TagsParams();
 		TagsCore_CallSlot(iClient, TagsCall_Attack, iSlot, tParams);
@@ -1456,6 +1559,22 @@ public Action NormalSoundHook(int clients[MAXPLAYERS], int &numClients, char sam
 		if (boss.bValid)
 			return boss.CallFunction("OnSoundPlayed", clients, numClients, sample, channel, volume, level, pitch, flags, soundEntry, seed);
 	}
+	return Plugin_Continue;
+}
+
+public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int itemDefIndex, Handle &item)
+{
+	return GiveNamedItem(client, classname, itemDefIndex);
+}
+
+Action GiveNamedItem(int iClient, const char[] sClassname, int iIndex)
+{
+	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
+	if (boss.bValid)
+		return boss.CallFunction("OnGiveNamedItem", sClassname, iIndex);
+	else if (g_ConfigIndex.IsRestricted(iIndex))
+		return Plugin_Handled;
+	
 	return Plugin_Continue;
 }
 

@@ -16,6 +16,18 @@
 				"linux"		"@_ZN9CTFPlayer33GetEquippedWearableForLoadoutSlotEi"
 				"windows"	"\x55\x8B\xEC\x83\xEC\x2A\x8B\xC1\x53\x56\x33\xF6\x89\x45\xF8\x8B\x88\x2A\x2A\x2A\x2A\x57\x89\x4D\xFC"
 			}
+			"CTFPlayer::AddObject"
+			{
+				"library"	"server"
+				"linux"		"@_ZN9CTFPlayer9AddObjectEP11CBaseObject"
+				"windows"	"\x55\x8B\xEC\x53\x56\x57\x8B\x7D\x08\x8B\xD9\x85\xFF\x74\x2A\x8B\x07\x8B\xCF\xFF\x50\x08\x8B\xCF"
+			}
+			"CTFPlayer::RemoveObject"
+			{
+				"library"	"server"
+				"linux"		"@_ZN9CTFPlayer12RemoveObjectEP11CBaseObject"
+				"windows"	"\x55\x8B\xEC\x8B\xD1\x56\x8B\xB2\x7C\x21\x00\x00"
+			}
 			"CWeaponMedigun::AllowedToHealTarget"
 			{
 				"library"	"server"
@@ -62,10 +74,20 @@
 		}
 		"Offsets"
 		{
+			"CTFGameRules::GetCaptureValueForPlayer"
+			{
+				"linux"		"154"
+				"windows"	"153"
+			}
 			"CBaseEntity::ShouldTransmit"
 			{
 				"linux"		"19"
 				"windows"	"18"
+			}
+			"CTFPlayer::GiveNamedItem"
+			{
+				"windows"	"475"
+				"linux"		"482"
 			}
 			"CTFWeaponBase::SendWeaponAnim"
 			{

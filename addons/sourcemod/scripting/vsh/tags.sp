@@ -195,7 +195,7 @@ void Tags_OnThink(int iClient)
 	}
 }
 
-void Tags_OnPlayerHurt(int iVictim, int iAttacker, int iDamage)
+void Tags_PlayerHurt(int iVictim, int iAttacker, int iDamage)
 {
 	if (SaxtonHale_IsValidBoss(iVictim) && SaxtonHale_IsValidAttack(iAttacker))
 	{
@@ -216,6 +216,33 @@ void Tags_OnPlayerHurt(int iVictim, int iAttacker, int iDamage)
 					if (iPrimary > MaxClients)
 						SetEntPropFloat(iPrimary, Prop_Send, "m_flNextSecondaryAttack", 0.0);	//Allow airblast to be used
 				}
+			}
+		}
+	}
+}
+
+void Tags_OnButton(int iClient, int &iButtons)
+{
+	//Prevent clients holding m2 while airblast in cooldown
+	if (iButtons & IN_ATTACK2 && g_iTagsAirblastRequirement[iClient] > 0 && g_iTagsAirblastDamage[iClient] < g_iTagsAirblastRequirement[iClient])
+	{
+		int iPrimary = TF2_GetItemInSlot(iClient, WeaponSlot_Primary);
+		int iActiveWep = GetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon");
+		if (iActiveWep > MaxClients && iPrimary == iActiveWep)
+			iButtons &= ~IN_ATTACK2;
+		
+		//Change the m_iWeaponState to a proper value after the airblast to prevent the visual bug
+		if (g_nTagsAirblastState[iClient] == FlamethrowerState_Airblast)
+		{
+			if (iButtons & IN_ATTACK)
+			{
+				g_nTagsAirblastState[iClient] = FlamethrowerState_Firing;
+				SetEntProp(iPrimary, Prop_Send, "m_iWeaponState", FlamethrowerState_Firing);
+			}
+			else
+			{
+				g_nTagsAirblastState[iClient] = FlamethrowerState_Idle;
+				SetEntProp(iPrimary, Prop_Send, "m_iWeaponState", FlamethrowerState_Idle);
 			}
 		}
 	}
@@ -568,7 +595,11 @@ public void Tags_AddHealth(int iClient, int iTarget, TagsParams tParams)
 		return;
 	
 	int iAmount = tParams.GetInt("amount");
-	Client_AddHealth(iTarget, iAmount, iAmount);
+	float flMaxOverheal = tParams.GetFloat("overheal", 1.5);
+	
+	int iMaxHealth = SDK_GetMaxHealth(iTarget);
+	
+	Client_AddHealth(iTarget, iAmount, RoundToNearest(float(iMaxHealth) * (flMaxOverheal - 1.0)));
 }
 
 public void Tags_AddHealthBase(int iClient, int iTarget, TagsParams tParams)
@@ -577,9 +608,11 @@ public void Tags_AddHealthBase(int iClient, int iTarget, TagsParams tParams)
 		return;
 	
 	float flAmount = tParams.GetFloat("amount");
+	float flMaxOverheal = tParams.GetFloat("overheal", 1.5);
+	
 	int iMaxHealth = SDK_GetMaxHealth(iTarget);
 	
-	Client_AddHealth(iTarget, RoundToNearest(float(iMaxHealth) * flAmount), RoundToNearest(float(iMaxHealth) * 0.5));
+	Client_AddHealth(iTarget, RoundToNearest(float(iMaxHealth) * flAmount), RoundToNearest(float(iMaxHealth) * (flMaxOverheal - 1.0)));
 }
 
 public void Tags_DropHealth(int iClient, int iTarget, TagsParams tParams)
@@ -759,17 +792,25 @@ public void Tags_Airblast(int iClient, int iTarget, TagsParams tParams)
 
 public void Tags_Explode(int iClient, int iTarget, TagsParams tParams)
 {
-	if (iTarget <= 0 || !IsValidEdict(iTarget))
+	if (iTarget <= 0 || !IsValidEdict(iTarget) || GameRules_GetRoundState() == RoundState_Preround)
 		return;
 	
 	float flDamage = tParams.GetFloat("damage");
 	float flRadius = tParams.GetFloat("radius");
 	
+	//If no particle was specified, pick a generic explosion particle
+	char sParticle[MAXLEN_CONFIG_VALUE];
+	if (!tParams.GetString("particle", sParticle, sizeof(sParticle)))
+		Format(sParticle, sizeof(sParticle), "ExplosionCore_MidAir");
+	
+	//If no sounds were specified, pick a generic explosion sound. If multiple sounds were specified, pick a random one
+	char sSound[MAXLEN_CONFIG_VALUE];
+	if (!tParams.GetStringRandom("sound", sSound, sizeof(sSound)))
+		Format(sSound, sizeof(sSound), "weapons/airstrike_small_explosion_0%d.wav", GetRandomInt(1, 3));
+	
 	float vecPos[3];
 	GetEntPropVector(iTarget, Prop_Send, "m_vecOrigin", vecPos);
-	char sSound[255];
-	Format(sSound, sizeof(sSound), "weapons/airstrike_small_explosion_0%i.wav", GetRandomInt(1,3));
-	TF2_Explode(iClient, vecPos, flDamage, flRadius, "ExplosionCore_MidAir", sSound);
+	TF2_Explode(iClient, vecPos, flDamage, flRadius, sParticle, sSound);
 }
 
 public void Tags_KillWeapon(int iClient, int iTarget, TagsParams tParams)
@@ -787,6 +828,15 @@ public void Tags_KillWeapon(int iClient, int iTarget, TagsParams tParams)
 			return;
 		}
 	}
+}
+
+public void Tags_ForceSuicide(int iClient, int iTarget, TagsParams tParams)
+{
+	if (iTarget <= 0 || iTarget > MaxClients || !IsClientInGame(iTarget) || !IsPlayerAlive(iTarget))
+		return;
+	
+	//Pretty straight-forward, isn't it?
+	ForcePlayerSuicide(iTarget);
 }
 
 //---------------------------
