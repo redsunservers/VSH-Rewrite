@@ -97,12 +97,8 @@ methodmap CRageHop < SaxtonHaleBase
 		
 		ability.flBombDamage = 50.0;
 		ability.flBombRadius = 225.0;
-
-		ability.flBombDamage = 40.0;
-		ability.flBombRadius = 200.0;
 		
 		ability.flDuration = 10.0;
-		
 	}
 	
 	public void OnThink()
@@ -120,16 +116,22 @@ methodmap CRageHop < SaxtonHaleBase
 			char sSound[PLATFORM_MAX_PATH];
 			Format(sSound, sizeof(sSound), "weapons/airstrike_small_explosion_0%i.wav", GetRandomInt(1,3));
 			
+			float flBombRadiusValue = this.flBombRadius;
 			if(this.bSuperRage)
-				TF2_Explode(this.iClient, vecExplosionOrigin, this.flBombDamage * 1.5, this.flBombRadius * 1.25, "heavy_ring_of_fire", sSound);
+			{
+				flBombRadiusValue *= 1.25;
+				TF2_Explode(this.iClient, vecExplosionOrigin, this.flBombDamage * 1.5, flBombRadiusValue, "heavy_ring_of_fire", sSound);
+			}
 			else
-				TF2_Explode(this.iClient, vecExplosionOrigin, this.flBombDamage, this.flBombRadius, "heavy_ring_of_fire", sSound);
+			{
+				TF2_Explode(this.iClient, vecExplosionOrigin, this.flBombDamage, flBombRadiusValue, "heavy_ring_of_fire", sSound);
+			}
 			
 			for (int i = 1; i <= MaxClients; i++)
 			{
 				if (IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i) > 1 && GetClientTeam(i) != iTeam)
 				{
-					if (IsClientInRange(i, vecExplosionOrigin, this.flBombRadius) || (IsClientInRange(i, vecExplosionOrigin, this.flBombRadius * 1.25) && this.bSuperRage))
+					if (IsClientInRange(i, vecExplosionOrigin, flBombRadiusValue))
 					{
 						TF2_IgnitePlayer(i, this.iClient);
 						TF2_AddCondition(i, TFCond_Gas, 10.0, this.iClient);

@@ -85,6 +85,7 @@ methodmap CPyroCar < SaxtonHaleBase
 	{
 		StrCat(sInfo, length, "\nHealth: Low");
 		StrCat(sInfo, length, "\nYou are forced to go forward");
+		StrCat(sInfo, length, "\nYou are slower than usual bosses");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nAbilities");
 		StrCat(sInfo, length, "\n- Float Jump, you go faster as you levitate upwards");

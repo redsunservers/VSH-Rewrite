@@ -2,7 +2,6 @@ static float g_flRageBonusEndTime[TF_MAXPLAYERS+1];
 static float g_flSpeedRageBonusMultiplier[TF_MAXPLAYERS+1];
 static float g_flRageBonusDuration[TF_MAXPLAYERS+1];
 static float g_flSpeedRageBonusMultValue[TF_MAXPLAYERS+1];
-static float g_flSpeedAbilityBonusMultiplier[TF_MAXPLAYERS+1];
 static float g_flSpeedAbilityBonusMultValue[TF_MAXPLAYERS+1];
 
 methodmap CForceForward < SaxtonHaleBase
@@ -66,21 +65,19 @@ methodmap CForceForward < SaxtonHaleBase
 			g_flSpeedRageBonusMultiplier[this.iClient] = 1.0;
 		}
 		
+		
+		float flSpeedAbilityBonusMultiplier = 1.0;
 		//Ability speedboost
 		if (TF2_IsPlayerInCondition(this.iClient, TFCond_TeleportedGlow))
 		{
-			g_flSpeedAbilityBonusMultiplier[this.iClient] = g_flSpeedAbilityBonusMultValue[this.iClient];
-		}
-		else
-		{
-			g_flSpeedAbilityBonusMultiplier[this.iClient] = 1.0;
+			flSpeedAbilityBonusMultiplier = g_flSpeedAbilityBonusMultValue[this.iClient];
 		}
 		
 		
 		float flMaxSpeed = GetEntPropFloat(this.iClient, Prop_Data, "m_flMaxspeed");
 		
-		vecVel[0] = Cosine(DegToRad(vecAng[0])) * Cosine(DegToRad(vecAng[1])) * flMaxSpeed * g_flSpeedRageBonusMultiplier[this.iClient] * g_flSpeedAbilityBonusMultiplier[this.iClient];
-		vecVel[1] = Cosine(DegToRad(vecAng[0])) * Sine(DegToRad(vecAng[1])) * flMaxSpeed * g_flSpeedRageBonusMultiplier[this.iClient] * g_flSpeedAbilityBonusMultiplier[this.iClient];
+		vecVel[0] = Cosine(DegToRad(vecAng[0])) * Cosine(DegToRad(vecAng[1])) * flMaxSpeed * g_flSpeedRageBonusMultiplier[this.iClient] * flSpeedAbilityBonusMultiplier;
+		vecVel[1] = Cosine(DegToRad(vecAng[0])) * Sine(DegToRad(vecAng[1])) * flMaxSpeed * g_flSpeedRageBonusMultiplier[this.iClient] * flSpeedAbilityBonusMultiplier;
 		
 		TeleportEntity(this.iClient, NULL_VECTOR, NULL_VECTOR, vecVel);
 		

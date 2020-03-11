@@ -104,7 +104,7 @@ methodmap CFloatJump < SaxtonHaleBase
 			
 			vecVel[0] = Cosine(DegToRad(vecAng[0])) * Cosine(DegToRad(vecAng[1])) * 600.0;
 			vecVel[1] = Cosine(DegToRad(vecAng[0])) * Sine(DegToRad(vecAng[1])) * 600.0;
-			vecVel[2] = (((0) * 1.5) + 90.0) * this.flHeightMultiplier;
+			vecVel[2] = 90.0 * this.flHeightMultiplier;
 			
 			SetEntProp(this.iClient, Prop_Send, "m_bJumping", true);
 			
