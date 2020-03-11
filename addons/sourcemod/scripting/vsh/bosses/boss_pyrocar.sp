@@ -85,10 +85,9 @@ methodmap CPyroCar < SaxtonHaleBase
 	{
 		StrCat(sInfo, length, "\nHealth: Low");
 		StrCat(sInfo, length, "\nYou are forced to go forward");
-		StrCat(sInfo, length, "\nYou have the same speed as the medic");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nAbilities");
-		StrCat(sInfo, length, "\n- Float Jump");
+		StrCat(sInfo, length, "\n- Float Jump, you go faster as you levitate upwards");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
 		StrCat(sInfo, length, "\n- Hops repeatedly dealing explosive fire damage near the impact for 10 seconds");
