@@ -97,6 +97,9 @@ methodmap CRageHop < SaxtonHaleBase
 		
 		ability.flBombDamage = 50.0;
 		ability.flBombRadius = 225.0;
+
+		ability.flBombDamage = 40.0;
+		ability.flBombRadius = 200.0;
 		
 		ability.flDuration = 10.0;
 		

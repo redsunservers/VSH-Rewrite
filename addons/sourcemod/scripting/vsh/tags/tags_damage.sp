@@ -27,7 +27,7 @@ public Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor,
 	if (weapon > MaxClients && HasEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"))
 	{
 		int iIndex = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
-		iWeaponSlot = TF2_GetSlotInItem(iIndex, TF2_GetPlayerClass(attacker));
+		iWeaponSlot = TF2_GetItemSlot(iIndex, TF2_GetPlayerClass(attacker));
 	}
 	
 	//Call attackdamage function

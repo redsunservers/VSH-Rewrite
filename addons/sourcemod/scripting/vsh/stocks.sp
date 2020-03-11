@@ -231,17 +231,33 @@ stock int TF2_GetSlotFromWeapon(int iWeapon)
 	return -1;
 }
 
-stock int TF2_GetSlotInItem(int iIndex, TFClassType nClass)
+stock int TF2_GetItemSlot(int iIndex, TFClassType nClass)
 {
 	int iSlot = TF2Econ_GetItemSlot(iIndex, nClass);
 	if (iSlot >= 0)
 	{
-		//Spy slots is a bit messy
-		if (nClass == TFClass_Spy)
+		// Econ reports wrong slots for Engineer and Spy
+		switch (nClass)
 		{
-			if (iSlot == 1) iSlot = WeaponSlot_Primary;		//Revolver
-			if (iSlot == 4) iSlot = WeaponSlot_Secondary;	//Sapper
-			if (iSlot == 6) iSlot = WeaponSlot_InvisWatch;	//Invis Watch
+			case TFClass_Engineer:
+			{
+				switch (iSlot)
+				{
+					case 4: iSlot = WeaponSlot_BuilderEngie; // Toolbox
+					case 5: iSlot = WeaponSlot_PDABuild; // Construction PDA
+					case 6: iSlot = WeaponSlot_PDADestroy; // Destruction PDA
+				}
+			}
+			case TFClass_Spy:
+			{
+				switch (iSlot)
+				{
+					case 1: iSlot = WeaponSlot_Primary; // Revolver
+					case 4: iSlot = WeaponSlot_Secondary; // Sapper
+					case 5: iSlot = WeaponSlot_PDADisguise; // Disguise Kit
+					case 6: iSlot = WeaponSlot_InvisWatch; // Invis Watch
+				}
+			}
 		}
 	}
 	
@@ -320,15 +336,46 @@ stock int TF2_GetBuilding(int iClient, TFObjectType nType, TFObjectMode nMode = 
 	int iBuilding = MaxClients+1;
 	while ((iBuilding = FindEntityByClassname(iBuilding, "obj_*")) > MaxClients)
 	{
-		if (GetEntPropEnt(iBuilding, Prop_Send, "m_hBuilder") == iClient
-			&& view_as<TFObjectType>(GetEntProp(iBuilding, Prop_Send, "m_iObjectType")) == nType
-			&& view_as<TFObjectMode>(GetEntProp(iBuilding, Prop_Send, "m_iObjectMode")) == nMode)
+		if (TF2_GetBuildingOwner(iBuilding) == iClient
+			&& TF2_GetBuildingType(iBuilding) == nType
+			&& TF2_GetBuildingMode(iBuilding) == nMode)
 		{
 			return iBuilding;
 		}
 	}
 	
 	return -1;
+}
+
+stock int TF2_GetBuildingOwner(int iBuilding)
+{
+	//There is the possibility that a map has buildings without ownership
+	return GetEntPropEnt(iBuilding, Prop_Send, "m_hBuilder");
+}
+
+stock void TF2_SetBuildingOwner(int iBuilding, int iClient)
+{
+	if (0 < iClient <= MaxClients && IsClientInGame(iClient))
+	{
+		SetEntPropEnt(iBuilding, Prop_Send, "m_hBuilder", iClient);
+		SDK_AddObject(iClient, iBuilding);
+	}
+}
+
+stock TFObjectType TF2_GetBuildingType(int iBuilding)
+{
+	if (iBuilding > MaxClients)
+		return view_as<TFObjectType>(GetEntProp(iBuilding, Prop_Send, "m_iObjectType"));
+		
+	return TFObject_Invalid;
+}
+
+stock TFObjectMode TF2_GetBuildingMode(int iBuilding)
+{
+	if (iBuilding > MaxClients)
+		return view_as<TFObjectMode>(GetEntProp(iBuilding, Prop_Send, "m_iObjectMode"));
+		
+	return TFObjectMode_Invalid;
 }
 
 stock void TF2_StunBuilding(int iBuilding, float flDuration)
@@ -342,6 +389,56 @@ public Action Timer_EnableBuilding(Handle timer, int iRef)
 	int iBuilding = EntRefToEntIndex(iRef);
 	if (iBuilding > MaxClients)
 		SetEntProp(iBuilding, Prop_Send, "m_bDisabled", false);
+}
+
+stock void TF2_SetBuildingTeam(int iBuilding, TFTeam nTeam, int iNewBuilder = -1)
+{
+	int iBuilder = TF2_GetBuildingOwner(iBuilding);
+	
+	//Remove the building from the original builder so it doesn't explode on team switch
+	SDK_RemoveObject(iBuilder, iBuilding);
+	
+	//Set its team. If we were attempting to do this by changing its TeamNum ent prop, Sentries would act derpy by actively trying to shoot itself
+	int iTeam = view_as<int>(nTeam);
+	SetVariantInt(iTeam);
+	AcceptEntityInput(iBuilding, "SetTeam");
+	SetEntProp(iBuilding, Prop_Send, "m_nSkin", iTeam-2);
+	
+	//Set a new builder and give them the building, if specified
+	TF2_SetBuildingOwner(iBuilding, iNewBuilder);
+	
+	switch (TF2_GetBuildingType(iBuilding))
+	{
+		case TFObject_Sentry:
+		{
+			//Mini-sentries use different skins, adjust accordingly
+			if (GetEntProp(iBuilding, Prop_Send, "m_bMiniBuilding"))
+				SetEntProp(iBuilding, Prop_Send, "m_nSkin", iTeam);
+			
+			//Reset wrangler shield and player-controlled status to change team colors
+			//If the sentry is still being wrangled, the values will automatically adjust themselves next frame
+			if (GetEntProp(iBuilding, Prop_Send, "m_nShieldLevel") > 0)
+			{
+				SetEntProp(iBuilding, Prop_Send, "m_bPlayerControlled", false);
+				SetEntProp(iBuilding, Prop_Send, "m_nShieldLevel", 0);
+			}
+		}
+		case TFObject_Dispenser:
+		{
+			//Disable the dispenser's screen, it's better than having it not change team color
+			int iScreen = MaxClients+1;
+			while ((iScreen = FindEntityByClassname(iScreen, "vgui_screen")) > MaxClients)
+			{
+				if (GetEntPropEnt(iScreen, Prop_Send, "m_hOwnerEntity") == iBuilding)
+					AcceptEntityInput(iScreen, "Kill");
+			}
+		}
+		case TFObject_Teleporter:
+		{
+			//Disable teleporters for a little bit to reset the effects' colors
+			TF2_StunBuilding(iBuilding, 0.1);
+		}
+	}
 }
 
 stock int TF2_CreateAndEquipWeapon(int iClient, int iIndex, char[] sClassnameTemp = NULL_STRING, int iLevel = 0, TFQuality iQuality = TFQual_Normal, char[] sAttrib = NULL_STRING, bool bAttrib = false)
@@ -381,7 +478,7 @@ stock int TF2_CreateAndEquipWeapon(int iClient, int iIndex, char[] sClassnameTem
 			EquipPlayerWeapon(iClient, iWeapon);
 			
 			//Make sure max ammo is set correctly
-			int iSlot = TF2_GetSlotInItem(iIndex, TF2_GetPlayerClass(iClient));
+			int iSlot = TF2_GetItemSlot(iIndex, TF2_GetPlayerClass(iClient));
 			int iMaxAmmo = SDK_GetMaxAmmo(iClient, iSlot);
 			int iAmmoType = GetEntProp(iWeapon, Prop_Send, "m_iPrimaryAmmoType");
 			
@@ -401,6 +498,26 @@ stock int TF2_CreateAndEquipWeapon(int iClient, int iIndex, char[] sClassnameTem
 	}
 	
 	return iWeapon;
+}
+
+stock int TF2_GetObjectiveResource()
+{
+	static int iRefObj = 0;
+	
+	if (iRefObj != 0)
+	{
+		int iObj = EntRefToEntIndex(iRefObj);
+		if (iObj > MaxClients)
+			return iObj;
+		
+		iRefObj = 0;
+	}
+	
+	int iObj = FindEntityByClassname(MaxClients+1, "tf_objective_resource");
+	if (iObj > MaxClients)
+		iRefObj = EntIndexToEntRef(iObj);
+	
+	return iObj;
 }
 
 stock void CheckForceAttackWin(int iVictim=0)
@@ -593,6 +710,51 @@ stock int TF2_CreateLightEntity(float flRadius, int iColor[4], int iBrightness)
 	}
 	
 	return iGlow;
+}
+
+stock void TF2_ShowAnnotation(int[] iClients, int iCount, int iTarget, const char[] sMessage, float flDuration = 5.0, const char[] sSound = SOUND_NULL)
+{
+	//Create an annotation and show it to a specified array of clients
+	Event event = CreateEvent("show_annotation");
+	event.SetInt("id", iTarget);				//Make its ID match the target, just so it's assigned to something unique
+	event.SetInt("follow_entindex", iTarget);
+	event.SetFloat("lifetime", flDuration);
+	event.SetString("text", sMessage);
+	event.SetString("play_sound", sSound);		//If this is missing, it'll try to play a sound with an empty filepath
+	
+	for (int i = 0; i < iCount; i++)
+	{
+		//No point in showing the annotation to the target
+		if (iClients[i] != iTarget)
+			event.FireToClient(iClients[i]);
+	}
+	
+	event.Cancel();
+}
+
+stock void TF2_ShowAnnotationToAll(int iTarget, const char[] sMessage, float flDuration = 5.0, const char[] sSound = SOUND_NULL)
+{
+	int[] iClients = new int[MaxClients];
+	int iCount = 0;
+
+	for (int iClient = 1; iClient <= MaxClients; iClient++)
+	{
+		if (IsClientInGame(iClient))
+			iClients[iCount++] = iClient;
+	}
+	
+	if (iCount <= 0)
+		return;
+	
+	TF2_ShowAnnotation(iClients, iCount, iTarget, sMessage, flDuration, sSound);
+}
+
+stock void TF2_ShowAnnotationToClient(int iClient, int iTarget, const char[] sMessage, float flDuration = 5.0, const char[] sSound = SOUND_NULL)
+{
+	int iClients[1];
+	iClients[0] = iClient;
+	
+	TF2_ShowAnnotation(iClients, 1, iTarget, sMessage, flDuration, sSound);
 }
 
 stock void BroadcastSoundToTeam(TFTeam nTeam, const char[] strSound)

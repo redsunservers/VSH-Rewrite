@@ -49,7 +49,8 @@ methodmap CModifiersIce < SaxtonHaleBase
 	
 	public Action OnTakeDamage(int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 	{
-		if (!(damagetype & DMG_FALL))
+		//OnTakeDamageAlive takes stomping as dealing damage through falling, so we only trigger the effect if the server deals damage
+		if (!(damagetype & DMG_FALL) || attacker != 0)
 			return Plugin_Continue;
 		
 		int iTeam = GetClientTeam(this.iClient);
@@ -89,6 +90,14 @@ methodmap CModifiersIce < SaxtonHaleBase
 		}
 		
 		return Plugin_Stop;
+	}
+	
+	public Action OnAttackDamage(int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+	{
+		if (damagecustom == TF_CUSTOM_BOOTS_STOMP)
+			return Plugin_Stop;
+		
+		return Plugin_Continue;
 	}
 };
 

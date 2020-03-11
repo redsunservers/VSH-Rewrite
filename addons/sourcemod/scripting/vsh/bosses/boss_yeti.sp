@@ -48,7 +48,13 @@ methodmap CYeti < SaxtonHaleBase
 	{
 		boss.CallFunction("CreateAbility", "CBraveJump");
 		boss.CallFunction("CreateAbility", "CGroundPound");
-		boss.CallFunction("CreateAbility", "CRageFreeze");
+		CRageFreeze rageFreeze = boss.CallFunction("CreateAbility", "CRageFreeze");
+		
+		//CRageAddCond should last as long as slow + freeze
+		CRageAddCond rageCond = boss.CallFunction("CreateAbility", "CRageAddCond");
+		rageCond.AddCond(TFCond_RuneHaste);
+		rageCond.flRageCondDuration = rageFreeze.flSlowDuration + rageFreeze.flFreezeDuration;
+		rageCond.flRageCondSuperRageMultiplier = rageFreeze.flRageFreezeSuperRageMultiplier;
 		
 		boss.iBaseHealth = 800;
 		boss.iHealthPerPlayer = 850;
@@ -146,7 +152,7 @@ methodmap CYeti < SaxtonHaleBase
 		return Plugin_Continue;
 	}
 	
-	public Action OnAttackDamage(int &victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+	public Action OnAttackDamage(int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 	{
 		// Prevent kill taunt
 		if (victim != this.iClient && damagecustom == TF_CUSTOM_TAUNT_HIGH_NOON)
