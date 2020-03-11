@@ -129,7 +129,7 @@ methodmap CRageHop < SaxtonHaleBase
 			{
 				if (IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i) > 1 && GetClientTeam(i) != iTeam)
 				{
-					if (IsClientInRange(i, vecExplosionOrigin, this.flBombRadius))
+					if (IsClientInRange(i, vecExplosionOrigin, this.flBombRadius) || (IsClientInRange(i, vecExplosionOrigin, this.flBombRadius * 1.25) && this.bSuperRage))
 					{
 						TF2_IgnitePlayer(i, this.iClient);
 						TF2_AddCondition(i, TFCond_Gas, 10.0, this.iClient);
