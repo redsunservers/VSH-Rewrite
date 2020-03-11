@@ -95,8 +95,8 @@ methodmap CRageHop < SaxtonHaleBase
 		ability.flRageHopMaxHeight = 500.0;
 		ability.flRageHopMaxDistance = 4.5;
 		
-		ability.flBombDamage = 40.0;
-		ability.flBombRadius = 200.0;
+		ability.flBombDamage = 50.0;
+		ability.flBombRadius = 225.0;
 		
 		ability.flDuration = 10.0;
 		
@@ -118,7 +118,7 @@ methodmap CRageHop < SaxtonHaleBase
 			Format(sSound, sizeof(sSound), "weapons/airstrike_small_explosion_0%i.wav", GetRandomInt(1,3));
 			
 			if(this.bSuperRage)
-				TF2_Explode(this.iClient, vecExplosionOrigin, this.flBombDamage * 1.5, this.flBombRadius, "heavy_ring_of_fire", sSound);
+				TF2_Explode(this.iClient, vecExplosionOrigin, this.flBombDamage * 1.5, this.flBombRadius * 1.25, "heavy_ring_of_fire", sSound);
 			else
 				TF2_Explode(this.iClient, vecExplosionOrigin, this.flBombDamage, this.flBombRadius, "heavy_ring_of_fire", sSound);
 			
@@ -126,7 +126,7 @@ methodmap CRageHop < SaxtonHaleBase
 			{
 				if (IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i) > 1 && GetClientTeam(i) != iTeam)
 				{
-					if (IsClientInRange(i, vecExplosionOrigin, 200.0))
+					if (IsClientInRange(i, vecExplosionOrigin, this.flBombRadius))
 					{
 						TF2_IgnitePlayer(i, this.iClient);
 						TF2_AddCondition(i, TFCond_Gas, 10.0, this.iClient);

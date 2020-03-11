@@ -104,7 +104,7 @@ methodmap CFloatJump < SaxtonHaleBase
 			
 			vecVel[0] = Cosine(DegToRad(vecAng[0])) * Cosine(DegToRad(vecAng[1])) * 600.0;
 			vecVel[1] = Cosine(DegToRad(vecAng[0])) * Sine(DegToRad(vecAng[1])) * 600.0;
-			vecVel[2] = (((-vecAng[0]) * 1.5) + 90.0) * this.flHeightMultiplier;
+			vecVel[2] = (((0) * 1.5) + 90.0) * this.flHeightMultiplier;
 			
 			SetEntProp(this.iClient, Prop_Send, "m_bJumping", true);
 			
@@ -155,12 +155,12 @@ methodmap CFloatJump < SaxtonHaleBase
 			this.iJumpCharge = 0;
 			
 			TF2_AddCondition(this.iClient, TFCond_SwimmingNoEffects, 2.0);
+			TF2_AddCondition(this.iClient, TFCond_TeleportedGlow, 3.5);
 			
 			char sSound[PLATFORM_MAX_PATH];
 			this.CallFunction("GetSoundAbility", sSound, sizeof(sSound), "CFloatJump");
 			if (!StrEmpty(sSound))
 				EmitSoundToAll(sSound, this.iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
-			
 		}
 	}
 };
