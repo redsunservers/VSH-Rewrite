@@ -64,10 +64,10 @@ methodmap CPyroCar < SaxtonHaleBase
 		boss.CallFunction("CreateAbility", "CRageHop");
 		boss.CallFunction("CreateAbility", "CForceForward");
 		
-		boss.iBaseHealth = 750;
+		boss.iBaseHealth = 700;
 		boss.iHealthPerPlayer = 750;
 		boss.nClass = TFClass_Pyro;
-		boss.flSpeed = 350.0;
+		boss.flSpeed = 345.0;
 		boss.iMaxRageDamage = 2000;
 	}
 	
@@ -85,10 +85,10 @@ methodmap CPyroCar < SaxtonHaleBase
 	{
 		StrCat(sInfo, length, "\nHealth: Low");
 		StrCat(sInfo, length, "\nYou are forced to go forward");
-		StrCat(sInfo, length, "\nYou have the same speed as the medic");
+		StrCat(sInfo, length, "\nYou are slower than usual bosses");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nAbilities");
-		StrCat(sInfo, length, "\n- Float Jump");
+		StrCat(sInfo, length, "\n- Float Jump, you go faster as you levitate upwards");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
 		StrCat(sInfo, length, "\n- Hops repeatedly dealing explosive fire damage near the impact for 10 seconds");
@@ -98,7 +98,7 @@ methodmap CPyroCar < SaxtonHaleBase
 	public void OnSpawn()
 	{
 		char attribs[128];
-		Format(attribs, sizeof(attribs), "3 ; 0.2 ; 24 ; 1.0 ; 59 ; 1.0 ; 112 ; 0.5 ; 181 ; 1.0 ; 252 ; 0.75 ; 356 ; 1.0 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 2450 ; 862 ; 0.6 ; 863 ; 0.1 ; 865 ; 50 ; 259 ; 1.0 ; 356 ; 1.0 ; 214 ; %d", GetRandomInt(9999, 99999));
+		Format(attribs, sizeof(attribs), "24 ; 1.0 ; 59 ; 1.0 ; 112 ; 1.0 ; 181 ; 1.0 ; 356 ; 1.0 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 2450 ; 862 ; 0.6 ; 863 ; 0.1 ; 865 ; 50 ; 259 ; 1.0 ; 356 ; 1.0 ; 214 ; %d", GetRandomInt(9999, 99999));
 		int iWeapon = this.CallFunction("CreateWeapon", 40, "tf_weapon_flamethrower", 100, TFQual_Strange, attribs);
 		if (iWeapon > MaxClients)
 			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
@@ -106,7 +106,6 @@ methodmap CPyroCar < SaxtonHaleBase
 		/*
 		Backburner attributes:
 		
-		3: clip size penalty
 		24: allow crits from behind
 		59: self dmg push force decreased
 		112: ammo regen
