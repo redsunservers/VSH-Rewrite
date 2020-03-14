@@ -71,7 +71,7 @@ public Action Console_JoinTeamCommand(int iClient, const char[] sCommand, int iA
 	if (strcmp(sTeam, "spectate") == 0)
 	{
 		SaxtonHaleBase boss = SaxtonHaleBase(iClient);
-		if (boss.bValid && (g_bRoundStarted || GameRules_GetRoundState() == RoundState_Preround))
+		if (boss.bValid && IsPlayerAlive(iClient) && (g_bRoundStarted || GameRules_GetRoundState() == RoundState_Preround))
 		{
 			if (!boss.bMinion)
 				PrintToChat(iClient, "%s%s Do not suicide and waste round as Boss. Use !vshbosstoggle instead.", TEXT_TAG, TEXT_ERROR);
