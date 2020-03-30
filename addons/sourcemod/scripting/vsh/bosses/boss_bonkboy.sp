@@ -96,7 +96,8 @@ methodmap CBonkBoy < SaxtonHaleBase
 		StrCat(sInfo, length, "\nAbilities");
 		StrCat(sInfo, length, "\n- Faster movement speed and extra jump height");
 		StrCat(sInfo, length, "\n- Dash Jump");
-		StrCat(sInfo, length, "\n- Sandman with fast recharge balls, able to hold 3 max");
+		StrCat(sInfo, length, "\n- Sandman deals crit to stunned players");
+		StrCat(sInfo, length, "\n- Fast recharge balls, able to hold 3 max");
 		StrCat(sInfo, length, "\n- Medium range ball stuns player and building, moonshot instakills");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
@@ -109,7 +110,7 @@ methodmap CBonkBoy < SaxtonHaleBase
 	public void OnSpawn()
 	{
 		char attribs[256];
-		Format(attribs, sizeof(attribs), "2 ; 3.54 ; 252 ; 0.5 ; 259 ; 1.0 ; 38 ; 1.0 ; 278 ; 0.33 ; 524 ; 1.2 ; 551 ; 1.0");
+		Format(attribs, sizeof(attribs), "2 ; 3.54 ; 252 ; 0.5 ; 259 ; 1.0 ; 38 ; 1.0 ; 278 ; 0.33 ; 437 ; 65536.0 ; 524 ; 1.2 ; 551 ; 1.0");
 		int iWeapon = this.CallFunction("CreateWeapon", 44, "tf_weapon_bat_wood", 1, TFQual_Collectors, attribs);
 		if (iWeapon > MaxClients)
 			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
@@ -123,6 +124,7 @@ methodmap CBonkBoy < SaxtonHaleBase
 		
 		38: Launches a ball that slows opponents
 		278: increase in recharge rate
+		437: 100% critical hit vs stunned players
 		524: greater jump height when active
 		551: special_taunt
 		*/
