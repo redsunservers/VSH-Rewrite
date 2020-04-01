@@ -6,7 +6,7 @@ static Menu g_hMenuWeaponSlot[sizeof(g_strClassName)][MENU_MAX_SLOT];
 
 void MenuWeapon_Refresh()
 {
-	char buffer[512];
+	char buffer[1024];
 	
 	delete g_hMenuWeaponMain;
 	for (int iClass = 1; iClass < sizeof(g_strClassName); iClass++)
@@ -19,7 +19,7 @@ void MenuWeapon_Refresh()
 	
 	// Create menus loaded from config
 	
-	char sClassDesp[sizeof(g_strClassName)][MENU_MAX_SLOT][512];
+	char sClassDesp[sizeof(g_strClassName)][MENU_MAX_SLOT][1024];
 	
 	//Get list of every weapons in config to add desp
 	int iLength = g_ConfigIndex.Length;
