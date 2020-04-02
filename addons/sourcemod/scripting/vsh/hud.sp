@@ -80,7 +80,7 @@ void Hud_Think(int iClient)
 	{
 		//If dead, display whoever client is spectating and damage
 		int iObserverTarget = GetEntPropEnt(iClient, Prop_Send, "m_hObserverTarget");
-		if (iObserverTarget != iClient && 0 < iObserverTarget <= MaxClients && IsClientInGame(iObserverTarget) && !SaxtonHaleBase(iObserverTarget).bValid)
+		if (iObserverTarget != iClient && 0 < iObserverTarget <= MaxClients && IsClientInGame(iObserverTarget) && !SaxtonHale_IsValidBoss(iClient, false))
 		{
 			if (g_iPlayerAssistDamage[iObserverTarget] <= 0)
 				Format(sMessage, sizeof(sMessage), "%N's Damage: %i", iObserverTarget, g_iPlayerDamage[iObserverTarget]);
