@@ -59,20 +59,17 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 		{
 			//Player is about to play as same class unchanged, strip weapon and cosmetics for GiveNamedItem to regenerate
 			
-			int iEntity = MaxClients+1;
-			while ((iEntity = FindEntityByClassname(iEntity, "tf_weapon_*")) > MaxClients)
-				if (GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == this.iClient || GetEntPropEnt(iEntity, Prop_Send, "moveparent") == this.iClient)
-					AcceptEntityInput(iEntity, "Kill");
+			TF2_RemoveAllWeapons(this.iClient);
 			
-			iEntity = MaxClients+1;
+			int iEntity = MaxClients+1;
 			while ((iEntity = FindEntityByClassname(iEntity, "tf_wearable*")) > MaxClients)
 				if (GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == this.iClient || GetEntPropEnt(iEntity, Prop_Send, "moveparent") == this.iClient)
-					AcceptEntityInput(iEntity, "Kill");
+					RemoveEntity(iEntity);
 			
 			iEntity = MaxClients+1;
 			while ((iEntity = FindEntityByClassname(iEntity, "tf_powerup_bottle")) > MaxClients)
 				if (GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == this.iClient || GetEntPropEnt(iEntity, Prop_Send, "moveparent") == this.iClient)
-					AcceptEntityInput(iEntity, "Kill");
+					RemoveEntity(iEntity);
 		}
 		else if (this.nClass != TFClass_Unknown)
 		{
