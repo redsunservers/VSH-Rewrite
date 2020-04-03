@@ -68,8 +68,8 @@ methodmap CGentleSpy < SaxtonHaleBase
 {
 	public CGentleSpy(CGentleSpy boss)
 	{
-		boss.iBaseHealth = 700;
-		boss.iHealthPerPlayer = 650;
+		boss.iBaseHealth = 800;
+		boss.iHealthPerPlayer = 800;
 		boss.nClass = TFClass_Spy;
 		boss.iMaxRageDamage = 2000;
 		
@@ -84,7 +84,7 @@ methodmap CGentleSpy < SaxtonHaleBase
 	
 	public void GetBossInfo(char[] sInfo, int length)
 	{
-		StrCat(sInfo, length, "\nHealth: Low");
+		StrCat(sInfo, length, "\nHealth: Medium");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nAbilities");
 		StrCat(sInfo, length, "\n- Passive Invis Watch");
