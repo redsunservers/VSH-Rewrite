@@ -32,6 +32,11 @@ methodmap CModifiersIce < SaxtonHaleBase
 		iColor[3] = 255;
 	}
 	
+	public void OnDeath(Event event)
+	{
+		g_bIceRagdoll = true;
+	}
+	
 	public void OnPlayerKilled(Event event, int iVictim)
 	{
 		if (g_flClientIceSlowdown[iVictim] > GetGameTime())
