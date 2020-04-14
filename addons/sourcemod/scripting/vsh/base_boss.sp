@@ -37,11 +37,6 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 
 		strcopy(g_sClientBossType[this.iClient], sizeof(g_sClientBossType[]), type);
 
-		if (g_hClientBossModelTimer[this.iClient] != null)
-			delete g_hClientBossModelTimer[this.iClient];
-
-		g_hClientBossModelTimer[this.iClient] = CreateTimer(0.2, Timer_ApplyBossModel, this.iClient, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-
 		g_sClientBossRageMusic[this.iClient] = "";
 		g_bClientBossWeighDownForce[this.iClient] = false;
 		g_flClientBossWeighDownTimer[this.iClient] = 0.0;
@@ -54,6 +49,12 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 			Call_PushCell(this);
 			Call_Finish();
 		}
+		
+		if (g_hClientBossModelTimer[this.iClient] != null)
+			delete g_hClientBossModelTimer[this.iClient];
+		
+		if (this.bModel)
+			g_hClientBossModelTimer[this.iClient] = CreateTimer(0.2, Timer_ApplyBossModel, this.iClient, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 		
 		if (TF2_GetPlayerClass(this.iClient) == this.nClass)
 		{
