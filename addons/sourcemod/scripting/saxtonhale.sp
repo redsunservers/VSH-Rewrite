@@ -37,6 +37,7 @@
 #define MAXLEN_CONFIG_VALUEARRAY		1024	//Config: Max string buffer size for groups of values
 
 #define TF_MAXPLAYERS					32
+#define MAX_ATTRIBUTES_SENT 			20
 
 #define ATTRIB_MELEE_RANGE_MULTIPLIER	264
 #define ATTRIB_BIDERECTIONAL			276
@@ -123,14 +124,6 @@ enum FlamethrowerState
 	FlamethrowerState_StartFiring,
 	FlamethrowerState_Firing,
 	FlamethrowerState_Airblast,
-};
-
-enum MinigunState
-{
-	MinigunState_Idle = 0,
-	MinigunState_Lowering,
-	MinigunState_Shooting,
-	MinigunState_Spinning,
 };
 
 enum
