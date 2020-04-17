@@ -8,11 +8,14 @@ static Handle g_hSDKGetMaxHealth;
 static Handle g_hSDKGetMaxAmmo;
 static Handle g_hSDKSendWeaponAnim;
 static Handle g_hSDKGetMaxClip;
+static Handle g_hSDKAddVelocity;
 static Handle g_hSDKRemoveWearable;
 static Handle g_hSDKGetEquippedWearable;
 static Handle g_hSDKEquipWearable;
 static Handle g_hSDKAddObject;
 static Handle g_hSDKRemoveObject;
+
+int g_iOffsetFuseTime = -1;
 
 static int g_iHookIdGiveNamedItem[TF_MAXPLAYERS+1];
 
@@ -108,6 +111,15 @@ void SDK_Init()
 	if (g_hSDKGetMaxClip == null)
 		LogMessage("Failed to create call: CTFWeaponBase::GetMaxClip1!");
 	
+	// This function is used to control entity velocity
+	StartPrepSDKCall(SDKCall_Raw);
+	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "IPhysicsObject::AddVelocity");
+	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_Pointer, VDECODE_FLAG_ALLOWNULL);
+	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_Pointer, VDECODE_FLAG_ALLOWNULL);
+	g_hSDKAddVelocity = EndPrepSDKCall();
+	if (g_hSDKAddVelocity == null)
+		LogMessage("Failed to create call: IPhysicsObject::AddVelocity!");
+	
 	//This call is used to give an owner to a building
 	StartPrepSDKCall(SDKCall_Player);
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Signature, "CTFPlayer::AddObject");
@@ -180,6 +192,20 @@ void SDK_Init()
 	
 	delete hHook;
 	delete hGameData;
+	
+	if (LookupOffset(g_iOffsetFuseTime, "CTFWeaponBaseMerasmusGrenade", "m_hThrower"))
+		g_iOffsetFuseTime += 48;
+}
+
+static bool LookupOffset(int &iOffset, const char[] sClass, const char[] sProp)
+{
+	iOffset = FindSendPropInfo(sClass, sProp);
+	if (iOffset <= 0)
+	{
+		LogMessage("Could not locate offset for %s::%s!", sClass, sProp);
+		return false;
+	}
+	return true;
 }
 
 void SDK_HookGiveNamedItem(int iClient)
@@ -365,6 +391,23 @@ int SDK_GetMaxClip(int iWeapon)
 	return -1;
 }
 
+void SDK_AddVelocity(int iEntity, float vecVelocity[3], float vecAngleVelocity[3])
+{
+	if (g_hSDKAddVelocity != null)
+	{
+		static int iOffset = -1;
+		if (iOffset == -1)
+			FindDataMapInfo(iEntity, "m_pPhysicsObject", _, _, iOffset);
+
+		if (iOffset != -1)
+		{
+			Address pPhysicsObj = view_as<Address>(LoadFromAddress(GetEntityAddress(iEntity)+view_as<Address>(iOffset), NumberType_Int32));
+			if (pPhysicsObj != Address_Null)
+				SDKCall(g_hSDKAddVelocity, pPhysicsObj, vecVelocity, vecAngleVelocity);
+		}
+	}
+}
+
 int SDK_GetMaxHealth(int iClient)
 {
 	if (g_hSDKGetMaxHealth != null)
@@ -401,4 +444,12 @@ void SDK_RemoveObject(int iClient, int iEntity)
 {
 	if(g_hSDKRemoveObject != null)
 		SDKCall(g_hSDKRemoveObject, iClient, iEntity);
+}
+
+void SDK_SetFuseTime(int iEntity, float flTime)
+{
+	if (g_iOffsetFuseTime <= 0)
+		return;
+	
+	SetEntDataFloat(iEntity, g_iOffsetFuseTime, flTime);
 }

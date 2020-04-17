@@ -131,7 +131,8 @@ methodmap CBombProjectile < SaxtonHaleBase
 	
 	public void OnThink()
 	{
-		if (g_iOffsetFuseTime <= 0 || g_flBombProjectileEnd[this.iClient] == 0.0) return;
+		if (g_flBombProjectileEnd[this.iClient] == 0.0)
+			return;
 		
 		float flGameTime = GetGameTime();
 		if (flGameTime <= g_flBombProjectileEnd[this.iClient])
@@ -168,7 +169,7 @@ methodmap CBombProjectile < SaxtonHaleBase
 				SDK_AddVelocity(iBomb, vecVelocity, vecAngleVelocity);
 				
 				SetEntPropFloat(iBomb, Prop_Data, "m_flDamage", this.flDamage);
-				SetEntDataFloat(iBomb, g_iOffsetFuseTime, GetGameTime() + 2.0);	//Fuse time
+				SDK_SetFuseTime(iBomb, GetGameTime() + 2.0);	//Fuse time
 				SetEntProp(iBomb, Prop_Send, "m_CollisionGroup", 24);
 			}
 		}
