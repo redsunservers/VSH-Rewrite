@@ -172,7 +172,7 @@ public Action Command_Preferences(int iClient, int iArgs)
 		
 		for (int iPreferences = 0; iPreferences < sizeof(g_strPreferencesName); iPreferences++)
 		{
-			if (StrContains(g_strPreferencesName[iPreferences], sPreferences, false) == 0)
+			if (!StrEmpty(g_strPreferencesName[iPreferences]) && StrContains(g_strPreferencesName[iPreferences], sPreferences, false) == 0)
 			{
 				Preferences preferences = view_as<Preferences>(RoundToNearest(Pow(2.0, float(iPreferences))));
 				

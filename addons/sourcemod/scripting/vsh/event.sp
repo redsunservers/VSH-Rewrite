@@ -102,7 +102,7 @@ public Action Event_RoundStart(Event event, const char[] sName, bool bDontBroadc
 
 	g_iTotalAttackCount = SaxtonHale_GetAliveAttackPlayers();	//Update amount of attack players
 
-	Winstreak_RoundStart();
+	Rank_RoundStart();
 
 	RequestFrame(Frame_InitVshPreRoundTimer, tf_arena_preround_time.IntValue);
 }
@@ -181,9 +181,9 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 		{
 			SaxtonHaleBase boss = SaxtonHaleBase(iBoss);
 			
-			//Check if there still enough players while winstreak is on, otherwise quick snipe disable it
-			if (g_iTotalAttackCount < Winstreak_GetPlayerRequirement(iBoss))
-				Winstreak_SetEnable(false);
+			//Check if there still enough players while rank is on, otherwise quick snipe disable it
+			if (g_iTotalAttackCount < Rank_GetPlayerRequirement(iBoss))
+				Rank_SetEnable(false);
 			
 			float flMusicTime;
 			boss.CallFunction("GetMusicInfo", g_sBossMusic, sizeof(g_sBossMusic), flMusicTime);
@@ -201,7 +201,7 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 		}
 	}
 
-	//Refresh boss health from winstreak disable & player count
+	//Refresh boss health from rank disable & player count
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
 		SaxtonHaleBase boss = SaxtonHaleBase(iClient);
@@ -251,9 +251,9 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 		boss.CallFunction("GetBossName", sBuffer, sizeof(sBuffer));
 		Format(sMessage, sizeof(sMessage), "%s %s with %d health!", sMessage, sBuffer, boss.iMaxHealth);
 	
-		//Get Winstreak
-		if (Winstreak_IsEnabled() && Winstreak_GetCurrent(iClient) > 0)
-			Format(sMessage, sizeof(sMessage), "%s\n%d Winstreak (-%.0f%%%% health)", sMessage, Winstreak_GetCurrent(iClient), Winstreak_GetPrecentageLoss(iClient) * 100.0);
+		//Get rank
+		if (GetMainBoss() == iClient && Rank_GetCurrent(iClient) > 0)
+			Format(sMessage, sizeof(sMessage), "%s\nRank %d (-%.0f%%%% health)", sMessage, Rank_GetCurrent(iClient), Rank_GetPrecentageLoss(iClient) * 100.0);
 	}
 	
 	if (!bAllowModifiersColor)
@@ -279,20 +279,19 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 	if (0 < iNextPlayer <= MaxClients && IsClientInGame(iNextPlayer))
 	{
 		char sFormat[512];
-		Format(sFormat, sizeof(sFormat), "%s================\nYou are about to be the next boss!\n", TEXT_COLOR);
+		Format(sFormat, sizeof(sFormat), "%s================%s\nYou are about to be the next boss!\n", TEXT_DARK, TEXT_COLOR);
 		
 		SaxtonHaleNextBoss nextBoss = SaxtonHaleNextBoss(iNextPlayer);
 		
 		if (nextBoss.bSpecialClassRound)
-			Format(sFormat, sizeof(sFormat), "%sYour round will be a special class round", sFormat);
-		else if (!Preferences_Get(iNextPlayer, Preferences_Winstreak))
-			Format(sFormat, sizeof(sFormat), "%sYour winstreak preference is currently disabled", sFormat);
-		else if (Winstreak_IsAllowed(iNextPlayer))
-			Format(sFormat, sizeof(sFormat), "%sYou currently have %d winstreak", sFormat, Winstreak_GetCurrent(iNextPlayer));
-		else
-			Format(sFormat, sizeof(sFormat), "%sYou need %d enemy players to have your %d winstreak counted", sFormat, Winstreak_GetPlayerRequirement(iNextPlayer), Winstreak_GetCurrent(iNextPlayer));
+			Format(sFormat, sizeof(sFormat), "%sYour round will be a special class round.", sFormat);
 		
-		Format(sFormat, sizeof(sFormat), "%s\n================", sFormat);
+		if (Rank_IsAllowed(iNextPlayer))
+			Format(sFormat, sizeof(sFormat), "%sYou are currently at rank %s%d%s.", sFormat, TEXT_DARK, Rank_GetCurrent(iNextPlayer), TEXT_COLOR);
+		else
+			Format(sFormat, sizeof(sFormat), "%sYou need %s%d%s enemy players to have your rank %s%d%s counted.", sFormat, TEXT_DARK, Rank_GetPlayerRequirement(iNextPlayer), TEXT_COLOR, TEXT_DARK, Rank_GetCurrent(iNextPlayer), TEXT_COLOR);
+		
+		Format(sFormat, sizeof(sFormat), "%s%s\n================", sFormat, TEXT_DARK);
 		PrintToChat(iNextPlayer, sFormat);
 	}
 }
@@ -330,8 +329,12 @@ public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcas
 
 				Forward_BossWin(TFTeam_Boss);
 
-				if (Winstreak_IsEnabled())
-					Winstreak_SetCurrent(iMainBoss, Winstreak_GetCurrent(iMainBoss) + 1, true);
+				if (Rank_IsEnabled())
+				{
+					int iRank = Rank_GetCurrent(iMainBoss) + 1;
+					PrintToChatAll("%s%s %N's rank has %sincreased%s to %s%d%s!", TEXT_TAG, TEXT_COLOR, iMainBoss, TEXT_POSITIVE, TEXT_COLOR, TEXT_DARK, iRank, TEXT_COLOR);
+					Rank_SetCurrent(iMainBoss, iRank, true);
+				}
 			}
 		}
 	}
@@ -349,13 +352,20 @@ public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcas
 
 				Forward_BossLose(TFTeam_Boss);
 
-				if (Winstreak_IsEnabled())
-					Winstreak_SetCurrent(iMainBoss, 0, true);
+				if (Rank_IsEnabled())
+				{
+					int iRank = Rank_GetCurrent(iMainBoss) - 1;
+					if (iRank >= 0)
+					{
+						PrintToChatAll("%s%s %N's rank has %sdecreased%s to %s%d%s!", TEXT_TAG, TEXT_COLOR, iMainBoss, TEXT_NEGATIVE, TEXT_COLOR, TEXT_DARK, iRank, TEXT_COLOR);
+						Rank_SetCurrent(iMainBoss, iRank, true);
+					}
+				}
 			}
 		}
 	}
 
-	Winstreak_SetEnable(false);
+	Rank_SetEnable(false);
 
 	ArrayList aPlayersList = new ArrayList();
 	
