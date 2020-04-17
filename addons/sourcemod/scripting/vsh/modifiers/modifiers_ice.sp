@@ -1,6 +1,8 @@
 #define ICE_SLOWDOWN 0.7
 #define ICE_DURATION 2.0
+#define ICE_RANGE 250.0
 
+static bool g_bIceRagdoll;
 static float g_flClientIceSlowdown[TF_MAXPLAYERS+1];
 
 methodmap CModifiersIce < SaxtonHaleBase
@@ -30,15 +32,30 @@ methodmap CModifiersIce < SaxtonHaleBase
 		iColor[3] = 255;
 	}
 	
+	public void OnDeath(Event event)
+	{
+		g_bIceRagdoll = true;
+	}
+	
 	public void OnPlayerKilled(Event event, int iVictim)
 	{
 		if (g_flClientIceSlowdown[iVictim] > GetGameTime())
 			g_bIceRagdoll = true;
 	}
 	
+	public void OnEntityCreated(int iEntity, const char[] sClassname)
+	{
+		if (g_bIceRagdoll && strcmp(sClassname, "tf_ragdoll") == 0)
+		{
+			RequestFrame(Ice_RagdollSpawn, EntIndexToEntRef(iEntity));
+			g_bIceRagdoll = false;
+		}
+	}
+	
 	public Action OnTakeDamage(int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
-	{		
-		if (!(damagetype & DMG_FALL))
+	{
+		//OnTakeDamageAlive takes stomping as dealing damage through falling, so we only trigger the effect if the server deals damage
+		if (!(damagetype & DMG_FALL) || attacker != 0)
 			return Plugin_Continue;
 		
 		int iTeam = GetClientTeam(this.iClient);
@@ -47,20 +64,17 @@ methodmap CModifiersIce < SaxtonHaleBase
 		GetClientAbsOrigin(this.iClient, vecClientPos);
 		
 		int iColor[4];
-		iColor[0] = 128;
-		iColor[1] = 176;
-		iColor[2] = 255;
-		iColor[3] = 255;
+		this.GetRenderColor(iColor);
 		
 		int iLight = TF2_CreateLightEntity(250.0, iColor, 6);
 		if (iLight != -1)
 		{
 			TeleportEntity(iLight, vecClientPos, view_as<float>({ 90.0, 0.0, 0.0 }), NULL_VECTOR);
 			
-			Handle iData = CreateDataPack();
-			WritePackCell(iData, EntIndexToEntRef(iLight));
-			WritePackCell(iData, 6);
-			CreateTimer(1.0, Timer_IceLight, iData);
+			DataPack data;
+			CreateDataTimer(1.0, Timer_IceLight, data);
+			data.WriteCell(EntIndexToEntRef(iLight));
+			data.WriteCell(6);
 			
 			CreateTimer(6.0, Timer_DestroyLight, EntIndexToEntRef(iLight));
 		}
@@ -72,20 +86,23 @@ methodmap CModifiersIce < SaxtonHaleBase
 				float vecTargetPos[3];
 				GetClientAbsOrigin(i, vecTargetPos);
 				
-				if (GetVectorDistance(vecClientPos, vecTargetPos) < 250.0)
+				if (GetVectorDistance(vecClientPos, vecTargetPos) < ICE_RANGE)
 				{
 					g_flClientIceSlowdown[i] = GetGameTime() + ICE_DURATION;
-					g_flPlayerSpeedMultiplier[i] *= ICE_SLOWDOWN;
-					
-					//Recalculate player's speed
-					TF2_AddCondition(this.iClient, TFCond_SpeedBuffAlly, 0.01);
-					
-					CreateTimer(ICE_DURATION, Timer_ResetSpeed, EntIndexToEntRef(i));
+					TF2_StunPlayer(i, ICE_DURATION, ICE_SLOWDOWN, TF_STUNFLAG_SLOWDOWN);
 				}
 			}
 		}
 		
 		return Plugin_Stop;
+	}
+	
+	public Action OnAttackDamage(int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+	{
+		if (damagecustom == TF_CUSTOM_BOOTS_STOMP)
+			return Plugin_Stop;
+		
+		return Plugin_Continue;
 	}
 };
 
@@ -97,35 +114,21 @@ public void Ice_RagdollSpawn(int iRef)
 	SetEntProp(iEntity, Prop_Send, "m_bIceRagdoll", 1);
 }
 
-public Action Timer_IceLight(Handle hTimer, DataPack iData)
+public Action Timer_IceLight(Handle hTimer, DataPack data)
 {
-	ResetPack(iData);
-	int iLight = EntRefToEntIndex(ReadPackCell(iData));
-	int iBrightness = ReadPackCell(iData);
-	delete iData;
+	data.Reset();
+	int iRef = data.ReadCell();
+	int iBrightness = data.ReadCell();
 	
+	int iLight = EntRefToEntIndex(iRef);
 	if (iLight > MaxClients)
 	{
 		iBrightness--;
 		SetVariantInt(iBrightness);
 		AcceptEntityInput(iLight, "brightness");
 		
-		iData = CreateDataPack();
-		WritePackCell(iData, EntIndexToEntRef(iLight));
-		WritePackCell(iData, iBrightness);
-		CreateTimer(1.0, Timer_IceLight, iData);
+		CreateDataTimer(1.0, Timer_IceLight, data);
+		data.WriteCell(iRef);
+		data.WriteCell(iBrightness);
 	}
-}
-
-public Action Timer_ResetSpeed(Handle hTimer, int iRef)
-{
-	int iClient = EntRefToEntIndex(iRef);
-	
-	if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient))
-		return;
-	
-	g_flPlayerSpeedMultiplier[iClient] /= ICE_SLOWDOWN;
-	
-	//Recalculate player's speed
-	TF2_AddCondition(iClient, TFCond_SpeedBuffAlly, 0.01);
 }

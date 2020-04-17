@@ -65,7 +65,7 @@ stock void Winstreak_SetEnable(bool bValue)
 stock bool Winstreak_IsAllowed(int iClient)
 {
 	if (Winstreak_GetCurrent(iClient) != -1	//Is his current winstreak loaded
-		&& Preferences_Get(iClient, halePreferences_Winstreak)		//Is winstreak pref on
+		&& Preferences_Get(iClient, Preferences_Winstreak)		//Is winstreak pref on
 		&& (GetMainBoss() != iClient || !ClassLimit_IsSpecialRoundOn())	//If boss, is special round not on
 		&& g_iTotalAttackCount >= Winstreak_GetPlayerRequirement(iClient))		//Is there enough attack players
 	{
@@ -77,8 +77,8 @@ stock bool Winstreak_IsAllowed(int iClient)
 
 stock int Winstreak_GetPlayerRequirement(int iClient)
 {
-	int iPlayerRequirement = 10 + Winstreak_GetCurrent(iClient);
-	if (iPlayerRequirement > 24) iPlayerRequirement = 24;
+	int iPlayerRequirement = 5 + Winstreak_GetCurrent(iClient);
+	if (iPlayerRequirement > 20) iPlayerRequirement = 20;
 	
 	return iPlayerRequirement;
 }

@@ -75,6 +75,12 @@ methodmap CHorsemann < SaxtonHaleBase
 		boss.CallFunction("CreateAbility", "CTeleportSwap");
 		boss.CallFunction("CreateAbility", "CRageGhost");
 		
+		/*
+		CModelOverride modelOverride = boss.CallFunction("CreateAbility", "CModelOverride");
+		modelOverride.SetModel(HORSEMANN_MODEL);
+		modelOverride.flScale = 0.5;
+		*/
+		
 		boss.iBaseHealth = 700;
 		boss.iHealthPerPlayer = 650;
 		boss.nClass = TFClass_DemoMan;
@@ -96,8 +102,8 @@ methodmap CHorsemann < SaxtonHaleBase
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
 		StrCat(sInfo, length, "\n- Becomes ghost to fly, immune to damage, and unable to attack for 8 seconds");
-		StrCat(sInfo, length, "\n- Steals health from nearby players with random spooky effects");
-		StrCat(sInfo, length, "\n- 200%% Rage: Extends duration to 16 seconds");
+		StrCat(sInfo, length, "\n- Pulls and steals health from nearby players with random spooky effects");
+		StrCat(sInfo, length, "\n- 200%% Rage: Larger range and health steal is doubled");
 	}
 	
 	public void OnSpawn()
@@ -161,13 +167,13 @@ methodmap CHorsemann < SaxtonHaleBase
 			if (StrContains(sample, "vo/halloween_boss/", false) == 0)
 				return Plugin_Continue;
 			
-			Format(sample, sizeof(sample), g_strHorsemannVoice[GetRandomInt(0, sizeof(g_strHorsemannVoice) - 1)]);
+			Format(sample, sizeof(sample), g_strHorsemannVoice[GetRandomInt(0, sizeof(g_strHorsemannVoice)-1)]);
 			return Plugin_Changed;
 		}
 			
 		if (StrContains(sample, "player/footsteps/", false) == 0)
 		{
-			EmitSoundToAll(g_strHorsemannFootsteps[GetRandomInt(0, sizeof(g_strHorsemannFootsteps) - 1)], this.iClient, _, _, _, 0.4, GetRandomInt(90, 100));
+			EmitSoundToAll(g_strHorsemannFootsteps[GetRandomInt(0, sizeof(g_strHorsemannFootsteps)-1)], this.iClient, _, _, _, 0.4, GetRandomInt(90, 100));
 			return Plugin_Handled;
 		}
 		

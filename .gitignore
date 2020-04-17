@@ -1,2 +1,4 @@
 *.smx
 *.bat
+*.bin
+build/*

@@ -7,7 +7,7 @@ methodmap CModifiersJump < SaxtonHaleBase
 		if (bravejump != INVALID_ABILITY)
 		{
 			bravejump.flCooldown *= 0.50;
-			bravejump.flMaxHeigth *= 0.75;
+			bravejump.flMaxHeight *= 0.75;
 			bravejump.flMaxDistance *= 0.60;
 		}
 	}

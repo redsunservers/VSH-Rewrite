@@ -16,7 +16,7 @@ void Menu_Init()
 	
 	// Main Menu
 	g_hMenuMain = new Menu(Menu_SelectMain);
-	g_hMenuMain.SetTitle("[VSH REWRITE] - %s", PLUGIN_VERSION);
+	g_hMenuMain.SetTitle("[VSH REWRITE] - %s.%s", PLUGIN_VERSION, PLUGIN_VERSION_REVISION);
 	g_hMenuMain.AddItem("class", "Class & Weapon Menu (!vshclass)");
 	g_hMenuMain.AddItem("boss", "Bosses Info (!vshboss)");
 	g_hMenuMain.AddItem("modifiers", "Modifiers Info (!vshmodifiers)");
@@ -72,9 +72,9 @@ public int Menu_SelectMain(Menu hMenu, MenuAction action, int iClient, int iSele
 	if (StrEqual(sSelect, "class"))
 		MenuWeapon_DisplayMain(iClient);
 	else if (StrEqual(sSelect, "boss"))
-		MenuBoss_DisplayBossMain(iClient);
+		MenuBoss_DisplayBossList(iClient, MenuBoss_CallbackInfo);
 	else if (StrEqual(sSelect, "modifiers"))
-		MenuBoss_DisplayModifiersMain(iClient);
+		MenuBoss_DisplayModifiersList(iClient, MenuBoss_CallbackInfo);
 	else if (StrEqual(sSelect, "queue"))
 		Menu_DisplayQueue(iClient);
 	else if (StrEqual(sSelect, "preference"))
@@ -134,7 +134,7 @@ void Menu_DisplayPreferences(int iClient)
 	
 	for (int iPreferences = 0; iPreferences < sizeof(g_strPreferencesName); iPreferences++)
 	{
-		halePreferences preferences = view_as<halePreferences>(RoundToNearest(Pow(2.0, float(iPreferences))));
+		Preferences preferences = view_as<Preferences>(RoundToNearest(Pow(2.0, float(iPreferences))));
 		
 		char buffer[512];
 		if (Preferences_Get(iClient, preferences))

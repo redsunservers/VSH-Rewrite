@@ -13,15 +13,9 @@ methodmap SaxtonHaleAbility < SaxtonHaleBase
 			{
 				strcopy(g_sAbilityType[this.iClient][i], sizeof(g_sAbilityType[][]), type);
 				
-				char sFunction[256];
-				Format(sFunction, sizeof(sFunction), "%s.%s", type, type);
-				
-				Handle hPlugin = Function_GetPlugin(type);
-				Function func = GetFunctionByName(hPlugin, sFunction);
-				if (func != INVALID_FUNCTION)
+				//Call ability's constructor function
+				if (this.StartFunction(type, type))
 				{
-					Call_StartFunction(hPlugin, func);
-					Call_PushCell(this);
 					Call_PushCell(this);
 					Call_Finish();
 				}
@@ -54,17 +48,9 @@ methodmap SaxtonHaleAbility < SaxtonHaleBase
 			{
 				Format(g_sAbilityType[this.iClient][i], sizeof(g_sAbilityType[][]), "");
 				
-				char sFunction[256];
-				Format(sFunction, sizeof(sFunction), "%s.Destroy", type);
-				
-				Handle hPlugin = Function_GetPlugin(type);
-				Function func = GetFunctionByName(hPlugin, sFunction);
-				if (func != INVALID_FUNCTION)
-				{
-					Call_StartFunction(hPlugin, func);
-					Call_PushCell(this);
+				//Call destroy function
+				if (this.StartFunction(type, "Destroy"))
 					Call_Finish();
-				}
 				
 				break;
 			}
@@ -78,7 +64,13 @@ methodmap SaxtonHaleAbility < SaxtonHaleBase
 	
 	public void Destroy()
 	{
+		//Call destroy function now, since ability type get reset before called
 		for (int i = 0; i < MAX_BOSS_ABILITY; i++)
+		{
+			if (this.StartFunction(g_sAbilityType[this.iClient][i], "Destroy"))
+				Call_Finish();
+			
 			Format(g_sAbilityType[this.iClient][i], sizeof(g_sAbilityType[][]), "");
+		}
 	}
 };

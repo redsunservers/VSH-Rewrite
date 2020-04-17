@@ -1,6 +1,9 @@
 static char g_sClientBossType[TF_MAXPLAYERS+1][64];
 static char g_sClientBossRageMusic[TF_MAXPLAYERS+1][255];
 
+static bool g_bClientBossWeighDownForce[TF_MAXPLAYERS+1];
+
+static float g_flClientBossWeighDownTimer[TF_MAXPLAYERS+1];
 static float g_flClientBossRageMusicVolume[TF_MAXPLAYERS+1];
 
 static Handle g_hClientBossModelTimer[TF_MAXPLAYERS+1];
@@ -24,6 +27,8 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 		this.flMaxRagePercentage = 2.0;
 		this.iRageDamage = 0;
 		this.flEnvDamageCap = 400.0;
+		this.flWeighDownTimer = 2.8;
+		this.flWeighDownForce = 3000.0;
 		this.flGlowTime = 0.0;
 		this.bMinion = false;
 		this.bModel = true;
@@ -32,26 +37,44 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 
 		strcopy(g_sClientBossType[this.iClient], sizeof(g_sClientBossType[]), type);
 
-		if (g_hClientBossModelTimer[this.iClient] != null)
-			delete g_hClientBossModelTimer[this.iClient];
-
-		g_hClientBossModelTimer[this.iClient] = CreateTimer(0.2, Timer_ApplyBossModel, this.iClient, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-
 		g_sClientBossRageMusic[this.iClient] = "";
+		g_bClientBossWeighDownForce[this.iClient] = false;
+		g_flClientBossWeighDownTimer[this.iClient] = 0.0;
 		g_flClientBossRageMusicVolume[this.iClient] = 0.0;
 		g_hClientBossRageMusicTime[this.iClient] = null;
 		
-		char sFunction[256];
-		Format(sFunction, sizeof(sFunction), "%s.%s", type, type);
-		
-		Handle hPlugin = Function_GetPlugin(type);
-		Function func = GetFunctionByName(hPlugin, sFunction);
-		if (func != INVALID_FUNCTION)
+		//Call boss's constructor function
+		if (this.StartFunction(type, type))
 		{
-			Call_StartFunction(hPlugin, func);
-			Call_PushCell(this);
 			Call_PushCell(this);
 			Call_Finish();
+		}
+		
+		if (g_hClientBossModelTimer[this.iClient] != null)
+			delete g_hClientBossModelTimer[this.iClient];
+		
+		if (this.bModel)
+			g_hClientBossModelTimer[this.iClient] = CreateTimer(0.2, Timer_ApplyBossModel, this.iClient, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+		
+		if (TF2_GetPlayerClass(this.iClient) == this.nClass)
+		{
+			//Player is about to play as same class unchanged, strip weapon and cosmetics for GiveNamedItem to regenerate
+			
+			TF2_RemoveAllWeapons(this.iClient);
+			
+			int iEntity = MaxClients+1;
+			while ((iEntity = FindEntityByClassname(iEntity, "tf_wearable*")) > MaxClients)
+				if (GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == this.iClient || GetEntPropEnt(iEntity, Prop_Send, "moveparent") == this.iClient)
+					RemoveEntity(iEntity);
+			
+			iEntity = MaxClients+1;
+			while ((iEntity = FindEntityByClassname(iEntity, "tf_powerup_bottle")) > MaxClients)
+				if (GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == this.iClient || GetEntPropEnt(iEntity, Prop_Send, "moveparent") == this.iClient)
+					RemoveEntity(iEntity);
+		}
+		else if (this.nClass != TFClass_Unknown)
+		{
+			TF2_SetPlayerClass(this.iClient, this.nClass);
 		}
 		
 		return view_as<SaxtonHaleBase>(this);
@@ -73,35 +96,27 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 	{
 		strcopy(type, length, g_sClientBossType[this.iClient]);
 	}
+	
+	public bool IsBossType(const char[] type)
+	{
+		return StrEqual(g_sClientBossType[this.iClient], type);
+	}
 
 	public int CalculateMaxHealth()
 	{
-		int iTeam = GetClientTeam(this.iClient);
-		int iEnemy = 0;
-		for (int i = 1; i <= MaxClients; i++)
-		{
-			if (IsClientInGame(i))
-			{
-				int iTargetTeam = GetClientTeam(i);
-				if (iTargetTeam > 1 && iTargetTeam != iTeam)
-					iEnemy++;
-			}
-		}
-
-		return RoundToNearest((this.iBaseHealth + this.iHealthPerPlayer*iEnemy) * this.flHealthMultiplier);
+		return RoundToNearest((this.iBaseHealth + this.iHealthPerPlayer * SaxtonHale_GetAliveAttackPlayers()) * this.flHealthMultiplier);
 	}
-
+	
+	public void GetBossName(char[] sName, int length)
+	{
+		Format(sName, length, "Unknown Boss Name");
+	}
+	
 	public void OnThink()
 	{
-		if (this.flGlowTime == -1.0 || this.flGlowTime >= GetGameTime())
-		{
-			SetEntProp(this.iClient, Prop_Send, "m_bGlowEnabled", true);
-		}
-		else
-		{
-			SetEntProp(this.iClient, Prop_Send, "m_bGlowEnabled", false);
-		}
-
+		bool bGlow = (this.flGlowTime == -1.0 || this.flGlowTime >= GetGameTime());
+		SetEntProp(this.iClient, Prop_Send, "m_bGlowEnabled", bGlow);
+		
 		//Dont modify his speed during setup time or when taunting
 		if (this.flSpeed >= 0.0 && GameRules_GetRoundState() != RoundState_Preround && !TF2_IsPlayerInCondition(this.iClient, TFCond_Taunting))
 		{
@@ -109,7 +124,26 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 			SetEntPropFloat(this.iClient, Prop_Data, "m_flMaxspeed", flMaxSpeed);
 		}
 		
-		if (g_bRoundStarted && this.iMaxRageDamage != -1)
+		if (GetEntityFlags(this.iClient) & FL_ONGROUND)
+		{
+			//Reset weighdown timer
+			g_bClientBossWeighDownForce[this.iClient] = false;
+			g_flClientBossWeighDownTimer[this.iClient] = 0.0;
+		}
+		else if (g_bClientBossWeighDownForce[this.iClient])
+		{
+			//Set weighdown force
+			float flVelocity[3];
+			flVelocity[2] = -this.flWeighDownForce;
+			TeleportEntity(this.iClient, NULL_VECTOR, NULL_VECTOR, flVelocity);
+		}
+		else if (g_flClientBossWeighDownTimer[this.iClient] == 0.0 && !g_bClientBossWeighDownForce[this.iClient])
+		{
+			//Start weighdown timer
+			g_flClientBossWeighDownTimer[this.iClient] = GetGameTime();
+		}
+		
+		if (g_bRoundStarted && IsPlayerAlive(this.iClient) && this.iMaxRageDamage != -1)
 		{
 			float flRage = (float(this.iRageDamage) / float(this.iMaxRageDamage)) * 100.0;
 			
@@ -149,40 +183,37 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 		}
 	}
 
-	public void GetBossName(char[] sName, int length)
+	public void OnButtonHold(int iButton)
 	{
-		Format(sName, length, "Unknown Boss Name");
+		//Is boss crouching, allowed to use weighdown and passed timer
+		if (iButton == IN_DUCK
+			&& this.flWeighDownTimer >= 0.0
+			&& g_flClientBossWeighDownTimer[this.iClient] != 0.0
+			&& g_flClientBossWeighDownTimer[this.iClient] < GetGameTime() - this.flWeighDownTimer)
+		{
+			//Check if boss is looking down
+			float vecAngles[3];
+			GetClientEyeAngles(this.iClient, vecAngles);
+			if (vecAngles[0] > 60.0)
+			{
+				//Enable weighdown
+				g_bClientBossWeighDownForce[this.iClient] = true;
+				g_flClientBossWeighDownTimer[this.iClient] = 0.0;
+			}
+		}
 	}
-	
+
 	public void OnSpawn()
 	{
 		if (this.bModel)
 		{
 			ApplyBossModel(this.iClient);
 			
-			//Remove his zombie skin cosmetic
+			//Remove zombie skin cosmetic
 			SetEntProp(this.iClient, Prop_Send, "m_bForcedSkin", 0);
 			SetEntProp(this.iClient, Prop_Send, "m_nForcedSkin", 0);
 			SetEntProp(this.iClient, Prop_Send, "m_iPlayerSkinOverride", 0);
-			
-			int iEntity = MaxClients+1;
-			while ((iEntity = FindEntityByClassname(iEntity, "tf_wearable*")) > MaxClients)
-				if (GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == this.iClient || GetEntPropEnt(iEntity, Prop_Send, "moveparent") == this.iClient)
-					AcceptEntityInput(iEntity, "Kill");
-			
-			iEntity = MaxClients+1;
-			while ((iEntity = FindEntityByClassname(iEntity, "tf_powerup_bottle")) > MaxClients)
-				if (GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == this.iClient || GetEntPropEnt(iEntity, Prop_Send, "moveparent") == this.iClient)
-					AcceptEntityInput(iEntity, "Kill");
-			
-			iEntity = MaxClients+1;
-			while ((iEntity = FindEntityByClassname(iEntity, "tf_weapon_spellbook")) > MaxClients)
-				if (GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == this.iClient || GetEntPropEnt(iEntity, Prop_Send, "moveparent") == this.iClient)
-					AcceptEntityInput(iEntity, "Kill");
 		}
-		
-		for (int iSlot = WeaponSlot_Primary; iSlot <= WeaponSlot_InvisWatch; iSlot++)	//Don't remove toolbox weapon
-			TF2_RemoveItemInSlot(this.iClient, iSlot);
 		
 		int iHealth = this.CallFunction("CalculateMaxHealth");
 		if (iHealth > 0)
@@ -190,6 +221,20 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 			this.iMaxHealth = iHealth;
 			this.iHealth = iHealth;
 		}
+	}
+	
+	public Action OnGiveNamedItem(const char[] sClassname, int iIndex)
+	{
+		//If dont modify player model, allow keep cosmetics
+		if (!this.bModel)
+		{
+			int iSlot = TF2_GetItemSlot(iIndex, TF2_GetPlayerClass(this.iClient));
+			if (iSlot > WeaponSlot_BuilderEngie)
+				return Plugin_Continue;
+		}
+		
+		//Otherwise block everything by default
+		return Plugin_Handled;
 	}
 	
 	public int CreateWeapon(int iIndex, char[] sClassname, int iLevel, TFQuality iQuality, char[] sAttrib)
@@ -248,6 +293,12 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 			EmitSoundToAll(sSound, this.iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
 	}
 
+	public void OnEntityCreated(int iEntity, const char[] sClassname)
+	{
+		if (strcmp(sClassname, "tf_projectile_healing_bolt") == 0)
+			SDKHook(iEntity, SDKHook_StartTouch, Crossbow_OnTouch);
+	}
+
 	public Action OnAttackCritical(int iWeapon, bool &bResult)
 	{
 		//Disable random crit for bosses
@@ -269,7 +320,7 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 		return Plugin_Continue;
 	}
 	
-	public Action OnAttackDamage(int &victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+	public Action OnAttackDamage(int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 	{
 		if (damagecustom == TF_CUSTOM_BOOTS_STOMP)
 		{
@@ -301,6 +352,23 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 			this.CallFunction("GetSound", sSound, sizeof(sSound), VSHSound_Pain);
 			if (!StrEmpty(sSound))
 				EmitSoundToAll(sSound, this.iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
+		}
+
+		if (GetEntityFlags(this.iClient) & FL_ONGROUND || TF2_IsUbercharged(this.iClient))
+		{
+			damagetype |= DMG_PREVENT_PHYSICS_FORCE;
+			action = Plugin_Changed;
+		}
+
+		if (inflictor > MaxClients && !this.bMinion)
+		{
+			char sInflictor[32];
+			GetEdictClassname(inflictor, sInflictor, sizeof(sInflictor));
+			if (strcmp(sInflictor, "tf_projectile_sentryrocket") == 0 || strcmp(sInflictor, "obj_sentrygun") == 0)
+			{
+				damagetype |= DMG_PREVENT_PHYSICS_FORCE;
+				action = Plugin_Changed;
+			}
 		}
 
 		if (MaxClients < attacker)
@@ -344,6 +412,12 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 
 	public void Destroy()
 	{
+		//Call destroy function now, since boss type get reset before called
+		if (this.StartFunction(g_sClientBossType[this.iClient], "Destroy"))
+			Call_Finish();
+		
+		Format(g_sClientBossType[this.iClient], sizeof(g_sClientBossType[]), "");
+		
 		this.bValid = false;
 		
 		SetVariantString("");
@@ -413,4 +487,24 @@ public Action Timer_BossRageMusic(Handle hTimer, SaxtonHaleBoss boss)
 		g_flClientBossRageMusicVolume[boss.iClient] = 0.0;
 		StopSound(boss.iClient, SNDCHAN_AUTO, g_sClientBossRageMusic[boss.iClient]);
 	}
+}
+
+public Action Crossbow_OnTouch(int iEntity, int iToucher)
+{
+	if (!SaxtonHale_IsValidBoss(iToucher))
+		return Plugin_Continue;
+	
+	int iClient = GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity");
+	if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient))
+		return Plugin_Continue;
+	
+	SaxtonHaleBase boss = SaxtonHaleBase(iToucher);
+	if (!boss.bCanBeHealed && GetClientTeam(iClient) == GetClientTeam(iToucher))
+	{
+		//Dont allow crossbows heal boss, kill arrow
+		AcceptEntityInput(iEntity, "Kill");
+		return Plugin_Handled;
+	}
+	
+	return Plugin_Continue;
 }

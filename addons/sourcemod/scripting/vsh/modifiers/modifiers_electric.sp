@@ -1,8 +1,11 @@
+#define ELECTRIC_BEAM	"sprites/laserbeam.spr"
+
+static bool g_bElectricDamage[TF_MAXPLAYERS+1];	//Whenever if client is currently being damaged or not
+
 methodmap CModifiersElectric < SaxtonHaleBase
 {
 	public CModifiersElectric(CModifiersElectric boss)
 	{
-		PrecacheGeneric("sprites/laserbeam.vmt");
 	}
 	
 	public void GetModifiersName(char[] sName, int length)
@@ -26,11 +29,12 @@ methodmap CModifiersElectric < SaxtonHaleBase
 		iColor[3] = 255;
 	}
 	
-	public Action OnAttackDamage(int &victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+	public Action OnAttackDamage(int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 	{		
-		if (TF2_IsUbercharged(victim)) return Plugin_Continue;
+		if (damage < 3.0 || g_bElectricDamage[victim] || TF2_IsUbercharged(victim))
+			return Plugin_Continue;
 		
-		int iTeam = GetClientTeam(victim);
+		TFTeam nTeam = TF2_GetClientTeam(victim);
 		
 		float vecVictimPos[3];
 		GetClientAbsOrigin(victim, vecVictimPos);
@@ -38,6 +42,10 @@ methodmap CModifiersElectric < SaxtonHaleBase
 		
 		damage *= 0.85;
 		
+		//Mark victim as currently taking damage to avoid endless loop
+		g_bElectricDamage[victim] = true;
+		
+		//Create entity at centre so lasers can connect
 		int iTarget = CreateEntityByName("info_target");
 		if (iTarget > MaxClients)
 		{
@@ -49,7 +57,7 @@ methodmap CModifiersElectric < SaxtonHaleBase
 		
 		for (int i = 1; i <= MaxClients; i++)
 		{
-			if (IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i) == iTeam && i != victim)
+			if (IsClientInGame(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == nTeam && i != victim)
 			{
 				float vecTargetPos[3];
 				GetClientAbsOrigin(i, vecTargetPos);
@@ -57,12 +65,15 @@ methodmap CModifiersElectric < SaxtonHaleBase
 				
 				if (GetVectorDistance(vecVictimPos, vecTargetPos) < 215.0)
 				{
+					//Mark victim as currently taking damage to avoid endless loop
+					g_bElectricDamage[i] = true;
 					SDKHooks_TakeDamage(i, 0, this.iClient, (damage * 0.40), DMG_SHOCK, _, _, vecVictimPos);
+					g_bElectricDamage[i] = false;
 					
 					int iLaser = CreateEntityByName("env_laser");
 					if (iLaser > MaxClients)
 					{
-						SetEntityModel(iLaser, "sprites/laserbeam.vmt");
+						DispatchKeyValue(iLaser, "texture", ELECTRIC_BEAM);
 						DispatchKeyValue(iLaser, "renderamt", "100");		//Brightness
 						DispatchKeyValue(iLaser, "rendermode", "0");
 						DispatchKeyValue(iLaser, "rendercolor", "255 192 0");	//Color
@@ -86,6 +97,8 @@ methodmap CModifiersElectric < SaxtonHaleBase
 				}
 			}
 		}
+		
+		g_bElectricDamage[victim] = false;
 		
 		return Plugin_Changed;
 	}

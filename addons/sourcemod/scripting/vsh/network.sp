@@ -69,12 +69,12 @@ stock bool Network_CreateEntityGlow(int iEntity, char[] sModel, int iColor[4] = 
 		SetEntityRenderColor(iGlow, 0, 0, 0, 0);
 		
 		int iGlowManager = TF2_CreateGlow(iGlow, iColor);
-		DHookEntity(g_hHookShouldTransmit, true, iGlowManager);
-		DHookEntity(g_hHookShouldTransmit, true, iGlow);
+		SDK_AlwaysTransmitEntity(iGlow);
+		SDK_AlwaysTransmitEntity(iGlowManager);
 		
 		// Set effect flags.
 		int iFlags = GetEntProp(iGlow, Prop_Send, "m_fEffects");
-		SetEntProp(iGlow, Prop_Send, "m_fEffects", iFlags | (1 << 0)); // EF_BONEMERGE
+		SetEntProp(iGlow, Prop_Send, "m_fEffects", iFlags | EF_BONEMERGE); // EF_BONEMERGE
 		
 		SetVariantString("!activator");
 		AcceptEntityInput(iGlow, "SetParent", iEntity);

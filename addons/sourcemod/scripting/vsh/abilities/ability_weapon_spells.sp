@@ -159,10 +159,10 @@ methodmap CWeaponSpells < SaxtonHaleBase
 		}
 		
 		//Create timer to set spell back to what it used to be
-		Handle iData = CreateDataPack();
-		WritePackCell(iData, EntIndexToEntRef(iClient));
-		WritePackCell(iData, spellIndex);
-		CreateTimer(flDuration, Timer_SetSpellIndex, iData);
+		DataPack data;
+		CreateDataTimer(flDuration, Timer_SetSpellIndex, data);
+		data.WriteCell(EntIndexToEntRef(iClient));
+		data.WriteCell(spellIndex);
 	}
 	
 	public Action OnCommandKeyValues(const char[] sCommand)
@@ -260,11 +260,11 @@ stock int GetSpellbook(int iClient)
 	return -1;
 }
 
-public Action Timer_SetSpellIndex(Handle hTimer, DataPack iData)
+public Action Timer_SetSpellIndex(Handle hTimer, DataPack data)
 {
-	ResetPack(iData);
-	int iClient = EntRefToEntIndex(ReadPackCell(iData));
-	haleSpells spellIndex = ReadPackCell(iData);
+	data.Reset();
+	int iClient = EntRefToEntIndex(data.ReadCell());
+	haleSpells spellIndex = data.ReadCell();
 	
 	if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient)) return;
 	

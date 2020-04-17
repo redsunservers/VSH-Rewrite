@@ -51,9 +51,10 @@ methodmap CSeeMan < SaxtonHaleBase
 	public Action OnTakeDamage(int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 	{
 		char sWeaponClassName[32];
-		if (weapon >= 0) GetEdictClassname(inflictor, sWeaponClassName, sizeof(sWeaponClassName));
+		if (inflictor >= 0) GetEdictClassname(inflictor, sWeaponClassName, sizeof(sWeaponClassName));
 		
-		if (this.iClient == attacker && strcmp(sWeaponClassName, "tf_generic_bomb") == 0) return Plugin_Stop; // Don't let the bombs from the bomb ability damages us!
+		//Disable self-damage from bomb rage ability
+		if (this.iClient == attacker && strcmp(sWeaponClassName, "tf_generic_bomb") == 0) return Plugin_Stop;
 
 		EmitSoundToAll(SEEMAN_SEE_SND, this.iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
 		return Plugin_Continue;
@@ -117,8 +118,6 @@ methodmap CSeeMan < SaxtonHaleBase
 	
 	public void Precache()
 	{
-		CBomb.Precache();
-		
 		PrepareSound(SEEMAN_SEE_SND);
 		PrepareSound(SEEMAN_RAGE_SND);
 		PrepareSound(SEE_BOSSES_INTRO_SND);

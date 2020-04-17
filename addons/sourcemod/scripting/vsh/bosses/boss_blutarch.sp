@@ -99,6 +99,8 @@ methodmap CBlutarch < SaxtonHaleBase
 	
 	public void OnDeath(Event eventInfo)
 	{
+		if (!g_bRoundStarted) return;
+		
 		for (int iClient = 1; iClient <= MaxClients; iClient++)
 		{
 			SaxtonHaleBase boss = SaxtonHaleBase(iClient);

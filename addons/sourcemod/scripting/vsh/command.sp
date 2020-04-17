@@ -35,6 +35,8 @@ public void Command_Init()
 	Command_Create("queue", Command_AddQueuePoints);
 	Command_Create("point", Command_AddQueuePoints);
 	Command_Create("special", Command_ForceSpecialRound);
+	Command_Create("cap", Command_EnableCap);
+	Command_Create("cp", Command_EnableCap);
 	Command_Create("dome", Command_ForceDome);
 	Command_Create("rage", Command_SetRage);
 }
@@ -115,7 +117,7 @@ public Action Command_Boss(int iClient, int iArgs)
 		return Plugin_Handled;
 	}
 
-	MenuBoss_DisplayBossMain(iClient);
+	MenuBoss_DisplayBossList(iClient, MenuBoss_CallbackInfo);
 	return Plugin_Handled;
 }
 
@@ -129,7 +131,7 @@ public Action Command_Modifiers(int iClient, int iArgs)
 		return Plugin_Handled;
 	}
 
-	MenuBoss_DisplayModifiersMain(iClient);
+	MenuBoss_DisplayModifiersList(iClient, MenuBoss_CallbackInfo);
 	return Plugin_Handled;
 }
 
@@ -172,7 +174,7 @@ public Action Command_Preferences(int iClient, int iArgs)
 		{
 			if (StrContains(g_strPreferencesName[iPreferences], sPreferences, false) == 0)
 			{
-				halePreferences preferences = view_as<halePreferences>(RoundToNearest(Pow(2.0, float(iPreferences))));
+				Preferences preferences = view_as<Preferences>(RoundToNearest(Pow(2.0, float(iPreferences))));
 				
 				bool bValue = !Preferences_Get(iClient, preferences);
 				if (Preferences_Set(iClient, preferences, bValue))
@@ -184,18 +186,18 @@ public Action Command_Preferences(int iClient, int iArgs)
 					else
 						Format(buffer, sizeof(buffer), "Disable");
 					
-					PrintToChat(iClient, "%s%s %s %s", VSH_TAG, VSH_TEXT_COLOR, buffer, g_strPreferencesName[iPreferences]);
+					PrintToChat(iClient, "%s%s %s %s", TEXT_TAG, TEXT_COLOR, buffer, g_strPreferencesName[iPreferences]);
 					return Plugin_Handled;
 				}
 				else
 				{
-					PrintToChat(iClient, "%s%s Your preferences is still loading, try again later.", VSH_TAG, VSH_ERROR_COLOR);
+					PrintToChat(iClient, "%s%s Your preferences is still loading, try again later.", TEXT_TAG, TEXT_ERROR);
 					return Plugin_Handled;
 				}
 			}
 		}
 		
-		PrintToChat(iClient, "Invalid preferences entered", VSH_TAG, VSH_ERROR_COLOR);
+		PrintToChat(iClient, "Invalid preferences entered", TEXT_TAG, TEXT_ERROR);
 		return Plugin_Handled;
 	}
 }
@@ -294,14 +296,14 @@ public Action Command_AdminMenu(int iClient, int iArgs)
 		return Plugin_Handled;
 	}
 
-	if (Client_HasFlag(iClient, haleClientFlags_Admin))
+	if (Client_HasFlag(iClient, ClientFlags_Admin))
 	{
 		MenuAdmin_DisplayMain(iClient);
 		return Plugin_Handled;
 	}
 	else
 	{
-		ReplyToCommand(iClient, "%s%s You do not have permission to use this command.", VSH_TAG, VSH_ERROR_COLOR);
+		ReplyToCommand(iClient, "%s%s You do not have permission to use this command.", TEXT_TAG, TEXT_ERROR);
 		return Plugin_Handled;
 	}
 }
@@ -310,15 +312,15 @@ public Action Command_ConfigRefresh(int iClient, int iArgs)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
-	if (Client_HasFlag(iClient, haleClientFlags_Admin))
+	if (Client_HasFlag(iClient, ClientFlags_Admin))
 	{
 		Config_Refresh();
 		
-		PrintToChatAll("%s%s %N refreshed vsh config", VSH_TAG, VSH_TEXT_COLOR, iClient);
+		PrintToChatAll("%s%s %N refreshed vsh config", TEXT_TAG, TEXT_COLOR, iClient);
 		return Plugin_Handled;
 	}
 
-	ReplyToCommand(iClient, "%s%s You do not have permission to use this command.", VSH_TAG, VSH_ERROR_COLOR);
+	ReplyToCommand(iClient, "%s%s You do not have permission to use this command.", TEXT_TAG, TEXT_ERROR);
 	return Plugin_Handled;
 }
 
@@ -326,12 +328,12 @@ public Action Command_AddQueuePoints(int iClient, int iArgs)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
-	if (Client_HasFlag(iClient, haleClientFlags_Admin))
+	if (Client_HasFlag(iClient, ClientFlags_Admin))
 	{
 		int iAddQueue;
 		if (iArgs < 2)
 		{
-			ReplyToCommand(iClient, "%s%s Usage: vshqueue [target] [amount]", VSH_TAG, VSH_ERROR_COLOR);
+			ReplyToCommand(iClient, "%s%s Usage: vshqueue [target] [amount]", TEXT_TAG, TEXT_ERROR);
 			return Plugin_Handled;
 		}
 		
@@ -341,7 +343,7 @@ public Action Command_AddQueuePoints(int iClient, int iArgs)
 		
 		if (StringToIntEx(sArg2, iAddQueue) == 0)
 		{
-			ReplyToCommand(iClient, "%s%s Could not convert '%s' to int", VSH_TAG, VSH_ERROR_COLOR, sArg2);
+			ReplyToCommand(iClient, "%s%s Could not convert '%s' to int", TEXT_TAG, TEXT_ERROR, sArg2);
 			return Plugin_Handled;
 		}
 		
@@ -352,18 +354,18 @@ public Action Command_AddQueuePoints(int iClient, int iArgs)
 		int iTargetCount = ProcessTargetString(sArg1, iClient, iTargetList, sizeof(iTargetList), COMMAND_FILTER_NO_IMMUNITY, sTargetName, sizeof(sTargetName), bIsML);
 		if (iTargetCount <= 0)
 		{
-			ReplyToCommand(iClient, "%s%s Could not find anyone to give queue points", VSH_TAG, VSH_ERROR_COLOR);
+			ReplyToCommand(iClient, "%s%s Could not find anyone to give queue points", TEXT_TAG, TEXT_ERROR);
 			return Plugin_Handled;
 		}
 		
 		for (int i = 0; i < iTargetCount; i++)
 			Queue_AddPlayerPoints(iTargetList[i], iAddQueue);
 		
-		ReplyToCommand(iClient, "%s%s Gave %s %d queue points", VSH_TAG, VSH_TEXT_COLOR, sTargetName, iAddQueue);
+		ReplyToCommand(iClient, "%s%s Gave %s %d queue points", TEXT_TAG, TEXT_COLOR, sTargetName, iAddQueue);
 		return Plugin_Handled;
 	}
 
-	ReplyToCommand(iClient, "%s%s You do not have permission to use this command.", VSH_TAG, VSH_ERROR_COLOR);
+	ReplyToCommand(iClient, "%s%s You do not have permission to use this command.", TEXT_TAG, TEXT_ERROR);
 	return Plugin_Handled;
 }
 
@@ -371,15 +373,14 @@ public Action Command_ForceSpecialRound(int iClient, int iArgs)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
-	if (Client_HasFlag(iClient, haleClientFlags_Admin))
+	if (Client_HasFlag(iClient, ClientFlags_Admin))
 	{
 		char sClass[256];
 		
 		if (iArgs < 1)
 		{
 			Format(sClass, sizeof(sClass), "random");
-			g_bSpecialRound = true;
-			g_nSpecialRoundNextClass = TFClass_Unknown;
+			NextBoss_SetSpecialClass(TFClass_Unknown);
 		}
 		else
 		{
@@ -388,20 +389,42 @@ public Action Command_ForceSpecialRound(int iClient, int iArgs)
 			
 			if (nClass == TFClass_Unknown)
 			{
-				ReplyToCommand(iClient, "%s%s Unable to find class '%s'", VSH_TAG, VSH_ERROR_COLOR, sClass);
+				ReplyToCommand(iClient, "%s%s Unable to find class '%s'", TEXT_TAG, TEXT_ERROR, sClass);
 				return Plugin_Handled;
 			}
 			
 			Format(sClass, sizeof(sClass), g_strClassName[nClass]);
-			g_bSpecialRound = true;
-			g_nSpecialRoundNextClass = nClass;
+			NextBoss_SetSpecialClass(nClass);
 		}
 		
-		PrintToChatAll("%s%s %N force set next round a %s special round!", VSH_TAG, VSH_TEXT_COLOR, iClient, sClass);
+		PrintToChatAll("%s%s %N force set next round a %s special round!", TEXT_TAG, TEXT_COLOR, iClient, sClass);
 		return Plugin_Handled;
 	}
 
-	ReplyToCommand(iClient, "%s%s You do not have permission to use this command.", VSH_TAG, VSH_ERROR_COLOR);
+	ReplyToCommand(iClient, "%s%s You do not have permission to use this command.", TEXT_TAG, TEXT_ERROR);
+	return Plugin_Handled;
+}
+
+public Action Command_EnableCap(int iClient, int iArgs)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+
+	if (Client_HasFlag(iClient, ClientFlags_Admin))
+	{
+		if (GameRules_GetPropFloat("m_flCapturePointEnableTime") > GetGameTime())
+		{
+			GameRules_SetPropFloat("m_flCapturePointEnableTime", 0.0);
+			PrintToChatAll("%s%s %N force unlocked capture point!", TEXT_TAG, TEXT_COLOR, iClient);
+		}
+		else
+		{
+			ReplyToCommand(iClient, "%s%s Capture point is already unlocked", TEXT_TAG, TEXT_ERROR);
+		}
+		
+		return Plugin_Handled;
+	}
+	
+	ReplyToCommand(iClient, "%s%s You do not have permission to use this command.", TEXT_TAG, TEXT_ERROR);
 	return Plugin_Handled;
 }
 
@@ -409,21 +432,53 @@ public Action Command_ForceDome(int iClient, int iArgs)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
-	if (Client_HasFlag(iClient, haleClientFlags_Admin))
+	if (Client_HasFlag(iClient, ClientFlags_Admin))
 	{
-		if (Dome_Start())
-		{
-			PrintToChatAll("%s%s %N force start the dome!", VSH_TAG, VSH_TEXT_COLOR, iClient);
-			return Plugin_Handled;
-		}
+		char sBuffer[32];
+		GetCmdArgString(sBuffer, sizeof(sBuffer));
+		
+		TFTeam nTeam;
+		if (StrContains(sBuffer, "red", false) == 0)
+			nTeam = TFTeam_Red;
+		else if (StrContains(sBuffer, "blu", false) == 0)
+			nTeam = TFTeam_Blue;
+		else if (StrContains(sBuffer, "attack", false) == 0)
+			nTeam = TFTeam_Attack;
+		else if (StrContains(sBuffer, "boss", false) == 0)
+			nTeam = TFTeam_Boss;
 		else
+			nTeam = view_as<TFTeam>(StringToInt(sBuffer));
+		
+		char sTeam[32];
+		
+		switch (nTeam)
 		{
-			ReplyToCommand(iClient, "%s%s There is already a active dome!", VSH_TAG, VSH_ERROR_COLOR);
-			return Plugin_Handled;
+			case TFTeam_Attack:
+			{
+				Dome_SetTeam(TFTeam_Attack);
+				sTeam = "attack";
+			}
+			case TFTeam_Boss:
+			{
+				Dome_SetTeam(TFTeam_Boss);
+				sTeam = "boss";
+			}
+			default:
+			{
+				Dome_SetTeam(TFTeam_Unassigned);
+				sTeam = "neutral";
+			}
 		}
+		
+		if (Dome_Start())
+			PrintToChatAll("%s%s %N force start %s dome!", TEXT_TAG, TEXT_COLOR, iClient, sTeam);
+		else
+			PrintToChatAll("%s%s %N changed dome team to %s!", TEXT_TAG, TEXT_COLOR, iClient, sTeam);
+		
+		return Plugin_Handled;
 	}
 
-	ReplyToCommand(iClient, "%s%s You do not have permission to use this command.", VSH_TAG, VSH_ERROR_COLOR);
+	ReplyToCommand(iClient, "%s%s You do not have permission to use this command.", TEXT_TAG, TEXT_ERROR);
 	return Plugin_Handled;
 }
 
@@ -431,7 +486,7 @@ public Action Command_SetRage(int iClient, int iArgs)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
-	if (Client_HasFlag(iClient, haleClientFlags_Admin))
+	if (Client_HasFlag(iClient, ClientFlags_Admin))
 	{
 		int iRage;
 		if (iArgs == 0)
@@ -444,13 +499,13 @@ public Action Command_SetRage(int iClient, int iArgs)
 			GetCmdArg(1, strBuf, sizeof(strBuf));
 			if (StringToIntEx(strBuf, iRage) == 0)
 			{
-				ReplyToCommand(iClient, "%s%s Could not convert '%s' to int", VSH_TAG, VSH_ERROR_COLOR, strBuf);
+				ReplyToCommand(iClient, "%s%s Could not convert '%s' to int", TEXT_TAG, TEXT_ERROR, strBuf);
 				return Plugin_Handled;
 			}
 		}
 		else
 		{
-			ReplyToCommand(iClient, "%s%s Usage: vsh_rage [amount=100]", VSH_TAG, VSH_ERROR_COLOR);
+			ReplyToCommand(iClient, "%s%s Usage: vsh_rage [amount=100]", TEXT_TAG, TEXT_ERROR);
 			return Plugin_Handled;
 		}
 
@@ -461,10 +516,10 @@ public Action Command_SetRage(int iClient, int iArgs)
 				boss.iRageDamage = RoundToNearest(float(boss.iMaxRageDamage) * (float(iRage)/100.0));
 		}
 
-		PrintToChatAll("%s%s %N sets rage to %i percent", VSH_TAG, VSH_TEXT_COLOR, iClient, iRage);
+		PrintToChatAll("%s%s %N sets rage to %i percent", TEXT_TAG, TEXT_COLOR, iClient, iRage);
 		return Plugin_Handled;
 	}
 
-	ReplyToCommand(iClient, "%s%s You do not have permission to use this command.", VSH_TAG, VSH_ERROR_COLOR);
+	ReplyToCommand(iClient, "%s%s You do not have permission to use this command.", TEXT_TAG, TEXT_ERROR);
 	return Plugin_Handled;
 }

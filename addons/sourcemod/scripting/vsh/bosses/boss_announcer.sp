@@ -24,16 +24,16 @@ static char g_strAnnouncerLose[][] = {
 static char g_strAnnouncerKill[][] = {
 	"vo/announcer_am_lastmanforfeit01.mp3",
 	"vo/announcer_am_lastmanforfeit03.mp3",
-	"vo/announcer_dec_kill07.mp3",
-	"vo/announcer_dec_kill10.mp3",
-	"vo/announcer_dec_missionbegin30s02.mp3",
+	"vo/announcer_dec_missionbegins30s02.mp3",
 };
 
 static char g_strAnnouncerKillMinion[][] = {
 	"vo/mvm_general_destruction02.mp3",
 	"vo/mvm_general_destruction04.mp3",
 	"vo/mvm_general_destruction05.mp3",
-	"vo/mvm_general_destruction028.mp3",
+	"vo/mvm_general_destruction08.mp3",
+	"vo/announcer_dec_kill07.mp3",
+	"vo/announcer_dec_kill10.mp3",
 };
 
 static char g_strAnnouncerDisguise[][] = {
@@ -43,13 +43,22 @@ static char g_strAnnouncerDisguise[][] = {
 };
 
 static char g_strAnnouncerLastMan[][] = {
-	"vo/taunts/announcer_am_lastmanalive02.mp3",
-	"vo/taunts/announcer_am_lastmanalive03.mp3",
+	"vo/announcer_am_lastmanalive01.mp3",
+	"vo/announcer_am_lastmanalive03.mp3",
+	"vo/announcer_am_lastmanalive04.mp3",
 };
 
 static char g_strAnnouncerBackStabbed[][] = {
 	"vo/compmode/cm_admin_misc_07.mp3",
 	"vo/compmode/cm_admin_misc_09.mp3",
+	"vo/announcer_sd_monkeynaut_end_crash02.mp3",
+};
+
+static char g_strAnnouncerHitBuilding[][] = {
+	"weapons/sentry_damage1.wav",
+	"weapons/sentry_damage2.wav",
+	"weapons/sentry_damage3.wav",
+	"weapons/sentry_damage4.wav",
 };
 
 methodmap CAnnouncer < SaxtonHaleBase
@@ -72,11 +81,11 @@ methodmap CAnnouncer < SaxtonHaleBase
 		StrCat(sInfo, length, "\nHealth: Medium");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nAbilities");
-		StrCat(sInfo, length, "\n- Swaps player you shot using Diamondback to your team");
+		StrCat(sInfo, length, "\n- Brings players and buildings shot from your Diamondback to your team");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- Diamondback with ammos added");
-		StrCat(sInfo, length, "\n- 200%% Rage: Double ammo added to Diamondback");
+		StrCat(sInfo, length, "\n- Ammo is added to your Diamondback");
+		StrCat(sInfo, length, "\n- 200%% Rage: Ammo added is doubled");
 	}
 	
 	public void OnSpawn()
@@ -146,7 +155,7 @@ methodmap CAnnouncer < SaxtonHaleBase
 	{
 		//Need to block gun sounds
 		
-		if (strncmp(sample, "vo/", 3) == 0)//Block voicelines
+		if (strncmp(sample, "vo/", 3) == 0 && !(strncmp(sample, "vo/announcer_", 13) == 0 || strncmp(sample, "vo/mvm_", 7) == 0 || strncmp(sample, "vo/compmode/cm_admin_", 21) == 0))	//Block voicelines, except her own's
 			return Plugin_Handled;
 		return Plugin_Continue;
 	}
@@ -169,13 +178,13 @@ methodmap CAnnouncer < SaxtonHaleBase
 		}
 	}
 	
-	public Action OnAttackDamage(int &victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+	public Action OnAttackDamage(int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 	{
 		if (weapon <= MaxClients)
 			return Plugin_Continue;
 		
 		int iIndex = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
-		if (TF2_GetSlotInItem(iIndex, TF2_GetPlayerClass(this.iClient)) != WeaponSlot_Primary)
+		if (TF2_GetItemSlot(iIndex, TF2_GetPlayerClass(this.iClient)) != WeaponSlot_Primary)
 			return Plugin_Continue;
 		
 		if (TF2_IsUbercharged(victim))
@@ -193,12 +202,41 @@ methodmap CAnnouncer < SaxtonHaleBase
 		
 		boss.CallFunction("CreateBoss", "CAnnouncerMinion");
 		
+		//Alert teammates, herself and unconverted minions that the victim is about to change teams
+		TFClassType nClass = TF2_GetPlayerClass(victim);
+		char sMessage[128];
+		Format(sMessage, sizeof(sMessage), "A%s %s was hit and will switch teams!", (nClass == TFClass_Engineer ? "n" : ""), g_strClassName[nClass]);
+		Announcer_ShowAnnotation(victim, sMessage, 6.0);
+		
 		EmitSoundToClient(this.iClient, SOUND_BACKSTAB);
 		EmitSoundToClient(victim, SOUND_ALERT);
 		EmitSoundToClient(victim, g_strAnnouncerDisguise[GetRandomInt(0, sizeof(g_strAnnouncerDisguise)-1)]);
 		
 		damage = 0.0;
 		return Plugin_Stop;
+	}
+	
+	public Action OnAttackBuilding(int building, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+	{
+		if (weapon <= MaxClients)
+			return Plugin_Continue;
+		
+		int iIndex = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
+		if (TF2_GetItemSlot(iIndex, TF2_GetPlayerClass(this.iClient)) != WeaponSlot_Primary)
+			return Plugin_Continue;
+		
+		//Alert teammates, herself and unconverted minions that the building has changed teams
+		TFObjectType nType = TF2_GetBuildingType(building);
+		TFObjectMode nMode = TF2_GetBuildingMode(building);
+		
+		char sMessage[128];
+		Format(sMessage, sizeof(sMessage), "A %s was hit and has switched teams!", g_strBuildingName[nType][nMode]);
+		Announcer_ShowAnnotation(building, sMessage, 3.0);
+		
+		TF2_SetBuildingTeam(building, TF2_GetClientTeam(this.iClient), this.iClient);
+		EmitSoundToClient(this.iClient, g_strAnnouncerHitBuilding[GetRandomInt(0, sizeof(g_strAnnouncerHitBuilding)-1)]);
+		damage = 0.0;
+		return Plugin_Changed;
 	}
 	
 	public void Precache()
@@ -215,6 +253,7 @@ methodmap CAnnouncer < SaxtonHaleBase
 		for (int i = 0; i < sizeof(g_strAnnouncerDisguise); i++) PrecacheSound(g_strAnnouncerDisguise[i]);
 		for (int i = 0; i < sizeof(g_strAnnouncerLastMan); i++) PrecacheSound(g_strAnnouncerLastMan[i]);
 		for (int i = 0; i < sizeof(g_strAnnouncerBackStabbed); i++) PrecacheSound(g_strAnnouncerBackStabbed[i]);
+		for (int i = 0; i < sizeof(g_strAnnouncerHitBuilding); i++) PrecacheSound(g_strAnnouncerHitBuilding[i]);
 		
 		AddFileToDownloadsTable("materials/models/player/administrator/admin_body.vmt");
 		AddFileToDownloadsTable("materials/models/player/administrator/admin_body.vtf");
@@ -248,12 +287,16 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 	{
 		boss.flSpeed = -1.0;
 		boss.iMaxRageDamage = -1;
+		boss.flWeighDownTimer = -1.0;
 		boss.bMinion = true;
 		boss.bCanBeHealed = true;
 		boss.bModel = false;
 		
 		g_iAnnouncerMinionTimeLeft[boss.iClient] = 6;	//6 seconds before swapping to boss team
 		g_hAnnouncerMinionTimer[boss.iClient] = CreateTimer(0.0, Timer_AnnouncerChangeTeam, boss.iClient);
+		
+		//Make minions untargetable by all sentries until the team-swapping countdown ends
+		SetEntityFlags(boss.iClient, (GetEntityFlags(boss.iClient) | FL_NOTARGET));
 	}
 	
 	public bool IsBossHidden()
@@ -261,10 +304,25 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 		return true;
 	}
 	
-	public Action OnAttackDamage(int &victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+	public Action OnAttackDamage(int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 	{
 		//Don't allow minion attack boss team
-		if (this.iClient != victim && GetClientTeam(victim) == BOSS_TEAM)
+		if (this.iClient != victim && TF2_GetClientTeam(victim) == TFTeam_Boss)
+		{
+			damage = 0.0;
+			return Plugin_Stop;
+		}
+		
+		return Plugin_Continue;
+	}
+	
+	public Action OnAttackBuilding(int building, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+	{
+		//Stop minions from damaging buildings of other minions in opposite teams or players in the boss team
+		int iBuilder = TF2_GetBuildingOwner(building);
+		SaxtonHaleBase boss = SaxtonHaleBase(iBuilder);
+		
+		if (TF2_GetClientTeam(iBuilder) == TFTeam_Boss || (boss.bValid && boss.CallFunction("IsBossType", "CAnnouncerMinion")))
 		{
 			damage = 0.0;
 			return Plugin_Stop;
@@ -279,7 +337,7 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 			return Plugin_Continue;
 		
 		//Don't allow minion take damage from boss team
-		if (this.iClient != attacker && GetClientTeam(attacker) == BOSS_TEAM)
+		if (this.iClient != attacker && TF2_GetClientTeam(attacker) == TFTeam_Boss)
 		{
 			damage = 0.0;
 			return Plugin_Stop;
@@ -292,7 +350,7 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 	
 	public Action OnBuild(TFObjectType nType, TFObjectMode nMode)
 	{
-		//Allow Engineer build anything
+		//Let them build normally
 		return Plugin_Continue;
 	}
 	
@@ -303,61 +361,18 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 			SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 			if (boss.bValid && IsPlayerAlive(iClient))
 			{
-				char sType[128];
-				boss.CallFunction("GetBossType", sType, sizeof(sType));
-				if (StrEqual(sType, "CAnnouncer"))
-				{
+				if (boss.CallFunction("IsBossType", "CAnnouncer"))
 					EmitSoundToAll(g_strAnnouncerKillMinion[GetRandomInt(0,sizeof(g_strAnnouncerKillMinion)-1)], iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
-				}
 			}
 		}
 	}
-	/*
-	public void Think()
-	{
-		//Ring effect, only show to whoever in boss team or spectators
-		
-		if (GetClientTeam(this.iClient) != BOSS_TEAM && IsPlayerAlive(this.iClient))
-		{
-			float vecPos[3];
-			GetClientAbsOrigin(this.iClient, vecPos);
-			int iTeam = GetClientTeam(this.iClient);
-			
-			int iColor[4];
-			iColor[3] = 255;
-			if (iTeam == TFTeam_Blue) iColor[0] = 255;
-			else if (iTeam == TFTeam_Red) iColor[2] = 255;
-			
-			int iClients[MAXPLAYERS];
-			int iLength = 0;
-			for (int iClient = 1; iClient <= MaxClients; iClient++)
-			{
-				if (IsClientInGame(iClient))
-				{
-					char sBossType[256];
-					if (g_clientBoss[iClient].IsValid())
-						g_clientBoss[iClient].GetType(sBossType, sizeof(sBossType));
-					
-					if (GetClientTeam(iClient) != ATTACK_TEAM || !IsPlayerAlive(iClient) || StrEqual(sBossType, "CAnnouncerMinion"))
-					{
-						iClients[iLength] = iClient;
-						iLength++;
-					}
-				}
-			}
-			
-			for (int i = 1; i <= 3; i++)
-			{
-				vecPos[2] += 18.0;
-				TE_SetupBeamRingPoint(vecPos, 40.0, 41.0, g_iSpritesLaserbeam, g_iSpritesGlow, 0, 10, 0.1, 3.0, 0.0, iColor, 10, 0);
-				TE_Send(iClients, iLength);
-			}
-		}
-	}
-	*/
+	
 	public void Destroy()
 	{
 		g_hAnnouncerMinionTimer[this.iClient] = null;
+		
+		//Make them targetable by sentries, just in case
+		SetEntityFlags(this.iClient, (GetEntityFlags(this.iClient) & ~FL_NOTARGET));
 	}
 };
 
@@ -366,7 +381,7 @@ public Action Timer_AnnouncerChangeTeam(Handle hTimer, int iClient)
 	if (hTimer != g_hAnnouncerMinionTimer[iClient])
 		return;
 	
-	if (GetClientTeam(iClient) == BOSS_TEAM || GetClientTeam(iClient) <= 1 || !IsPlayerAlive(iClient))
+	if (TF2_GetClientTeam(iClient) == TFTeam_Boss || TF2_GetClientTeam(iClient) <= TFTeam_Spectator || !IsPlayerAlive(iClient))
 		return;
 	
 	if (g_iAnnouncerMinionTimeLeft[iClient] > 0)
@@ -378,58 +393,83 @@ public Action Timer_AnnouncerChangeTeam(Handle hTimer, int iClient)
 		return;
 	}
 	
-	PrintCenterText(iClient, "YOU'RE NOW IN BOSS TEAM");
+	//Need to detach buildings from engineers before switching teams so they don't explode
+	int iBuilding = MaxClients+1;
+	while ((iBuilding = FindEntityByClassname(iBuilding, "obj_*")) > MaxClients)
+	{
+		//Even when keeping the same builder, the "original builder" will be detached from the building
+		if (GetEntPropEnt(iBuilding, Prop_Send, "m_hBuilder") == iClient)
+			TF2_SetBuildingTeam(iBuilding, TFTeam_Boss);
+	}
 	
-	Client_AddFlag(iClient, haleClientFlags_BossTeam);
+	PrintCenterText(iClient, "YOU'RE NOW IN BOSS TEAM");
+	Client_AddFlag(iClient, ClientFlags_BossTeam);
+	
 	SetEntProp(iClient, Prop_Send, "m_lifeState", LifeState_Dead);
-	ChangeClientTeam(iClient, BOSS_TEAM);
+	TF2_ChangeClientTeam(iClient, TFTeam_Boss);
 	SetEntProp(iClient, Prop_Send, "m_lifeState", LifeState_Alive);
 	
-	//Restore weapons, health, ammo and cosmetics after changing teams
-	TF2_RegeneratePlayer(iClient);
+	//...and add them all back
+	iBuilding = MaxClients+1;
+	while ((iBuilding = FindEntityByClassname(iBuilding, "obj_*")) > MaxClients)
+	{
+		if (GetEntPropEnt(iBuilding, Prop_Send, "m_hBuilder") == iClient)
+			SDK_AddObject(iClient, iBuilding);
+	}
 	
-	/*
-	//Reset attributes for every weapons, to not include any extras from config
+	//Update wearable teams
+	int iEntity = MaxClients+1;
+	while ((iEntity = FindEntityByClassname(iEntity, "tf_wearable*")) > MaxClients)
+		if (GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == iClient || GetEntPropEnt(iEntity, Prop_Send, "moveparent") == iClient)
+			SetEntProp(iEntity, Prop_Send, "m_iTeamNum", view_as<int>(TFTeam_Boss));
+	
 	for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
 	{
 		int iWeapon = TF2_GetItemInSlot(iClient, iSlot);
-		if (IsValidEdict(iWeapon))
+		if (iWeapon > MaxClients)
 		{
-			TF2Attrib_RemoveAll(iWeapon);
+			//Change weapon teams
+			SetEntProp(iWeapon, Prop_Send, "m_iTeamNum", view_as<int>(TFTeam_Boss));
 			
-			int iIndex = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
-			ArrayList aAttrib = TF2Econ_GetItemStaticAttributes(iIndex);
+			//Remove attribs added from config, attribs added from TF2 itself is kept
+			int iAttribIndex[MAX_ATTRIBUTES_SENT];
+			int iCount = TF2Attrib_ListDefIndices(iWeapon, iAttribIndex, sizeof(iAttribIndex));
 			
-			int iLength = aAttrib.Length;
-			for (int i = 0; i < iLength; i++)
-				TF2Attrib_SetByDefIndex(iWeapon, aAttrib.Get(i, 0), aAttrib.Get(i, 1));	//0 is attrib index, 1 is value
+			for (int i = 0; i < iCount; i++)
+				TF2Attrib_RemoveByDefIndex(iWeapon, iAttribIndex[i]);
 			
 			TF2Attrib_ClearCache(iWeapon);
-			delete aAttrib;
-		}
-	}
-	*/
-	
-	int iWeapon = GetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon");
-	if (iWeapon > MaxClients)
-	{
-		char sClassname[256];
-		GetEntityClassname(iWeapon, sClassname, sizeof(sClassname));
-		
-		//Minigun bug with status during team switch while attacking
-		if (StrEqual(sClassname, "tf_weapon_minigun"))
-		{
-			if (GetEntProp(iWeapon, Prop_Send, "m_iWeaponState") == view_as<int>(MinigunState_Shooting)
-				|| GetEntProp(iWeapon, Prop_Send, "m_iWeaponState") == view_as<int>(MinigunState_Spinning))
-			{
-				SetEntProp(iWeapon, Prop_Send, "m_iWeaponState", MinigunState_Idle);
-			}
 		}
 	}
 	
-	//Dont give health overheal
+	//Refill health
 	SetEntProp(iClient, Prop_Send, "m_iHealth", SDK_GetMaxHealth(iClient));
 	
-	//TF2_AddCondition(iClient, TFCond_Buffed, TFCondDuration_Infinite);
+	//Allow sentries to target this fella from now on
+	SetEntityFlags(iClient, (GetEntityFlags(iClient) & ~FL_NOTARGET));
+	
+	//Give crit resistance 
 	TF2_AddCondition(iClient, TFCond_DefenseBuffed, TFCondDuration_Infinite);
+}
+
+public void Announcer_ShowAnnotation(int iTarget, char[] sMessage, float flDuration)
+{
+	int[] iClients = new int[MaxClients];
+	int iCount = 0;
+	
+	for (int iClient = 1; iClient <= MaxClients; iClient++)
+	{
+		if (IsClientInGame(iClient) && iClient != iTarget)
+		{
+			SaxtonHaleBase boss = SaxtonHaleBase(iClient);
+			
+			if (TF2_GetClientTeam(iClient) != TFTeam_Attack || (boss.bValid && boss.CallFunction("IsBossType", "CAnnouncerMinion")))
+				iClients[iCount++] = iClient;
+		}
+	}
+	
+	if (iCount <= 0)
+		return;
+	
+	TF2_ShowAnnotation(iClients, iCount, iTarget, sMessage, flDuration);
 }

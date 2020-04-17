@@ -2,7 +2,8 @@
 #define BODY_EAT		"vo/sandwicheat09.mp3"
 #define BODY_ENTITY_MAX	6
 
-ArrayList g_aBodyEntity;
+static bool g_bBodyBlockRagdoll;
+static ArrayList g_aBodyEntity;
 
 static int g_iMaxHeal[TF_MAXPLAYERS+1];
 static float g_flMaxEatDistance[TF_MAXPLAYERS+1];
@@ -73,10 +74,10 @@ methodmap CBodyEat < SaxtonHaleBase
 
 	public void OnPlayerKilled(Event event, int iVictim)
 	{
-		if (g_bBlockRagdoll) return;
+		if (g_bBodyBlockRagdoll) return;
 		if (!SaxtonHale_IsValidAttack(iVictim)) return;
 		
-		g_bBlockRagdoll = true;
+		g_bBodyBlockRagdoll = true;
 		bool bFake = view_as<bool>(event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER);
 		
 		//Check how many bodies in map
@@ -148,7 +149,7 @@ methodmap CBodyEat < SaxtonHaleBase
 		//Create glow to body
 		Network_CreateEntityGlow(iRagdoll, sModel, iColor, BodyGlow_Transmit);
 		SetEntProp(iRagdoll, Prop_Data, "m_CollisionGroup", COLLISION_GROUP_DEBRIS_TRIGGER);
-		DHookEntity(g_hHookShouldTransmit, true, iRagdoll);
+		SDK_AlwaysTransmitEntity(iRagdoll);
 		
 		//Kill body from timer
 		CreateTimer(30.0, Timer_EntityCleanup, EntIndexToEntRef(iRagdoll));
@@ -236,7 +237,16 @@ methodmap CBodyEat < SaxtonHaleBase
 		}
 	}
 	
-	public static void Precache()
+	public void OnEntityCreated(int iEntity, const char[] sClassname)
+	{
+		if (g_bBodyBlockRagdoll && strcmp(sClassname, "tf_ragdoll") == 0)
+		{
+			AcceptEntityInput(iEntity, "Kill");
+			g_bBodyBlockRagdoll = false;
+		}
+	}
+	
+	public void Precache()
 	{
 		PrecacheSound(BODY_EAT);
 	}

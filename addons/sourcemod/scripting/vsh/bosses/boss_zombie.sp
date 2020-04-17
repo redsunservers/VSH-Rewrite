@@ -6,6 +6,7 @@ methodmap CZombie < SaxtonHaleBase
 	{
 		boss.nClass = TFClass_Scout;
 		boss.flSpeed = -1.0;
+		boss.flWeighDownTimer = -1.0;
 		boss.iMaxRageDamage = -1;
 		boss.bMinion = true;
 		boss.bModel = false;
@@ -47,7 +48,7 @@ methodmap CZombie < SaxtonHaleBase
 			TF2_MakeBleed(iClient, iClient, 99999.0);
 	}
 	
-	public Action OnAttackDamage(int &victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+	public Action OnAttackDamage(int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 	{
 		if (this.iClient != victim && GetClientTeam(this.iClient) != GetClientTeam(victim))
 		{

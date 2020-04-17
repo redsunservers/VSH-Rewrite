@@ -16,11 +16,17 @@
 				"linux"		"@_ZN9CTFPlayer33GetEquippedWearableForLoadoutSlotEi"
 				"windows"	"\x55\x8B\xEC\x83\xEC\x2A\x8B\xC1\x53\x56\x33\xF6\x89\x45\xF8\x8B\x88\x2A\x2A\x2A\x2A\x57\x89\x4D\xFC"
 			}
-			"CTFPlayer::TeamFortress_CalculateMaxSpeed"
+			"CTFPlayer::AddObject"
 			{
 				"library"	"server"
-				"linux"		"@_ZNK9CTFPlayer30TeamFortress_CalculateMaxSpeedEb"
-				"windows"	"\x55\x8B\xEC\x83\xEC\x18\x83\x3D\x2A\x2A\x2A\x2A\x00\x56\x8B\xF1\x75\x2A\xD9\xEE\x5E\x8B\xE5\x5D\xC2\x04\x00\x8B\x86"
+				"linux"		"@_ZN9CTFPlayer9AddObjectEP11CBaseObject"
+				"windows"	"\x55\x8B\xEC\x53\x56\x57\x8B\x7D\x08\x8B\xD9\x85\xFF\x74\x2A\x8B\x07\x8B\xCF\xFF\x50\x08\x8B\xCF"
+			}
+			"CTFPlayer::RemoveObject"
+			{
+				"library"	"server"
+				"linux"		"@_ZN9CTFPlayer12RemoveObjectEP11CBaseObject"
+				"windows"	"\x55\x8B\xEC\x8B\xD1\x56\x8B\xB2\x7C\x21\x00\x00"
 			}
 			"CWeaponMedigun::AllowedToHealTarget"
 			{
@@ -32,25 +38,11 @@
 			{
 				"library"	"server"
 				"linux"		"@_ZN16CObjectDispenser15CouldHealTargetEP11CBaseEntity"
-				//TODO get windows sig
+				"windows"	"\x55\x8B\xEC\x56\x8B\x75\x08\x57\x8B\xF9\x8B\x87\x10\x01\x00\x00"
 			}
 		}
 		"Functions"
 		{
-			"CTFPlayer::TeamFortress_CalculateMaxSpeed"
-			{
-				"signature"	"CTFPlayer::TeamFortress_CalculateMaxSpeed"
-				"callconv"	"thiscall"
-				"return"	"float"
-				"this"		"entity"
-				"arguments"
-				{
-					"ignoreCharging"
-					{
-						"type"	"bool"
-					}
-				}
-			}
 			"CWeaponMedigun::AllowedToHealTarget"
 			{
 				"signature"	"CWeaponMedigun::AllowedToHealTarget"
@@ -82,10 +74,20 @@
 		}
 		"Offsets"
 		{
+			"CTFGameRules::GetCaptureValueForPlayer"
+			{
+				"linux"		"154"
+				"windows"	"153"
+			}
 			"CBaseEntity::ShouldTransmit"
 			{
 				"linux"		"19"
 				"windows"	"18"
+			}
+			"CTFPlayer::GiveNamedItem"
+			{
+				"windows"	"475"
+				"linux"		"482"
 			}
 			"CTFWeaponBase::SendWeaponAnim"
 			{
@@ -96,6 +98,16 @@
 			{
 				"linux"		"323"
 				"windows"	"317"
+			}
+			"CTFStunBall::ApplyBallImpactEffectOnVictim"
+			{
+				"linux"		"260"
+				"windows"	"259"
+			}
+			"CTFStunBall::ShouldBallTouch"
+			{
+				"linux"		"262"
+				"windows"	"261"
 			}
 			"IPhysicsObject::AddVelocity"
 			{

@@ -60,28 +60,8 @@ methodmap CSeeldier < SaxtonHaleBase
 		int iTotalMinions = 3;
 		if (this.bSuperRage) iTotalMinions *= 2;
 		
-		float vecBossPos[3], vecBossAng[3];
-		GetClientAbsOrigin(this.iClient, vecBossPos);
-		GetClientAbsAngles(this.iClient, vecBossAng);
-		vecBossAng[0] = 0.0;
-		vecBossAng[2] = 0.0;
+		ArrayList aValidMinions = GetValidSummonableClients();
 		
-		ArrayList aValidMinions = new ArrayList();
-		for (int i = 1; i <= MaxClients; i++)
-		{
-			if (IsClientInGame(i)
-				&& GetClientTeam(i) > 1
-				&& !IsPlayerAlive(i)
-				&& Preferences_Get(i, halePreferences_Revival)
-				&& !Client_HasFlag(i, haleClientFlags_Punishment))
-			{
-				if (SaxtonHale_IsValidBoss(i, false)) continue; // Can't let dead boss ressurect
-				
-				aValidMinions.Push(i);
-			}
-		}
-		
-		aValidMinions.Sort(Sort_Random, Sort_Integer);
 		int iLength = aValidMinions.Length;
 		if (iLength < iTotalMinions)
 			iTotalMinions = iLength;
@@ -91,21 +71,19 @@ methodmap CSeeldier < SaxtonHaleBase
 		for (int i = 0; i < iLength; i++)
 		{
 			int iClient = aValidMinions.Get(i);
-
-			// Allow them to join the boss team
-			Client_AddFlag(iClient, haleClientFlags_BossTeam);
-			TF2_ForceTeamJoin(iClient, BOSS_TEAM);
 			
 			SaxtonHaleBase boss = SaxtonHaleBase(iClient);
+			if (boss.bValid)
+				boss.CallFunction("Destroy");
+
+			// Allow them to join the boss team
+			Client_AddFlag(iClient, ClientFlags_BossTeam);
+			TF2_ForceTeamJoin(iClient, TFTeam_Boss);
+			
 			boss.CallFunction("CreateBoss", "CSeeldierMinion");
 			TF2_RespawnPlayer(iClient);
 			
-			float vecVel[3];
-			vecVel[0] = GetRandomFloat(-200.0, 200.0);
-			vecVel[1] = GetRandomFloat(-200.0, 200.0);
-			vecVel[2] = GetRandomFloat(-200.0, 200.0);
-			
-			TeleportEntity(iClient, vecBossPos, vecBossAng, vecVel);
+			TF2_TeleportToClient(iClient, this.iClient);
 			TF2_AddCondition(iClient, TFCond_Ubercharged, 2.0);
 		}
 		
@@ -128,7 +106,7 @@ methodmap CSeeldier < SaxtonHaleBase
 		}
 	}
 	
-	public void GetSoundAbility (char[] sSound, int length, const char[] sType)
+	public void GetSoundAbility(char[] sSound, int length, const char[] sType)
 	{
 		if (strcmp(sType, "CBraveJump") == 0)
 			strcopy(sSound, length, SEELDIER_SEE_SND);
@@ -173,6 +151,7 @@ methodmap CSeeldierMinion < SaxtonHaleBase
 		boss.iHealthPerPlayer = 0;
 		boss.nClass = TFClass_Soldier;
 		boss.iMaxRageDamage = -1;
+		boss.flWeighDownTimer = -1.0;
 		boss.bMinion = true;
 		
 		EmitSoundToClient(boss.iClient, SOUND_ALERT);	//Alert player as he spawned
@@ -186,7 +165,7 @@ methodmap CSeeldierMinion < SaxtonHaleBase
 	public void OnSpawn()
 	{
 		char attribs[128];
-		Format(attribs, sizeof(attribs), "2 ; 1.25 ; 252 ; 0.5 ; 259 ; 1.0 ; 329 ; 0.65");
+		Format(attribs, sizeof(attribs), "2 ; 1.25 ; 252 ; 0.5 ; 259 ; 1.0");
 		int iWeapon = this.CallFunction("CreateWeapon", 195, "tf_weapon_shovel", 100, TFQual_Collectors, attribs);
 		if (iWeapon > MaxClients)
 			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);

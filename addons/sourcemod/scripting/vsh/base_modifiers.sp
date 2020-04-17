@@ -7,15 +7,8 @@ methodmap SaxtonHaleModifiers < SaxtonHaleBase
 		this.bModifiers = true;
 		strcopy(g_sClientModifiersType[this.iClient], sizeof(g_sClientModifiersType[]), type);
 		
-		char sFunction[256];
-		Format(sFunction, sizeof(sFunction), "%s.%s", type, type);
-		
-		Handle hPlugin = Function_GetPlugin(type);
-		Function func = GetFunctionByName(hPlugin, sFunction);
-		if (func != INVALID_FUNCTION)
+		if (this.StartFunction(type, type))
 		{
-			Call_StartFunction(hPlugin, func);
-			Call_PushCell(this);
 			Call_PushCell(this);
 			Call_Finish();
 		}
@@ -52,8 +45,13 @@ methodmap SaxtonHaleModifiers < SaxtonHaleBase
 	
 	public void Destroy()
 	{
-		this.bModifiers = false;
+		//Call destroy function now, since modifiers type get reset before called
+		if (this.StartFunction(g_sClientModifiersType[this.iClient], "Destroy"))
+			Call_Finish();
+		
 		strcopy(g_sClientModifiersType[this.iClient], sizeof(g_sClientModifiersType[]), "");
+		
+		this.bModifiers = false;
 		SetEntityRenderColor(this.iClient, 255, 255, 255, 255);
 	}
 };

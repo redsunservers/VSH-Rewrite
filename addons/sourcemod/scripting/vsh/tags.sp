@@ -1,6 +1,8 @@
 static int g_iBackstabCount[TF_MAXPLAYERS+1][TF_MAXPLAYERS+1];
 static int g_iClimbAmount[TF_MAXPLAYERS+1];
 static int g_iZombieUsed[TF_MAXPLAYERS+1];
+static float g_flUberBeforeHealingBuilding[TF_MAXPLAYERS+1];
+static float g_flDispenserBoost[TF_MAXPLAYERS+1];
 
 static bool g_bTagsLunchbox[TF_MAXPLAYERS+1];
 
@@ -18,6 +20,14 @@ enum
 	TagsAttrib_MAX,
 }
 
+enum TagsMath
+{
+	TagsMath_Set,
+	TagsMath_Add,
+	TagsMath_Multiply,
+	TagsMath_Damage
+}
+
 void Tags_ResetClient(int iClient)
 {
 	if (g_aAttrib == null)
@@ -25,11 +35,17 @@ void Tags_ResetClient(int iClient)
 	
 	g_iClimbAmount[iClient] = 0;
 	g_iZombieUsed[iClient] = 0;
+	g_flUberBeforeHealingBuilding[iClient] = 0.0;
+	g_flDispenserBoost[iClient] = 0.0;
+	
 	g_iTagsAirblastRequirement[iClient] = -1;
 	g_iTagsAirblastDamage[iClient] = 0;
 	
 	for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
 		g_iBackstabCount[iClient][iVictim] = 0;
+	
+	TF2Attrib_SetByDefIndex(iClient, ATTRIB_SENTRYATTACKSPEED, 1.0);
+	TF2Attrib_SetByDefIndex(iClient, ATTRIB_BIDERECTIONAL, 0.0);
 	
 	Hud_SetRageView(iClient, false);
 }
@@ -81,10 +97,105 @@ void Tags_OnThink(int iClient)
 				}
 			}
 		}
+		else if (StrContains(sClassname, "tf_weapon_medigun") == 0)
+		{
+			//Healing buildings, Set uber back to what it was when healing building
+			int iHealTarget = GetEntPropEnt(iSecondary, Prop_Send, "m_hHealingTarget");
+			
+			if (iHealTarget > -1 && GetEntProp(iSecondary, Prop_Send, "m_bChargeRelease"))
+				g_flUberBeforeHealingBuilding[iClient] = 0.0;
+			else if (iHealTarget > MaxClients)
+				SetEntPropFloat(iSecondary, Prop_Send, "m_flChargeLevel", g_flUberBeforeHealingBuilding[iClient]);
+			else
+				g_flUberBeforeHealingBuilding[iClient] = GetEntPropFloat(iSecondary, Prop_Send, "m_flChargeLevel");
+		}
+	}
+	
+	static int TELEPORTER_BODYGROUP_ARROW 	= (1 << 1);
+	
+	//Compiler no like this
+	const int iObjectType = view_as<int>(TFObjectType);
+	const int iObjectMode = view_as<int>(TFObjectMode);
+	int iBuilding[iObjectType][iObjectMode];	//Building index built from client
+	
+	TFTeam nTeam = TF2_GetClientTeam(iClient);
+	
+	//Get buildings that were healed
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == nTeam)
+		{
+			char sClassname[32];
+			int iMedigun = GetPlayerWeaponSlot(i, WeaponSlot_Secondary);
+			if (iMedigun <= MaxClients)
+				continue;
+			
+			GetEdictClassname(iMedigun, sClassname, sizeof(sClassname));
+			if (StrContains(sClassname, "tf_weapon_medigun") != 0)
+				continue;
+			
+			int iPatient = GetEntPropEnt(iMedigun, Prop_Send, "m_hHealingTarget");
+			if (iPatient > MaxClients)
+			{
+				char sPatientClassname[64];
+				GetEdictClassname(iPatient, sPatientClassname, sizeof(sPatientClassname));
+				if (StrContains(sPatientClassname, "obj_") == 0 && GetEntPropEnt(iPatient, Prop_Send, "m_hBuilder") == iClient)
+				{
+					TFObjectType nType = view_as<TFObjectType>(GetEntProp(iPatient, Prop_Send, "m_iObjectType"));
+					TFObjectType nMode = view_as<TFObjectType>(GetEntProp(iPatient, Prop_Send, "m_iObjectMode"));
+					iBuilding[nType][nMode] = iPatient;
+				}
+			}
+		}
+	}
+	
+	//Sentry
+	if (iBuilding[TFObject_Sentry][TFObjectMode_None] > MaxClients)
+		TF2Attrib_SetByDefIndex(iClient, ATTRIB_SENTRYATTACKSPEED, 0.5);
+	else
+		TF2Attrib_SetByDefIndex(iClient, ATTRIB_SENTRYATTACKSPEED, 1.0);
+	
+	//Dispenser
+	if (iBuilding[TFObject_Dispenser][TFObjectMode_None] > MaxClients && g_flDispenserBoost[iClient] <= GetGameTime())
+	{
+		int iMetal = GetEntProp(iBuilding[TFObject_Dispenser][TFObjectMode_None], Prop_Send, "m_iAmmoMetal");
+		if (iMetal < 400)
+		{
+			SetEntProp(iBuilding[TFObject_Dispenser][TFObjectMode_None], Prop_Send, "m_iAmmoMetal", iMetal+1);
+			g_flDispenserBoost[iClient] = GetGameTime()+0.25;
+		}
+	}
+	
+	//Teleporter
+	if (iBuilding[TFObject_Teleporter][TFObjectMode_Entrance] <= MaxClients && iBuilding[TFObject_Teleporter][TFObjectMode_Exit] <= MaxClients)
+	{
+		float flVal;
+		if (TF2_FindAttribute(iClient, ATTRIB_BIDERECTIONAL, flVal) && flVal >= 1.0)
+		{
+			TF2Attrib_SetByDefIndex(iClient, ATTRIB_BIDERECTIONAL, 0.0);
+			
+			int iTeleporterExit = TF2_GetBuilding(iClient, TFObject_Teleporter, TFObjectMode_Exit);
+			if (iTeleporterExit > MaxClients)
+			{
+				int iBodyGroups = GetEntProp(iTeleporterExit, Prop_Send, "m_nBody");
+				SetEntProp(iTeleporterExit, Prop_Send, "m_nBody", iBodyGroups &~ TELEPORTER_BODYGROUP_ARROW);
+			}
+		}
+	}
+	else
+	{
+		TF2Attrib_SetByDefIndex(iClient, ATTRIB_BIDERECTIONAL, 1.0);
+		
+		int iTeleporterExit = TF2_GetBuilding(iClient, TFObject_Teleporter, TFObjectMode_Exit);
+		if (iTeleporterExit > MaxClients)
+		{
+			int iBodyGroups = GetEntProp(iTeleporterExit, Prop_Send, "m_nBody");
+			SetEntProp(iTeleporterExit, Prop_Send, "m_nBody", iBodyGroups | TELEPORTER_BODYGROUP_ARROW);
+		}
 	}
 }
 
-void Tags_OnPlayerHurt(int iVictim, int iAttacker, int iDamage)
+void Tags_PlayerHurt(int iVictim, int iAttacker, int iDamage)
 {
 	if (SaxtonHale_IsValidBoss(iVictim) && SaxtonHale_IsValidAttack(iAttacker))
 	{
@@ -105,6 +216,33 @@ void Tags_OnPlayerHurt(int iVictim, int iAttacker, int iDamage)
 					if (iPrimary > MaxClients)
 						SetEntPropFloat(iPrimary, Prop_Send, "m_flNextSecondaryAttack", 0.0);	//Allow airblast to be used
 				}
+			}
+		}
+	}
+}
+
+void Tags_OnButton(int iClient, int &iButtons)
+{
+	//Prevent clients holding m2 while airblast in cooldown
+	if (iButtons & IN_ATTACK2 && g_iTagsAirblastRequirement[iClient] > 0 && g_iTagsAirblastDamage[iClient] < g_iTagsAirblastRequirement[iClient])
+	{
+		int iPrimary = TF2_GetItemInSlot(iClient, WeaponSlot_Primary);
+		int iActiveWep = GetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon");
+		if (iActiveWep > MaxClients && iPrimary == iActiveWep)
+			iButtons &= ~IN_ATTACK2;
+		
+		//Change the m_iWeaponState to a proper value after the airblast to prevent the visual bug
+		if (g_nTagsAirblastState[iClient] == FlamethrowerState_Airblast)
+		{
+			if (iButtons & IN_ATTACK)
+			{
+				g_nTagsAirblastState[iClient] = FlamethrowerState_Firing;
+				SetEntProp(iPrimary, Prop_Send, "m_iWeaponState", FlamethrowerState_Firing);
+			}
+			else
+			{
+				g_nTagsAirblastState[iClient] = FlamethrowerState_Idle;
+				SetEntProp(iPrimary, Prop_Send, "m_iWeaponState", FlamethrowerState_Idle);
 			}
 		}
 	}
@@ -186,41 +324,68 @@ public void Tags_SetEntProp(int iClient, int iTarget, TagsParams tParams)
 	tParams.GetString("type", sType, sizeof(sType));
 	tParams.GetString("prop", sProp, sizeof(sProp));
 	tParams.GetString("math", sMath, sizeof(sMath));
+	int iElement = tParams.GetInt("element", 0);
 	
 	if (StrEqual(sType, "int"))
 	{
 		int iValue = tParams.GetInt("value");
 		
-		if (StrEqual(sMath, "add"))
-			iValue += GetEntProp(iTarget, Prop_Send, sProp);
-		else if (StrEqual(sMath, "multiply"))
-			iValue *= GetEntProp(iTarget, Prop_Send, sProp);
-		else if (StrEqual(sMath, "damage"))
-			iValue = RoundToFloor(float(g_iPlayerDamage[iClient]) / float(iValue));
+		switch (Tags_GetMath(sMath))
+		{
+			case TagsMath_Add: iValue += GetEntProp(iTarget, Prop_Send, sProp);
+			case TagsMath_Multiply: iValue *= GetEntProp(iTarget, Prop_Send, sProp);
+			case TagsMath_Damage: iValue = RoundToFloor(float(g_iPlayerDamage[iClient]) / float(iValue));
+		}
 		
 		int iMin, iMax;
 		if (tParams.GetIntEx("min", iMin) && iValue < iMin) iValue = iMin;
 		if (tParams.GetIntEx("max", iMax) && iValue > iMax) iValue = iMax;
 		
-		SetEntProp(iTarget, Prop_Send, sProp, iValue);
+		SetEntProp(iTarget, Prop_Send, sProp, iValue, _, iElement);
 	}
 	else if (StrEqual(sType, "float"))
 	{
 		float flValue = tParams.GetFloat("value");
 		
-		if (StrEqual(sMath, "add"))
-			flValue += GetEntPropFloat(iTarget, Prop_Send, sProp);
-		else if (StrEqual(sMath, "multiply"))
-			flValue *= GetEntPropFloat(iTarget, Prop_Send, sProp);
-		else if (StrEqual(sMath, "damage"))
-			flValue = float(g_iPlayerDamage[iClient]) / flValue;
+		switch (Tags_GetMath(sMath))
+		{
+			case TagsMath_Add: flValue += GetEntPropFloat(iTarget, Prop_Send, sProp);
+			case TagsMath_Multiply: flValue *= GetEntPropFloat(iTarget, Prop_Send, sProp);
+			case TagsMath_Damage: flValue = float(g_iPlayerDamage[iClient]) / flValue;
+		}
 		
 		float flMin, flMax;
 		if (tParams.GetFloatEx("min", flMin) && flValue < flMin) flValue = flMin;
 		if (tParams.GetFloatEx("max", flMax) && flValue > flMax) flValue = flMax;
 		
-		SetEntPropFloat(iTarget, Prop_Send, sProp, flValue);
+		SetEntPropFloat(iTarget, Prop_Send, sProp, flValue, iElement);
 	}
+}
+
+public void Tags_SetAttrib(int iClient, int iTarget, TagsParams tParams)
+{
+	if (iTarget <= 0 || !IsValidEdict(iTarget))
+		return;
+	
+	int iIndex = tParams.GetInt("index");
+	float flValue = tParams.GetFloat("value");
+	
+	float flCurrentValue = 0.0;
+	TF2_FindAttribute(iTarget, iIndex, flCurrentValue);
+	
+	char sMath[32];
+	tParams.GetString("math", sMath, sizeof(sMath));
+	
+	switch (Tags_GetMath(sMath))
+	{
+		case TagsMath_Add: flValue += flCurrentValue;
+		case TagsMath_Multiply: flValue *= flCurrentValue;
+		case TagsMath_Damage: flValue = float(g_iPlayerDamage[iClient]) / flValue;
+	}
+	
+	//Set attrib
+	TF2Attrib_SetByDefIndex(iTarget, iIndex, flValue);
+	TF2Attrib_ClearCache(iTarget);
 }
 
 public void Tags_AddAttrib(int iClient, int iTarget, TagsParams tParams)
@@ -430,7 +595,11 @@ public void Tags_AddHealth(int iClient, int iTarget, TagsParams tParams)
 		return;
 	
 	int iAmount = tParams.GetInt("amount");
-	Client_AddHealth(iTarget, iAmount, iAmount);
+	float flMaxOverheal = tParams.GetFloat("overheal", 1.5);
+	
+	int iMaxHealth = SDK_GetMaxHealth(iTarget);
+	
+	Client_AddHealth(iTarget, iAmount, RoundToNearest(float(iMaxHealth) * (flMaxOverheal - 1.0)));
 }
 
 public void Tags_AddHealthBase(int iClient, int iTarget, TagsParams tParams)
@@ -439,9 +608,11 @@ public void Tags_AddHealthBase(int iClient, int iTarget, TagsParams tParams)
 		return;
 	
 	float flAmount = tParams.GetFloat("amount");
+	float flMaxOverheal = tParams.GetFloat("overheal", 1.5);
+	
 	int iMaxHealth = SDK_GetMaxHealth(iTarget);
 	
-	Client_AddHealth(iTarget, RoundToNearest(float(iMaxHealth) * flAmount), RoundToNearest(float(iMaxHealth) * 0.5));
+	Client_AddHealth(iTarget, RoundToNearest(float(iMaxHealth) * flAmount), RoundToNearest(float(iMaxHealth) * (flMaxOverheal - 1.0)));
 }
 
 public void Tags_DropHealth(int iClient, int iTarget, TagsParams tParams)
@@ -512,32 +683,16 @@ public void Tags_SummonZombie(int iClient, int iTarget, TagsParams tParams)
 		iMaxCount = iMin;
 	
 	//Collect list of valid players
-	int[] iDeadPlayers = new int[MaxClients];
-	int iLength = 0;
+	ArrayList aDeadPlayers = GetValidSummonableClients();
+	int iLength = aDeadPlayers.Length;
 	
-	for (int i = 1; i <= MaxClients; i++)
-	{
-		if (IsClientInGame(i)
-			&& GetClientTeam(i) > 1
-			&& !IsPlayerAlive(i)
-			&& Preferences_Get(i, halePreferences_Revival)
-			&& !Client_HasFlag(i, haleClientFlags_Punishment)
-			&& (!SaxtonHale_IsValidBoss(i, false)))
-		{
-			iDeadPlayers[iLength] = i;
-			iLength++;
-		}
-	}
-	
-	//Sort random
-	SortIntegers(iDeadPlayers, iLength, Sort_Random);
 	if (iMaxCount > iLength)
 		iMaxCount = iLength;
 	
 	//Loop and summon zombies
 	for (int i = 0; i < iMaxCount; i++)
 	{
-		int iZombie = iDeadPlayers[i];
+		int iZombie = aDeadPlayers.Get(i);
 		SaxtonHaleBase boss = SaxtonHaleBase(iZombie);
 		if (boss.bValid)
 			boss.CallFunction("Destroy");
@@ -548,17 +703,11 @@ public void Tags_SummonZombie(int iClient, int iTarget, TagsParams tParams)
 		boss.CallFunction("CreateBoss", "CZombie");
 		TF2_RespawnPlayer(iZombie);
 		
-		float vecPos[3];
-		GetClientAbsOrigin(iTarget, vecPos);
-		TeleportEntity(iZombie, vecPos, NULL_VECTOR, NULL_VECTOR);
-		
-		if (GetEntProp(iTarget, Prop_Send, "m_bDucking") || GetEntProp(iTarget, Prop_Send, "m_bDucked"))
-		{
-			SetEntProp(iZombie, Prop_Send, "m_bDucking", true);
-			SetEntProp(iZombie, Prop_Send, "m_bDucked", true);
-			SetEntityFlags(iZombie, GetEntityFlags(iZombie)|FL_DUCKING);
-		}
+		TF2_TeleportToClient(iZombie, iTarget);
 	}
+	
+	delete aDeadPlayers;
+	g_iZombieUsed[iTarget]++;
 }
 
 public void Tags_AddAmmo(int iClient, int iTarget, TagsParams tParams)
@@ -643,17 +792,25 @@ public void Tags_Airblast(int iClient, int iTarget, TagsParams tParams)
 
 public void Tags_Explode(int iClient, int iTarget, TagsParams tParams)
 {
-	if (iTarget <= 0 || !IsValidEdict(iTarget))
+	if (iTarget <= 0 || !IsValidEdict(iTarget) || GameRules_GetRoundState() == RoundState_Preround)
 		return;
 	
 	float flDamage = tParams.GetFloat("damage");
 	float flRadius = tParams.GetFloat("radius");
 	
+	//If no particle was specified, pick a generic explosion particle
+	char sParticle[MAXLEN_CONFIG_VALUE];
+	if (!tParams.GetString("particle", sParticle, sizeof(sParticle)))
+		Format(sParticle, sizeof(sParticle), "ExplosionCore_MidAir");
+	
+	//If no sounds were specified, pick a generic explosion sound. If multiple sounds were specified, pick a random one
+	char sSound[MAXLEN_CONFIG_VALUE];
+	if (!tParams.GetStringRandom("sound", sSound, sizeof(sSound)))
+		Format(sSound, sizeof(sSound), "weapons/airstrike_small_explosion_0%d.wav", GetRandomInt(1, 3));
+	
 	float vecPos[3];
 	GetEntPropVector(iTarget, Prop_Send, "m_vecOrigin", vecPos);
-	char sSound[255];
-	Format(sSound, sizeof(sSound), "weapons/airstrike_small_explosion_0%i.wav", GetRandomInt(1,3));
-	TF2_Explode(iClient, vecPos, flDamage, flRadius, "ExplosionCore_MidAir", sSound);
+	TF2_Explode(iClient, vecPos, flDamage, flRadius, sParticle, sSound);
 }
 
 public void Tags_KillWeapon(int iClient, int iTarget, TagsParams tParams)
@@ -673,6 +830,15 @@ public void Tags_KillWeapon(int iClient, int iTarget, TagsParams tParams)
 	}
 }
 
+public void Tags_ForceSuicide(int iClient, int iTarget, TagsParams tParams)
+{
+	if (iTarget <= 0 || iTarget > MaxClients || !IsClientInGame(iTarget) || !IsPlayerAlive(iTarget))
+		return;
+	
+	//Pretty straight-forward, isn't it?
+	ForcePlayerSuicide(iTarget);
+}
+
 //---------------------------
 
 public void Frame_AreaOfRange(DataPack data)
@@ -687,7 +853,7 @@ public void Frame_AreaOfRange(DataPack data)
 	{
 		float vecPos[3], vecTargetPos[3];
 		GetClientAbsOrigin(iClient, vecPos);
-		int iTeam = GetClientTeam(iClient);
+		TFTeam nTeam = TF2_GetClientTeam(iClient);
 
 		for (int i = 1; i <= MaxClients; i++)
 		{
@@ -704,8 +870,8 @@ public void Frame_AreaOfRange(DataPack data)
 		
 		int iColor[4];
 		iColor[3] = 255;
-		if (iTeam == TFTeam_Red) iColor[0] = 255;
-		else if (iTeam == TFTeam_Blue) iColor[2] = 255;
+		if (nTeam == TFTeam_Red) iColor[0] = 255;
+		else if (nTeam == TFTeam_Blue) iColor[2] = 255;
 		
 		//Ring effect
 		vecPos[2] += 8.0;
@@ -760,6 +926,20 @@ public Action Timer_ResetAttrib(Handle hTimer, DataPack data)
 			return;
 		}
 	}
+}
+
+stock TagsMath Tags_GetMath(const char[] sMath)
+{
+	if (StrEqual(sMath, "set"))
+		return TagsMath_Set;
+	else if (StrEqual(sMath, "add"))
+		return TagsMath_Add;
+	else if (StrEqual(sMath, "multiply"))
+		return TagsMath_Multiply;
+	else if (StrEqual(sMath, "damage"))
+		return TagsMath_Damage;
+	
+	return TagsMath_Set;
 }
 
 stock int Tags_GetBackstabCount(int iClient, int iVictim)
