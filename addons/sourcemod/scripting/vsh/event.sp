@@ -331,7 +331,7 @@ public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcas
 				if (Rank_IsEnabled())
 				{
 					int iRank = Rank_GetCurrent(iMainBoss) + 1;
-					PrintToChatAll("%s%s %N's rank has %sincreased%s to %s%d%s!", TEXT_TAG, TEXT_COLOR, iMainBoss, TEXT_POSITIVE, TEXT_COLOR, TEXT_DARK, iRank, TEXT_COLOR);
+					PrintToChatAll("%s %s%N%s's rank has %sincreased%s to %s%d%s!", TEXT_TAG, TEXT_DARK, iMainBoss, TEXT_COLOR, TEXT_POSITIVE, TEXT_COLOR, TEXT_DARK, iRank, TEXT_COLOR);
 					Rank_SetCurrent(iMainBoss, iRank, true);
 				}
 			}
@@ -356,7 +356,7 @@ public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcas
 					int iRank = Rank_GetCurrent(iMainBoss) - 1;
 					if (iRank >= 0)
 					{
-						PrintToChatAll("%s%s %N's rank has %sdecreased%s to %s%d%s!", TEXT_TAG, TEXT_COLOR, iMainBoss, TEXT_NEGATIVE, TEXT_COLOR, TEXT_DARK, iRank, TEXT_COLOR);
+						PrintToChatAll("%s %s%N%s's rank has %sdecreased%s to %s%d%s!", TEXT_TAG, TEXT_DARK, iMainBoss, TEXT_COLOR, TEXT_NEGATIVE, TEXT_COLOR, TEXT_DARK, iRank, TEXT_COLOR);
 						Rank_SetCurrent(iMainBoss, iRank, true);
 					}
 				}
