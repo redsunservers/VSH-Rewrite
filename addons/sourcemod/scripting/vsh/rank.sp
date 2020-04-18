@@ -65,7 +65,9 @@ stock void Rank_SetEnable(bool bValue)
 
 stock bool Rank_IsAllowed(int iClient)
 {
-	return Rank_GetCurrent(iClient) != -1 && g_iTotalAttackCount >= Rank_GetPlayerRequirement(iClient);
+	return Rank_GetCurrent(iClient) != -1								//Is his current rank loaded
+		&& (GetMainBoss() != iClient || !ClassLimit_IsSpecialRoundOn())	//If boss, is special round not on
+		&& g_iTotalAttackCount >= Rank_GetPlayerRequirement(iClient);	//Is there enough attack players
 }
 
 stock int Rank_GetPlayerRequirement(int iClient)

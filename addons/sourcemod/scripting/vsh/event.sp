@@ -284,12 +284,11 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 		SaxtonHaleNextBoss nextBoss = SaxtonHaleNextBoss(iNextPlayer);
 		
 		if (nextBoss.bSpecialClassRound)
-			Format(sFormat, sizeof(sFormat), "%sYour round will be a special class round.", sFormat);
-		
-		if (Rank_IsAllowed(iNextPlayer))
+			Format(sFormat, sizeof(sFormat), "%sYour round will be a special class round, rank %s%d%s will not change.", sFormat, TEXT_DARK, Rank_GetPlayerRequirement(iNextPlayer), TEXT_COLOR);
+		else if (Rank_IsAllowed(iNextPlayer))
 			Format(sFormat, sizeof(sFormat), "%sYou are currently at rank %s%d%s.", sFormat, TEXT_DARK, Rank_GetCurrent(iNextPlayer), TEXT_COLOR);
 		else
-			Format(sFormat, sizeof(sFormat), "%sYou need %s%d%s enemy players to have your rank %s%d%s counted.", sFormat, TEXT_DARK, Rank_GetPlayerRequirement(iNextPlayer), TEXT_COLOR, TEXT_DARK, Rank_GetCurrent(iNextPlayer), TEXT_COLOR);
+			Format(sFormat, sizeof(sFormat), "%sYou need %s%d%s enemy players to have your rank %s%d%s changed.", sFormat, TEXT_DARK, Rank_GetPlayerRequirement(iNextPlayer), TEXT_COLOR, TEXT_DARK, Rank_GetCurrent(iNextPlayer), TEXT_COLOR);
 		
 		Format(sFormat, sizeof(sFormat), "%s%s\n================", sFormat, TEXT_DARK);
 		PrintToChat(iNextPlayer, sFormat);
