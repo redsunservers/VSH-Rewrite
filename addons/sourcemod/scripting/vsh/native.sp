@@ -22,7 +22,8 @@ void Native_AskLoad()
 	CreateNative("SaxtonHale_ForceSpecialRound", Native_ForceSpecialRound);
 	CreateNative("SaxtonHale_SetPreferences", Native_SetPreferences);
 	CreateNative("SaxtonHale_SetQueue", Native_SetQueue);
-	CreateNative("SaxtonHale_SetWinstreak", Native_SetWinstreak);
+	CreateNative("SaxtonHale_SetRank", Native_SetRank);
+	CreateNative("SaxtonHale_SetWinstreak", Native_SetRank);
 	CreateNative("SaxtonHale_IsWinstreakEnable", Native_IsWinstreakEnable);
 	CreateNative("SaxtonHale_SetAdmin", Native_SetAdmin);
 	CreateNative("SaxtonHale_SetPunishment", Native_SetPunishment);
@@ -266,24 +267,24 @@ public any Native_SetQueue(Handle hPlugin, int iNumParams)
 	Queue_SetPlayerPoints(iClient, iQueue);
 }
 
-//SaxtonHale_SetWinstreak(int iClient, int iWinstreak);
-public any Native_SetWinstreak(Handle hPlugin, int iNumParams)
+//SaxtonHale_SetRank(int iClient, int iRank);
+public any Native_SetRank(Handle hPlugin, int iNumParams)
 {
 	int iClient = GetNativeCell(1);
-	int iWinstreak = GetNativeCell(2);
+	int iRank = GetNativeCell(2);
 	
 	if (iClient <= 0 || iClient > MaxClients)
 		ThrowNativeError(SP_ERROR_NATIVE, "Client index %d is invalid", iClient);
 	if (!IsClientConnected(iClient))
 		ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not connected", iClient);
 
-	Winstreak_SetCurrent(iClient, iWinstreak);
+	Rank_SetCurrent(iClient, iRank);
 }
 
 //bool SaxtonHale_IsWinstreakEnable();
 public any Native_IsWinstreakEnable(Handle hPlugin, int iNumParams)
 {
-	return Winstreak_IsEnabled();
+	return Rank_IsEnabled();
 }
 
 //SaxtonHale_SetAdmin(int iClient, bool bEnable);

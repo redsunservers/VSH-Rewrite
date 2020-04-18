@@ -22,7 +22,7 @@
 
 #include "include/saxtonhale.inc"
 
-#define PLUGIN_VERSION 					"1.3.2"
+#define PLUGIN_VERSION 					"1.3.3"
 #define PLUGIN_VERSION_REVISION 		"manual"
 
 #if !defined SP_MAX_EXEC_PARAMS
@@ -89,7 +89,7 @@ enum ClientFlags ( <<=1 )
 enum Preferences ( <<=1 )
 {
 	Preferences_PickAsBoss = 1,
-	Preferences_Winstreak,
+	Preferences_None1,
 	Preferences_MultiBoss,
 	Preferences_Music,
 	Preferences_Revival,
@@ -205,9 +205,9 @@ enum
 	CHANNEL_MAX = 6,
 };
 
-char g_strPreferencesName[][32] = {
+char g_strPreferencesName[][] = {
 	"Boss Selection",
-	"Winstreak",
+	"",
 	"Multi Boss",
 	"Music",
 	"Revival"
@@ -442,9 +442,9 @@ ConVar tf_arena_preround_time;
 #include "vsh/preferences.sp"
 #include "vsh/property.sp"
 #include "vsh/queue.sp"
+#include "vsh/rank.sp"
 #include "vsh/sdk.sp"
 #include "vsh/stocks.sp"
-#include "vsh/winstreak.sp"
 
 public Plugin myinfo =
 {
@@ -517,11 +517,11 @@ public void OnPluginStart()
 	FuncStack_Init();
 	Menu_Init();
 	NextBoss_Init();
+	Rank_Init();
 	SDK_Init();
 	TagsCall_Init();
 	TagsCore_Init();
 	TagsName_Init();
-	Winstreak_Init();
 	
 	SaxtonHaleFunction func;
 	
@@ -1193,7 +1193,7 @@ public void OnClientConnected(int iClient)
 	//-1 as unknown
 	Preferences_SetAll(iClient, -1);
 	Queue_SetPlayerPoints(iClient, -1);
-	Winstreak_SetCurrent(iClient, -1);
+	Rank_SetCurrent(iClient, -1);
 }
 
 public void OnClientPutInServer(int iClient)
@@ -1217,10 +1217,10 @@ public void OnClientDisconnect(int iClient)
 {
 	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 	
-	if (boss.bValid && !boss.bMinion && SaxtonHale_IsWinstreakEnable())
+	if (boss.bValid && !boss.bMinion && Rank_IsEnabled())
 	{
 		//Ur not going anywhere kiddo
-		Winstreak_SetCurrent(iClient, 0, true);
+		Rank_SetCurrent(iClient, Rank_GetCurrent(iClient) - 1, true);
 	}
 	
 	if (boss.bValid)
@@ -1238,7 +1238,7 @@ public void OnClientDisconnect(int iClient)
 	
 	Preferences_SetAll(iClient, -1);
 	Queue_SetPlayerPoints(iClient, -1);
-	Winstreak_SetCurrent(iClient, -1);
+	Rank_SetCurrent(iClient, -1);
 	
 	NextBoss_DeleteClient(iClient);
 }
