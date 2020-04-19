@@ -1,4 +1,7 @@
-#define MERASMUS_MODEL "models/bots/merasmus/merasmus.mdl"
+//Models made by bentorianbezil
+#define MERASMUS_MODEL "models/player/vsh_rewrite/merasmus/merasmus.mdl"
+#define MERASMUS_MODEL_WAND "models/player/vsh_rewrite/merasmus/c_merasmus_staff.mdl"
+#define MERASMUS_MODEL_ARMS "models/player/vsh_rewrite/merasmus/c_merasmus_arms.mdl"
 
 static char g_strMerasmusRoundStart[][] = {
 	"vo/halloween_merasmus/sf12_appears02.mp3",
@@ -79,6 +82,9 @@ static char g_strMerasmusBackStabbed[][] = {
 	"vo/halloween_merasmus/sf12_magic_backfire06.mp3"
 };
 
+static int g_iMerasmusModelWand = -1;
+static int g_iMerasmusModelArms = -1;
+
 methodmap CMerasmus < SaxtonHaleBase
 {
 	public CMerasmus(CMerasmus boss)
@@ -117,11 +123,23 @@ methodmap CMerasmus < SaxtonHaleBase
 	{
 		char attribs[128];
 		Format(attribs, sizeof(attribs), "2 ; 2.40 ; 252 ; 0.5 ; 259 ; 1.0");
-		int iWeapon = this.CallFunction("CreateWeapon", 880, "tf_weapon_club", 666, TFQual_Haunted, attribs);
+		int iWeapon = this.CallFunction("CreateWeapon", 3, "tf_weapon_club", 666, TFQual_Haunted, attribs);
 		if (iWeapon > MaxClients)
+		{
+			SetEntProp(iWeapon, Prop_Send, "m_nModelIndexOverrides", g_iMerasmusModelWand);
+			
+			int iViewModel = CreateViewModel(this.iClient, g_iMerasmusModelWand);
+			SetEntPropEnt(iViewModel, Prop_Send, "m_hWeaponAssociatedWith", iWeapon);
+			SetEntPropEnt(iWeapon, Prop_Send, "m_hExtraWearableViewModel", iViewModel);
+			
+			CreateViewModel(this.iClient, g_iMerasmusModelArms);
+			SetEntProp(GetEntPropEnt(this.iClient, Prop_Send, "m_hViewModel"), Prop_Send, "m_fEffects", EF_NODRAW);
+			
 			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
+		}
+		
 		/*
-		Fist attributes:
+		Wand attributes:
 		
 		2: damage bonus
 		252: reduction in push force taken from damage
@@ -133,6 +151,11 @@ methodmap CMerasmus < SaxtonHaleBase
 	public void GetModel(char[] sModel, int length)
 	{
 		strcopy(sModel, length, MERASMUS_MODEL);
+	}
+	
+	public void OnWeaponSwitchPost(int iWeapon)
+	{
+		SetEntProp(GetEntPropEnt(this.iClient, Prop_Send, "m_hViewModel"), Prop_Send, "m_fEffects", EF_NODRAW);
 	}
 	
 	public void GetSound(char[] sSound, int length, SaxtonHaleSound iSoundType)
@@ -175,6 +198,9 @@ methodmap CMerasmus < SaxtonHaleBase
 	public void Precache()
 	{
 		PrecacheModel(MERASMUS_MODEL);
+		g_iMerasmusModelWand = PrecacheModel(MERASMUS_MODEL_WAND);
+		g_iMerasmusModelArms = PrecacheModel(MERASMUS_MODEL_ARMS);
+		
 		for (int i = 0; i < sizeof(g_strMerasmusRoundStart); i++) PrecacheSound(g_strMerasmusRoundStart[i]);
 		for (int i = 0; i < sizeof(g_strMerasmusWin); i++) PrecacheSound(g_strMerasmusWin[i]);
 		for (int i = 0; i < sizeof(g_strMerasmusLose); i++) PrecacheSound(g_strMerasmusLose[i]);
@@ -193,6 +219,24 @@ methodmap CMerasmus < SaxtonHaleBase
 		for (int i = 0; i < sizeof(g_strMerasmusLastMan); i++) PrecacheSound(g_strMerasmusLastMan[i]);
 		for (int i = 0; i < sizeof(g_strMerasmusBackStabbed); i++) PrecacheSound(g_strMerasmusBackStabbed[i]);
 		
-	
+		AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/merasmus.mdl");
+		AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/merasmus.sw.vtx");
+		AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/merasmus.vvd");
+		AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/merasmus.phy");
+		AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/merasmus.dx80.vtx");
+		AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/merasmus.dx90.vtx");
+		
+		AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_staff.mdl");
+		AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_staff.sw.vtx");
+		AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_staff.vvd");
+		AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_staff.phy");
+		AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_staff.dx80.vtx");
+		AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_staff.dx90.vtx");
+		
+		AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_arms.sw.mdl");
+		AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_arms.sw.sw.vtx");
+		AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_arms.sw.vvd");
+		AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_arms.sw.dx80.vtx");
+		AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_arms.sw.dx90.vtx");
 	}
 };
