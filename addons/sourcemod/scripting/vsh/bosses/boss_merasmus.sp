@@ -148,6 +148,28 @@ methodmap CMerasmus < SaxtonHaleBase
 		*/
 	}
 	
+	public void OnPlayerKilled(Event event, int iVictim)
+	{
+		int iWeaponId = event.GetInt("weaponid");
+		
+		if(iWeaponId == TF_WEAPON_CLUB)
+		{
+			event.SetString("weapon_logclassname", "merasmus_decap");
+			event.SetString("weapon", "merasmus_decap");
+			event.SetInt("customkill", TF_CUSTOM_MERASMUS_DECAPITATION);
+		}
+	}
+	
+	public void OnDestroyObject(Event event)
+	{
+		int iWeaponId = event.GetInt("weaponid");
+		
+		if (iWeaponId == TF_WEAPON_CLUB)
+		{
+			event.SetString("weapon", "merasmus_decap");
+		}
+	}
+	
 	public void GetModel(char[] sModel, int length)
 	{
 		strcopy(sModel, length, MERASMUS_MODEL);
