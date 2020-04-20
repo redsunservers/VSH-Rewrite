@@ -8,7 +8,6 @@ static Handle g_hSDKGetMaxHealth;
 static Handle g_hSDKGetMaxAmmo;
 static Handle g_hSDKSendWeaponAnim;
 static Handle g_hSDKGetMaxClip;
-static Handle g_hSDKAddVelocity;
 static Handle g_hSDKRemoveWearable;
 static Handle g_hSDKGetEquippedWearable;
 static Handle g_hSDKEquipWearable;
@@ -110,15 +109,6 @@ void SDK_Init()
 	g_hSDKGetMaxClip = EndPrepSDKCall();
 	if (g_hSDKGetMaxClip == null)
 		LogMessage("Failed to create call: CTFWeaponBase::GetMaxClip1!");
-	
-	// This function is used to control entity velocity
-	StartPrepSDKCall(SDKCall_Raw);
-	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "IPhysicsObject::AddVelocity");
-	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_Pointer, VDECODE_FLAG_ALLOWNULL);
-	PrepSDKCall_AddParameter(SDKType_Vector, SDKPass_Pointer, VDECODE_FLAG_ALLOWNULL);
-	g_hSDKAddVelocity = EndPrepSDKCall();
-	if (g_hSDKAddVelocity == null)
-		LogMessage("Failed to create call: IPhysicsObject::AddVelocity!");
 	
 	//This call is used to give an owner to a building
 	StartPrepSDKCall(SDKCall_Player);
@@ -389,23 +379,6 @@ int SDK_GetMaxClip(int iWeapon)
 	if (g_hSDKGetMaxClip != null)
 		return SDKCall(g_hSDKGetMaxClip, iWeapon);
 	return -1;
-}
-
-void SDK_AddVelocity(int iEntity, float vecVelocity[3], float vecAngleVelocity[3])
-{
-	if (g_hSDKAddVelocity != null)
-	{
-		static int iOffset = -1;
-		if (iOffset == -1)
-			FindDataMapInfo(iEntity, "m_pPhysicsObject", _, _, iOffset);
-
-		if (iOffset != -1)
-		{
-			Address pPhysicsObj = view_as<Address>(LoadFromAddress(GetEntityAddress(iEntity)+view_as<Address>(iOffset), NumberType_Int32));
-			if (pPhysicsObj != Address_Null)
-				SDKCall(g_hSDKAddVelocity, pPhysicsObj, vecVelocity, vecAngleVelocity);
-		}
-	}
 }
 
 int SDK_GetMaxHealth(int iClient)
