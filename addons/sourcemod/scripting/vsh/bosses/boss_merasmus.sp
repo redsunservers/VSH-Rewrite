@@ -190,8 +190,9 @@ methodmap CMerasmus < SaxtonHaleBase
 	
 	public Action OnSoundPlayed(int clients[MAXPLAYERS], int &numClients, char sample[PLATFORM_MAX_PATH], int &channel, float &volume, int &level, int &pitch, int &flags, char soundEntry[PLATFORM_MAX_PATH], int &seed)
 	{
-		if (strncmp(sample, "vo/", 3) == 0)//Block voicelines
+		if (StrContains(sample, "vo/") == 0 && StrContains(sample, "vo/halloween_merasmus") != 0)//Block voicelines
 			return Plugin_Handled;
+		
 		return Plugin_Continue;
 	}
 	
