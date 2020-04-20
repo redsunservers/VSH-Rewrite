@@ -109,11 +109,6 @@
 				"linux"		"262"
 				"windows"	"261"
 			}
-			"IPhysicsObject::AddVelocity"
-			{
-				"linux"		"53"
-				"windows"	"52"
-			}
 		}
 	}
 }

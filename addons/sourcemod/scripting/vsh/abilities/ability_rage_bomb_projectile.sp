@@ -166,7 +166,6 @@ methodmap CBombProjectile < SaxtonHaleBase
 				
 				DispatchSpawn(iBomb);
 				
-				//SDK_AddVelocity(iBomb, vecVelocity, vecAngleVelocity);
 				TeleportEntity(iBomb, NULL_VECTOR, vecAngleVelocity, vecVelocity);
 				
 				SetEntPropFloat(iBomb, Prop_Data, "m_flDamage", this.flDamage);
