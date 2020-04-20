@@ -8,13 +8,6 @@ static char g_strMerasmusRoundStart[][] = {
 	"vo/halloween_merasmus/sf12_appears04.mp3",
 	"vo/halloween_merasmus/sf12_appears08.mp3",
 	"vo/halloween_merasmus/sf12_appears17.mp3"
-	
-	public void GetSoundAbility(char[] sSound, int length, const char[] sType)
-	{
-		if (strcmp(sType, "CWeaponSpells") == 0)
-			strcopy(sSound, length, g_strMerasmusJump[GetRandomInt(0,sizeof(g_strMerasmusJump)-1)]);
-	}
-	
 };
 
 static char g_strMerasmusWin[][] = {
@@ -193,6 +186,12 @@ methodmap CMerasmus < SaxtonHaleBase
 			case TFClass_Sniper: strcopy(sSound, length, g_strMerasmusKillSniper[GetRandomInt(0,sizeof(g_strMerasmusKillSniper)-1)]);
 			case TFClass_Spy: strcopy(sSound, length, g_strMerasmusKillSpy[GetRandomInt(0,sizeof(g_strMerasmusKillSpy)-1)]);
 		}
+	}
+
+	public void GetSoundAbility(char[] sSound, int length, const char[] sType)
+	{
+		if (strcmp(sType, "CWeaponSpells") == 0)
+			strcopy(sSound, length, g_strMerasmusJump[GetRandomInt(0,sizeof(g_strMerasmusJump)-1)]);
 	}
 	
 	public Action OnSoundPlayed(int clients[MAXPLAYERS], int &numClients, char sample[PLATFORM_MAX_PATH], int &channel, float &volume, int &level, int &pitch, int &flags, char soundEntry[PLATFORM_MAX_PATH], int &seed)
