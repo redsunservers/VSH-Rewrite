@@ -6,7 +6,9 @@ static float g_flBombProjectileRate[TF_MAXPLAYERS+1];
 static float g_flBombProjectileDuration[TF_MAXPLAYERS+1];
 static float g_flBombProjectileRadius[TF_MAXPLAYERS+1];
 static float g_flBombProjectileDamage[TF_MAXPLAYERS+1];
-static float g_flBombProjectileAngle[TF_MAXPLAYERS+1];
+static float g_flBombProjectileMaxDistance[TF_MAXPLAYERS+1];
+static float g_flBombProjectileMinHeight[TF_MAXPLAYERS+1];
+static float g_flBombProjectileMaxHeight[TF_MAXPLAYERS+1];
 
 methodmap CBombProjectile < SaxtonHaleBase
 {
@@ -62,11 +64,11 @@ methodmap CBombProjectile < SaxtonHaleBase
 	{
 		public set (float flVal)
 		{
-			g_flBombProjectileDamage[this.iClient] = flVal;
+			g_flBombProjectileMaxDistance[this.iClient] = flVal;
 		}
 		public get()
 		{
-			return g_flBombProjectileDamage[this.iClient];
+			return g_flBombProjectileMaxDistance[this.iClient];
 		}
 	}
 	
@@ -74,11 +76,11 @@ methodmap CBombProjectile < SaxtonHaleBase
 	{
 		public set (float flVal)
 		{
-			g_flBombProjectileDamage[this.iClient] = flVal;
+			g_flBombProjectileMinHeight[this.iClient] = flVal;
 		}
 		public get()
 		{
-			return g_flBombProjectileDamage[this.iClient];
+			return g_flBombProjectileMinHeight[this.iClient];
 		}
 	}
 	
@@ -86,26 +88,14 @@ methodmap CBombProjectile < SaxtonHaleBase
 	{
 		public set (float flVal)
 		{
-			g_flBombProjectileDamage[this.iClient] = flVal;
+			g_flBombProjectileMaxHeight[this.iClient] = flVal;
 		}
 		public get()
 		{
-			return g_flBombProjectileDamage[this.iClient];
+			return g_flBombProjectileMaxHeight[this.iClient];
 		}
 	}
-	
-	property float flMaxAngle
-	{
-		public set (float flVal)
-		{
-			g_flBombProjectileAngle[this.iClient] = flVal;
-		}
-		public get()
-		{
-			return g_flBombProjectileAngle[this.iClient];
-		}
-	}
-	
+		
 	public CBombProjectile(CBombProjectile ability)
 	{
 		g_flBombProjectileNext[ability.iClient] = 0.0;
@@ -114,11 +104,10 @@ methodmap CBombProjectile < SaxtonHaleBase
 		ability.flRate = 0.2;
 		ability.flDuration = 6.0;
 		ability.flRadius = 100.0;
-		ability.flDamage = 50.0;
+		ability.flDamage = 100.0;
 		ability.flMaxDistance = 600.0;
 		ability.flMinHeight = 500.0;
 		ability.flMaxHeight = 1000.0;
-		ability.flMaxAngle = 360.0;
 		
 		PrecacheModel(BOMBPROJECTILE_MODEL);
 	}
@@ -156,7 +145,7 @@ methodmap CBombProjectile < SaxtonHaleBase
 				
 				//Create random angle velocity
 				for (int i = 0; i < 3; i++)
-					vecAngleVelocity[i] = GetRandomFloat(-this.flMaxAngle, this.flMaxAngle);
+					vecAngleVelocity[i] = GetRandomFloat(0.0, 360.0);
 				
 				DispatchKeyValueVector(iBomb, "origin", vecOrigin);
 				SetEntityModel(iBomb, BOMBPROJECTILE_MODEL);
@@ -168,7 +157,7 @@ methodmap CBombProjectile < SaxtonHaleBase
 				
 				TeleportEntity(iBomb, NULL_VECTOR, vecAngleVelocity, vecVelocity);
 				
-				SetEntPropFloat(iBomb, Prop_Data, "m_flDamage", this.flDamage);
+				SetEntPropFloat(iBomb, Prop_Send, "m_flDamage", this.flDamage);
 				SDK_SetFuseTime(iBomb, GetGameTime() + 2.0);	//Fuse time
 				SetEntProp(iBomb, Prop_Send, "m_CollisionGroup", 24);
 			}
