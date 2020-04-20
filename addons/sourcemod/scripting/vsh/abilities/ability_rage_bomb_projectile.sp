@@ -118,7 +118,7 @@ methodmap CBombProjectile < SaxtonHaleBase
 		ability.flMaxDistance = 600.0;
 		ability.flMinHeight = 500.0;
 		ability.flMaxHeight = 1000.0;
-		ability.flMaxAngle = 500.0;
+		ability.flMaxAngle = 360.0;
 		
 		PrecacheModel(BOMBPROJECTILE_MODEL);
 	}
@@ -166,7 +166,8 @@ methodmap CBombProjectile < SaxtonHaleBase
 				
 				DispatchSpawn(iBomb);
 				
-				SDK_AddVelocity(iBomb, vecVelocity, vecAngleVelocity);
+				//SDK_AddVelocity(iBomb, vecVelocity, vecAngleVelocity);
+				TeleportEntity(iBomb, NULL_VECTOR, vecAngleVelocity, vecVelocity);
 				
 				SetEntPropFloat(iBomb, Prop_Data, "m_flDamage", this.flDamage);
 				SDK_SetFuseTime(iBomb, GetGameTime() + 2.0);	//Fuse time
