@@ -95,7 +95,6 @@ methodmap CMerasmus < SaxtonHaleBase
 		weaponSpells.flRageRequirement = 0.0;
 		weaponSpells.flCooldown = 3.0;
 		
-		OnRage
 		CRageAddCond rageCond = boss.CallFunction("CreateAbility", "CRageAddCond");
 		rageCond.flrageCondDuration = 8.0;
 		rageCond.AddCond(TFCond_UberchargedCanteen);
