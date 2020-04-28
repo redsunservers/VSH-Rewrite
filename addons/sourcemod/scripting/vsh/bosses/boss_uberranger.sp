@@ -94,11 +94,6 @@ methodmap CUberRanger < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- 200%% Rage: extends über duration to 8 seconds and summons 3 Über Rangers");
 	}
 	
-	public bool IsBossHidden()
-	{
-		return true;
-	}
-	
 	public void OnSpawn()
 	{
 		//Bosses and minions can't be overhealed, so a -max overheal attribute for the Medigun isn't needed

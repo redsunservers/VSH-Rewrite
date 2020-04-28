@@ -95,7 +95,7 @@ methodmap CRageHop < SaxtonHaleBase
 		ability.flRageHopMaxHeight = 500.0;
 		ability.flRageHopMaxDistance = 4.5;
 		
-		ability.flBombDamage = 50.0;
+		ability.flBombDamage = 100.0;
 		ability.flBombRadius = 225.0;
 		
 		ability.flDuration = 10.0;
