@@ -79,11 +79,6 @@ methodmap CBonkBoy < SaxtonHaleBase
 		g_bBonkBoyRage[boss.iClient] = false;
 	}
 	
-	public bool IsBossHidden()
-	{
-		return true;
-	}
-	
 	public void GetBossName(char[] sName, int length)
 	{
 		strcopy(sName, length, "Bonk Boy");
