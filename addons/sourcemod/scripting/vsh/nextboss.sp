@@ -7,7 +7,7 @@ void NextBoss_Init()
 	g_aNextBoss = new ArrayList(sizeof(NextBoss));
 	g_aNextBossMulti = new ArrayList();
 	
-	g_ConfigConvar.Create("vsh_boss_chance_saxton", "0.25", "% chance for next boss to be Saxton Hale from normal bosses pool (0.0 - 1.0)", _, true, 0.0, true, 1.0);
+	g_ConfigConvar.Create("vsh_boss_chance_saxton", "0.15", "% chance for next boss to be Saxton Hale from normal bosses pool (0.0 - 1.0)", _, true, 0.0, true, 1.0);
 	g_ConfigConvar.Create("vsh_boss_chance_multi", "0.20", "% chance for next boss to be multiple bosses (0.0 - 1.0)", _, true, 0.0, true, 1.0);
 	g_ConfigConvar.Create("vsh_boss_chance_modifiers", "0.15", "% chance for next boss to have random modifiers (0.0 - 1.0)", _, true, 0.0, true, 1.0);
 }
