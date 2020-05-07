@@ -31,7 +31,7 @@ methodmap CModifiersElectric < SaxtonHaleBase
 	
 	public Action OnAttackDamage(int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 	{		
-		if (g_bElectricDamage[victim] || TF2_IsUbercharged(victim))
+		if (damage < 3.0 || g_bElectricDamage[victim] || TF2_IsUbercharged(victim))
 			return Plugin_Continue;
 		
 		TFTeam nTeam = TF2_GetClientTeam(victim);

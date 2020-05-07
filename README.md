@@ -7,8 +7,8 @@ VSH-Rewrite started its development by [Kenzzer](https://github.com/Kenzzer) at 
 - +10 bosses all balanced with unique abilities, and can be expanded further from sub-plugins
 - +5 modifiers that changes boss's ability/effect upside and downside to change gameplay, and can be expanded further from sub-plugins
 - Config with +80 rebalanced TF2 weapons to keep VSH gamemode balanced for all class and weapons
-- Dome replaced from capture point. As time passes in gameplay, map gets smaller and smaller to keep gameplay not stale
-- Winstreak. Everytime boss wins a round, health pool gets smaller until a single boss death to reset all progress, for players to take the challenge
+- Instead of team winning from control point, dome is spawned to damage opposing team. As time passes in gameplay, dome gets smaller to kill any stallers
+- Rank, increases and decreases on every boss win and death. The bigger the rank, the smaller the health pool, keeping skilled bosses a challenge to win with low health
 
 ## Builds
 All builds can be found [here](https://github.com/redsunservers/VSH-Rewrite/actions?query=workflow%3APackage+branch%3Amaster).

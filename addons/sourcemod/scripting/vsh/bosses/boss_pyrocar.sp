@@ -64,16 +64,11 @@ methodmap CPyroCar < SaxtonHaleBase
 		boss.CallFunction("CreateAbility", "CRageHop");
 		boss.CallFunction("CreateAbility", "CForceForward");
 		
-		boss.iBaseHealth = 700;
-		boss.iHealthPerPlayer = 750;
+		boss.iBaseHealth = 800;
+		boss.iHealthPerPlayer = 800;
 		boss.nClass = TFClass_Pyro;
 		boss.flSpeed = 345.0;
 		boss.iMaxRageDamage = 2000;
-	}
-	
-	public bool IsBossHidden()
-	{
-		return true;
 	}
 	
 	public void GetBossName(char[] sName, int length)
@@ -83,7 +78,7 @@ methodmap CPyroCar < SaxtonHaleBase
 	
 	public void GetBossInfo(char[] sInfo, int length)
 	{
-		StrCat(sInfo, length, "\nHealth: Low");
+		StrCat(sInfo, length, "\nHealth: Medium");
 		StrCat(sInfo, length, "\nYou are forced to go forward");
 		StrCat(sInfo, length, "\nYou are slower than usual bosses");
 		StrCat(sInfo, length, "\n ");
@@ -186,5 +181,4 @@ methodmap CPyroCar < SaxtonHaleBase
 		for (int i = 0; i < sizeof(g_strPyrocarKillBuilding); i++) PrepareSound(g_strPyrocarKillBuilding[i]);
 		for (int i = 0; i < sizeof(g_strPyrocarLastMan); i++) PrepareSound(g_strPyrocarLastMan[i]);
 	}
-	
 };

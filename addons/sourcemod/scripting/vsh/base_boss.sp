@@ -37,11 +37,6 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 
 		strcopy(g_sClientBossType[this.iClient], sizeof(g_sClientBossType[]), type);
 
-		if (g_hClientBossModelTimer[this.iClient] != null)
-			delete g_hClientBossModelTimer[this.iClient];
-
-		g_hClientBossModelTimer[this.iClient] = CreateTimer(0.2, Timer_ApplyBossModel, this.iClient, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
-
 		g_sClientBossRageMusic[this.iClient] = "";
 		g_bClientBossWeighDownForce[this.iClient] = false;
 		g_flClientBossWeighDownTimer[this.iClient] = 0.0;
@@ -55,24 +50,27 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 			Call_Finish();
 		}
 		
+		if (g_hClientBossModelTimer[this.iClient] != null)
+			delete g_hClientBossModelTimer[this.iClient];
+		
+		if (this.bModel)
+			g_hClientBossModelTimer[this.iClient] = CreateTimer(0.2, Timer_ApplyBossModel, this.iClient, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
+		
 		if (TF2_GetPlayerClass(this.iClient) == this.nClass)
 		{
 			//Player is about to play as same class unchanged, strip weapon and cosmetics for GiveNamedItem to regenerate
 			
-			int iEntity = MaxClients+1;
-			while ((iEntity = FindEntityByClassname(iEntity, "tf_weapon_*")) > MaxClients)
-				if (GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == this.iClient || GetEntPropEnt(iEntity, Prop_Send, "moveparent") == this.iClient)
-					AcceptEntityInput(iEntity, "Kill");
+			TF2_RemoveAllWeapons(this.iClient);
 			
-			iEntity = MaxClients+1;
+			int iEntity = MaxClients+1;
 			while ((iEntity = FindEntityByClassname(iEntity, "tf_wearable*")) > MaxClients)
 				if (GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == this.iClient || GetEntPropEnt(iEntity, Prop_Send, "moveparent") == this.iClient)
-					AcceptEntityInput(iEntity, "Kill");
+					RemoveEntity(iEntity);
 			
 			iEntity = MaxClients+1;
 			while ((iEntity = FindEntityByClassname(iEntity, "tf_powerup_bottle")) > MaxClients)
 				if (GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == this.iClient || GetEntPropEnt(iEntity, Prop_Send, "moveparent") == this.iClient)
-					AcceptEntityInput(iEntity, "Kill");
+					RemoveEntity(iEntity);
 		}
 		else if (this.nClass != TFClass_Unknown)
 		{
@@ -497,8 +495,11 @@ public Action Crossbow_OnTouch(int iEntity, int iToucher)
 		return Plugin_Continue;
 	
 	int iClient = GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity");
+	if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient))
+		return Plugin_Continue;
+	
 	SaxtonHaleBase boss = SaxtonHaleBase(iToucher);
-	if (!boss.bCanBeHealed && IsClientInGame(iClient) && GetClientTeam(iClient) == GetClientTeam(iToucher))
+	if (!boss.bCanBeHealed && GetClientTeam(iClient) == GetClientTeam(iToucher))
 	{
 		//Dont allow crossbows heal boss, kill arrow
 		AcceptEntityInput(iEntity, "Kill");

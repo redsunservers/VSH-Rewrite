@@ -101,7 +101,7 @@ public MRESReturn WeaponBall_BallImpact(int iEntity, Handle hParams)
 	g_flWeaponBallStunTime[iVictim] = flTime;
 	g_iWeaponBallThrower[iVictim] = iThrower;
 	
-	SDKHook(iVictim, SDKHook_OnTakeDamage, WeaponBall_OnTakeDamage);
+	SDKHook(iVictim, SDKHook_OnTakeDamageAlive, WeaponBall_OnTakeDamage);
 	HookEvent("player_death", WeaponBall_PlayerDeath, EventHookMode_Pre);
 	RequestFrame(WeaponBall_UnhookBallDamage, GetClientUserId(iVictim));
 }
@@ -132,7 +132,7 @@ public MRESReturn WeaponBall_BallTouch(int iEntity, Handle hReturn, Handle hPara
 		return;
 	
 	//Deal damage
-	SDKHooks_TakeDamage(iBuilding, iThrower, iThrower, flTime * 120.0);
+	SDKHooks_TakeDamage(iBuilding, iThrower, iThrower, flTime * 120.0, DMG_CRIT);
 	
 	//Stun building
 	TF2_StunBuilding(iBuilding, flTime * 8.0);
@@ -175,9 +175,7 @@ public Action WeaponBall_OnTakeDamage(int victim, int &attacker, int &inflictor,
 		if (g_flWeaponBallStunTime[victim] > 0.85)
 		{
 			//Home run baby
-			damagetype |= DMG_CRIT;
-			damage = 1337.0 / 3.0;
-			
+			damage = 1337.0;
 			TF2_StunPlayer(victim, 10.0, _, TF_STUNFLAGS_BIGBONK, attacker);
 		}
 		else if (g_flWeaponBallStunTime[victim] > 0.10)
@@ -207,7 +205,7 @@ public void WeaponBall_UnhookBallDamage(int iUserId)
 {
 	int iClient = GetClientOfUserId(iUserId);
 	if (0 < iClient <= MaxClients && IsClientInGame(iClient))
-		SDKUnhook(iClient, SDKHook_OnTakeDamage, WeaponBall_OnTakeDamage);
+		SDKUnhook(iClient, SDKHook_OnTakeDamageAlive, WeaponBall_OnTakeDamage);
 	
 	UnhookEvent("player_death", WeaponBall_PlayerDeath, EventHookMode_Pre);
 }

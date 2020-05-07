@@ -366,49 +366,7 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 			}
 		}
 	}
-	/*
-	public void Think()
-	{
-		//Ring effect, only show to whoever in boss team or spectators
-		
-		if (GetClientTeam(this.iClient) != TFTeam_Boss && IsPlayerAlive(this.iClient))
-		{
-			float vecPos[3];
-			GetClientAbsOrigin(this.iClient, vecPos);
-			int iTeam = GetClientTeam(this.iClient);
-			
-			int iColor[4];
-			iColor[3] = 255;
-			if (iTeam == TFTeam_Blue) iColor[0] = 255;
-			else if (iTeam == TFTeam_Red) iColor[2] = 255;
-			
-			int iClients[MAXPLAYERS];
-			int iLength = 0;
-			for (int iClient = 1; iClient <= MaxClients; iClient++)
-			{
-				if (IsClientInGame(iClient))
-				{
-					char sBossType[256];
-					if (g_clientBoss[iClient].IsValid())
-						g_clientBoss[iClient].GetType(sBossType, sizeof(sBossType));
-					
-					if (GetClientTeam(iClient) != ATTACK_TEAM || !IsPlayerAlive(iClient) || StrEqual(sBossType, "CAnnouncerMinion"))
-					{
-						iClients[iLength] = iClient;
-						iLength++;
-					}
-				}
-			}
-			
-			for (int i = 1; i <= 3; i++)
-			{
-				vecPos[2] += 18.0;
-				TE_SetupBeamRingPoint(vecPos, 40.0, 41.0, g_iSpritesLaserbeam, g_iSpritesGlow, 0, 10, 0.1, 3.0, 0.0, iColor, 10, 0);
-				TE_Send(iClients, iLength);
-			}
-		}
-	}
-	*/
+	
 	public void Destroy()
 	{
 		g_hAnnouncerMinionTimer[this.iClient] = null;
@@ -446,6 +404,7 @@ public Action Timer_AnnouncerChangeTeam(Handle hTimer, int iClient)
 	
 	PrintCenterText(iClient, "YOU'RE NOW IN BOSS TEAM");
 	Client_AddFlag(iClient, ClientFlags_BossTeam);
+	
 	SetEntProp(iClient, Prop_Send, "m_lifeState", LifeState_Dead);
 	TF2_ChangeClientTeam(iClient, TFTeam_Boss);
 	SetEntProp(iClient, Prop_Send, "m_lifeState", LifeState_Alive);
@@ -457,56 +416,39 @@ public Action Timer_AnnouncerChangeTeam(Handle hTimer, int iClient)
 		if (GetEntPropEnt(iBuilding, Prop_Send, "m_hBuilder") == iClient)
 			SDK_AddObject(iClient, iBuilding);
 	}
-
-	//Restore weapons, health, ammo and cosmetics after changing teams
-	TF2_RegeneratePlayer(iClient);
 	
-	/*
-	//Reset attributes for every weapons, to not include any extras from config
+	//Update wearable teams
+	int iEntity = MaxClients+1;
+	while ((iEntity = FindEntityByClassname(iEntity, "tf_wearable*")) > MaxClients)
+		if (GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == iClient || GetEntPropEnt(iEntity, Prop_Send, "moveparent") == iClient)
+			SetEntProp(iEntity, Prop_Send, "m_iTeamNum", view_as<int>(TFTeam_Boss));
+	
 	for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
 	{
 		int iWeapon = TF2_GetItemInSlot(iClient, iSlot);
-		if (IsValidEdict(iWeapon))
+		if (iWeapon > MaxClients)
 		{
-			TF2Attrib_RemoveAll(iWeapon);
+			//Change weapon teams
+			SetEntProp(iWeapon, Prop_Send, "m_iTeamNum", view_as<int>(TFTeam_Boss));
 			
-			int iIndex = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
-			ArrayList aAttrib = TF2Econ_GetItemStaticAttributes(iIndex);
+			//Remove attribs added from config, attribs added from TF2 itself is kept
+			int iAttribIndex[MAX_ATTRIBUTES_SENT];
+			int iCount = TF2Attrib_ListDefIndices(iWeapon, iAttribIndex, sizeof(iAttribIndex));
 			
-			int iLength = aAttrib.Length;
-			for (int i = 0; i < iLength; i++)
-				TF2Attrib_SetByDefIndex(iWeapon, aAttrib.Get(i, 0), aAttrib.Get(i, 1));	//0 is attrib index, 1 is value
+			for (int i = 0; i < iCount; i++)
+				TF2Attrib_RemoveByDefIndex(iWeapon, iAttribIndex[i]);
 			
 			TF2Attrib_ClearCache(iWeapon);
-			delete aAttrib;
 		}
 	}
-	*/
 	
-	int iWeapon = GetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon");
-	if (iWeapon > MaxClients)
-	{
-		char sClassname[256];
-		GetEntityClassname(iWeapon, sClassname, sizeof(sClassname));
-		
-		//Minigun bug with status during team switch while attacking
-		if (StrEqual(sClassname, "tf_weapon_minigun"))
-		{
-			if (GetEntProp(iWeapon, Prop_Send, "m_iWeaponState") == view_as<int>(MinigunState_Shooting)
-				|| GetEntProp(iWeapon, Prop_Send, "m_iWeaponState") == view_as<int>(MinigunState_Spinning))
-			{
-				SetEntProp(iWeapon, Prop_Send, "m_iWeaponState", MinigunState_Idle);
-			}
-		}
-	}
+	//Refill health
+	SetEntProp(iClient, Prop_Send, "m_iHealth", SDK_GetMaxHealth(iClient));
 	
 	//Allow sentries to target this fella from now on
 	SetEntityFlags(iClient, (GetEntityFlags(iClient) & ~FL_NOTARGET));
 	
-	//Dont give health overheal
-	SetEntProp(iClient, Prop_Send, "m_iHealth", SDK_GetMaxHealth(iClient));
-	
-	//TF2_AddCondition(iClient, TFCond_Buffed, TFCondDuration_Infinite);
+	//Give crit resistance 
 	TF2_AddCondition(iClient, TFCond_DefenseBuffed, TFCondDuration_Infinite);
 }
 
