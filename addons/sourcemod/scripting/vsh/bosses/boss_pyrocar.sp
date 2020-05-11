@@ -67,8 +67,8 @@ methodmap CPyroCar < SaxtonHaleBase
 		boss.iBaseHealth = 800;
 		boss.iHealthPerPlayer = 800;
 		boss.nClass = TFClass_Pyro;
-		boss.flSpeed = 345.0;
-		boss.iMaxRageDamage = 2000;
+		boss.flSpeed = 360.0;
+		boss.iMaxRageDamage = 2500;
 	}
 	
 	public void GetBossName(char[] sName, int length)
@@ -81,19 +81,20 @@ methodmap CPyroCar < SaxtonHaleBase
 		StrCat(sInfo, length, "\nHealth: Medium");
 		StrCat(sInfo, length, "\nYou are forced to go forward");
 		StrCat(sInfo, length, "\nYou are slower than usual bosses");
+		StrCat(sInfo, length, "\nYour flamethrower has a shorter range");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nAbilities");
 		StrCat(sInfo, length, "\n- Float Jump, you go faster as you levitate upwards");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- Hops repeatedly dealing explosive fire damage near the impact for 10 seconds");
-		StrCat(sInfo, length, "\n- 200%% Rage: Increases explosion damage and extends the duration to 15 seconds");
+		StrCat(sInfo, length, "\n- Hops repeatedly dealing explosive fire damage near the impact for 8 seconds");
+		StrCat(sInfo, length, "\n- 200%% Rage: Increases explosion damage and extends the duration to 12 seconds");
 	}
 	
 	public void OnSpawn()
 	{
-		char attribs[128];
-		Format(attribs, sizeof(attribs), "24 ; 1.0 ; 59 ; 1.0 ; 112 ; 1.0 ; 181 ; 1.0 ; 356 ; 1.0 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 2450 ; 862 ; 0.6 ; 863 ; 0.1 ; 865 ; 50 ; 259 ; 1.0 ; 356 ; 1.0 ; 214 ; %d", GetRandomInt(9999, 99999));
+		char attribs[256];
+		Format(attribs, sizeof(attribs), "2 ; 2.0 ; 24 ; 1.0 ; 59 ; 1.0 ; 72 ; 0.25 ; 112 ; 1.0 ; 181 ; 1.0 ; 259 ; 1.0 ; 356 ; 1.0 ; 797 ; 1.0 ; 828 ; 0.1 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 300 ; 862 ; 0.4 ; 863 ; 0.01 ; 865 ; 85 ; 214 ; %d", GetRandomInt(9999, 99999));
 		int iWeapon = this.CallFunction("CreateWeapon", 40, "tf_weapon_flamethrower", 100, TFQual_Strange, attribs);
 		if (iWeapon > MaxClients)
 			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
@@ -101,14 +102,18 @@ methodmap CPyroCar < SaxtonHaleBase
 		/*
 		Backburner attributes:
 		
+		2: damage bonus
 		24: allow crits from behind
 		59: self dmg push force decreased
+		72: weapon burn dmg reduced
 		112: ammo regen
 		181: no self blast dmg
 		214: kill_eater
 		252: reduction in push force taken from damage
 		259: Deals 3x falling damage to the player you land on
 		356: No airblast
+		797: dmg pierces resists absorbs
+		828: afterburn duration penalty
 		839: flame spread degree
 		841: flame gravity
 		843: flame drag

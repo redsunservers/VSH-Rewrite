@@ -5,6 +5,7 @@ static float g_flFloatJumpHeightMultiplier[TF_MAXPLAYERS+1];
 static float g_flJumpCooldown[TF_MAXPLAYERS+1];
 static float g_flJumpCooldownWait[TF_MAXPLAYERS+1];
 static float g_flFloatEndTime[TF_MAXPLAYERS+1];
+static float g_flFlightTime[TF_MAXPLAYERS+1];
 static bool g_bFloatJumpHoldingChargeButton[TF_MAXPLAYERS+1];
 
 methodmap CFloatJump < SaxtonHaleBase
@@ -71,6 +72,18 @@ methodmap CFloatJump < SaxtonHaleBase
 		}
 	}
 	
+	property float flFlightTime
+	{
+		public get()
+		{
+			return g_flFlightTime[this.iClient];
+		}
+		public set(float val)
+		{
+			g_flFlightTime[this.iClient] = val;
+		}
+	}
+	
 	public CFloatJump(CFloatJump ability)
 	{
 		g_iFloatJumpCharge[ability.iClient] = 0;
@@ -79,10 +92,11 @@ methodmap CFloatJump < SaxtonHaleBase
 		g_flFloatEndTime[ability.iClient] = 0.0;
 		
 		//Default values, these can be changed if needed
-		ability.iMaxJumpCharge = 160;
+		ability.iMaxJumpCharge = 200;
 		ability.iJumpChargeBuild = 4;
-		ability.flHeightMultiplier = 4.0;
-		ability.flCooldown = 8.0;
+		ability.flHeightMultiplier = 8.5;
+		ability.flCooldown = 7.0;
+		ability.flFlightTime = 1.5;
 	}
 	
 	public void OnThink()
@@ -147,15 +161,17 @@ methodmap CFloatJump < SaxtonHaleBase
 			
 			g_bFloatJumpHoldingChargeButton[this.iClient] = false;
 			
-			if ((g_flJumpCooldownWait[this.iClient] != 0.0 && g_flJumpCooldownWait[this.iClient] > GetGameTime()) || this.iJumpCharge < this.iMaxJumpCharge) return;
+			if ((g_flJumpCooldownWait[this.iClient] != 0.0 && g_flJumpCooldownWait[this.iClient] > GetGameTime()) || this.iJumpCharge < 1) return;
 			
-			g_flJumpCooldownWait[this.iClient] = GetGameTime()+this.flCooldown;
+			float flCooldownTime = (this.flCooldown*(float(this.iJumpCharge)/float(this.iMaxJumpCharge)));
+			if (flCooldownTime < 2.5) flCooldownTime = 2.5;
+			g_flJumpCooldownWait[this.iClient] = GetGameTime()+flCooldownTime;
 			
-			g_flFloatEndTime[this.iClient] = GetGameTime() + 2.0;
+			g_flFloatEndTime[this.iClient] = GetGameTime() + this.flFlightTime * (float(this.iJumpCharge)/float(this.iMaxJumpCharge));
 			this.iJumpCharge = 0;
 			
-			TF2_AddCondition(this.iClient, TFCond_SwimmingNoEffects, 2.0);
-			TF2_AddCondition(this.iClient, TFCond_TeleportedGlow, 3.5);
+			TF2_AddCondition(this.iClient, TFCond_SwimmingNoEffects, this.flFlightTime);
+			TF2_AddCondition(this.iClient, TFCond_TeleportedGlow, this.flFlightTime * 1.75);
 			
 			char sSound[PLATFORM_MAX_PATH];
 			this.CallFunction("GetSoundAbility", sSound, sizeof(sSound), "CFloatJump");
