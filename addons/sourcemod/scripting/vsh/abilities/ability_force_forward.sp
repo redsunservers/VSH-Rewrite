@@ -51,17 +51,14 @@ methodmap CForceForward < SaxtonHaleBase
 		ability.flSpeedAbilityMultValue = 1.5;
 		
 		int iEntity = 0;
-		while(iEntity > -1)
+		while ((iEntity = FindEntityByClassname(iEntity, "trigger_push")) > MaxClients)
 		{
-			iEntity = FindEntityByClassname(iEntity, "trigger_push");
 			SDKHook(iEntity, SDKHook_StartTouch, OnCatapultStart);
 			SDKHook(iEntity, SDKHook_EndTouch, OnCatapultEnd);
 		}
-		
 		iEntity = 0;
-		while(iEntity > -1)
+		while ((iEntity = FindEntityByClassname(iEntity, "trigger_catapult")) > MaxClients)
 		{
-			iEntity = FindEntityByClassname(iEntity, "trigger_catapult");
 			SDKHook(iEntity, SDKHook_StartTouch, OnCatapultStart);
 			SDKHook(iEntity, SDKHook_EndTouch, OnCatapultEnd);
 		}
