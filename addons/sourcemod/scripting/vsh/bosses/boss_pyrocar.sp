@@ -80,6 +80,7 @@ methodmap CPyroCar < SaxtonHaleBase
 	{
 		StrCat(sInfo, length, "\nHealth: Medium");
 		StrCat(sInfo, length, "\nYou are forced to go forward");
+		StrCat(sInfo, length, "\nYou are forced to go forward");
 		StrCat(sInfo, length, "\nYour flamethrower has a shorter range");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nAbilities");
