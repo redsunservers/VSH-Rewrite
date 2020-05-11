@@ -127,7 +127,6 @@ methodmap CRageHop < SaxtonHaleBase
 			if(flFinalBombDamage < 5.0) flFinalBombDamage = 5.0;
 			if(flFinalBombDamage > 120.0) flFinalBombDamage = 120.0;
 			
-			PrintToConsoleAll("%f", flFinalBombDamage);
 			if(this.bSuperRage)
 			{
 				flBombRadiusValue *= 1.25;
