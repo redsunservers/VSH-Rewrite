@@ -47,8 +47,8 @@ methodmap CForceForward < SaxtonHaleBase
 	public CForceForward(CForceForward ability)
 	{
 		ability.flRageDuration = 10.0;
-		ability.flSpeedRageMultValue = 1.2;
-		ability.flSpeedAbilityMultValue = 1.4;
+		ability.flSpeedRageMultValue = 1.25;
+		ability.flSpeedAbilityMultValue = 1.5;
 		
 		int iEntity = 0;
 		while(iEntity > -1)
