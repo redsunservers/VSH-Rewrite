@@ -134,15 +134,16 @@ methodmap CForceForward < SaxtonHaleBase
 
 public Action OnCatapultStart(int iEntity, int iClient)
 {
-	g_bInCatapult[iClient] = true;
+	if(iClient <= MaxClients)
+		g_bInCatapult[iClient] = true;
 	
 	return Plugin_Continue;
 }
 
 public Action OnCatapultEnd(int iEntity, int iClient)
 {
-	
-	g_bInCatapult[iClient] = false;
+	if(iClient <= MaxClients)
+		g_bInCatapult[iClient] = false;
 	
 	return Plugin_Continue;
 }
