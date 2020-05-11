@@ -92,15 +92,15 @@ methodmap CForceForward < SaxtonHaleBase
 		
 		float vecCompareVel[3];
 		
-		if(!g_bInCatapult[this.iClient])
+		if (!g_bInCatapult[this.iClient])
 		{
 			vecCompareVel[0] = Cosine(DegToRad(vecAng[0])) * Cosine(DegToRad(vecAng[1])) * flMaxSpeed * g_flSpeedRageBonusMultiplier[this.iClient] * flSpeedAbilityBonusMultiplier;
 			vecCompareVel[1] = Cosine(DegToRad(vecAng[0])) * Sine(DegToRad(vecAng[1])) * flMaxSpeed * g_flSpeedRageBonusMultiplier[this.iClient] * flSpeedAbilityBonusMultiplier;
 			
-			if(FloatAbs(vecVel[0]) < FloatAbs(vecCompareVel[0]))
+			if (FloatAbs(vecVel[0]) < FloatAbs(vecCompareVel[0]))
 				vecVel[0] = vecCompareVel[0];
 			
-			if(FloatAbs(vecVel[1]) < FloatAbs(vecCompareVel[1]))
+			if (FloatAbs(vecVel[1]) < FloatAbs(vecCompareVel[1]))
 				vecVel[1] = vecCompareVel[1];
 			
 			TeleportEntity(this.iClient, NULL_VECTOR, NULL_VECTOR, vecVel);
@@ -134,7 +134,7 @@ methodmap CForceForward < SaxtonHaleBase
 
 public Action OnCatapultStart(int iEntity, int iClient)
 {
-	if(iClient <= MaxClients)
+	if (iClient <= MaxClients)
 		g_bInCatapult[iClient] = true;
 	
 	return Plugin_Continue;
@@ -142,7 +142,7 @@ public Action OnCatapultStart(int iEntity, int iClient)
 
 public Action OnCatapultEnd(int iEntity, int iClient)
 {
-	if(iClient <= MaxClients)
+	if (iClient <= MaxClients)
 		g_bInCatapult[iClient] = false;
 	
 	return Plugin_Continue;

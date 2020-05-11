@@ -124,10 +124,10 @@ methodmap CRageHop < SaxtonHaleBase
 			
 			float flBombRadiusValue = this.flBombRadius;
 			float flFinalBombDamage = (g_vecPeakVel[this.iClient] + 125.0) / 100.0 * -this.flBombDamage;
-			if(flFinalBombDamage < 5.0) flFinalBombDamage = 5.0;
-			if(flFinalBombDamage > 110.0) flFinalBombDamage = 110.0;
+			if (flFinalBombDamage < 5.0) flFinalBombDamage = 5.0;
+			if (flFinalBombDamage > 110.0) flFinalBombDamage = 110.0;
 			
-			if(this.bSuperRage)
+			if (this.bSuperRage)
 			{
 				flBombRadiusValue *= 1.25;
 				flFinalBombDamage *= 1.25;
