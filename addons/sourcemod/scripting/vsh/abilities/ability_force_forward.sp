@@ -3,6 +3,7 @@ static float g_flSpeedRageBonusMultiplier[TF_MAXPLAYERS+1];
 static float g_flRageBonusDuration[TF_MAXPLAYERS+1];
 static float g_flSpeedRageBonusMultValue[TF_MAXPLAYERS+1];
 static float g_flSpeedAbilityBonusMultValue[TF_MAXPLAYERS+1];
+static bool g_bInCatapult[TF_MAXPLAYERS+1];
 
 methodmap CForceForward < SaxtonHaleBase
 {
@@ -46,8 +47,24 @@ methodmap CForceForward < SaxtonHaleBase
 	public CForceForward(CForceForward ability)
 	{
 		ability.flRageDuration = 10.0;
-		ability.flSpeedRageMultValue = 1.3;
-		ability.flSpeedAbilityMultValue = 1.55;
+		ability.flSpeedRageMultValue = 1.2;
+		ability.flSpeedAbilityMultValue = 1.4;
+		
+		int iEntity = 0;
+		while(iEntity > -1)
+		{
+			iEntity = FindEntityByClassname(iEntity, "trigger_push");
+			SDKHook(iEntity, SDKHook_StartTouch, OnCatapultStart);
+			SDKHook(iEntity, SDKHook_EndTouch, OnCatapultEnd);
+		}
+		
+		iEntity = 0;
+		while(iEntity > -1)
+		{
+			iEntity = FindEntityByClassname(iEntity, "trigger_catapult");
+			SDKHook(iEntity, SDKHook_StartTouch, OnCatapultStart);
+			SDKHook(iEntity, SDKHook_EndTouch, OnCatapultEnd);
+		}
 	}
 	
 	public void OnThink()
@@ -76,10 +93,21 @@ methodmap CForceForward < SaxtonHaleBase
 		
 		float flMaxSpeed = GetEntPropFloat(this.iClient, Prop_Data, "m_flMaxspeed");
 		
-		vecVel[0] = Cosine(DegToRad(vecAng[0])) * Cosine(DegToRad(vecAng[1])) * flMaxSpeed * g_flSpeedRageBonusMultiplier[this.iClient] * flSpeedAbilityBonusMultiplier;
-		vecVel[1] = Cosine(DegToRad(vecAng[0])) * Sine(DegToRad(vecAng[1])) * flMaxSpeed * g_flSpeedRageBonusMultiplier[this.iClient] * flSpeedAbilityBonusMultiplier;
+		float vecCompareVel[3];
 		
-		TeleportEntity(this.iClient, NULL_VECTOR, NULL_VECTOR, vecVel);
+		if(!g_bInCatapult[this.iClient])
+		{
+			vecCompareVel[0] = Cosine(DegToRad(vecAng[0])) * Cosine(DegToRad(vecAng[1])) * flMaxSpeed * g_flSpeedRageBonusMultiplier[this.iClient] * flSpeedAbilityBonusMultiplier;
+			vecCompareVel[1] = Cosine(DegToRad(vecAng[0])) * Sine(DegToRad(vecAng[1])) * flMaxSpeed * g_flSpeedRageBonusMultiplier[this.iClient] * flSpeedAbilityBonusMultiplier;
+			
+			if(FloatAbs(vecVel[0]) < FloatAbs(vecCompareVel[0]))
+				vecVel[0] = vecCompareVel[0];
+			
+			if(FloatAbs(vecVel[1]) < FloatAbs(vecCompareVel[1]))
+				vecVel[1] = vecCompareVel[1];
+			
+			TeleportEntity(this.iClient, NULL_VECTOR, NULL_VECTOR, vecVel);
+		}
 		
 	}
 	
@@ -96,4 +124,28 @@ methodmap CForceForward < SaxtonHaleBase
 			g_flSpeedRageBonusMultiplier[this.iClient] = this.flSpeedRageMultValue;
 		}
 	}
+	
+	public void OnEntityCreated(int iEntity, const char[] sClassname)
+	{
+		if (StrEqual(sClassname, "trigger_catapult") || StrEqual(sClassname, "trigger_push"))
+		{
+			SDKHook(iEntity, SDKHook_StartTouch, OnCatapultStart);
+			SDKHook(iEntity, SDKHook_EndTouch, OnCatapultEnd);
+		}
+	}
 };
+
+public Action OnCatapultStart(int iEntity, int iClient)
+{
+	g_bInCatapult[iClient] = true;
+	
+	return Plugin_Continue;
+}
+
+public Action OnCatapultEnd(int iEntity, int iClient)
+{
+	
+	g_bInCatapult[iClient] = false;
+	
+	return Plugin_Continue;
+}
