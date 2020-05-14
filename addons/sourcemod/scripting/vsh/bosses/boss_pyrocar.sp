@@ -1,6 +1,6 @@
 #define ITEM_NEON_ANNIHILATOR			813
 #define ITEM_BACKBURNER					40
-#define PYROCAR_BACKBURNER_ATTRIBUTES	"2 ; 2.3 ; 24 ; 1.0 ; 59 ; 1.0 ; 72 ; 0.25 ; 112 ; 1.0 ; 178 ; 0.01 ; 181 ; 1.0 ; 259 ; 1.0 ; 356 ; 1.0 ; 797 ; 1.0 ; 828 ; 0.1 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 450 ; 862 ; 0.4 ; 863 ; 0.01 ; 865 ; 85 ; 214 ; %d"
+#define PYROCAR_BACKBURNER_ATTRIBUTES	"2 ; 2.4 ; 24 ; 1.0 ; 59 ; 1.0 ; 72 ; 0.25 ; 112 ; 1.0 ; 178 ; 0.01 ; 181 ; 1.0 ; 259 ; 1.0 ; 356 ; 1.0 ; 797 ; 1.0 ; 828 ; 0.1 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 450 ; 862 ; 0.4 ; 863 ; 0.01 ; 865 ; 85 ; 214 ; %d"
 
 static char g_strPyrocarRoundStart[][] =  {
 	"vsh_rewrite/pyrocar/pyrocar_intro.mp3", 
