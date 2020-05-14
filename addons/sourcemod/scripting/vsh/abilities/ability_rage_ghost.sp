@@ -109,7 +109,7 @@ methodmap CRageGhost < SaxtonHaleBase
 		ability.flDuration = 8.0;
 		ability.flHealSteal = 25.0;	//Steals hp per second
 		ability.flHealGain = 50.0;	//Gains hp per second
-		ability.flBuildingDrain = 3.0;	//Building health drain multiplier based on flHealSteal, 0.0 or lower disables it
+		ability.flBuildingDrain = 1.0;	//Building health drain multiplier based on flHealSteal, 0.0 or lower disables it
 		ability.flPullStrength = 10.0;	//Scale of pull strength, negative values push enemies away instead. Note that making it too weak will only pull players if they're airborne
 		
 		g_bGhostEnable[ability.iClient] = false;
