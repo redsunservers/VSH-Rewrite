@@ -95,7 +95,7 @@ methodmap CFloatJump < SaxtonHaleBase
 		ability.iMaxJumpCharge = 200;
 		ability.iJumpChargeBuild = 4;
 		ability.flHeightMultiplier = 8.5;
-		ability.flCooldown = 8.0;
+		ability.flCooldown = 7.5;
 		ability.flFlightTime = 1.5;
 	}
 	
@@ -164,7 +164,7 @@ methodmap CFloatJump < SaxtonHaleBase
 			if ((g_flJumpCooldownWait[this.iClient] != 0.0 && g_flJumpCooldownWait[this.iClient] > GetGameTime()) || this.iJumpCharge < 1) return;
 			
 			float flCooldownTime = (this.flCooldown*(float(this.iJumpCharge)/float(this.iMaxJumpCharge)));
-			if (flCooldownTime < 4.0) flCooldownTime = 4.0;
+			if (flCooldownTime < 3.5) flCooldownTime = 3.5;
 			g_flJumpCooldownWait[this.iClient] = GetGameTime()+flCooldownTime;
 			
 			g_flFloatEndTime[this.iClient] = GetGameTime() + this.flFlightTime * (float(this.iJumpCharge)/float(this.iMaxJumpCharge));
