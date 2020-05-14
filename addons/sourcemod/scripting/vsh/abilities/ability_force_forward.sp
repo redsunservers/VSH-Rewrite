@@ -61,9 +61,9 @@ methodmap CForceForward < SaxtonHaleBase
 	public CForceForward(CForceForward ability)
 	{
 		ability.flRageDuration = 8.0;
-		ability.flSpeedSwimmingBonusMult = 1.1;
+		ability.flSpeedSwimmingBonusMult = 1.05;
 		ability.flSpeedRageBonusMult = 1.25;
-		ability.flSpeedAbilityBonusMult = 1.45;
+		ability.flSpeedAbilityBonusMult = 1.5;
 		
 		int iEntity = 0;
 		while ((iEntity = FindEntityByClassname(iEntity, "trigger_push")) > MaxClients)
@@ -85,7 +85,7 @@ methodmap CForceForward < SaxtonHaleBase
 		
 		float vecAng[3];
 		float vecVel[3];
-		GetClientAbsAngles(this.iClient, vecAng);
+		GetClientEyeAngles(this.iClient, vecAng);
 		
 		GetEntPropVector(this.iClient, Prop_Data, "m_vecAbsVelocity", vecVel);
 		
@@ -113,14 +113,27 @@ methodmap CForceForward < SaxtonHaleBase
 		
 		if (!g_bInCatapult[this.iClient])
 		{
-			vecCompareVel[0] = Cosine(DegToRad(vecAng[0])) * Cosine(DegToRad(vecAng[1])) * flMaxSpeed * flSpeedBonusMultiplier;
-			vecCompareVel[1] = Cosine(DegToRad(vecAng[0])) * Sine(DegToRad(vecAng[1])) * flMaxSpeed * flSpeedBonusMultiplier;
+			vecCompareVel[0] = Cosine(DegToRad(vecAng[1])) * flMaxSpeed * flSpeedBonusMultiplier;
+			vecCompareVel[1] = Sine(DegToRad(vecAng[1])) * flMaxSpeed * flSpeedBonusMultiplier;
 			
 			if (FloatAbs(vecVel[0]) < FloatAbs(vecCompareVel[0]))
 				vecVel[0] = vecCompareVel[0];
 			
 			if (FloatAbs(vecVel[1]) < FloatAbs(vecCompareVel[1]))
 				vecVel[1] = vecCompareVel[1];
+				
+			int iWaterLevel = GetEntProp(this.iClient, Prop_Send, "m_nWaterLevel");
+			//0 - not in water (WL_NotInWater)
+			//1 - feet in water (WL_Feet)
+			//2 - waist in water (WL_Waist)
+			//3 - head in water (WL_Eyes) 
+		
+			//Give Pyrocar proper swimming
+			if (iWaterLevel >= 3)
+			{
+				vecVel[2] = -Sine(DegToRad(vecAng[0])) * flMaxSpeed * flSpeedBonusMultiplier;
+			}
+			
 			
 			TeleportEntity(this.iClient, NULL_VECTOR, NULL_VECTOR, vecVel);
 		}

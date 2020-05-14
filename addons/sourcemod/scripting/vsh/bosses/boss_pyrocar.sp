@@ -1,6 +1,6 @@
 #define ITEM_NEON_ANNIHILATOR			813
 #define ITEM_BACKBURNER					40
-#define PYROCAR_BACKBURNER_ATTRIBUTES	"2 ; 2.3 ; 24 ; 1.0 ; 59 ; 1.0 ; 72 ; 0.25 ; 112 ; 1.0 ; 178 ; 0.01 ; 181 ; 1.0 ; 259 ; 1.0 ; 356 ; 1.0 ; 797 ; 1.0 ; 828 ; 0.1 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 433 ; 862 ; 0.4 ; 863 ; 0.01 ; 865 ; 85 ; 214 ; %d"
+#define PYROCAR_BACKBURNER_ATTRIBUTES	"2 ; 2.3 ; 24 ; 1.0 ; 59 ; 1.0 ; 72 ; 0.25 ; 112 ; 1.0 ; 178 ; 0.01 ; 181 ; 1.0 ; 259 ; 1.0 ; 356 ; 1.0 ; 797 ; 1.0 ; 828 ; 0.1 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 450 ; 862 ; 0.4 ; 863 ; 0.01 ; 865 ; 85 ; 214 ; %d"
 
 static char g_strPyrocarRoundStart[][] =  {
 	"vsh_rewrite/pyrocar/pyrocar_intro.mp3", 
@@ -155,7 +155,7 @@ methodmap CPyroCar < SaxtonHaleBase
 			{
 				TF2_RemoveItemInSlot(this.iClient, WeaponSlot_Primary);
 				g_iPyrocarPrimary[this.iClient] = -1;
-				Format(attribs, sizeof(attribs), "2 ; 1.50 ; 438 ; 1.0 ; 137 ; 1.5 ; 264 ; 2.1 ; 178 ; 0.01");
+				Format(attribs, sizeof(attribs), "2 ; 1.50 ; 438 ; 1.0 ; 137 ; 1.5 ; 264 ; 1.5 ; 178 ; 0.01");
 				g_iPyrocarMelee[this.iClient] = this.CallFunction("CreateWeapon", ITEM_NEON_ANNIHILATOR, "tf_weapon_breakable_sign", 100, TFQual_Unusual, attribs);
 				if (g_iPyrocarMelee[this.iClient] > MaxClients)
 				{
