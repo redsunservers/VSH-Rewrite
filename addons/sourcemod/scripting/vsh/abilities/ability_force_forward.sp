@@ -1,8 +1,10 @@
-static float g_flRageBonusEndTime[TF_MAXPLAYERS+1];
-static float g_flSpeedRageBonusMultiplier[TF_MAXPLAYERS+1];
-static float g_flRageBonusDuration[TF_MAXPLAYERS+1];
-static float g_flSpeedRageBonusMultValue[TF_MAXPLAYERS+1];
-static float g_flSpeedAbilityBonusMultValue[TF_MAXPLAYERS+1];
+#define ITEM_NEON_ANNIHILATOR			813
+
+static float g_flRageEndTime[TF_MAXPLAYERS+1];
+static float g_flSpeedRageBonusMult[TF_MAXPLAYERS+1];
+static float g_flRageDuration[TF_MAXPLAYERS+1];
+static float g_flSpeedAbilityBonusMult[TF_MAXPLAYERS+1];
+static float g_flSpeedSwimmingBonusMult[TF_MAXPLAYERS+1];
 static bool g_bInCatapult[TF_MAXPLAYERS+1];
 
 methodmap CForceForward < SaxtonHaleBase
@@ -12,43 +14,56 @@ methodmap CForceForward < SaxtonHaleBase
 	{
 		public get()
 		{
-			return g_flRageBonusDuration[this.iClient];
+			return g_flRageDuration[this.iClient];
 		}
 		public set(float val)
 		{
-			g_flRageBonusDuration[this.iClient] = val;
+			g_flRageDuration[this.iClient] = val;
 		}
 	}
 	
-	property float flSpeedRageMultValue
+	property float flSpeedRageBonusMult
 	{
 		public get()
 		{
-			return g_flSpeedRageBonusMultValue[this.iClient];
+			return g_flSpeedRageBonusMult[this.iClient];
 		}
 		public set(float val)
 		{
-			g_flSpeedRageBonusMultValue[this.iClient] = val;
+			g_flSpeedRageBonusMult[this.iClient] = val;
 		}
 	}
 	
-	property float flSpeedAbilityMultValue
+	property float flSpeedAbilityBonusMult
 	{
 		public get()
 		{
-			return g_flSpeedAbilityBonusMultValue[this.iClient];
+			return g_flSpeedAbilityBonusMult[this.iClient];
 		}
 		public set(float val)
 		{
-			g_flSpeedAbilityBonusMultValue[this.iClient] = val;
+			g_flSpeedAbilityBonusMult[this.iClient] = val;
+		}
+	}
+	
+	property float flSpeedSwimmingBonusMult
+	{
+		public get()
+		{
+			return g_flSpeedSwimmingBonusMult[this.iClient];
+		}
+		public set(float val)
+		{
+			g_flSpeedSwimmingBonusMult[this.iClient] = val;
 		}
 	}
 	
 	public CForceForward(CForceForward ability)
 	{
-		ability.flRageDuration = 10.0;
-		ability.flSpeedRageMultValue = 1.25;
-		ability.flSpeedAbilityMultValue = 1.5;
+		ability.flRageDuration = 8.0;
+		ability.flSpeedSwimmingBonusMult = 1.05;
+		ability.flSpeedRageBonusMult = 1.25;
+		ability.flSpeedAbilityBonusMult = 1.5;
 		
 		int iEntity = 0;
 		while ((iEntity = FindEntityByClassname(iEntity, "trigger_push")) > MaxClients)
@@ -70,23 +85,27 @@ methodmap CForceForward < SaxtonHaleBase
 		
 		float vecAng[3];
 		float vecVel[3];
-		GetClientAbsAngles(this.iClient, vecAng);
+		GetClientEyeAngles(this.iClient, vecAng);
 		
 		GetEntPropVector(this.iClient, Prop_Data, "m_vecAbsVelocity", vecVel);
 		
-		if (g_flRageBonusEndTime[this.iClient] < GetGameTime())
-		{
-			g_flSpeedRageBonusMultiplier[this.iClient] = 1.0;
-		}
 		
-		
-		float flSpeedAbilityBonusMultiplier = 1.0;
+		float flSpeedBonusMultiplier = 1.0;
 		//Ability speedboost
 		if (TF2_IsPlayerInCondition(this.iClient, TFCond_TeleportedGlow))
 		{
-			flSpeedAbilityBonusMultiplier = g_flSpeedAbilityBonusMultValue[this.iClient];
+			flSpeedBonusMultiplier *= this.flSpeedAbilityBonusMult;
 		}
 		
+		if (GetEntityFlags(this.iClient) & FL_INWATER)
+		{
+			flSpeedBonusMultiplier *= this.flSpeedSwimmingBonusMult;
+		}
+		
+		if (g_flRageEndTime[this.iClient] >= GetGameTime())
+		{
+			flSpeedBonusMultiplier *= this.flSpeedRageBonusMult;
+		}
 		
 		float flMaxSpeed = GetEntPropFloat(this.iClient, Prop_Data, "m_flMaxspeed");
 		
@@ -94,31 +113,41 @@ methodmap CForceForward < SaxtonHaleBase
 		
 		if (!g_bInCatapult[this.iClient])
 		{
-			vecCompareVel[0] = Cosine(DegToRad(vecAng[0])) * Cosine(DegToRad(vecAng[1])) * flMaxSpeed * g_flSpeedRageBonusMultiplier[this.iClient] * flSpeedAbilityBonusMultiplier;
-			vecCompareVel[1] = Cosine(DegToRad(vecAng[0])) * Sine(DegToRad(vecAng[1])) * flMaxSpeed * g_flSpeedRageBonusMultiplier[this.iClient] * flSpeedAbilityBonusMultiplier;
+			vecCompareVel[0] = Cosine(DegToRad(vecAng[1])) * flMaxSpeed * flSpeedBonusMultiplier;
+			vecCompareVel[1] = Sine(DegToRad(vecAng[1])) * flMaxSpeed * flSpeedBonusMultiplier;
 			
 			if (FloatAbs(vecVel[0]) < FloatAbs(vecCompareVel[0]))
 				vecVel[0] = vecCompareVel[0];
 			
 			if (FloatAbs(vecVel[1]) < FloatAbs(vecCompareVel[1]))
 				vecVel[1] = vecCompareVel[1];
+				
+			int iWaterLevel = GetEntProp(this.iClient, Prop_Send, "m_nWaterLevel");
+			//0 - not in water (WL_NotInWater)
+			//1 - feet in water (WL_Feet)
+			//2 - waist in water (WL_Waist)
+			//3 - head in water (WL_Eyes) 
+		
+			//Give Pyrocar proper swimming
+			if (iWaterLevel >= 3)
+			{
+				vecVel[2] = -Sine(DegToRad(vecAng[0])) * flMaxSpeed * flSpeedBonusMultiplier;
+			}
+			
 			
 			TeleportEntity(this.iClient, NULL_VECTOR, NULL_VECTOR, vecVel);
 		}
-		
 	}
 	
 	public void OnRage()
 	{
 		if (this.bSuperRage)
 		{
-			g_flRageBonusEndTime[this.iClient] = GetGameTime() + this.flRageDuration * 1.5;
-			g_flSpeedRageBonusMultiplier[this.iClient] = 1 + (this.flSpeedRageMultValue-1) * 1.5;
+			g_flRageEndTime[this.iClient] = GetGameTime() + this.flRageDuration * 1.5;
 		}
 		else
 		{
-			g_flRageBonusEndTime[this.iClient] = GetGameTime() + this.flRageDuration;
-			g_flSpeedRageBonusMultiplier[this.iClient] = this.flSpeedRageMultValue;
+			g_flRageEndTime[this.iClient] = GetGameTime() + this.flRageDuration;
 		}
 	}
 	

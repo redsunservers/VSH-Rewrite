@@ -94,7 +94,7 @@ methodmap CRageHop < SaxtonHaleBase
 		ability.flRageHopMaxHeight = 500.0;
 		ability.flRageHopMaxDistance = 0.2;
 		
-		ability.flBombDamage = 21.0;
+		ability.flBombDamage = 23.0;
 		ability.flBombRadius = 200.0;
 		
 		ability.flDuration = 8.0;
@@ -123,9 +123,9 @@ methodmap CRageHop < SaxtonHaleBase
 			Format(sSound, sizeof(sSound), "weapons/airstrike_small_explosion_0%i.wav", GetRandomInt(1,3));
 			
 			float flBombRadiusValue = this.flBombRadius;
-			float flFinalBombDamage = (g_vecPeakVel[this.iClient] + 125.0) / 100.0 * -this.flBombDamage;
-			if (flFinalBombDamage < 5.0) flFinalBombDamage = 5.0;
-			if (flFinalBombDamage > 110.0) flFinalBombDamage = 110.0;
+			float flFinalBombDamage = (g_vecPeakVel[this.iClient] + 120.0) / 100.0 * -this.flBombDamage;
+			if (flFinalBombDamage < 20.0) flFinalBombDamage = 20.0;
+			if (flFinalBombDamage > 120.0) flFinalBombDamage = 120.0;
 			
 			if (this.bSuperRage)
 			{
