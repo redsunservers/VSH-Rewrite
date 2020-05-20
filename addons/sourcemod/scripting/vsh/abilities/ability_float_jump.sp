@@ -1,11 +1,13 @@
 static int g_iFloatJumpCharge[TF_MAXPLAYERS+1];
 static int g_iFloatJumpMaxCharge[TF_MAXPLAYERS+1];
 static int g_iFloatJumpChargeBuild[TF_MAXPLAYERS+1];
-static float g_flFloatJumpHeightMultiplier[TF_MAXPLAYERS+1];
-static float g_flJumpCooldown[TF_MAXPLAYERS+1];
-static float g_flJumpCooldownWait[TF_MAXPLAYERS+1];
-static float g_flFloatEndTime[TF_MAXPLAYERS+1];
-static float g_flFlightTime[TF_MAXPLAYERS+1];
+static float g_flFloatJumpMaxDistance[TF_MAXPLAYERS+1];
+static float g_flFloatJumpMaxHeight[TF_MAXPLAYERS+1];
+static float g_flFloatJumpCooldown[TF_MAXPLAYERS+1];
+static float g_flFloatJumpCooldownWait[TF_MAXPLAYERS+1];
+static float g_flFloatJumpEndTime[TF_MAXPLAYERS+1];
+static float g_flFloatJumpDuration[TF_MAXPLAYERS+1];
+static float g_flFloatJumpGravity[TF_MAXPLAYERS+1];
 static bool g_bFloatJumpHoldingChargeButton[TF_MAXPLAYERS+1];
 
 methodmap CFloatJump < SaxtonHaleBase
@@ -52,51 +54,77 @@ methodmap CFloatJump < SaxtonHaleBase
 	{
 		public get()
 		{
-			return g_flJumpCooldown[this.iClient];
+			return g_flFloatJumpCooldown[this.iClient];
 		}
 		public set(float val)
 		{
-			g_flJumpCooldown[this.iClient] = val;
+			g_flFloatJumpCooldown[this.iClient] = val;
 		}
 	}
 	
-	property float flHeightMultiplier
+	property float flMaxDistance
 	{
 		public get()
 		{
-			return g_flFloatJumpHeightMultiplier[this.iClient];
+			return g_flFloatJumpMaxDistance[this.iClient];
 		}
 		public set(float val)
 		{
-			g_flFloatJumpHeightMultiplier[this.iClient] = val;
+			g_flFloatJumpMaxDistance[this.iClient] = val;
 		}
 	}
 	
-	property float flFlightTime
+	property float flMaxHeight
 	{
 		public get()
 		{
-			return g_flFlightTime[this.iClient];
+			return g_flFloatJumpMaxHeight[this.iClient];
 		}
 		public set(float val)
 		{
-			g_flFlightTime[this.iClient] = val;
+			g_flFloatJumpMaxHeight[this.iClient] = val;
+		}
+	}
+	
+	property float flDuration
+	{
+		public get()
+		{
+			return g_flFloatJumpDuration[this.iClient];
+		}
+		public set(float val)
+		{
+			g_flFloatJumpDuration[this.iClient] = val;
+		}
+	}
+	
+	property float flGravity
+	{
+		public get()
+		{
+			return g_flFloatJumpGravity[this.iClient];
+		}
+		public set(float val)
+		{
+			g_flFloatJumpGravity[this.iClient] = val;
 		}
 	}
 	
 	public CFloatJump(CFloatJump ability)
 	{
 		g_iFloatJumpCharge[ability.iClient] = 0;
-		g_flJumpCooldownWait[ability.iClient] = 0.0;
+		g_flFloatJumpCooldownWait[ability.iClient] = 0.0;
 		g_bFloatJumpHoldingChargeButton[ability.iClient] = false;
-		g_flFloatEndTime[ability.iClient] = 0.0;
+		g_flFloatJumpEndTime[ability.iClient] = 0.0;
 		
 		//Default values, these can be changed if needed
 		ability.iMaxJumpCharge = 200;
 		ability.iJumpChargeBuild = 4;
-		ability.flHeightMultiplier = 8.5;
+		ability.flMaxDistance = 725.0;
+		ability.flMaxHeight = 500.0;
 		ability.flCooldown = 7.5;
-		ability.flFlightTime = 1.5;
+		ability.flDuration = 1.0;
+		ability.flGravity = 0.3;
 	}
 	
 	public void OnThink()
@@ -109,25 +137,31 @@ methodmap CFloatJump < SaxtonHaleBase
 		else
 			Format(sMessage, sizeof(sMessage), "Hold right click to use your float jump!");
 		
-		if (g_flFloatEndTime[this.iClient] > GetGameTime())
+		if (g_flFloatJumpEndTime[this.iClient] < GetGameTime() && GetEntityGravity(this.iClient) != 1.0 && GetEntityFlags(this.iClient) & FL_ONGROUND)
 		{
-			float vecAng[3];
+			//Ability ended and pyrocar landed on ground
+			SetEntityGravity(this.iClient, 1.0);
+		}
+		else if (g_flFloatJumpEndTime[this.iClient] > GetGameTime() || GetEntityGravity(this.iClient) != 1.0)
+		{
+			//Still in air floating
+			float vecAng[3], vecVel[3];
 			GetClientEyeAngles(this.iClient, vecAng);
+			GetEntPropVector(this.iClient, Prop_Data, "m_vecVelocity", vecVel);
 			
-			float vecVel[3];
+			vecVel[0] = Cosine(DegToRad(vecAng[0])) * Cosine(DegToRad(vecAng[1])) * this.flMaxDistance;
+			vecVel[1] = Cosine(DegToRad(vecAng[0])) * Sine(DegToRad(vecAng[1])) * this.flMaxDistance;
 			
-			vecVel[0] = Cosine(DegToRad(vecAng[0])) * Cosine(DegToRad(vecAng[1])) * 600.0;
-			vecVel[1] = Cosine(DegToRad(vecAng[0])) * Sine(DegToRad(vecAng[1])) * 600.0;
-			vecVel[2] = 90.0 * this.flHeightMultiplier;
+			if (g_flFloatJumpEndTime[this.iClient] > GetGameTime())
+				vecVel[2] = this.flMaxHeight;	//Only give extra height if still floating up
 			
 			SetEntProp(this.iClient, Prop_Send, "m_bJumping", true);
-			
 			TeleportEntity(this.iClient, NULL_VECTOR, NULL_VECTOR, vecVel);
 		}
 		
-		if (g_flJumpCooldownWait[this.iClient] != 0.0 && g_flJumpCooldownWait[this.iClient] > GetGameTime())
+		if (g_flFloatJumpCooldownWait[this.iClient] != 0.0 && g_flFloatJumpCooldownWait[this.iClient] > GetGameTime())
 		{
-			float flRemainingTime = g_flJumpCooldownWait[this.iClient]-GetGameTime();
+			float flRemainingTime = g_flFloatJumpCooldownWait[this.iClient]-GetGameTime();
 			int iSec = RoundToNearest(flRemainingTime);
 			Format(sMessage, sizeof(sMessage), "Float cooldown %i second%s remaining!", iSec, (iSec > 1) ? "s" : "");
 			Hud_AddText(this.iClient, sMessage);
@@ -136,7 +170,7 @@ methodmap CFloatJump < SaxtonHaleBase
 		
 		Hud_AddText(this.iClient, sMessage);
 		
-		g_flJumpCooldownWait[this.iClient] = 0.0;
+		g_flFloatJumpCooldownWait[this.iClient] = 0.0;
 		
 		if (g_bFloatJumpHoldingChargeButton[this.iClient])
 			this.iJumpCharge += this.iJumpChargeBuild;
@@ -161,17 +195,21 @@ methodmap CFloatJump < SaxtonHaleBase
 			
 			g_bFloatJumpHoldingChargeButton[this.iClient] = false;
 			
-			if ((g_flJumpCooldownWait[this.iClient] != 0.0 && g_flJumpCooldownWait[this.iClient] > GetGameTime()) || this.iJumpCharge < 1) return;
+			if ((g_flFloatJumpCooldownWait[this.iClient] != 0.0 && g_flFloatJumpCooldownWait[this.iClient] > GetGameTime()) || this.iJumpCharge < 1)
+				return;
 			
 			float flCooldownTime = (this.flCooldown*(float(this.iJumpCharge)/float(this.iMaxJumpCharge)));
-			if (flCooldownTime < 3.5) flCooldownTime = 3.5;
-			g_flJumpCooldownWait[this.iClient] = GetGameTime()+flCooldownTime;
+			if (flCooldownTime < 3.5)
+				flCooldownTime = 3.5;
 			
-			g_flFloatEndTime[this.iClient] = GetGameTime() + this.flFlightTime * (float(this.iJumpCharge)/float(this.iMaxJumpCharge));
+			g_flFloatJumpCooldownWait[this.iClient] = GetGameTime()+flCooldownTime;
+			
+			g_flFloatJumpEndTime[this.iClient] = GetGameTime() + this.flDuration * (float(this.iJumpCharge)/float(this.iMaxJumpCharge));
 			this.iJumpCharge = 0;
 			
-			TF2_AddCondition(this.iClient, TFCond_SwimmingNoEffects, this.flFlightTime);
-			TF2_AddCondition(this.iClient, TFCond_TeleportedGlow, this.flFlightTime * 1.7);
+			TF2_AddCondition(this.iClient, TFCond_SwimmingNoEffects, this.flDuration);
+			TF2_AddCondition(this.iClient, TFCond_TeleportedGlow, this.flDuration * 1.7);
+			SetEntityGravity(this.iClient, this.flGravity);
 			
 			char sSound[PLATFORM_MAX_PATH];
 			this.CallFunction("GetSoundAbility", sSound, sizeof(sSound), "CFloatJump");
