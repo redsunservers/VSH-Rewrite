@@ -77,6 +77,11 @@ methodmap CPyroCar < SaxtonHaleBase
 		boss.iMaxRageDamage = 2500;
 	}
 	
+	public bool IsBossHidden()
+	{
+		return true;
+	}
+	
 	public void GetBossName(char[] sName, int length)
 	{
 		strcopy(sName, length, "Pyrocar");
