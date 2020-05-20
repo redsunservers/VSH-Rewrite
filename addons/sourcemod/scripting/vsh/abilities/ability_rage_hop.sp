@@ -92,7 +92,7 @@ methodmap CRageHop < SaxtonHaleBase
 		
 		//Default values, these can be changed if needed	
 		ability.flRageHopMaxHeight = 500.0;
-		ability.flRageHopMaxDistance = 0.2;
+		ability.flRageHopMaxDistance = 1.2;
 		
 		ability.flBombDamage = 23.0;
 		ability.flBombRadius = 200.0;
@@ -104,8 +104,6 @@ methodmap CRageHop < SaxtonHaleBase
 	{
 		if (GameRules_GetRoundState() == RoundState_Preround) return;
 		if (!IsPlayerAlive(this.iClient)) return;
-		
-		int iTeam = GetClientTeam(this.iClient);
 		
 		float vecPeakVel[3];
 		GetEntPropVector(this.iClient, Prop_Data, "m_vecVelocity", vecPeakVel);
@@ -132,20 +130,8 @@ methodmap CRageHop < SaxtonHaleBase
 				flBombRadiusValue *= 1.25;
 				flFinalBombDamage *= 1.25;
 			}
-			TF2_Explode(this.iClient, vecExplosionOrigin, flFinalBombDamage, flBombRadiusValue, "heavy_ring_of_fire", sSound);
 			
-			for (int i = 1; i <= MaxClients; i++)
-			{
-				if (IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i) > 1 && GetClientTeam(i) != iTeam)
-				{
-					if (IsClientInRange(i, vecExplosionOrigin, flBombRadiusValue))
-					{
-						TF2_IgnitePlayer(i, this.iClient);
-						TF2_AddCondition(i, TFCond_Gas, 10.0, this.iClient);
-					}
-				}
-				
-			}
+			TF2_Explode(this.iClient, vecExplosionOrigin, flFinalBombDamage, flBombRadiusValue, "heavy_ring_of_fire", sSound);
 			
 			g_vecPeakVel[this.iClient] = 0.0;
 			g_bStompEnabled[this.iClient] = false;
@@ -156,9 +142,9 @@ methodmap CRageHop < SaxtonHaleBase
 			float vecVel[3];
 			GetEntPropVector(this.iClient, Prop_Data, "m_vecVelocity", vecVel);
 			
+			vecVel[0] *= this.flRageHopMaxDistance;
+			vecVel[1] *= this.flRageHopMaxDistance;
 			vecVel[2] = this.flRageHopMaxHeight;
-			vecVel[0] *= (FLOAT_PI * this.flRageHopMaxDistance);
-			vecVel[1] *= (FLOAT_PI * this.flRageHopMaxDistance);
 			SetEntProp(this.iClient, Prop_Send, "m_bJumping", true);
 			
 			TeleportEntity(this.iClient, NULL_VECTOR, NULL_VECTOR, vecVel);
