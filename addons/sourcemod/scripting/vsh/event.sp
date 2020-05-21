@@ -691,7 +691,9 @@ public Action Event_PlayerInventoryUpdate(Event event, const char[] sName, bool 
 
 	int iClient = GetClientOfUserId(event.GetInt("userid"));
 	if (GetClientTeam(iClient) <= 1) return;
-
+	
+	TF2_CheckClientWeapons(iClient);
+	
 	if (SaxtonHale_IsValidAttack(iClient))
 	{
 		/*Balance specific weapons*/
