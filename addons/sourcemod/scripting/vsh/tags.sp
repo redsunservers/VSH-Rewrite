@@ -813,9 +813,9 @@ public void Tags_Explode(int iClient, int iTarget, TagsParams tParams)
 	TF2_Explode(iClient, vecPos, flDamage, flRadius, sParticle, sSound);
 }
 
-public void Tags_KillWeapon(int iClient, int iTarget, TagsParams tParams)
+public void Tags_DestroyEntity(int iClient, int iTarget, TagsParams tParams)
 {
-	//Find slot from given target
+	//Check if target is a weapon
 	for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
 	{
 		if (TF2_GetItemInSlot(iClient, iSlot) == iTarget)
@@ -828,6 +828,9 @@ public void Tags_KillWeapon(int iClient, int iTarget, TagsParams tParams)
 			return;
 		}
 	}
+	
+	//Not a weapon, remove as normal
+	RemoveEntity(iTarget);
 }
 
 public void Tags_ForceSuicide(int iClient, int iTarget, TagsParams tParams)
