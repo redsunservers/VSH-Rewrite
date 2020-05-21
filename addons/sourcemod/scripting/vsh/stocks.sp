@@ -290,6 +290,46 @@ stock void TF2_RemoveItemInSlot(int client, int slot)
 	}
 }
 
+stock void TF2_CheckClientWeapons(int iClient)
+{
+	//Weapons
+	for (int iSlot = WeaponSlot_Primary; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
+	{
+		int iWeapon = GetPlayerWeaponSlot(iClient, iSlot);
+		if (iWeapon > MaxClients)
+		{
+			char sClassname[256];
+			GetEntityClassname(iWeapon, sClassname, sizeof(sClassname));
+			if (GiveNamedItem(iClient, sClassname, GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex")) >= Plugin_Handled)
+				TF2_RemoveItemInSlot(iClient, iSlot);
+		}
+	}
+	
+	//Cosmetics
+	int iWearable = MaxClients+1;
+	while ((iWearable = FindEntityByClassname(iWearable, "tf_wearable*")) > MaxClients)
+	{
+		if (GetEntPropEnt(iWearable, Prop_Send, "m_hOwnerEntity") == iClient || GetEntPropEnt(iWearable, Prop_Send, "moveparent") == iClient)
+		{
+			char sClassname[256];
+			GetEntityClassname(iWearable, sClassname, sizeof(sClassname));
+			if (GiveNamedItem(iClient, sClassname, GetEntProp(iWearable, Prop_Send, "m_iItemDefinitionIndex")) >= Plugin_Handled)
+				TF2_RemoveWearable(iClient, iWearable);
+		}
+	}
+	
+	//MvM Canteen
+	int iPowerupBottle = MaxClients+1;
+	while ((iPowerupBottle = FindEntityByClassname(iPowerupBottle, "tf_powerup_bottle*")) > MaxClients)
+	{
+		if (GetEntPropEnt(iPowerupBottle, Prop_Send, "m_hOwnerEntity") == iClient || GetEntPropEnt(iPowerupBottle, Prop_Send, "moveparent") == iClient)
+		{
+			if (GiveNamedItem(iClient, "tf_powerup_bottle", GetEntProp(iPowerupBottle, Prop_Send, "m_iItemDefinitionIndex")) >= Plugin_Handled)
+				TF2_RemoveWearable(iClient, iPowerupBottle);
+		}
+	}
+}
+
 stock int TF2_GetAmmo(int iClient, int iSlot)
 {
 	int iWeapon = GetPlayerWeaponSlot(iClient, iSlot);
