@@ -217,7 +217,9 @@ methodmap CVagineer < SaxtonHaleBase
 			int iSentry = MaxClients+1;
 			while((iSentry = FindEntityByClassname(iSentry, "obj_sentrygun")) > MaxClients)
 			{
-				if (GetEntPropEnt(iSentry, Prop_Send, "m_hBuilder") == this.iClient)
+				//Wait until the sentry is fully built to drain HP so it doesn't explode while being carried
+				//m_iState: 0 is being carried or in the process of building, 1 is idle (can be either enabled or disabled), 2 is shooting at a target or being wrangled, 3 is in the process of upgrading
+				if (GetEntPropEnt(iSentry, Prop_Send, "m_hBuilder") == this.iClient && GetEntProp(iSentry, Prop_Send, "m_iState") > 0)
 				{
 					SetVariantInt(1);
 					AcceptEntityInput(iSentry, "RemoveHealth");
