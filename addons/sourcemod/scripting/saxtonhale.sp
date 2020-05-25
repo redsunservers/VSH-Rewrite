@@ -89,7 +89,7 @@ enum ClientFlags ( <<=1 )
 enum Preferences ( <<=1 )
 {
 	Preferences_PickAsBoss = 1,
-	Preferences_None1,
+	Preferences_Rank,
 	Preferences_MultiBoss,
 	Preferences_Music,
 	Preferences_Revival,
@@ -207,7 +207,7 @@ enum
 
 char g_strPreferencesName[][] = {
 	"Boss Selection",
-	"",
+	"Rank Mode",
 	"Multi Boss",
 	"Music",
 	"Revival"
@@ -1218,7 +1218,12 @@ public void OnClientDisconnect(int iClient)
 	if (boss.bValid && !boss.bMinion && Rank_IsEnabled())
 	{
 		//Ur not going anywhere kiddo
-		Rank_SetCurrent(iClient, Rank_GetCurrent(iClient) - 1, true);
+		int iRank = Rank_GetCurrent(iClient) - 1;
+		if (iRank >= 0)
+		{
+			PrintToChatAll("%s %s%N%s's rank has %sdecreased%s to %s%d%s!", TEXT_TAG, TEXT_DARK, iClient, TEXT_COLOR, TEXT_NEGATIVE, TEXT_COLOR, TEXT_DARK, iRank, TEXT_COLOR);
+			Rank_SetCurrent(iClient, iRank, true);
+		}
 	}
 	
 	if (boss.bValid)

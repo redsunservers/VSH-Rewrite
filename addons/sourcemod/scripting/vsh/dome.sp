@@ -1,5 +1,4 @@
-//#define DOME_PROP_RADIUS 185.0	//Small prop
-#define DOME_PROP_RADIUS 10000.0	//Huge prop, exactly 10k weeeeeeeeeeee
+#define DOME_PROP_RADIUS 10000.0	//Dome prop radius, exactly 10k weeeeeeeeeeee
 
 #define DOME_FADE_START_MULTIPLIER 0.7
 #define DOME_FADE_ALPHA_MAX 64
@@ -42,6 +41,8 @@ void Dome_Init()
 	g_ConfigConvar.Create("vsh_dome_radius_end", "0", "End radius of dome", _, true, 0.0);
 	g_ConfigConvar.Create("vsh_dome_speed_duration", "120", "How long it takes in second for dome to fully shrink, without any slowdown", _, true, 0.0);
 	
+	HookEntityOutput("tf_logic_arena", "OnCapEnabled", Dome_OnCapEnabled);
+	
 	HookEntityOutput("team_control_point", "OnOwnerChangedToTeam1", Dome_BlockOutput);
 	HookEntityOutput("team_control_point", "OnOwnerChangedToTeam2", Dome_BlockOutput);
 	HookEntityOutput("team_control_point", "OnCapReset", Dome_BlockOutput);
@@ -54,15 +55,6 @@ void Dome_Init()
 
 void Dome_MapStart()
 {
-	/*
-	//Small prop
-	AddFileToDownloadsTable("models/kirillian/brsphere.dx80.vtx");
-	AddFileToDownloadsTable("models/kirillian/brsphere.dx90.vtx");
-	AddFileToDownloadsTable("models/kirillian/brsphere.mdl");
-	AddFileToDownloadsTable("models/kirillian/brsphere.sw.vtx");
-	AddFileToDownloadsTable("models/kirillian/brsphere.vvd");
-	*/
-
 	//Huge prop
 	AddFileToDownloadsTable("models/kirillian/brsphere_huge.dx80.vtx");
 	AddFileToDownloadsTable("models/kirillian/brsphere_huge.dx90.vtx");
@@ -117,6 +109,11 @@ public Action Dome_TriggerTouch(int iTrigger, int iToucher)
 		return Plugin_Handled;
 	
 	return Plugin_Continue;
+}
+
+public Action Dome_OnCapEnabled(const char[] output, int caller, int activator, float delay)
+{
+	Dome_Start();
 }
 
 public Action Dome_BlockOutput(const char[] output, int caller, int activator, float delay)

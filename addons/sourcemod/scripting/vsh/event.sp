@@ -252,7 +252,7 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 		Format(sMessage, sizeof(sMessage), "%s %s with %d health!", sMessage, sBuffer, boss.iMaxHealth);
 	
 		//Get rank
-		if (GetMainBoss() == iClient && Rank_GetCurrent(iClient) > 0)
+		if (Rank_IsHealthEnabled() && Rank_GetCurrent(iClient) > 0)
 			Format(sMessage, sizeof(sMessage), "%s\nRank %d (-%.0f%%%% health)", sMessage, Rank_GetCurrent(iClient), Rank_GetPrecentageLoss(iClient) * 100.0);
 	}
 	
@@ -277,22 +277,7 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 	//Display chat on who is next boss
 	int iNextPlayer = Queue_GetPlayerFromRank(1);
 	if (0 < iNextPlayer <= MaxClients && IsClientInGame(iNextPlayer))
-	{
-		char sFormat[512];
-		Format(sFormat, sizeof(sFormat), "%s================%s\nYou are about to be the next boss!\n", TEXT_DARK, TEXT_COLOR);
-		
-		SaxtonHaleNextBoss nextBoss = SaxtonHaleNextBoss(iNextPlayer);
-		
-		if (nextBoss.bSpecialClassRound)
-			Format(sFormat, sizeof(sFormat), "%sYour round will be a special class round, rank %s%d%s will not change.", sFormat, TEXT_DARK, Rank_GetPlayerRequirement(iNextPlayer), TEXT_COLOR);
-		else if (Rank_IsAllowed(iNextPlayer))
-			Format(sFormat, sizeof(sFormat), "%sYou are currently at rank %s%d%s.", sFormat, TEXT_DARK, Rank_GetCurrent(iNextPlayer), TEXT_COLOR);
-		else
-			Format(sFormat, sizeof(sFormat), "%sYou need %s%d%s enemy players to have your rank %s%d%s changed.", sFormat, TEXT_DARK, Rank_GetPlayerRequirement(iNextPlayer), TEXT_COLOR, TEXT_DARK, Rank_GetCurrent(iNextPlayer), TEXT_COLOR);
-		
-		Format(sFormat, sizeof(sFormat), "%s%s\n================", sFormat, TEXT_DARK);
-		PrintToChat(iNextPlayer, sFormat);
-	}
+		Rank_DisplayNextClient(iNextPlayer);
 }
 
 public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcast)
@@ -478,11 +463,8 @@ public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcas
 
 public void Event_PointCaptured(Event event, const char[] sName, bool bDontBroadcast)
 {
-	int iCP = event.GetInt("cp");
 	TFTeam nTeam = view_as<TFTeam>(event.GetInt("team"));
-	
 	Dome_SetTeam(nTeam);
-	Dome_Start(iCP);
 }
 
 public void Event_BroadcastAudio(Event event, const char[] sName, bool bDontBroadcast)
