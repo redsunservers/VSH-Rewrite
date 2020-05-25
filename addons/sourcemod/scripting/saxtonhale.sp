@@ -382,7 +382,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/bosses/boss_hale.sp"
 #include "vsh/bosses/boss_horsemann.sp"
 #include "vsh/bosses/boss_painiscupcakes.sp"
-// #include "vsh/bosses/boss_pyrocar.sp"
+#include "vsh/bosses/boss_pyrocar.sp"
 #include "vsh/bosses/boss_pyromancer_scorched.sp"
 #include "vsh/bosses/boss_pyromancer_scalded.sp"
 #include "vsh/bosses/boss_redmond.sp"
