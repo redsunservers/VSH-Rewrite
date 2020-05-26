@@ -111,11 +111,10 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 {
 	if (!g_bEnabled || GameRules_GetProp("m_bInWaitingForPlayers")) return;
 
-	//Play one round of arena
+	//Play one round of arena, and force unlock/enable dome
 	if (g_iTotalRoundPlayed <= 0)
 	{
-		Dome_SetTeam(TFTeam_Unassigned);
-		Dome_Start();
+		GameRules_SetPropFloat("m_flCapturePointEnableTime", 0.0);
 		return;
 	}
 

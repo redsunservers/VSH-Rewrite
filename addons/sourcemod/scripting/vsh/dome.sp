@@ -127,7 +127,7 @@ void Dome_RoundStart()
 	g_bDomeCustomPos = false;
 	
 	g_iDomeEntRef = 0;
-	g_nDomeTeamOwner = TFTeam_Unassigned;
+	Dome_SetTeam(TFTeam_Unassigned);
 	
 	g_flDomeStart = 0.0;
 	g_flDomeRadius = 0.0;
@@ -135,10 +135,7 @@ void Dome_RoundStart()
 	g_hDomeTimerBleed = null;
 	
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
-	{
-		g_flDomePlayerTime[iClient] = 0.0;
 		g_bDomePlayerOutside[iClient] = false;
-	}
 	
 	//CP hud is in the way from our VSH hud, move em to better place
 	int iObjectiveRessource = TF2_GetObjectiveResource();
