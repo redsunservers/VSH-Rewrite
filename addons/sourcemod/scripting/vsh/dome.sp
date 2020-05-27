@@ -236,6 +236,7 @@ bool Dome_Start(int iCP = 0)
 	
 	SetEntityRenderMode(iDome, RENDER_TRANSCOLOR);
 	SetEntityRenderColor(iDome, g_iDomeColor[0], g_iDomeColor[1], g_iDomeColor[2], 0);
+	SDK_AlwaysTransmitEntity(iDome);
 	
 	GameRules_SetPropFloat("m_flCapturePointEnableTime", 0.0);
 	g_flDomeStart = GetGameTime();
