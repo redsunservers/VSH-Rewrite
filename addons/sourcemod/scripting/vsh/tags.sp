@@ -93,7 +93,9 @@ void Tags_OnThink(int iClient)
 				if (iAmmo == 0 && !g_bTagsLunchbox[iClient])
 				{
 					g_bTagsLunchbox[iClient] = true;
-					TagsCore_CallAll(iClient, TagsCall_Lunchbox);
+					
+					if (TF2_IsPlayerInCondition(iClient, TFCond_Taunting))
+						TagsCore_CallAll(iClient, TagsCall_Lunchbox);
 				}
 			}
 		}
