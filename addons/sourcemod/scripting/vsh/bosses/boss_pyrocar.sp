@@ -87,7 +87,7 @@ methodmap CPyroCar < SaxtonHaleBase
 	public void GetBossInfo(char[] sInfo, int length)
 	{
 		StrCat(sInfo, length, "\nHealth: Medium");
-		StrCat(sInfo, length, "\nYour flamethrower has a shorter range with no afterburn");
+		StrCat(sInfo, length, "\nYour flamethrower has no afterburn");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nAbilities");
 		StrCat(sInfo, length, "\n- Float Jump, gains less gravity while in air");
