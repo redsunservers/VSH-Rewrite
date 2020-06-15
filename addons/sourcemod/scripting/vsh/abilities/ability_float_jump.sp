@@ -120,9 +120,9 @@ methodmap CFloatJump < SaxtonHaleBase
 		//Default values, these can be changed if needed
 		ability.iMaxJumpCharge = 200;
 		ability.iJumpChargeBuild = 4;
-		ability.flMaxDistance = 725.0;
+		ability.flMaxDistance = 750.0;
 		ability.flMaxHeight = 500.0;
-		ability.flCooldown = 7.5;
+		ability.flCooldown = 7.0;
 		ability.flDuration = 1.0;
 		ability.flGravity = 0.3;
 	}

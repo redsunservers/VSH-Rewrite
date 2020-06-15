@@ -1,7 +1,7 @@
 #define ITEM_NEON_ANNIHILATOR			813
 #define ITEM_BACKBURNER					40
 #define ATTRIB_LESSHEALING				734
-#define PYROCAR_BACKBURNER_ATTRIBUTES	"24 ; 1.0 ; 37 ; 0.2 ; 59 ; 1.0 ; 72 ; 0.0 ; 112 ; 0.625 ; 178 ; 0.01 ; 181 ; 1.0 ; 252 ; 0.5 ; 259 ; 1.0 ; 356 ; 1.0 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 2450.0 ; 862 ; 0.4 ; 863 ; 0.01 ; 865 ; 85 ; 214 ; %d"
+#define PYROCAR_BACKBURNER_ATTRIBUTES	"24 ; 1.0 ; 37 ; 0.2 ; 59 ; 1.0 ; 72 ; 0.0 ; 112 ; 0.625 ; 178 ; 0.01 ; 181 ; 1.0 ; 252 ; 0.5 ; 259 ; 1.0 ; 356 ; 1.0 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 1850.0 ; 862 ; 0.4 ; 863 ; 0.01 ; 865 ; 85 ; 214 ; %d"
 
 static char g_strPyrocarRoundStart[][] =  {
 	"vsh_rewrite/pyrocar/pyrocar_intro.mp3", 
@@ -87,13 +87,15 @@ methodmap CPyroCar < SaxtonHaleBase
 	public void GetBossInfo(char[] sInfo, int length)
 	{
 		StrCat(sInfo, length, "\nHealth: Medium");
-		StrCat(sInfo, length, "\nYour flamethrower has no afterburn");
+		StrCat(sInfo, length, "\nYour flamethrower range is shorter and has no afterburn");
+		StrCat(sInfo, length, "\nYour current target obtains healing penalty");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nAbilities");
 		StrCat(sInfo, length, "\n- Float Jump, gains less gravity while in air");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- Hops repeatedly dealing explosive fire damage near the impact for 8 seconds");
+		StrCat(sInfo, length, "\n- Hops repeatedly dealing explosive damage near the impact for 8 seconds");
+		StrCat(sInfo, length, "\n- You additionally gain defensive buff and immunity to knockback");
 		StrCat(sInfo, length, "\n- 200%% Rage: Increases explosion damage and extends the duration to 12 seconds");
 	}
 	
@@ -196,6 +198,10 @@ methodmap CPyroCar < SaxtonHaleBase
 		//Disable self-damage from bomb rage ability
 		if (this.iClient == attacker && strcmp(sWeaponClassName, "tf_generic_bomb") == 0)
 			return Plugin_Stop;
+			
+		float flHealingRate = 1.0;
+		if (TF2_IsPlayerInCondition(this.iClient, TFCond_Milked) && this.iClient != attacker && TF2_FindAttribute(attacker, ATTRIB_LESSHEALING, flHealingRate))
+			Client_AddHealth(attacker, RoundToNearest(damage - flHealingRate/damage));
 		
 		return Plugin_Continue;
 	}
@@ -207,14 +213,17 @@ methodmap CPyroCar < SaxtonHaleBase
 			//Give victim less healing while damaged by pyrocar
 			if (!g_hPyrocarHealTimer[victim])
 			{
-				TF2Attrib_SetByDefIndex(victim, ATTRIB_LESSHEALING, 0.5);
+				TF2Attrib_SetByDefIndex(victim, ATTRIB_LESSHEALING, 0.35);
 				TF2Attrib_ClearCache(victim);
 			}
-			
-			g_hPyrocarHealTimer[victim] = CreateTimer(0.5, Timer_RemoveLessHealing, GetClientSerial(victim));
+			else
+			{
+				KillTimer(g_hPyrocarHealTimer[victim]);
+				g_hPyrocarHealTimer[victim] = CreateTimer(0.6, Timer_RemoveLessHealing, GetClientSerial(victim));
+			}
 			
 			//Deal constant damage for flamethrower
-			damage = 15.0;
+			damage = 16.0;
 			return Plugin_Changed;
 		}
 		

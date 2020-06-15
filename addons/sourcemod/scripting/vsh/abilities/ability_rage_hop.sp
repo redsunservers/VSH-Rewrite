@@ -1,4 +1,5 @@
 #define ATTRIB_PUSHRESISTANCE	252
+#define ATTRIB_AIRCONTROL 		610
 
 static float g_flJumpPower[TF_MAXPLAYERS+1];
 static float g_flRageHopMaxHeight[TF_MAXPLAYERS+1];
@@ -95,7 +96,7 @@ methodmap CRageHop < SaxtonHaleBase
 		ability.flRageHopMaxDistance = 1.2;
 		
 		ability.flBombDamage = 23.0;
-		ability.flBombRadius = 200.0;
+		ability.flBombRadius = 210.0;
 		
 		ability.flDuration = 8.0;
 	}
@@ -121,9 +122,10 @@ methodmap CRageHop < SaxtonHaleBase
 			Format(sSound, sizeof(sSound), "weapons/airstrike_small_explosion_0%i.wav", GetRandomInt(1,3));
 			
 			float flBombRadiusValue = this.flBombRadius;
-			float flFinalBombDamage = (g_vecPeakVel[this.iClient] + 120.0) / 100.0 * -this.flBombDamage;
-			if (flFinalBombDamage < 20.0) flFinalBombDamage = 20.0;
-			if (flFinalBombDamage > 120.0) flFinalBombDamage = 120.0;
+			//Calculate velocity and apply damage multiplier
+			float flFinalBombDamage = (g_vecPeakVel[this.iClient] + 110.0) / 100.0 * -this.flBombDamage;
+			if (flFinalBombDamage < 25.0) flFinalBombDamage = 25.0;
+			if (flFinalBombDamage > 140.0) flFinalBombDamage = 140.0;
 			
 			if (this.bSuperRage)
 			{
@@ -151,15 +153,29 @@ methodmap CRageHop < SaxtonHaleBase
 			
 			g_bStompEnabled[this.iClient] = true;
 		}
+		else if (g_flHopEndTime[this.iClient] < GetGameTime())
+		{
+			TF2Attrib_RemoveByDefIndex(this.iClient, ATTRIB_AIRCONTROL);
+		}
 	}
 	
 	public void OnRage()
 	{
 		if (this.bSuperRage)
+		{
 			g_flHopEndTime[this.iClient] = GetGameTime() + g_flDuration[this.iClient] * 1.5;
+			//Give defense buff (no crits block) and knockback immunity
+			TF2_AddCondition(this.iClient, TFCond_DefenseBuffNoCritBlock, g_flDuration[this.iClient] * 1.5);
+			TF2_AddCondition(this.iClient, TFCond_MegaHeal, g_flDuration[this.iClient] * 1.5);
+		}
 		else
+		{
 			g_flHopEndTime[this.iClient] = GetGameTime() + g_flDuration[this.iClient];
+			TF2_AddCondition(this.iClient, TFCond_DefenseBuffNoCritBlock, g_flDuration[this.iClient]);
+			TF2_AddCondition(this.iClient, TFCond_MegaHeal, g_flDuration[this.iClient]);
+		}
 		
+		TF2Attrib_SetByDefIndex(this.iClient, ATTRIB_AIRCONTROL, 10.0);
 		g_vecPeakVel[this.iClient] = 0.0;
 		
 		char sSound[PLATFORM_MAX_PATH];

@@ -1,12 +1,17 @@
+#define ATTRIB_LESSHEALING				734
+
 stock void Client_AddHealth(int iClient, int iAdditionalHeal, int iMaxOverHeal=0)
 {
 	int iMaxHealth = SDK_GetMaxHealth(iClient);
 	int iHealth = GetEntProp(iClient, Prop_Send, "m_iHealth");
 	int iTrueMaxHealth = iMaxHealth+iMaxOverHeal;
-
+	
+	float flHealingRate = 1.0;
+	TF2_FindAttribute(iClient, ATTRIB_LESSHEALING, flHealingRate);
+	
 	if (iHealth < iTrueMaxHealth)
 	{
-		iHealth += iAdditionalHeal;
+		iHealth += RoundToNearest(float(iAdditionalHeal) * flHealingRate);
 		if (iHealth > iTrueMaxHealth) iHealth = iTrueMaxHealth;
 		SetEntProp(iClient, Prop_Send, "m_iHealth", iHealth);
 	}
