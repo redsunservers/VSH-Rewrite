@@ -201,7 +201,7 @@ methodmap CPyroCar < SaxtonHaleBase
 			
 		float flHealingRate = 1.0;
 		if (TF2_IsPlayerInCondition(this.iClient, TFCond_Milked) && this.iClient != attacker && TF2_FindAttribute(attacker, ATTRIB_LESSHEALING, flHealingRate))
-			SDKHooks_TakeDamage(attacker, attacker, attacker, RoundToNearest(10 - flHealingRate/damage));
+			SDKHooks_TakeDamage(attacker, attacker, attacker, damage - flHealingRate/damage);
 		
 		return Plugin_Continue;
 	}
