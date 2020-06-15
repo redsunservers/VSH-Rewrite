@@ -213,13 +213,13 @@ methodmap CPyroCar < SaxtonHaleBase
 			//Give victim less healing while damaged by pyrocar
 			if (!g_hPyrocarHealTimer[victim])
 			{
-				TF2Attrib_SetByDefIndex(victim, ATTRIB_LESSHEALING, 0.35);
+				TF2Attrib_SetByDefIndex(victim, ATTRIB_LESSHEALING, 0.3);
 				TF2Attrib_ClearCache(victim);
 			}
 			else
 			{
 				KillTimer(g_hPyrocarHealTimer[victim]);
-				g_hPyrocarHealTimer[victim] = CreateTimer(0.6, Timer_RemoveLessHealing, GetClientSerial(victim));
+				g_hPyrocarHealTimer[victim] = CreateTimer(0.75, Timer_RemoveLessHealing, GetClientSerial(victim));
 			}
 			
 			//Deal constant damage for flamethrower
