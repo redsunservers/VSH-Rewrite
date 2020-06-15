@@ -1,7 +1,7 @@
 #define ITEM_NEON_ANNIHILATOR			813
 #define ITEM_BACKBURNER					40
 #define ATTRIB_LESSHEALING				734
-#define PYROCAR_BACKBURNER_ATTRIBUTES	"24 ; 1.0 ; 37 ; 0.2 ; 59 ; 1.0 ; 72 ; 0.0 ; 112 ; 0.625 ; 178 ; 0.01 ; 181 ; 1.0 ; 252 ; 0.5 ; 259 ; 1.0 ; 356 ; 1.0 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 1850.0 ; 862 ; 0.4 ; 863 ; 0.01 ; 865 ; 85 ; 214 ; %d"
+#define PYROCAR_BACKBURNER_ATTRIBUTES	"24 ; 1.0 ; 37 ; 0.25 ; 59 ; 1.0 ; 72 ; 0.0 ; 112 ; 0.6 ; 178 ; 0.01 ; 181 ; 1.0 ; 252 ; 0.5 ; 259 ; 1.0 ; 356 ; 1.0 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 1850.0 ; 862 ; 0.4 ; 863 ; 0.01 ; 865 ; 85 ; 214 ; %d"
 
 static char g_strPyrocarRoundStart[][] =  {
 	"vsh_rewrite/pyrocar/pyrocar_intro.mp3", 
@@ -95,7 +95,7 @@ methodmap CPyroCar < SaxtonHaleBase
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
 		StrCat(sInfo, length, "\n- Hops repeatedly dealing explosive damage near the impact for 8 seconds");
-		StrCat(sInfo, length, "\n- You additionally gain defensive buff and immunity to knockback");
+		StrCat(sInfo, length, "\n- Rage also grants you defensive buff and immunity to knockback");
 		StrCat(sInfo, length, "\n- 200%% Rage: Increases explosion damage and extends the duration to 12 seconds");
 	}
 	
