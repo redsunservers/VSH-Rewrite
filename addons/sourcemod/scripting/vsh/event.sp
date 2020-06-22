@@ -184,18 +184,21 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 			if (g_iTotalAttackCount < Rank_GetPlayerRequirement(iBoss))
 				Rank_SetEnable(false);
 			
-			float flMusicTime;
-			boss.CallFunction("GetMusicInfo", g_sBossMusic, sizeof(g_sBossMusic), flMusicTime);
-			if (!StrEmpty(g_sBossMusic))
+			if (g_ConfigConvar.LookupInt("vsh_music_enable"))
 			{
-				for (int i = 1; i <= MaxClients; i++)
-					if (IsClientInGame(i) && Preferences_Get(i, Preferences_Music))
-						EmitSoundToClient(i, g_sBossMusic);
-				
-				if (flMusicTime > 0.0)
-					g_hTimerBossMusic = CreateTimer(flMusicTime, Timer_Music, boss, TIMER_REPEAT);
-				
-				break;
+				float flMusicTime;
+				boss.CallFunction("GetMusicInfo", g_sBossMusic, sizeof(g_sBossMusic), flMusicTime);
+				if (!StrEmpty(g_sBossMusic))
+				{
+					for (int i = 1; i <= MaxClients; i++)
+						if (IsClientInGame(i) && Preferences_Get(i, Preferences_Music))
+							EmitSoundToClient(i, g_sBossMusic);
+					
+					if (flMusicTime > 0.0)
+						g_hTimerBossMusic = CreateTimer(flMusicTime, Timer_Music, boss, TIMER_REPEAT);
+					
+					break;
+				}
 			}
 		}
 	}
