@@ -199,8 +199,8 @@ methodmap CFloatJump < SaxtonHaleBase
 				return;
 			
 			float flCooldownTime = (this.flCooldown*(float(this.iJumpCharge)/float(this.iMaxJumpCharge)));
-			if (flCooldownTime < 3.5)
-				flCooldownTime = 3.5;
+			if (flCooldownTime < 4.0)
+				flCooldownTime = 4.0;
 			
 			g_flFloatJumpCooldownWait[this.iClient] = GetGameTime()+flCooldownTime;
 			
