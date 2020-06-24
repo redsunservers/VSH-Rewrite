@@ -1,7 +1,7 @@
 #define ITEM_NEON_ANNIHILATOR			813
 #define ITEM_BACKBURNER					40
 #define ATTRIB_LESSHEALING				734
-#define PYROCAR_BACKBURNER_ATTRIBUTES	"24 ; 1.0 ; 37 ; 0.25 ; 59 ; 1.0 ; 72 ; 0.0 ; 112 ; 0.6 ; 178 ; 0.01 ; 181 ; 1.0 ; 252 ; 0.5 ; 259 ; 1.0 ; 356 ; 1.0 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 2000.0 ; 862 ; 0.45 ; 863 ; 0.01 ; 865 ; 85 ; 214 ; %d"
+#define PYROCAR_BACKBURNER_ATTRIBUTES	"24 ; 1.0 ; 37 ; 0.25 ; 59 ; 1.0 ; 72 ; 0.0 ; 112 ; 0.6 ; 178 ; 0.01 ; 181 ; 1.0 ; 252 ; 0.5 ; 259 ; 1.0 ; 356 ; 1.0 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 1850.0 ; 862 ; 0.45 ; 863 ; 0.01 ; 865 ; 85 ; 214 ; %d"
 
 static char g_strPyrocarRoundStart[][] =  {
 	"vsh_rewrite/pyrocar/pyrocar_intro.mp3", 
@@ -198,10 +198,11 @@ methodmap CPyroCar < SaxtonHaleBase
 		//Disable self-damage from bomb rage ability
 		if (this.iClient == attacker && strcmp(sWeaponClassName, "tf_generic_bomb") == 0)
 			return Plugin_Stop;
-			
+		
+		//It's ugly but there's no other way
 		float flHealingRate = 1.0;
 		if (TF2_IsPlayerInCondition(this.iClient, TFCond_Milked) && this.iClient != attacker && TF2_FindAttribute(attacker, ATTRIB_LESSHEALING, flHealingRate))
-			SDKHooks_TakeDamage(attacker, attacker, attacker, damage - flHealingRate/damage);
+			Client_AddHealth(attacker, -RoundToNearest(damage - damage/flHealingRate));
 		
 		return Plugin_Continue;
 	}
@@ -216,14 +217,11 @@ methodmap CPyroCar < SaxtonHaleBase
 				TF2Attrib_SetByDefIndex(victim, ATTRIB_LESSHEALING, 0.3);
 				TF2Attrib_ClearCache(victim);
 			}
-			else
-			{
-				KillTimer(g_hPyrocarHealTimer[victim]);
-				g_hPyrocarHealTimer[victim] = CreateTimer(0.75, Timer_RemoveLessHealing, GetClientSerial(victim));
-			}
+			
+			g_hPyrocarHealTimer[victim] = CreateTimer(0.5, Timer_RemoveLessHealing, GetClientSerial(victim));
 			
 			//Deal constant damage for flamethrower
-			damage = 16.0;
+			damage = 12.0;
 			return Plugin_Changed;
 		}
 		

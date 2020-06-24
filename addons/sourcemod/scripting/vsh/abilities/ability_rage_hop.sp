@@ -95,7 +95,7 @@ methodmap CRageHop < SaxtonHaleBase
 		ability.flRageHopMaxHeight = 500.0;
 		ability.flRageHopMaxDistance = 1.2;
 		
-		ability.flBombDamage = 23.0;
+		ability.flBombDamage = 24.0;
 		ability.flBombRadius = 210.0;
 		
 		ability.flDuration = 8.0;
@@ -124,8 +124,8 @@ methodmap CRageHop < SaxtonHaleBase
 			float flBombRadiusValue = this.flBombRadius;
 			//Calculate velocity and apply damage multiplier
 			float flFinalBombDamage = (g_vecPeakVel[this.iClient] + 110.0) / 100.0 * -this.flBombDamage;
-			if (flFinalBombDamage < 25.0) flFinalBombDamage = 25.0;
-			if (flFinalBombDamage > 140.0) flFinalBombDamage = 140.0;
+			if (flFinalBombDamage < 30.0) flFinalBombDamage = 30.0;
+			if (flFinalBombDamage > 150.0) flFinalBombDamage = 150.0;
 			
 			if (this.bSuperRage)
 			{
