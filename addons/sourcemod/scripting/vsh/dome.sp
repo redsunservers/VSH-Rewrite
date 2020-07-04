@@ -159,11 +159,7 @@ void Dome_RoundStart()
 		int iProp = MaxClients+1;
 		while ((iProp = FindEntityByClassname(iProp, "prop_dynamic")) > MaxClients)
 		{
-			char sModel[128];
-			GetEntPropString(iProp, Prop_Data, "m_ModelName", sModel, sizeof(sModel));
-			
-			if (StrEqual(sModel, "models/props_gameplay/cap_point_base.mdl")
-				|| StrEqual(sModel, "models/props_doomsday/cap_point_small.mdl"))
+			if (Dome_IsDomeProp(iProp))
 			{
 				TeleportEntity(iProp, g_vecDomeCP, NULL_VECTOR, NULL_VECTOR);
 				DispatchKeyValue(iProp, "disableshadows", "1");
@@ -191,19 +187,39 @@ void Dome_OnThink(int iClient)
 	if (iTrigger <= MaxClients)
 		return;
 	
-	float vecOrigin[3];
-	GetClientAbsOrigin(iClient, vecOrigin);
-	
+	bool bTouch;
 	if (IsPlayerAlive(iClient) && TF2_GetClientTeam(iClient) > TFTeam_Spectator && IsClientInRange(iClient, g_vecDomeCP, g_ConfigConvar.LookupFloat("vsh_dome_cp_radius")))
 	{
-		g_bDomeCapturing[iClient] = true;
-		AcceptEntityInput(iTrigger, "StartTouch", iClient, iClient);
+		//Can client pos see dome center
+		float vecStart[3], vecEnd[3];
+		GetClientAbsOrigin(iClient, vecStart);
+		vecEnd = g_vecDomeCP;
+		vecEnd[2] += 8.0;
+		TR_TraceRayFilter(vecStart, vecEnd, MASK_PLAYERSOLID, RayType_EndPoint, TraceFilter_Dome);
+		if (!TR_DidHit())
+		{
+			bTouch = true;
+			g_bDomeCapturing[iClient] = true;
+			AcceptEntityInput(iTrigger, "StartTouch", iClient, iClient);
+		}
 	}
-	else if (g_bDomeCapturing[iClient])
+	
+	if (!bTouch && g_bDomeCapturing[iClient])
 	{
 		AcceptEntityInput(iTrigger, "EndTouch", iClient, iClient);
 		g_bDomeCapturing[iClient] = false;
 	}
+}
+
+stock bool TraceFilter_Dome(int iEntity, int iMask, any iData)
+{
+	if (0 < iEntity <= MaxClients)
+		return false;
+	
+	if (Dome_IsDomeProp(iEntity))
+		return false;
+	
+	return true;
 }
 
 bool Dome_Start(int iCP = 0)
@@ -535,4 +551,12 @@ float Dome_GetDistance(int iEntity)
 	else return -1.0;
 	
 	return GetVectorDistance(vecPos, g_vecDomeCP);
+}
+
+bool Dome_IsDomeProp(int iProp)
+{
+	char sModel[PLATFORM_MAX_PATH];
+	GetEntPropString(iProp, Prop_Data, "m_ModelName", sModel, sizeof(sModel));
+			
+	return StrEqual(sModel, "models/props_gameplay/cap_point_base.mdl") || StrEqual(sModel, "models/props_doomsday/cap_point_small.mdl");
 }
