@@ -1,7 +1,7 @@
 #define ITEM_NEON_ANNIHILATOR			813
 #define ITEM_BACKBURNER					40
 #define ATTRIB_LESSHEALING				734
-#define PYROCAR_BACKBURNER_ATTRIBUTES	"24 ; 1.0 ; 37 ; 0.25 ; 59 ; 1.0 ; 72 ; 0.0 ; 112 ; 0.6 ; 178 ; 0.01 ; 181 ; 1.0 ; 252 ; 0.5 ; 259 ; 1.0 ; 356 ; 1.0 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 1850.0 ; 862 ; 0.45 ; 863 ; 0.01 ; 865 ; 85 ; 214 ; %d"
+#define PYROCAR_BACKBURNER_ATTRIBUTES	"24 ; 1.0 ; 37 ; 0.025 ; 59 ; 1.0 ; 72 ; 0.0 ; 178 ; 0.01 ; 181 ; 1.0 ; 252 ; 0.5 ; 259 ; 1.0 ; 356 ; 1.0 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 1600.0 ; 862 ; 0.35 ; 863 ; 0.01 ; 865 ; 85 ; 214 ; %d"
 
 static char g_strPyrocarRoundStart[][] =  {
 	"vsh_rewrite/pyrocar/pyrocar_intro.mp3", 
@@ -65,6 +65,7 @@ static int g_iPyrocarPrimary[TF_MAXPLAYERS+1];
 static int g_iPyrocarMelee[TF_MAXPLAYERS+1];
 
 static Handle g_hPyrocarHealTimer[TF_MAXPLAYERS+1];
+static Handle g_hPyrocarAmmoTimer[TF_MAXPLAYERS+1];
 
 methodmap CPyroCar < SaxtonHaleBase
 {
@@ -88,6 +89,7 @@ methodmap CPyroCar < SaxtonHaleBase
 	{
 		StrCat(sInfo, length, "\nHealth: Medium");
 		StrCat(sInfo, length, "\nYour flamethrower range is shorter and has no afterburn");
+		StrCat(sInfo, length, "\nIt fires in powerful short bursts");
 		StrCat(sInfo, length, "\nYour current target obtains healing penalty");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nAbilities");
@@ -186,6 +188,11 @@ methodmap CPyroCar < SaxtonHaleBase
 						SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", g_iPyrocarPrimary[this.iClient]);
 				}
 			}
+			
+			if (TF2_GetAmmo(this.iClient, WeaponSlot_Primary) == 0 && g_hPyrocarAmmoTimer[this.iClient] == null)
+			{
+				g_hPyrocarAmmoTimer[this.iClient] = CreateTimer(1.0, Timer_RefillAmmo, this.iClient);
+			}
 		}
 	}
 	
@@ -214,14 +221,14 @@ methodmap CPyroCar < SaxtonHaleBase
 			//Give victim less healing while damaged by pyrocar
 			if (!g_hPyrocarHealTimer[victim])
 			{
-				TF2Attrib_SetByDefIndex(victim, ATTRIB_LESSHEALING, 0.3);
+				TF2Attrib_SetByDefIndex(victim, ATTRIB_LESSHEALING, 0.4);
 				TF2Attrib_ClearCache(victim);
 			}
 			
-			g_hPyrocarHealTimer[victim] = CreateTimer(0.5, Timer_RemoveLessHealing, GetClientSerial(victim));
+			g_hPyrocarHealTimer[victim] = CreateTimer(1.0, Timer_RemoveLessHealing, GetClientSerial(victim));
 			
 			//Deal constant damage for flamethrower
-			damage = 12.0;
+			damage = 17.0;
 			return Plugin_Changed;
 		}
 		
@@ -264,6 +271,7 @@ methodmap CPyroCar < SaxtonHaleBase
 		for (int iClient = 1; iClient <= MaxClients; iClient++)
 		{
 			g_hPyrocarHealTimer[iClient] = null;
+			g_hPyrocarAmmoTimer[iClient] = null;
 			
 			if (IsClientInGame(iClient))
 			{
@@ -303,6 +311,19 @@ public Action Timer_RemoveLessHealing(Handle hTimer, int iSerial)
 			
 			if (TF2_IsPlayerInCondition(iClient, TFCond_OnFire))
 				TF2_RemoveCondition(iClient, TFCond_OnFire);
+		}
+	}
+}
+
+public Action Timer_RefillAmmo(Handle hTimer, int iClient)
+{
+	if (0 < iClient <= MaxClients && g_hPyrocarAmmoTimer[iClient] == hTimer)
+	{
+		g_hPyrocarAmmoTimer[iClient] = null;
+		
+		if (IsClientInGame(iClient))
+		{
+			TF2_SetAmmo(iClient, WeaponSlot_Primary, 5);
 		}
 	}
 }

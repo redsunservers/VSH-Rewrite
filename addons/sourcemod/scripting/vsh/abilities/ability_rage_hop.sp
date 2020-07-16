@@ -95,8 +95,8 @@ methodmap CRageHop < SaxtonHaleBase
 		ability.flRageHopMaxHeight = 500.0;
 		ability.flRageHopMaxDistance = 1.2;
 		
-		ability.flBombDamage = 24.0;
-		ability.flBombRadius = 250.0;
+		ability.flBombDamage = 23.0;
+		ability.flBombRadius = 275.0;
 		
 		ability.flDuration = 8.0;
 	}
@@ -125,7 +125,7 @@ methodmap CRageHop < SaxtonHaleBase
 			//Calculate velocity and apply damage multiplier
 			float flFinalBombDamage = (g_vecPeakVel[this.iClient] + 110.0) / 100.0 * -this.flBombDamage;
 			if (flFinalBombDamage < 30.0) flFinalBombDamage = 30.0;
-			if (flFinalBombDamage > 150.0) flFinalBombDamage = 150.0;
+			if (flFinalBombDamage > 140.0) flFinalBombDamage = 140.0;
 			
 			if (this.bSuperRage)
 			{
@@ -175,7 +175,7 @@ methodmap CRageHop < SaxtonHaleBase
 			TF2_AddCondition(this.iClient, TFCond_MegaHeal, g_flDuration[this.iClient]);
 		}
 		
-		TF2Attrib_SetByDefIndex(this.iClient, ATTRIB_AIRCONTROL, 10.0);
+		TF2Attrib_SetByDefIndex(this.iClient, ATTRIB_AIRCONTROL, 8.0);
 		g_vecPeakVel[this.iClient] = 0.0;
 		
 		char sSound[PLATFORM_MAX_PATH];
