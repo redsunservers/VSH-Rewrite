@@ -15,6 +15,7 @@ public void Command_Init()
 	Command_Create("class", Command_Weapon);
 	Command_Create("weapon", Command_Weapon);
 	Command_Create("boss", Command_Boss);
+	Command_Create("multiboss", Command_MultiBoss);
 	Command_Create("modifiers", Command_Modifiers);
 	Command_Create("next", Command_HaleNext);
 	Command_Create("credits", Command_Credits);
@@ -115,7 +116,21 @@ public Action Command_Boss(int iClient, int iArgs)
 		return Plugin_Handled;
 	}
 
-	MenuBoss_DisplayBossList(iClient, MenuBoss_CallbackInfo);
+	MenuBoss_DisplayList(iClient, VSHClassType_Boss, MenuBoss_CallbackInfo);
+	return Plugin_Handled;
+}
+
+public Action Command_MultiBoss(int iClient, int iArgs)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+
+	if (iClient == 0)
+	{
+		ReplyToCommand(iClient, "This Command can only be used ingame");
+		return Plugin_Handled;
+	}
+
+	MenuBoss_DisplayList(iClient, VSHClassType_BossMulti, MenuBoss_CallbackInfo);
 	return Plugin_Handled;
 }
 
@@ -129,7 +144,7 @@ public Action Command_Modifiers(int iClient, int iArgs)
 		return Plugin_Handled;
 	}
 
-	MenuBoss_DisplayModifiersList(iClient, MenuBoss_CallbackInfo);
+	MenuBoss_DisplayList(iClient, VSHClassType_Modifier, MenuBoss_CallbackInfo);
 	return Plugin_Handled;
 }
 

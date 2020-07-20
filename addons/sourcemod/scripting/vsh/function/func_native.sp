@@ -241,12 +241,6 @@ public any FuncNative_RegisterClass(Handle hPlugin, int iNumParams)
 	
 	if (!FuncClass_Register(sClass, hPlugin, nClassType))
 		ThrowNativeError(SP_ERROR_NATIVE, "Methodmap Class (%s) already registered", sClass);
-	
-	switch (nClassType)
-	{
-		case VSHClassType_Boss: MenuBoss_AddInfoBoss(sClass);
-		case VSHClassType_Modifier: MenuBoss_AddInfoModifiers(sClass);
-	}
 }
 
 //void SaxtonHale_UnregisterClass(const char[] sClass);
@@ -263,7 +257,6 @@ public any FuncNative_UnregisterClass(Handle hPlugin, int iNumParams)
 		ThrowNativeError(SP_ERROR_NATIVE, "Unregister core class (%s) is not allowed", sClass);
 	
 	FuncClass_Unregister(sClass);
-	MenuBoss_RemoveInfo(sClass);
 	NextBoss_RemoveMulti(sClass);
 }
 

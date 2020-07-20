@@ -19,6 +19,7 @@ void Menu_Init()
 	g_hMenuMain.SetTitle("[VSH REWRITE] - %s.%s", PLUGIN_VERSION, PLUGIN_VERSION_REVISION);
 	g_hMenuMain.AddItem("class", "Class & Weapon Menu (!vshclass)");
 	g_hMenuMain.AddItem("boss", "Bosses Info (!vshboss)");
+	g_hMenuMain.AddItem("bossmulti", "Multi Bosses Info (!vshmultiboss)");
 	g_hMenuMain.AddItem("modifiers", "Modifiers Info (!vshmodifiers)");
 	g_hMenuMain.AddItem("queue", "Queue List (!vshnext)");
 	g_hMenuMain.AddItem("preference", "Settings (!vshsettings)");
@@ -72,9 +73,11 @@ public int Menu_SelectMain(Menu hMenu, MenuAction action, int iClient, int iSele
 	if (StrEqual(sSelect, "class"))
 		MenuWeapon_DisplayMain(iClient);
 	else if (StrEqual(sSelect, "boss"))
-		MenuBoss_DisplayBossList(iClient, MenuBoss_CallbackInfo);
+		MenuBoss_DisplayList(iClient, VSHClassType_Boss, MenuBoss_CallbackInfo);
+	else if (StrEqual(sSelect, "bossmulti"))
+		MenuBoss_DisplayList(iClient, VSHClassType_BossMulti, MenuBoss_CallbackInfo);
 	else if (StrEqual(sSelect, "modifiers"))
-		MenuBoss_DisplayModifiersList(iClient, MenuBoss_CallbackInfo);
+		MenuBoss_DisplayList(iClient, VSHClassType_Modifier, MenuBoss_CallbackInfo);
 	else if (StrEqual(sSelect, "queue"))
 		Menu_DisplayQueue(iClient);
 	else if (StrEqual(sSelect, "preference"))

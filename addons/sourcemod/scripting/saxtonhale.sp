@@ -465,10 +465,14 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	FuncNative_AskLoad();
 	Native_AskLoad();
 	Property_AskLoad();
-	
+
+#if !defined __sourcepawn_methodmap__
+	Format(error, err_max, "This plugin should be compiled with SourcePawn Public Methodmap to be compiled correctly!");
+	return APLRes_Failure;
+#else
 	RegPluginLibrary("saxtonhale");
-	
 	return APLRes_Success;
+#endif
 }
 
 public void OnPluginStart()

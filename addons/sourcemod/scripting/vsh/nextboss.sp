@@ -319,7 +319,7 @@ void NextBoss_SetBoss(SaxtonHaleNextBoss nextBoss, ArrayList aNonBosses)
 	TF2_RespawnPlayer(nextBoss.iClient);
 	
 	//Display to client what boss you are for 10 seconds
-	MenuBoss_DisplayInfo(nextBoss.iClient, sBossType, 10);
+	MenuBoss_DisplayInfo(nextBoss.iClient, VSHClassType_Boss, sBossType, 10);
 	
 	//Enable special round if triggered
 	if (nextBoss.bSpecialClassRound)

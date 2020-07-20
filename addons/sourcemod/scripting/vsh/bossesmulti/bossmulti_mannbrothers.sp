@@ -21,6 +21,20 @@ methodmap CMannBrothers < SaxtonHaleBase
 		strcopy(sName, length, "Mann Brothers");
 	}
 	
+	public void GetBossMultiInfo(char[] sInfo, int length)
+	{
+		StrCat(sInfo, length, "\nMelee deals 124 damage");
+		StrCat(sInfo, length, "\nHealth: Low");
+		StrCat(sInfo, length, "\n ");
+		StrCat(sInfo, length, "\nAbilities");
+		StrCat(sInfo, length, "\n- Spells: alt-attack to use spell for 20%% of rage");
+		StrCat(sInfo, length, "\n- Redmond use Bats spell, Blutarch use Teleport spell");
+		StrCat(sInfo, length, "\n ");
+		StrCat(sInfo, length, "\nRage");
+		StrCat(sInfo, length, "\n- Redmond summons a Meteor spell, Blutarch summons a MONOCULUS! spell");
+		StrCat(sInfo, length, "\n- 200%% Rage: Summons 3 spells");
+	}
+	
 	public void OnSpawn()
 	{
 		char attribs[128];

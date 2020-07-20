@@ -65,6 +65,21 @@ methodmap CPyromancers < SaxtonHaleBase
 		strcopy(sName, length, "Pyromancers");
 	}
 	
+	public void GetBossMultiInfo(char[] sInfo, int length)
+	{
+		StrCat(sInfo, length, "\nMelee deals 80 damage.");
+		StrCat(sInfo, length, "\nHealth: Low");
+		StrCat(sInfo, length, "\n ");
+		StrCat(sInfo, length, "\nAbilities");
+		StrCat(sInfo, length, "\n- Boost Jump");
+		StrCat(sInfo, length, "\n ");
+		StrCat(sInfo, length, "\nRage");
+		StrCat(sInfo, length, "\n- Scalded grants a degreaser for 8 seconds");
+		StrCat(sInfo, length, "\n- 200%% Rage: Scalded grants a buffed backburner with quick-switch for 8 seconds");
+		StrCat(sInfo, length, "\n- Scorched ignite all players within 500 units");
+		StrCat(sInfo, length, "\n- 200%% Rage: Scorched ignite all players on the map");
+	}
+	
 	public void OnSpawn()
 	{
 		for (int i = 0; i < sizeof(g_iCosmetics); i++)
