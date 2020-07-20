@@ -56,26 +56,8 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 		if (this.bModel)
 			g_hClientBossModelTimer[this.iClient] = CreateTimer(0.2, Timer_ApplyBossModel, this.iClient, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
 		
-		if (TF2_GetPlayerClass(this.iClient) == this.nClass)
-		{
-			//Player is about to play as same class unchanged, strip weapon and cosmetics for GiveNamedItem to regenerate
-			
-			TF2_RemoveAllWeapons(this.iClient);
-			
-			int iEntity = MaxClients+1;
-			while ((iEntity = FindEntityByClassname(iEntity, "tf_wearable*")) > MaxClients)
-				if (GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == this.iClient || GetEntPropEnt(iEntity, Prop_Send, "moveparent") == this.iClient)
-					RemoveEntity(iEntity);
-			
-			iEntity = MaxClients+1;
-			while ((iEntity = FindEntityByClassname(iEntity, "tf_powerup_bottle")) > MaxClients)
-				if (GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == this.iClient || GetEntPropEnt(iEntity, Prop_Send, "moveparent") == this.iClient)
-					RemoveEntity(iEntity);
-		}
-		else if (this.nClass != TFClass_Unknown)
-		{
+		if (this.nClass != TFClass_Unknown)
 			TF2_SetPlayerClass(this.iClient, this.nClass);
-		}
 		
 		return view_as<SaxtonHaleBase>(this);
 	}

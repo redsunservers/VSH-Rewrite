@@ -111,11 +111,10 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 {
 	if (!g_bEnabled || GameRules_GetProp("m_bInWaitingForPlayers")) return;
 
-	//Play one round of arena
+	//Play one round of arena, and force unlock/enable dome
 	if (g_iTotalRoundPlayed <= 0)
 	{
-		Dome_SetTeam(TFTeam_Unassigned);
-		Dome_Start();
+		GameRules_SetPropFloat("m_flCapturePointEnableTime", 0.0);
 		return;
 	}
 
@@ -185,18 +184,21 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 			if (g_iTotalAttackCount < Rank_GetPlayerRequirement(iBoss))
 				Rank_SetEnable(false);
 			
-			float flMusicTime;
-			boss.CallFunction("GetMusicInfo", g_sBossMusic, sizeof(g_sBossMusic), flMusicTime);
-			if (!StrEmpty(g_sBossMusic))
+			if (g_ConfigConvar.LookupInt("vsh_music_enable"))
 			{
-				for (int i = 1; i <= MaxClients; i++)
-					if (IsClientInGame(i) && Preferences_Get(i, Preferences_Music))
-						EmitSoundToClient(i, g_sBossMusic);
-				
-				if (flMusicTime > 0.0)
-					g_hTimerBossMusic = CreateTimer(flMusicTime, Timer_Music, boss, TIMER_REPEAT);
-				
-				break;
+				float flMusicTime;
+				boss.CallFunction("GetMusicInfo", g_sBossMusic, sizeof(g_sBossMusic), flMusicTime);
+				if (!StrEmpty(g_sBossMusic))
+				{
+					for (int i = 1; i <= MaxClients; i++)
+						if (IsClientInGame(i) && Preferences_Get(i, Preferences_Music))
+							EmitSoundToClient(i, g_sBossMusic);
+					
+					if (flMusicTime > 0.0)
+						g_hTimerBossMusic = CreateTimer(flMusicTime, Timer_Music, boss, TIMER_REPEAT);
+					
+					break;
+				}
 			}
 		}
 	}
@@ -252,7 +254,7 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 		Format(sMessage, sizeof(sMessage), "%s %s with %d health!", sMessage, sBuffer, boss.iMaxHealth);
 	
 		//Get rank
-		if (GetMainBoss() == iClient && Rank_GetCurrent(iClient) > 0)
+		if (Rank_IsHealthEnabled() && Rank_GetCurrent(iClient) > 0)
 			Format(sMessage, sizeof(sMessage), "%s\nRank %d (-%.0f%%%% health)", sMessage, Rank_GetCurrent(iClient), Rank_GetPrecentageLoss(iClient) * 100.0);
 	}
 	
@@ -277,22 +279,7 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 	//Display chat on who is next boss
 	int iNextPlayer = Queue_GetPlayerFromRank(1);
 	if (0 < iNextPlayer <= MaxClients && IsClientInGame(iNextPlayer))
-	{
-		char sFormat[512];
-		Format(sFormat, sizeof(sFormat), "%s================%s\nYou are about to be the next boss!\n", TEXT_DARK, TEXT_COLOR);
-		
-		SaxtonHaleNextBoss nextBoss = SaxtonHaleNextBoss(iNextPlayer);
-		
-		if (nextBoss.bSpecialClassRound)
-			Format(sFormat, sizeof(sFormat), "%sYour round will be a special class round, rank %s%d%s will not change.", sFormat, TEXT_DARK, Rank_GetPlayerRequirement(iNextPlayer), TEXT_COLOR);
-		else if (Rank_IsAllowed(iNextPlayer))
-			Format(sFormat, sizeof(sFormat), "%sYou are currently at rank %s%d%s.", sFormat, TEXT_DARK, Rank_GetCurrent(iNextPlayer), TEXT_COLOR);
-		else
-			Format(sFormat, sizeof(sFormat), "%sYou need %s%d%s enemy players to have your rank %s%d%s changed.", sFormat, TEXT_DARK, Rank_GetPlayerRequirement(iNextPlayer), TEXT_COLOR, TEXT_DARK, Rank_GetCurrent(iNextPlayer), TEXT_COLOR);
-		
-		Format(sFormat, sizeof(sFormat), "%s%s\n================", sFormat, TEXT_DARK);
-		PrintToChat(iNextPlayer, sFormat);
-	}
+		Rank_DisplayNextClient(iNextPlayer);
 }
 
 public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcast)
@@ -478,11 +465,8 @@ public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcas
 
 public void Event_PointCaptured(Event event, const char[] sName, bool bDontBroadcast)
 {
-	int iCP = event.GetInt("cp");
 	TFTeam nTeam = view_as<TFTeam>(event.GetInt("team"));
-	
 	Dome_SetTeam(nTeam);
-	Dome_Start(iCP);
 }
 
 public void Event_BroadcastAudio(Event event, const char[] sName, bool bDontBroadcast)
@@ -691,7 +675,9 @@ public Action Event_PlayerInventoryUpdate(Event event, const char[] sName, bool 
 
 	int iClient = GetClientOfUserId(event.GetInt("userid"));
 	if (GetClientTeam(iClient) <= 1) return;
-
+	
+	TF2_CheckClientWeapons(iClient);
+	
 	if (SaxtonHale_IsValidAttack(iClient))
 	{
 		/*Balance specific weapons*/

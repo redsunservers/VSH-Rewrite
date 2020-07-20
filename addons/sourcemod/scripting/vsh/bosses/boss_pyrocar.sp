@@ -1,3 +1,8 @@
+#define ITEM_NEON_ANNIHILATOR			813
+#define ITEM_BACKBURNER					40
+#define ATTRIB_LESSHEALING				734
+#define PYROCAR_BACKBURNER_ATTRIBUTES	"24 ; 1.0 ; 37 ; 0.025 ; 59 ; 1.0 ; 72 ; 0.0 ; 178 ; 0.01 ; 181 ; 1.0 ; 252 ; 0.5 ; 259 ; 1.0 ; 356 ; 1.0 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 1600.0 ; 862 ; 0.35 ; 863 ; 0.01 ; 865 ; 85 ; 214 ; %d"
+
 static char g_strPyrocarRoundStart[][] =  {
 	"vsh_rewrite/pyrocar/pyrocar_intro.mp3", 
 	"vsh_rewrite/pyrocar/pyrocar_theme.mp3"
@@ -56,24 +61,23 @@ static int g_iCosmetics[] =  {
 
 static int g_iPyrocarCosmetics[sizeof(g_iCosmetics)];
 
+static int g_iPyrocarPrimary[TF_MAXPLAYERS+1];
+static int g_iPyrocarMelee[TF_MAXPLAYERS+1];
+
+static Handle g_hPyrocarHealTimer[TF_MAXPLAYERS+1];
+static Handle g_hPyrocarAmmoTimer[TF_MAXPLAYERS+1];
+
 methodmap CPyroCar < SaxtonHaleBase
 {
 	public CPyroCar(CPyroCar boss)
 	{
 		boss.CallFunction("CreateAbility", "CFloatJump");
 		boss.CallFunction("CreateAbility", "CRageHop");
-		boss.CallFunction("CreateAbility", "CForceForward");
 		
-		boss.iBaseHealth = 700;
-		boss.iHealthPerPlayer = 750;
+		boss.iBaseHealth = 800;
+		boss.iHealthPerPlayer = 800;
 		boss.nClass = TFClass_Pyro;
-		boss.flSpeed = 345.0;
-		boss.iMaxRageDamage = 2000;
-	}
-	
-	public bool IsBossHidden()
-	{
-		return true;
+		boss.iMaxRageDamage = 2500;
 	}
 	
 	public void GetBossName(char[] sName, int length)
@@ -83,32 +87,42 @@ methodmap CPyroCar < SaxtonHaleBase
 	
 	public void GetBossInfo(char[] sInfo, int length)
 	{
-		StrCat(sInfo, length, "\nHealth: Low");
-		StrCat(sInfo, length, "\nYou are forced to go forward");
-		StrCat(sInfo, length, "\nYou are slower than usual bosses");
+		StrCat(sInfo, length, "\nHealth: Medium");
+		StrCat(sInfo, length, "\nYour flamethrower range is shorter and has no afterburn");
+		StrCat(sInfo, length, "\nIt fires in powerful short bursts");
+		StrCat(sInfo, length, "\nYour current target obtains healing penalty");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nAbilities");
-		StrCat(sInfo, length, "\n- Float Jump, you go faster as you levitate upwards");
+		StrCat(sInfo, length, "\n- Float Jump, gains less gravity while in air");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- Hops repeatedly dealing explosive fire damage near the impact for 10 seconds");
-		StrCat(sInfo, length, "\n- 200%% Rage: Increases explosion damage and extends the duration to 15 seconds");
+		StrCat(sInfo, length, "\n- Hops repeatedly dealing explosive damage near the impact for 8 seconds");
+		StrCat(sInfo, length, "\n- Rage also grants you defensive buff and immunity to knockback");
+		StrCat(sInfo, length, "\n- 200%% Rage: Increases explosion damage and extends the duration to 12 seconds");
 	}
 	
 	public void OnSpawn()
 	{
-		char attribs[128];
-		Format(attribs, sizeof(attribs), "24 ; 1.0 ; 59 ; 1.0 ; 112 ; 1.0 ; 181 ; 1.0 ; 356 ; 1.0 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 2450 ; 862 ; 0.6 ; 863 ; 0.1 ; 865 ; 50 ; 259 ; 1.0 ; 356 ; 1.0 ; 214 ; %d", GetRandomInt(9999, 99999));
-		int iWeapon = this.CallFunction("CreateWeapon", 40, "tf_weapon_flamethrower", 100, TFQual_Strange, attribs);
-		if (iWeapon > MaxClients)
-			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
+		char attribs[256];
+		Format(attribs, sizeof(attribs), PYROCAR_BACKBURNER_ATTRIBUTES, GetRandomInt(9999, 99999));
+		g_iPyrocarPrimary[this.iClient] = this.CallFunction("CreateWeapon", ITEM_BACKBURNER, "tf_weapon_flamethrower", 100, TFQual_Strange, attribs);
+		if (g_iPyrocarPrimary[this.iClient] > MaxClients)
+		{
+			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", g_iPyrocarPrimary[this.iClient]);
+			TF2_SetAmmo(this.iClient, WeaponSlot_Primary, 0);	//Reset ammo for TF2 to give correct amount of ammo
+		}
+				
+		g_iPyrocarMelee[this.iClient] = -1;
 			
 		/*
 		Backburner attributes:
 		
 		24: allow crits from behind
+		37: mult_maxammo_primary
 		59: self dmg push force decreased
+		72: afterburn damage penalty
 		112: ammo regen
+		178: deploy time decreased
 		181: no self blast dmg
 		214: kill_eater
 		252: reduction in push force taken from damage
@@ -130,16 +144,96 @@ methodmap CPyroCar < SaxtonHaleBase
 			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iPyrocarCosmetics[iRandom]);
 	}
 	
+	public void OnThink()
+	{
+		char attribs[256];
+		
+		int iWaterLevel = GetEntProp(this.iClient, Prop_Send, "m_nWaterLevel");
+		//0 - not in water (WL_NotInWater)
+		//1 - feet in water (WL_Feet)
+		//2 - waist in water (WL_Waist)
+		//3 - head in water (WL_Eyes) 
+		
+		//Give Neon if Pyrocar is underwater
+		if (iWaterLevel >= 3)
+		{
+			if (IsValidEntity(g_iPyrocarPrimary[this.iClient]) && g_iPyrocarPrimary[this.iClient] > MaxClients)
+			{
+				TF2_RemoveItemInSlot(this.iClient, WeaponSlot_Primary);
+				g_iPyrocarPrimary[this.iClient] = -1;
+				Format(attribs, sizeof(attribs), "2 ; 1.50 ; 438 ; 1.0 ; 137 ; 1.5 ; 264 ; 1.5 ; 178 ; 0.01");
+				g_iPyrocarMelee[this.iClient] = this.CallFunction("CreateWeapon", ITEM_NEON_ANNIHILATOR, "tf_weapon_breakable_sign", 100, TFQual_Unusual, attribs);
+				if (g_iPyrocarMelee[this.iClient] > MaxClients)
+				{
+					//Check if his active weapon got removed, if so set as that weapon
+					int iActiveWep = GetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon");
+					if (!(IsValidEntity(iActiveWep)))
+						SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", g_iPyrocarMelee[this.iClient]);
+				}
+			}
+		}
+		else
+		{
+			if (IsValidEntity(g_iPyrocarMelee[this.iClient]) && g_iPyrocarMelee[this.iClient] > MaxClients)
+			{
+				TF2_RemoveItemInSlot(this.iClient, WeaponSlot_Melee);
+				g_iPyrocarMelee[this.iClient] = -1;
+				Format(attribs, sizeof(attribs), PYROCAR_BACKBURNER_ATTRIBUTES, GetRandomInt(9999, 99999));
+				g_iPyrocarPrimary[this.iClient] = this.CallFunction("CreateWeapon", ITEM_BACKBURNER, "tf_weapon_flamethrower", 100, TFQual_Strange, attribs);
+				if (g_iPyrocarPrimary[this.iClient] > MaxClients)
+				{
+					//Check if his active weapon got removed, if so set as that weapon
+					int iActiveWep = GetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon");
+					if (!(IsValidEntity(iActiveWep)))
+						SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", g_iPyrocarPrimary[this.iClient]);
+				}
+			}
+			
+			if (TF2_GetAmmo(this.iClient, WeaponSlot_Primary) == 0 && g_hPyrocarAmmoTimer[this.iClient] == null)
+			{
+				g_hPyrocarAmmoTimer[this.iClient] = CreateTimer(1.0, Timer_RefillAmmo, this.iClient);
+			}
+		}
+	}
+	
 	public Action OnTakeDamage(int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 	{
 		char sWeaponClassName[32];
-		if (inflictor >= 0) GetEdictClassname(inflictor, sWeaponClassName, sizeof(sWeaponClassName));
+		if (inflictor >= 0)
+			GetEdictClassname(inflictor, sWeaponClassName, sizeof(sWeaponClassName));
 		
 		//Disable self-damage from bomb rage ability
-		if (this.iClient == attacker && strcmp(sWeaponClassName, "tf_generic_bomb") == 0) return Plugin_Stop;
+		if (this.iClient == attacker && strcmp(sWeaponClassName, "tf_generic_bomb") == 0)
+			return Plugin_Stop;
+		
+		//It's ugly but there's no other way
+		float flHealingRate = 1.0;
+		if (TF2_IsPlayerInCondition(this.iClient, TFCond_Milked) && this.iClient != attacker && TF2_FindAttribute(attacker, ATTRIB_LESSHEALING, flHealingRate))
+			Client_AddHealth(attacker, -RoundToNearest(damage - damage/flHealingRate));
 		
 		return Plugin_Continue;
-	}	
+	}
+	
+	public Action OnAttackDamage(int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+	{
+		if (weapon == TF2_GetItemInSlot(this.iClient, WeaponSlot_Primary))
+		{
+			//Give victim less healing while damaged by pyrocar
+			if (!g_hPyrocarHealTimer[victim])
+			{
+				TF2Attrib_SetByDefIndex(victim, ATTRIB_LESSHEALING, 0.4);
+				TF2Attrib_ClearCache(victim);
+			}
+			
+			g_hPyrocarHealTimer[victim] = CreateTimer(1.0, Timer_RemoveLessHealing, GetClientSerial(victim));
+			
+			//Deal constant damage for flamethrower
+			damage = 17.0;
+			return Plugin_Changed;
+		}
+		
+		return Plugin_Continue;
+	}
 	
 	public void GetSound(char[] sSound, int length, SaxtonHaleSound iSoundType)
 	{
@@ -172,6 +266,21 @@ methodmap CPyroCar < SaxtonHaleBase
 		return Plugin_Continue;
 	}
 	
+	public void Destroy()
+	{
+		for (int iClient = 1; iClient <= MaxClients; iClient++)
+		{
+			g_hPyrocarHealTimer[iClient] = null;
+			g_hPyrocarAmmoTimer[iClient] = null;
+			
+			if (IsClientInGame(iClient))
+			{
+				TF2Attrib_RemoveByDefIndex(iClient, ATTRIB_LESSHEALING);
+				TF2Attrib_ClearCache(iClient);
+			}
+		}
+	}
+	
 	public void Precache()
 	{
 		for (int i = 0; i < sizeof(g_iCosmetics); i++)
@@ -186,5 +295,35 @@ methodmap CPyroCar < SaxtonHaleBase
 		for (int i = 0; i < sizeof(g_strPyrocarKillBuilding); i++) PrepareSound(g_strPyrocarKillBuilding[i]);
 		for (int i = 0; i < sizeof(g_strPyrocarLastMan); i++) PrepareSound(g_strPyrocarLastMan[i]);
 	}
-	
 };
+
+public Action Timer_RemoveLessHealing(Handle hTimer, int iSerial)
+{
+	int iClient = GetClientFromSerial(iSerial);
+	if (0 < iClient <= MaxClients && g_hPyrocarHealTimer[iClient] == hTimer)
+	{
+		g_hPyrocarHealTimer[iClient] = null;
+		
+		if (IsClientInGame(iClient))
+		{
+			TF2Attrib_RemoveByDefIndex(iClient, ATTRIB_LESSHEALING);
+			TF2Attrib_ClearCache(iClient);
+			
+			if (TF2_IsPlayerInCondition(iClient, TFCond_OnFire))
+				TF2_RemoveCondition(iClient, TFCond_OnFire);
+		}
+	}
+}
+
+public Action Timer_RefillAmmo(Handle hTimer, int iClient)
+{
+	if (0 < iClient <= MaxClients && g_hPyrocarAmmoTimer[iClient] == hTimer)
+	{
+		g_hPyrocarAmmoTimer[iClient] = null;
+		
+		if (IsClientInGame(iClient))
+		{
+			TF2_SetAmmo(iClient, WeaponSlot_Primary, 5);
+		}
+	}
+}

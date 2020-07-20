@@ -26,7 +26,7 @@
 			{
 				"library"	"server"
 				"linux"		"@_ZN9CTFPlayer12RemoveObjectEP11CBaseObject"
-				"windows"	"\x55\x8B\xEC\x8B\xD1\x56\x8B\xB2\x7C\x21\x00\x00"
+				"windows"	"\x55\x8B\xEC\x8B\xD1\x56\x8B\xB2\x8C\x21\x00\x00"
 			}
 			"CWeaponMedigun::AllowedToHealTarget"
 			{
@@ -86,8 +86,8 @@
 			}
 			"CTFPlayer::GiveNamedItem"
 			{
-				"windows"	"475"
-				"linux"		"482"
+				"windows"	"477"
+				"linux"		"484"
 			}
 			"CTFWeaponBase::SendWeaponAnim"
 			{

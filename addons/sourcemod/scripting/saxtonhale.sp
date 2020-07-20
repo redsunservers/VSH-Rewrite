@@ -22,7 +22,7 @@
 
 #include "include/saxtonhale.inc"
 
-#define PLUGIN_VERSION 					"1.3.3"
+#define PLUGIN_VERSION 					"1.4.0"
 #define PLUGIN_VERSION_REVISION 		"manual"
 
 #if !defined SP_MAX_EXEC_PARAMS
@@ -89,7 +89,7 @@ enum ClientFlags ( <<=1 )
 enum Preferences ( <<=1 )
 {
 	Preferences_PickAsBoss = 1,
-	Preferences_None1,
+	Preferences_Rank,
 	Preferences_MultiBoss,
 	Preferences_Music,
 	Preferences_Revival,
@@ -207,7 +207,7 @@ enum
 
 char g_strPreferencesName[][] = {
 	"Boss Selection",
-	"",
+	"Rank Mode",
 	"Multi Boss",
 	"Music",
 	"Revival"
@@ -298,6 +298,7 @@ enum struct NextBoss
 	int iId;							//Id, must be at top of this struct
 	int iClient;						//Client to have those values, must be at 2nd top of this struct
 	char sBossType[MAX_TYPE_CHAR];		//Boss to play on next turn
+	char sBossMultiType[MAX_TYPE_CHAR];	//Boss multi to play on next turn
 	char sModifierType[MAX_TYPE_CHAR];	//Modifier to play on next turn
 	bool bForceNext;					//This client will be boss next round
 	bool bSpecialClassRound;			//All-Class on next turn
@@ -347,8 +348,9 @@ ConVar tf_feign_death_speed_duration;
 ConVar tf_arena_preround_time;
 
 #include "vsh/base_ability.sp"
-#include "vsh/base_modifiers.sp"
 #include "vsh/base_boss.sp"
+#include "vsh/base_bossmulti.sp"
+#include "vsh/base_modifiers.sp"
 
 #include "vsh/abilities/ability_body_eat.sp"
 #include "vsh/abilities/ability_brave_jump.sp"
@@ -394,6 +396,10 @@ ConVar tf_arena_preround_time;
 #include "vsh/bosses/boss_yeti.sp"
 #include "vsh/bosses/boss_zombie.sp"
 #include "vsh/bosses/boss_merasmus.sp"
+
+#include "vsh/bossesmulti/bossmulti_mannbrothers.sp"
+#include "vsh/bossesmulti/bossmulti_pyromancers.sp"
+#include "vsh/bossesmulti/bossmulti_seemanseeldier.sp"
 
 #include "vsh/modifiers/modifiers_angry.sp"
 #include "vsh/modifiers/modifiers_electric.sp"
@@ -461,10 +467,14 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	FuncNative_AskLoad();
 	Native_AskLoad();
 	Property_AskLoad();
-	
+
+#if !defined __sourcepawn_methodmap__
+	Format(error, err_max, "This plugin should be compiled with SourcePawn Public Methodmap to be compiled correctly!");
+	return APLRes_Failure;
+#else
 	RegPluginLibrary("saxtonhale");
-	
 	return APLRes_Success;
+#endif
 }
 
 public void OnPluginStart()
@@ -540,6 +550,21 @@ public void OnPluginStart()
 	func = SaxtonHaleFunction("GetBossInfo", ET_Ignore, Param_String, Param_Cell);
 	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
 	
+	//Multi Boss Functions
+	SaxtonHaleFunction("CreateBossMulti", ET_Single, Param_String);
+	SaxtonHaleFunction("IsBossMultiHidden", ET_Single);
+	SaxtonHaleFunction("IsBossMultiType", ET_Single, Param_String);
+	SaxtonHaleFunction("SetBossMultiType", ET_Ignore, Param_String);
+	SaxtonHaleFunction("GetBossMultiList", ET_Ignore, Param_Cell);
+	
+	func = SaxtonHaleFunction("GetBossMultiType", ET_Ignore, Param_String, Param_Cell);
+	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
+	
+	func = SaxtonHaleFunction("GetBossMultiName", ET_Ignore, Param_String, Param_Cell);
+	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
+	
+	func = SaxtonHaleFunction("GetBossMultiInfo", ET_Ignore, Param_String, Param_Cell);
+	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
 	
 	//Modifiers functions
 	SaxtonHaleFunction("CreateModifiers", ET_Single, Param_String);
@@ -635,6 +660,7 @@ public void OnPluginStart()
 	
 	//Register base constructor
 	SaxtonHale_RegisterClass("SaxtonHaleBoss", VSHClassType_Core);
+	SaxtonHale_RegisterClass("SaxtonHaleBossMulti", VSHClassType_Core);
 	SaxtonHale_RegisterClass("SaxtonHaleModifiers", VSHClassType_Core);
 	SaxtonHale_RegisterClass("SaxtonHaleAbility", VSHClassType_Core);
 	
@@ -642,6 +668,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("CSaxtonHale", VSHClassType_Boss);
 	
 	SaxtonHale_RegisterClass("CAnnouncer", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CBlutarch", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CBonkBoy", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CBrutalSniper", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CDemoPan", VSHClassType_Boss);
@@ -651,20 +678,19 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("CMerasmus", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CPainisCupcake", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CPyroCar", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CRedmond", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CScaldedPyromancer", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CScorchedPyromancer", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CSeeldier", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CSeeMan", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CUberRanger", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CVagineer", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CYeti", VSHClassType_Boss);
 	
-	//Register misc bosses
-	SaxtonHale_RegisterClass("CSeeMan", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CBlutarch", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CSeeldier", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CRedmond", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CScorchedPyromancer", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CScaldedPyromancer", VSHClassType_Boss);
-	SaxtonHale_RegisterMultiBoss("CSeeMan", "CSeeldier");
-	SaxtonHale_RegisterMultiBoss("CBlutarch", "CRedmond");
-	SaxtonHale_RegisterMultiBoss("CScorchedPyromancer", "CScaldedPyromancer");
+	//Register multi bosses
+	SaxtonHale_RegisterClass("CMannBrothers", VSHClassType_BossMulti);
+	SaxtonHale_RegisterClass("CPyromancers", VSHClassType_BossMulti);
+	SaxtonHale_RegisterClass("CSeeManSeeldier", VSHClassType_BossMulti);
 	
 	//Register minions
 	SaxtonHale_RegisterClass("CSeeldierMinion", VSHClassType_Boss);
@@ -709,6 +735,7 @@ public void OnPluginStart()
 	g_ConfigConvar.Create("vsh_force_load", "-1", "Force enable VSH on map start? (-1 for default, 0 for force disable, 1 for force enable)", _, true, -1.0, true, 1.0);
 	g_ConfigConvar.Create("vsh_boss_ping_limit", "200", "Max ping/latency to allow player to play as boss (-1 for no limit)", _, true, -1.0);
 	g_ConfigConvar.Create("vsh_telefrag_damage", "9001.0", "Damage amount to boss from telefrag", _, true, 0.0);
+	g_ConfigConvar.Create("vsh_music_enable", "1", "Enable boss music?", _, true, 0.0, true, 1.0);
 	g_ConfigConvar.Create("vsh_rps_enable", "1", "Allow everyone use Rock Paper Scissors Taunt?", _, true, 0.0, true, 1.0);
 	
 	//Incase of lateload, call client join functions
@@ -1224,7 +1251,12 @@ public void OnClientDisconnect(int iClient)
 	if (boss.bValid && !boss.bMinion && Rank_IsEnabled())
 	{
 		//Ur not going anywhere kiddo
-		Rank_SetCurrent(iClient, Rank_GetCurrent(iClient) - 1, true);
+		int iRank = Rank_GetCurrent(iClient) - 1;
+		if (iRank >= 0)
+		{
+			PrintToChatAll("%s %s%N%s's rank has %sdecreased%s to %s%d%s!", TEXT_TAG, TEXT_DARK, iClient, TEXT_COLOR, TEXT_NEGATIVE, TEXT_COLOR, TEXT_DARK, iRank, TEXT_COLOR);
+			Rank_SetCurrent(iClient, iRank, true);
+		}
 	}
 	
 	if (boss.bValid)

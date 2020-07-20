@@ -12,7 +12,6 @@ void MenuAdmin_Init()
 	g_hMenuAdminMain.AddItem("config", "Refresh VSH Config (!vshrefresh)");
 	g_hMenuAdminMain.AddItem("queue", "Add Queue (!vshqueue)");
 	g_hMenuAdminMain.AddItem("special", "Force Special Round (!vshspecial)");
-	g_hMenuAdminMain.AddItem("cap", "Force Unlock Capture Point (!vshcap)");
 	g_hMenuAdminMain.AddItem("dome", "Force Start Dome (!vshdome)");
 	g_hMenuAdminMain.AddItem("boss", "Set Next Boss & Modifiers (!vshsetboss)");
 	g_hMenuAdminMain.AddItem("rage", "Set Rage (!vshrage)");
@@ -77,8 +76,6 @@ public int MenuAdmin_SelectMain(Menu hMenu, MenuAction action, int iClient, int 
 		MenuAdmin_DisplayQueue(iClient);
 	else if (StrEqual(sSelect, "special"))
 		MenuAdmin_DisplaySpecial(iClient);
-	else if (StrEqual(sSelect, "cap"))
-		ClientCommand(iClient, "vsh_cap");
 	else if (StrEqual(sSelect, "dome"))
 		ClientCommand(iClient, "vsh_dome");
 	else if (StrEqual(sSelect, "boss"))
