@@ -89,6 +89,7 @@ enum SaxtonHaleClassType
 	VSHClassType_Boss,      /**< Boss */
 	VSHClassType_Ability,   /**< Ability */
 	VSHClassType_Modifier,  /**< Modifier */
+	VSHClassType_BossMulti,	/**< Multi Boss */
 };
 
 /**
@@ -135,16 +136,6 @@ native ArrayList SaxtonHale_GetAllClass();
  * @return                  Newly created ArrayList of registered class name, filtered by class type
  */
 native ArrayList SaxtonHale_GetAllClassType(SaxtonHaleClassType nClassType);
-
-/**
- * Registers multi bosses to be played togther
- *
- * @note Make sure SaxtonHale_RegisterClass is used first to register each bosses
- *
- * @param ...               Methodmap class name to registers for multi bosses
- * @error                   Class name already registered, or less than 2 bosses passed
- */
-native void SaxtonHale_RegisterMultiBoss(const char[] ...);
 
 /**
  * List of sounds to get from bosses
@@ -517,6 +508,17 @@ methodmap SaxtonHaleNextBoss
 	// @param sBossType     String value to set, NULL_STRING for random boss
 	public native void SetBoss(const char[] sBossType);
 	
+	//Gets current boss multi type
+	//
+	// @param sMultiType    String value to get, NULL_STRING if not specified yet
+	// @param iLength       Size of string
+	public native void GetBossMulti(char[] sMultiType, int iLength);
+	
+	//Sets new boss multi type
+	//
+	// @param sMultiType    String value to set, NULL_STRING for random boss
+	public native void SetBossMulti(const char[] sMultiType);
+	
 	//Gets current modifier type
 	//
 	// @param sModifierType String value to get, NULL_STRING if not specified yet
@@ -789,6 +791,9 @@ native void SaxtonHale_RegisterAbility(const char[] sAbilityType);
 
 #pragma deprecated Use SaxtonHale_UnregisterClass instead
 native void SaxtonHale_UnregisterAbility(const char[] sAbilityType);
+
+#pragma deprecated No longer supported, use SaxtonHale_RegisterClass instead
+native void SaxtonHale_RegisterMultiBoss(const char[] ...);
 
 #pragma deprecated Use SaxtonHaleNextBoss property bSpecialClass and nSpecialClass instead
 native bool SaxtonHale_ForceSpecialRound(int iClient = 0, TFClassType nClass = TFClass_Unknown);

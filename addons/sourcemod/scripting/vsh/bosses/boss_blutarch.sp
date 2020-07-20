@@ -1,10 +1,5 @@
 #define BLUTARCH_MODEL		"models/player/kirillian/boss/boss_blutarch_v2.mdl"
 
-static char g_strBlutarchRoundStart[][] = {
-	"vo/halloween_mann_brothers/sf13_mannbros_argue09.mp3",
-	"vo/halloween_mann_brothers/sf13_mannbros_argue14.mp3",
-};
-
 static char g_strBlutarchWin[][] = {
 	"vo/halloween_mann_brothers/sf13_blutarch_win04.mp3",
 	"vo/halloween_mann_brothers/sf13_blutarch_win11.mp3",
@@ -22,13 +17,7 @@ static char g_strBlutarchLose[][] = {
 	"vo/halloween_mann_brothers/sf13_blutarch_lose04.mp3",
 	"vo/halloween_mann_brothers/sf13_blutarch_lose07.mp3",
 };
-/*
-static char g_strBlutarchSpell[][] = {
-	"vo/halloween_mann_brothers/sf13_blutarch_misc01.mp3",
-	"vo/halloween_mann_brothers/sf13_blutarch_spells04.mp3",
-	"vo/halloween_mann_brothers/sf13_blutarch_spells05.mp3",
-};
-*/
+
 static char g_strBlutarchRage[][] = {
 	"vo/halloween_mann_brothers/sf13_blutarch_spells04.mp3",
 	"vo/halloween_mann_brothers/sf13_blutarch_spells05.mp3",
@@ -62,6 +51,16 @@ methodmap CBlutarch < SaxtonHaleBase
 		boss.iMaxRageDamage = 2500;
 	}
 	
+	public void GetBossMultiType(char[] sType, int length)
+	{
+		strcopy(sType, length, "CMannBrothers");
+	}
+	
+	public bool IsBossHidden()
+	{
+		return true;
+	}
+	
 	public void GetBossName(char[] sName, int length)
 	{
 		strcopy(sName, length, "Blutarch");
@@ -79,22 +78,6 @@ methodmap CBlutarch < SaxtonHaleBase
 		StrCat(sInfo, length, "\nRage");
 		StrCat(sInfo, length, "\n- Summons a Meteor spell");
 		StrCat(sInfo, length, "\n- 200%% Rage: Summons 3 Meteor spells");
-	}
-	
-	public void OnSpawn()
-	{
-		char attribs[128];
-		Format(attribs, sizeof(attribs), "2 ; 3.1 ; 252 ; 0.5 ; 259 ; 1.0");
-		int iWeapon = this.CallFunction("CreateWeapon", 574, "tf_weapon_knife", 100, TFQual_Haunted, attribs);
-		if (iWeapon > MaxClients)
-			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
-		/*
-		Wanga Prick attributes:
-		
-		2: damage bonus
-		252: reduction in push force taken from damage
-		259: Deals 3x falling damage to the player you land on
-		*/
 	}
 	
 	public void OnDeath(Event eventInfo)
@@ -128,7 +111,6 @@ methodmap CBlutarch < SaxtonHaleBase
 	{
 		switch (iSoundType)
 		{
-			case VSHSound_RoundStart: strcopy(sSound, length, g_strBlutarchRoundStart[GetRandomInt(0,sizeof(g_strBlutarchRoundStart)-1)]);
 			case VSHSound_Win: strcopy(sSound, length, g_strBlutarchWin[GetRandomInt(0,sizeof(g_strBlutarchWin)-1)]);
 			case VSHSound_Lose: strcopy(sSound, length, g_strBlutarchLose[GetRandomInt(0,sizeof(g_strBlutarchLose)-1)]);
 			case VSHSound_Rage: strcopy(sSound, length, g_strBlutarchRage[GetRandomInt(0,sizeof(g_strBlutarchRage)-1)]);
@@ -137,30 +119,13 @@ methodmap CBlutarch < SaxtonHaleBase
 		}
 	}
 	
-	/*
-	public void GetSoundAbility(char[] sSound, int length, const char[] sType)
-	{
-		if (strcmp(sType, "CWeaponSpells") == 0 && GetRandomInt(0, 1))
-			strcopy(sSound, length, g_strBlutarchSpell[GetRandomInt(0,sizeof(g_strBlutarchSpell)-1)]);
-	}
-	*/
-	
-	public Action OnSoundPlayed(int clients[MAXPLAYERS], int &numClients, char sample[PLATFORM_MAX_PATH], int &channel, float &volume, int &level, int &pitch, int &flags, char soundEntry[PLATFORM_MAX_PATH], int &seed)
-	{
-		if (strncmp(sample, "vo/", 3) == 0 && strncmp(sample, "vo/halloween_mann_brothers/", 27) != 0)
-			return Plugin_Handled;
-		return Plugin_Continue;
-	}
-	
 	public void Precache()
 	{
 		PrecacheModel(BLUTARCH_MODEL);
 		
-		for (int i = 0; i < sizeof(g_strBlutarchRoundStart); i++) PrecacheSound(g_strBlutarchRoundStart[i]);
 		for (int i = 0; i < sizeof(g_strBlutarchWin); i++) PrecacheSound(g_strBlutarchWin[i]);
 		for (int i = 0; i < sizeof(g_strBlutarchDeath); i++) PrecacheSound(g_strBlutarchDeath[i]);
 		for (int i = 0; i < sizeof(g_strBlutarchLose); i++) PrecacheSound(g_strBlutarchLose[i]);
-		//for (int i = 0; i < sizeof(g_strBlutarchSpell); i++) PrecacheSound(g_strBlutarchSpell[i]);
 		for (int i = 0; i < sizeof(g_strBlutarchRage); i++) PrecacheSound(g_strBlutarchRage[i]);
 		for (int i = 0; i < sizeof(g_strBlutarchLastMan); i++) PrecacheSound(g_strBlutarchLastMan[i]);
 		for (int i = 0; i < sizeof(g_strBlutarchBackstabbed); i++) PrecacheSound(g_strBlutarchBackstabbed[i]);

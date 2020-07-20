@@ -3,6 +3,8 @@ void Native_AskLoad()
 	CreateNative("SaxtonHaleNextBoss.SaxtonHaleNextBoss", Native_NextBoss);
 	CreateNative("SaxtonHaleNextBoss.GetBoss", Native_NextBoss_GetBoss);
 	CreateNative("SaxtonHaleNextBoss.SetBoss", Native_NextBoss_SetBoss);
+	CreateNative("SaxtonHaleNextBoss.GetBossMulti", Native_NextBoss_GetBossMulti);
+	CreateNative("SaxtonHaleNextBoss.SetBossMulti", Native_NextBoss_SetBossMulti);
 	CreateNative("SaxtonHaleNextBoss.GetModifier", Native_NextBoss_GetModifier);
 	CreateNative("SaxtonHaleNextBoss.SetModifier", Native_NextBoss_SetModifier);
 	CreateNative("SaxtonHaleNextBoss.GetName", Native_NextBoss_GetName);
@@ -53,6 +55,27 @@ public any Native_NextBoss_SetBoss(Handle hPlugin, int iNumParams)
 		ThrowNativeError(SP_ERROR_NATIVE, "Invalid id passed, id may be already used");
 	
 	GetNativeString(2, nextBoss.sBossType, sizeof(nextBoss.sBossType));
+	NextBoss_SetStruct(nextBoss);
+}
+
+//void SaxtonHaleNextBoss.GetBossMulti(char[] sMultiType, int iLength);
+public any Native_NextBoss_GetBossMulti(Handle hPlugin, int iNumParams)
+{
+	NextBoss nextBoss;
+	if (!NextBoss_GetStruct(GetNativeCell(1), nextBoss))
+		ThrowNativeError(SP_ERROR_NATIVE, "Invalid id passed, id may be already used");
+	
+	SetNativeString(2, nextBoss.sBossMultiType, GetNativeCell(3));
+}
+
+//void SaxtonHaleNextBoss.SetBossMulti(const char[] sMultiType);
+public any Native_NextBoss_SetBossMulti(Handle hPlugin, int iNumParams)
+{
+	NextBoss nextBoss;
+	if (!NextBoss_GetStruct(GetNativeCell(1), nextBoss))
+		ThrowNativeError(SP_ERROR_NATIVE, "Invalid id passed, id may be already used");
+	
+	GetNativeString(2, nextBoss.sBossMultiType, sizeof(nextBoss.sBossMultiType));
 	NextBoss_SetStruct(nextBoss);
 }
 
