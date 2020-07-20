@@ -127,8 +127,11 @@ methodmap CBombProjectile < SaxtonHaleBase
 		if (flGameTime <= g_flBombProjectileEnd[this.iClient])
 		{
 			if (g_flBombProjectileNext[this.iClient] > flGameTime) return;
-			
-			g_flBombProjectileNext[this.iClient] = flGameTime + this.flRate;
+		
+			if (this.bSuperRage)
+				g_flBombProjectileNext[this.iClient] = flGameTime + (this.flRate / 2.0);
+			else
+				g_flBombProjectileNext[this.iClient] = flGameTime + this.flRate;
 			
 			float vecOrigin[3], vecVelocity[3], vecAngleVelocity[3];
 			GetClientAbsOrigin(this.iClient, vecOrigin);
