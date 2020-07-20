@@ -97,8 +97,8 @@ methodmap CMerasmus < SaxtonHaleBase
 		
 		CRageAddCond rageCond = boss.CallFunction("CreateAbility", "CRageAddCond");
 		rageCond.flRageCondDuration = 8.0;
+		rageCond.flRageCondSuperRageMultiplier = 1.0;
 		rageCond.AddCond(TFCond_UberchargedCanteen);
-		rageCond.AddCond(TFCond_SpeedBuffAlly);
 		
 		boss.iBaseHealth = 800;
 		boss.iHealthPerPlayer = 800;
