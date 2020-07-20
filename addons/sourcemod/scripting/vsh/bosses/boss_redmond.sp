@@ -1,10 +1,5 @@
 #define REDMOND_MODEL		"models/player/kirillian/boss/boss_redmond_v2.mdl"
 
-static char g_strRedmondRoundStart[][] = {
-	"vo/halloween_mann_brothers/sf13_mannbros_argue09.mp3",
-	"vo/halloween_mann_brothers/sf13_mannbros_argue13.mp3",
-};
-
 static char g_strRedmondWin[][] = {
 	"vo/halloween_mann_brothers/sf13_redmond_win05.mp3",
 	"vo/halloween_mann_brothers/sf13_redmond_win08.mp3",
@@ -23,12 +18,7 @@ static char g_strRedmondLose[][] = {
 	"vo/halloween_mann_brothers/sf13_redmond_lose07.mp3",
 	"vo/halloween_mann_brothers/sf13_redmond_lose08.mp3",
 };
-/*
-static char g_strRedmondSpell[][] = {
-	"vo/halloween_mann_brothers/sf13_redmond_spells02.mp3",
-	"vo/halloween_mann_brothers/sf13_redmond_spells06.mp3",
-};
-*/
+
 static char g_strRedmondRage[][] = {
 	"vo/halloween_mann_brothers/sf13_redmond_spells02.mp3",
 	"vo/halloween_mann_brothers/sf13_redmond_spells06.mp3",
@@ -61,6 +51,16 @@ methodmap CRedmond < SaxtonHaleBase
 		boss.iMaxRageDamage = 2500;
 	}
 	
+	public void GetBossMultiType(char[] sType, int length)
+	{
+		strcopy(sType, length, "CMannBrothers");
+	}
+	
+	public bool IsBossHidden()
+	{
+		return true;
+	}
+	
 	public void GetBossName(char[] sName, int length)
 	{
 		strcopy(sName, length, "Redmond");
@@ -79,22 +79,6 @@ methodmap CRedmond < SaxtonHaleBase
 		StrCat(sInfo, length, "\nRage");
 		StrCat(sInfo, length, "\n- Summons a MONOCULUS! spell");
 		StrCat(sInfo, length, "\n- 200%% Rage: Summons 3 MONOCULUS! spells");
-	}
-	
-	public void OnSpawn()
-	{
-		char attribs[128];
-		Format(attribs, sizeof(attribs), "2 ; 3.1 ; 252 ; 0.5 ; 259 ; 1.0");
-		int iWeapon = this.CallFunction("CreateWeapon", 574, "tf_weapon_knife", 100, TFQual_Haunted, attribs);
-		if (iWeapon > MaxClients)
-			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
-		/*
-		Wanga Prick attributes:
-		
-		2: damage bonus
-		252: reduction in push force taken from damage
-		259: Deals 3x falling damage to the player you land on
-		*/
 	}
 	
 	public void OnDeath(Event eventInfo)
@@ -146,7 +130,6 @@ methodmap CRedmond < SaxtonHaleBase
 	{
 		switch (iSoundType)
 		{
-			case VSHSound_RoundStart: strcopy(sSound, length, g_strRedmondRoundStart[GetRandomInt(0,sizeof(g_strRedmondRoundStart)-1)]);
 			case VSHSound_Win: strcopy(sSound, length, g_strRedmondWin[GetRandomInt(0,sizeof(g_strRedmondWin)-1)]);
 			case VSHSound_Lose: strcopy(sSound, length, g_strRedmondLose[GetRandomInt(0,sizeof(g_strRedmondLose)-1)]);
 			case VSHSound_Rage: strcopy(sSound, length, g_strRedmondRage[GetRandomInt(0,sizeof(g_strRedmondRage)-1)]);
@@ -154,29 +137,14 @@ methodmap CRedmond < SaxtonHaleBase
 			case VSHSound_Backstab: strcopy(sSound, length, g_strRedmondBackstabbed[GetRandomInt(0,sizeof(g_strRedmondBackstabbed)-1)]);
 		}
 	}
-	/*
-	public void GetSoundAbility(char[] sSound, int length, const char[] sType)
-	{
-		if (strcmp(sType, "CWeaponSpells") == 0 && GetRandomInt(0, 1))
-			strcopy(sSound, length, g_strRedmondSpell[GetRandomInt(0,sizeof(g_strRedmondSpell)-1)]);
-	}
-	*/
-	public Action OnSoundPlayed(int clients[MAXPLAYERS], int &numClients, char sample[PLATFORM_MAX_PATH], int &channel, float &volume, int &level, int &pitch, int &flags, char soundEntry[PLATFORM_MAX_PATH], int &seed)
-	{
-		if (strncmp(sample, "vo/", 3) == 0)//Block voicelines
-			return Plugin_Handled;
-		return Plugin_Continue;
-	}
-	
+		
 	public void Precache()
 	{
 		PrecacheModel(REDMOND_MODEL);
 		
-		for (int i = 0; i < sizeof(g_strRedmondRoundStart); i++) PrecacheSound(g_strRedmondRoundStart[i]);
 		for (int i = 0; i < sizeof(g_strRedmondWin); i++) PrecacheSound(g_strRedmondWin[i]);
 		for (int i = 0; i < sizeof(g_strRedmondDeath); i++) PrecacheSound(g_strRedmondDeath[i]);
 		for (int i = 0; i < sizeof(g_strRedmondLose); i++) PrecacheSound(g_strRedmondLose[i]);
-		//for (int i = 0; i < sizeof(g_strRedmondSpell); i++) PrecacheSound(g_strRedmondSpell[i]);
 		for (int i = 0; i < sizeof(g_strRedmondRage); i++) PrecacheSound(g_strRedmondRage[i]);
 		for (int i = 0; i < sizeof(g_strRedmondLastMan); i++) PrecacheSound(g_strRedmondLastMan[i]);
 		for (int i = 0; i < sizeof(g_strRedmondBackstabbed); i++) PrecacheSound(g_strRedmondBackstabbed[i]);

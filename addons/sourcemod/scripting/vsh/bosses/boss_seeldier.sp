@@ -1,6 +1,5 @@
 #define SEELDIER_MODEL						"models/player/kirillian/boss/seeldier_fix.mdl"
 #define SEELDIER_SEE_SND					"vsh_rewrite/seeldier/see.wav"
-#define SEE_BOSSES_INTRO_SND				"vsh_rewrite/seeman/intro.wav"
 
 methodmap CSeeldier < SaxtonHaleBase
 {
@@ -13,6 +12,16 @@ methodmap CSeeldier < SaxtonHaleBase
 		boss.iHealthPerPlayer = 700;
 		boss.nClass = TFClass_Soldier;
 		boss.iMaxRageDamage = 2000;
+	}
+	
+	public void GetBossMultiType(char[] sType, int length)
+	{
+		strcopy(sType, length, "CSeeManSeeldier");
+	}
+	
+	public bool IsBossHidden()
+	{
+		return true;
 	}
 	
 	public void GetBossName(char[] sName, int length)
@@ -99,11 +108,8 @@ methodmap CSeeldier < SaxtonHaleBase
 	public void GetSound(char[] sSound, int length, SaxtonHaleSound iSoundType)
 	{
 		//C on every sounds
-		switch (iSoundType)
-		{
-			case VSHSound_RoundStart: strcopy(sSound, length, SEE_BOSSES_INTRO_SND);
-			default: strcopy(sSound, length, SEELDIER_SEE_SND);
-		}
+		if (iSoundType != VSHSound_RoundStart)
+			strcopy(sSound, length, SEELDIER_SEE_SND);
 	}
 	
 	public void GetSoundAbility(char[] sSound, int length, const char[] sType)
@@ -128,7 +134,6 @@ methodmap CSeeldier < SaxtonHaleBase
 	
 	public void Precache()
 	{
-		PrepareSound(SEE_BOSSES_INTRO_SND);
 		PrecacheModel(SEELDIER_MODEL);
 		PrepareSound(SEELDIER_SEE_SND);
 		

@@ -22,7 +22,7 @@
 
 #include "include/saxtonhale.inc"
 
-#define PLUGIN_VERSION 					"1.3.4"
+#define PLUGIN_VERSION 					"1.4.0"
 #define PLUGIN_VERSION_REVISION 		"manual"
 
 #if !defined SP_MAX_EXEC_PARAMS
@@ -298,6 +298,7 @@ enum struct NextBoss
 	int iId;							//Id, must be at top of this struct
 	int iClient;						//Client to have those values, must be at 2nd top of this struct
 	char sBossType[MAX_TYPE_CHAR];		//Boss to play on next turn
+	char sBossMultiType[MAX_TYPE_CHAR];	//Boss multi to play on next turn
 	char sModifierType[MAX_TYPE_CHAR];	//Modifier to play on next turn
 	bool bForceNext;					//This client will be boss next round
 	bool bSpecialClassRound;			//All-Class on next turn
@@ -347,8 +348,9 @@ ConVar tf_feign_death_speed_duration;
 ConVar tf_arena_preround_time;
 
 #include "vsh/base_ability.sp"
-#include "vsh/base_modifiers.sp"
 #include "vsh/base_boss.sp"
+#include "vsh/base_bossmulti.sp"
+#include "vsh/base_modifiers.sp"
 
 #include "vsh/abilities/ability_body_eat.sp"
 #include "vsh/abilities/ability_brave_jump.sp"
@@ -392,6 +394,10 @@ ConVar tf_arena_preround_time;
 #include "vsh/bosses/boss_vagineer.sp"
 #include "vsh/bosses/boss_yeti.sp"
 #include "vsh/bosses/boss_zombie.sp"
+
+#include "vsh/bossesmulti/bossmulti_mannbrothers.sp"
+#include "vsh/bossesmulti/bossmulti_pyromancers.sp"
+#include "vsh/bossesmulti/bossmulti_seemanseeldier.sp"
 
 #include "vsh/modifiers/modifiers_angry.sp"
 #include "vsh/modifiers/modifiers_electric.sp"
@@ -538,6 +544,21 @@ public void OnPluginStart()
 	func = SaxtonHaleFunction("GetBossInfo", ET_Ignore, Param_String, Param_Cell);
 	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
 	
+	//Multi Boss Functions
+	SaxtonHaleFunction("CreateBossMulti", ET_Single, Param_String);
+	SaxtonHaleFunction("IsBossMultiHidden", ET_Single);
+	SaxtonHaleFunction("IsBossMultiType", ET_Single, Param_String);
+	SaxtonHaleFunction("SetBossMultiType", ET_Ignore, Param_String);
+	SaxtonHaleFunction("GetBossMultiList", ET_Ignore, Param_Cell);
+	
+	func = SaxtonHaleFunction("GetBossMultiType", ET_Ignore, Param_String, Param_Cell);
+	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
+	
+	func = SaxtonHaleFunction("GetBossMultiName", ET_Ignore, Param_String, Param_Cell);
+	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
+	
+	func = SaxtonHaleFunction("GetBossMultiInfo", ET_Ignore, Param_String, Param_Cell);
+	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
 	
 	//Modifiers functions
 	SaxtonHaleFunction("CreateModifiers", ET_Single, Param_String);
@@ -632,6 +653,7 @@ public void OnPluginStart()
 	
 	//Register base constructor
 	SaxtonHale_RegisterClass("SaxtonHaleBoss", VSHClassType_Core);
+	SaxtonHale_RegisterClass("SaxtonHaleBossMulti", VSHClassType_Core);
 	SaxtonHale_RegisterClass("SaxtonHaleModifiers", VSHClassType_Core);
 	SaxtonHale_RegisterClass("SaxtonHaleAbility", VSHClassType_Core);
 	
@@ -639,6 +661,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("CSaxtonHale", VSHClassType_Boss);
 	
 	SaxtonHale_RegisterClass("CAnnouncer", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CBlutarch", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CBonkBoy", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CBrutalSniper", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CDemoPan", VSHClassType_Boss);
@@ -647,20 +670,19 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("CHorsemann", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CPainisCupcake", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CPyroCar", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CRedmond", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CScaldedPyromancer", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CScorchedPyromancer", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CSeeldier", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CSeeMan", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CUberRanger", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CVagineer", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CYeti", VSHClassType_Boss);
 	
-	//Register misc bosses
-	SaxtonHale_RegisterClass("CSeeMan", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CBlutarch", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CSeeldier", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CRedmond", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CScorchedPyromancer", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CScaldedPyromancer", VSHClassType_Boss);
-	SaxtonHale_RegisterMultiBoss("CSeeMan", "CSeeldier");
-	SaxtonHale_RegisterMultiBoss("CBlutarch", "CRedmond");
-	SaxtonHale_RegisterMultiBoss("CScorchedPyromancer", "CScaldedPyromancer");
+	//Register multi bosses
+	SaxtonHale_RegisterClass("CMannBrothers", VSHClassType_BossMulti);
+	SaxtonHale_RegisterClass("CPyromancers", VSHClassType_BossMulti);
+	SaxtonHale_RegisterClass("CSeeManSeeldier", VSHClassType_BossMulti);
 	
 	//Register minions
 	SaxtonHale_RegisterClass("CSeeldierMinion", VSHClassType_Boss);

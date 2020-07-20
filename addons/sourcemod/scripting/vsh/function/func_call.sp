@@ -21,6 +21,17 @@ void FuncCall_Start(SaxtonHaleBase boss, FuncStack funcStack)
 		if (funcStack.nParamType[iParam] == Param_String || funcStack.nParamType[iParam] == Param_Array)
 			funcStack.GetArray(iParam+1, array[iParam]);
 	
+	//Call base_bossmulti
+	if (!FuncCall_Call(boss, "SaxtonHaleBossMulti", funcStack, array, iArraySize))
+		return;
+	
+	//Call multi boss specifc
+	SaxtonHaleBossMulti saxtonBossMulti = view_as<SaxtonHaleBossMulti>(boss);
+	saxtonBossMulti.GetBossMultiType(sBuffer, sizeof(sBuffer));
+	if (!StrEmpty(sBuffer))
+		if (!FuncCall_Call(boss, sBuffer, funcStack, array, iArraySize))
+			return;
+	
 	//Call base_boss
 	if (!FuncCall_Call(boss, "SaxtonHaleBoss", funcStack, array, iArraySize))
 		return;

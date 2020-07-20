@@ -1,7 +1,6 @@
 #define SEEMAN_MODEL						"models/player/kirillian/boss/seeman_fix.mdl"
 #define SEEMAN_RAGE_SND						"vsh_rewrite/seeman/rage.wav"
 #define SEEMAN_SEE_SND						"vsh_rewrite/seeman/see.wav"
-#define SEE_BOSSES_INTRO_SND				"vsh_rewrite/seeman/intro.wav"
 
 methodmap CSeeMan < SaxtonHaleBase
 {
@@ -26,6 +25,16 @@ methodmap CSeeMan < SaxtonHaleBase
 		rageCond.flRageCondDuration = 3.0;
 		rageCond.flRageCondSuperRageMultiplier = 1.0;
 		rageCond.AddCond(TFCond_UberchargedCanteen);
+	}
+	
+	public void GetBossMultiType(char[] sType, int length)
+	{
+		strcopy(sType, length, "CSeeManSeeldier");
+	}
+	
+	public bool IsBossHidden()
+	{
+		return true;
 	}
 	
 	public void GetBossName(char[] sName, int length)
@@ -83,11 +92,8 @@ methodmap CSeeMan < SaxtonHaleBase
 	
 	public void GetSound(char[] sSound, int length, SaxtonHaleSound iSoundType)
 	{
-		switch (iSoundType)
-		{
-			case VSHSound_RoundStart: strcopy(sSound, length, SEE_BOSSES_INTRO_SND);
-			default: strcopy(sSound, length, SEEMAN_SEE_SND);
-		}
+		if (iSoundType != VSHSound_RoundStart)
+			strcopy(sSound, length, SEEMAN_SEE_SND);
 	}
 	
 	public void GetSoundAbility(char[] sSound, int length, const char[] sType)
@@ -120,7 +126,6 @@ methodmap CSeeMan < SaxtonHaleBase
 	{
 		PrepareSound(SEEMAN_SEE_SND);
 		PrepareSound(SEEMAN_RAGE_SND);
-		PrepareSound(SEE_BOSSES_INTRO_SND);
 		PrecacheModel(SEEMAN_MODEL);
 		
 		AddFileToDownloadsTable("models/player/kirillian/boss/seeman_fix.mdl");
