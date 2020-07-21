@@ -2,9 +2,12 @@ static ArrayList g_aSpells[TF_MAXPLAYERS+1];
 static haleSpells g_rageSpells[TF_MAXPLAYERS+1];
 static float g_flRageRequirement[TF_MAXPLAYERS+1];
 static bool g_bSpellsRage[TF_MAXPLAYERS+1];
+static float g_flSpellsCooldown[TF_MAXPLAYERS+1];
+static float g_flSpellsLastUsed[TF_MAXPLAYERS+1];
 
 enum haleSpells
 {
+	haleSpells_Invalid = -1,
 	haleSpells_Fireball = 0,
 	haleSpells_Bats,
 	haleSpells_Heal,
@@ -37,6 +40,18 @@ static char g_strSpellsName[][] =
 
 methodmap CWeaponSpells < SaxtonHaleBase
 {
+	property float flCooldown
+	{
+		public get()
+		{
+			return g_flSpellsCooldown[this.iClient];
+		}
+		public set(float val)
+		{
+			g_flSpellsCooldown[this.iClient] = val;
+		}
+	}
+	
 	property float flRageRequirement
 	{
 		public get()
@@ -52,6 +67,8 @@ methodmap CWeaponSpells < SaxtonHaleBase
 	public CWeaponSpells(CWeaponSpells ability)
 	{
 		ability.flRageRequirement = 0.25;
+		ability.flCooldown = 0.0;
+		g_rageSpells[ability.iClient] = haleSpells_Invalid;
 		
 		g_bSpellsRage[ability.iClient] = false;
 		
@@ -117,6 +134,9 @@ methodmap CWeaponSpells < SaxtonHaleBase
 	
 	public void OnRage()
 	{
+		if (g_rageSpells[this.iClient] == view_as<int>(haleSpells_Invalid))
+			return;
+		
 		int iClient = this.iClient;
 		
 		//Set spellbook to specified rare
@@ -160,10 +180,14 @@ methodmap CWeaponSpells < SaxtonHaleBase
 			}
 			
 			float flRagePercentage = float(this.iRageDamage) / float(this.iMaxRageDamage);
-			if (flRagePercentage >= this.flRageRequirement)
+			if (flRagePercentage >= this.flRageRequirement && g_flSpellsLastUsed[this.iClient] <= GetGameTime()-this.flCooldown)
 			{
 				//Normal spell, remove rage on use
 				this.iRageDamage -= RoundToFloor(this.flRageRequirement * float(this.iMaxRageDamage));
+				
+				//spell cooldowns, set timer after used
+				g_flSpellsLastUsed[this.iClient] = GetGameTime();
+				
 				
 				//Play ability sound if boss have one
 				char sSound[PLATFORM_MAX_PATH];

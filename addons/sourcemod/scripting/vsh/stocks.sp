@@ -802,6 +802,26 @@ stock void TF2_ShowAnnotationToClient(int iClient, int iTarget, const char[] sMe
 	TF2_ShowAnnotation(iClients, 1, iTarget, sMessage, flDuration, sSound);
 }
 
+stock int CreateViewModel(int iClient, int iModel)
+{
+	int iViewModel = CreateEntityByName("tf_wearable_vm");
+	if (iViewModel <= MaxClients)
+		return -1;
+	
+	SetEntProp(iViewModel, Prop_Send, "m_nModelIndex", iModel);
+	SetEntProp(iViewModel, Prop_Send, "m_fEffects", EF_BONEMERGE|EF_BONEMERGE_FASTCULL);
+	SetEntProp(iViewModel, Prop_Send, "m_iTeamNum", GetClientTeam(iClient));
+	SetEntProp(iViewModel, Prop_Send, "m_usSolidFlags", 4);
+	SetEntProp(iViewModel, Prop_Send, "m_CollisionGroup", 11);
+	
+	DispatchSpawn(iViewModel);
+	SetVariantString("!activator");
+	ActivateEntity(iViewModel);
+	
+	SDK_EquipWearable(iClient, iViewModel);
+	return iViewModel;
+}
+
 stock void BroadcastSoundToTeam(TFTeam nTeam, const char[] strSound)
 {
 	switch (nTeam)

@@ -361,6 +361,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/abilities/ability_groundpound.sp"
 #include "vsh/abilities/ability_model_override.sp"
 #include "vsh/abilities/ability_rage_bomb.sp"
+#include "vsh/abilities/ability_rage_bomb_projectile.sp"
 #include "vsh/abilities/ability_rage_conditions.sp"
 #include "vsh/abilities/ability_rage_freeze.sp"
 #include "vsh/abilities/ability_rage_ghost.sp"
@@ -394,6 +395,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/bosses/boss_vagineer.sp"
 #include "vsh/bosses/boss_yeti.sp"
 #include "vsh/bosses/boss_zombie.sp"
+#include "vsh/bosses/boss_merasmus.sp"
 
 #include "vsh/bossesmulti/bossmulti_mannbrothers.sp"
 #include "vsh/bossesmulti/bossmulti_pyromancers.sp"
@@ -592,6 +594,7 @@ public void OnPluginStart()
 	SaxtonHaleFunction("OnCommandKeyValues", ET_Hook, Param_String);
 	SaxtonHaleFunction("OnAttackCritical", ET_Hook, Param_Cell, Param_CellByRef);
 	SaxtonHaleFunction("OnVoiceCommand", ET_Hook, Param_String, Param_String);
+	SaxtonHaleFunction("OnWeaponSwitchPost", ET_Ignore, Param_Cell);
 	
 	func = SaxtonHaleFunction("OnSoundPlayed", ET_Hook, Param_Array, Param_CellByRef, Param_String, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_String, Param_CellByRef);
 	func.SetParam(1, Param_Array, VSHArrayType_Static, MAXPLAYERS);
@@ -672,6 +675,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("CDemoRobot", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CGentleSpy", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CHorsemann", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CMerasmus", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CPainisCupcake", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CPyroCar", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CRedmond", VSHClassType_Boss);
@@ -697,6 +701,7 @@ public void OnPluginStart()
 	//Register ability
 	SaxtonHale_RegisterClass("CBodyEat", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CBomb", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CBombProjectile", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CBraveJump", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CDashJump", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CDropModel", VSHClassType_Ability);
@@ -1227,6 +1232,7 @@ public void OnClientPutInServer(int iClient)
 	SDK_HookGiveNamedItem(iClient);
 	SDKHook(iClient, SDKHook_PreThink, Client_OnThink);
 	SDKHook(iClient, SDKHook_OnTakeDamageAlive, Client_OnTakeDamageAlive);
+	SDKHook(iClient, SDKHook_WeaponSwitchPost, Client_OnWeaponSwitchPost);
 	
 	Cookies_OnClientJoin(iClient);
 }
@@ -1400,7 +1406,7 @@ public Action Client_OnTakeDamageAlive(int victim, int &attacker, int &inflictor
 						damage = float(iTelefragDamage);
 						PrintCenterText(attacker, "TELEFRAG! You are a pro.");
 						PrintCenterText(victim, "TELEFRAG! Be careful around quantum tunneling devices!");
-
+						
 						//Try to retrieve the entity under the player, and hopefully this is the teleporter
 						int iBuilder = 0;
 						int iGroundEntity = GetEntPropEnt(attacker, Prop_Send, "m_hGroundEntity");
@@ -1431,6 +1437,19 @@ public Action Client_OnTakeDamageAlive(int victim, int &attacker, int &inflictor
 		}
 	}
 	return finalAction;
+}
+
+public Action Client_OnWeaponSwitchPost(int iClient, int iWeapon)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
+	
+	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
+	
+	if (0 < iClient <= MaxClients && boss.bValid)
+		return boss.CallFunction("OnWeaponSwitchPost", iWeapon);
+	
+	return Plugin_Continue;
 }
 
 public Action Building_OnTakeDamage(int building, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)

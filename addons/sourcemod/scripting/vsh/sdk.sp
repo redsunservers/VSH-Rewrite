@@ -14,6 +14,8 @@ static Handle g_hSDKEquipWearable;
 static Handle g_hSDKAddObject;
 static Handle g_hSDKRemoveObject;
 
+int g_iOffsetFuseTime = -1;
+
 static int g_iHookIdGiveNamedItem[TF_MAXPLAYERS+1];
 
 void SDK_Init()
@@ -180,6 +182,20 @@ void SDK_Init()
 	
 	delete hHook;
 	delete hGameData;
+	
+	if (LookupOffset(g_iOffsetFuseTime, "CTFWeaponBaseMerasmusGrenade", "m_hThrower"))
+		g_iOffsetFuseTime += 48;
+}
+
+static bool LookupOffset(int &iOffset, const char[] sClass, const char[] sProp)
+{
+	iOffset = FindSendPropInfo(sClass, sProp);
+	if (iOffset <= 0)
+	{
+		LogMessage("Could not locate offset for %s::%s!", sClass, sProp);
+		return false;
+	}
+	return true;
 }
 
 void SDK_HookGiveNamedItem(int iClient)
@@ -401,4 +417,12 @@ void SDK_RemoveObject(int iClient, int iEntity)
 {
 	if(g_hSDKRemoveObject != null)
 		SDKCall(g_hSDKRemoveObject, iClient, iEntity);
+}
+
+void SDK_SetFuseTime(int iEntity, float flTime)
+{
+	if (g_iOffsetFuseTime <= 0)
+		return;
+	
+	SetEntDataFloat(iEntity, g_iOffsetFuseTime, flTime);
 }
