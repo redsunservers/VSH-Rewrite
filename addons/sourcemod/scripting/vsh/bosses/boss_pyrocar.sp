@@ -21,7 +21,7 @@ static char g_strPyrocarLose[][] =  {
 };
 
 static char g_strPyrocarRage[][] =  {
-	"misc/halloween/spell_blast_jump.wav"
+	"vo/taunts/pyro_lollichop.mp3"
 };
 
 static char g_strPyrocarJump[][] =  {
