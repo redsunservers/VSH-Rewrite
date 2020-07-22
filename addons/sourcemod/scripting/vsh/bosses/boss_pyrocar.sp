@@ -91,7 +91,7 @@ methodmap CPyroCar < SaxtonHaleBase
 		boss.iHealthPerPlayer = 800;
 		boss.nClass = TFClass_Pyro;
 		boss.iMaxRageDamage = 2500;
-		boss.flSpeed = 320.0;
+		boss.flSpeed = 300.0;
 	}
 	
 	public void GetBossName(char[] sName, int length)
