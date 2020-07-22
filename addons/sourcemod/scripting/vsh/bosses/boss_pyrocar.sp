@@ -63,7 +63,7 @@ static int g_iCosmetics[] =  {
 	394 //Connoisseur's Cap
 };
 
-static float g_flGasMinCharge = 225.0;
+static float g_flGasMinCharge = 200.0;
 
 static int g_iPyrocarCosmetics[sizeof(g_iCosmetics)];
 
