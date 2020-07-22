@@ -88,11 +88,11 @@ methodmap CRageGas < SaxtonHaleBase
 		g_flBombProjectileEnd[this.iClient] = GetGameTime() + this.flDuration;
 		g_flPreviousSpeed[this.iClient] = this.flSpeed;
 		TF2_AddCondition(this.iClient, TFCond_SpeedBuffAlly, this.flDuration, this.iClient);
-		this.flSpeed *= 1.1;
+		this.flSpeed *= 1.2;
 		if(this.bSuperRage)
 		{
 			TF2_AddCondition(this.iClient, TFCond_TeleportedGlow, this.flDuration, this.iClient);
-			this.flSpeed *= 1.1;
+			this.flSpeed *= 1.2;
 		}
 	}
 	
