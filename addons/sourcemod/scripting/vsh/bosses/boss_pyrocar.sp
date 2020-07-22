@@ -5,7 +5,7 @@
 #define ATTRIB_LESSHEALING				734
 #define TF_DMG_AFTERBURN				DMG_PREVENT_PHYSICS_FORCE | DMG_BURN
 #define TF_DMG_GAS_AFTERBURN			1050632
-#define PYROCAR_BACKBURNER_ATTRIBUTES	"24 ; 1.0 ; 72 ; 0.5 ; 112 ; 0.25 ; 178 ; 0.4 ; 179 ; 1.0 ; 181 ; 1.0 ; 252 ; 0.5 ; 259 ; 1.0 ; 356 ; 1.0 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 1800.0 ; 862 ; 0.4 ; 863 ; 0.01 ; 865 ; 85 ; 214 ; %d"
+#define PYROCAR_BACKBURNER_ATTRIBUTES	"24 ; 1.0 ; 72 ; 0.5 ; 112 ; 0.25 ; 178 ; 0.65 ; 179 ; 1.0 ; 181 ; 1.0 ; 252 ; 0.5 ; 259 ; 1.0 ; 356 ; 1.0 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 1800.0 ; 862 ; 0.4 ; 863 ; 0.01 ; 865 ; 85 ; 214 ; %d"
 
 static char g_strPyrocarRoundStart[][] =  {
 	"vsh_rewrite/pyrocar/pyrocar_intro.mp3", 
@@ -222,6 +222,12 @@ methodmap CPyroCar < SaxtonHaleBase
 				Event event = CreateEvent("localplayer_pickup_weapon", true);
 				event.FireToClient(this.iClient);
 				event.Cancel();
+				
+				//Change active weapon
+				if (IsValidEntity(GetPlayerWeaponSlot(this.iClient, WeaponSlot_Primary)))
+					SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", g_iPyrocarPrimary[this.iClient]);
+				else
+					SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", g_iPyrocarMelee[this.iClient]);
 			}
 		}
 		
@@ -316,7 +322,7 @@ methodmap CPyroCar < SaxtonHaleBase
 		
 		//Deal constant damage for afterburn
 		if (damagetype == TF_DMG_AFTERBURN || damagetype == TF_DMG_GAS_AFTERBURN)
-			damage = 1.25;
+			damage = 1.75;
 			
 		g_flPyrocarGasCharge[this.iClient] += damage;
 			
