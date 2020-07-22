@@ -76,7 +76,7 @@ methodmap CRageGas < SaxtonHaleBase
 		g_flBombProjectileNext[ability.iClient] = 0.0;
 		g_flBombProjectileEnd[ability.iClient] = 0.0;
 		
-		ability.flRate = 1.7;
+		ability.flRate = 2.5;
 		ability.flDuration = 8.0;
 		ability.flMaxDistance = 600.0;
 		ability.flHeight = 700.0;
