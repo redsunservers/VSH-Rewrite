@@ -278,7 +278,6 @@ methodmap CAnnouncer < SaxtonHaleBase
 	}
 };
 
-static Handle g_hAnnouncerMinionTimer[TF_MAXPLAYERS+1];
 static int g_iAnnouncerMinionTimeLeft[TF_MAXPLAYERS+1];
 
 methodmap CAnnouncerMinion < SaxtonHaleBase
@@ -293,7 +292,7 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 		boss.bModel = false;
 		
 		g_iAnnouncerMinionTimeLeft[boss.iClient] = 6;	//6 seconds before swapping to boss team
-		g_hAnnouncerMinionTimer[boss.iClient] = CreateTimer(0.0, Timer_AnnouncerChangeTeam, boss.iClient);
+		boss.CallFunction("CreateTimer", 0.0, "CAnnouncerMinion", "ChangeTeam");
 		
 		//Make minions untargetable by all sentries until the team-swapping countdown ends
 		SetEntityFlags(boss.iClient, (GetEntityFlags(boss.iClient) | FL_NOTARGET));
@@ -302,6 +301,79 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 	public bool IsBossHidden()
 	{
 		return true;
+	}
+	
+	public void ChangeTeam()
+	{
+		if (TF2_GetClientTeam(this.iClient) == TFTeam_Boss || TF2_GetClientTeam(this.iClient) <= TFTeam_Spectator || !IsPlayerAlive(this.iClient))
+			return;
+		
+		if (g_iAnnouncerMinionTimeLeft[this.iClient] > 0)
+		{
+			//Warning on about to become boss
+			PrintCenterText(this.iClient, "YOU'RE SWAPPING TEAMS IN %d SECOND%s", g_iAnnouncerMinionTimeLeft[this.iClient], g_iAnnouncerMinionTimeLeft[this.iClient] > 1 ? "S" : "");
+			g_iAnnouncerMinionTimeLeft[this.iClient]--;
+			this.CallFunction("CreateTimer", 1.0, "CAnnouncerMinion", "ChangeTeam");
+			return;
+		}
+		
+		//Need to detach buildings from engineers before switching teams so they don't explode
+		int iBuilding = MaxClients+1;
+		while ((iBuilding = FindEntityByClassname(iBuilding, "obj_*")) > MaxClients)
+		{
+			//Even when keeping the same builder, the "original builder" will be detached from the building
+			if (GetEntPropEnt(iBuilding, Prop_Send, "m_hBuilder") == this.iClient)
+				TF2_SetBuildingTeam(iBuilding, TFTeam_Boss);
+		}
+		
+		PrintCenterText(this.iClient, "YOU'RE NOW IN BOSS TEAM");
+		Client_AddFlag(this.iClient, ClientFlags_BossTeam);
+		
+		SetEntProp(this.iClient, Prop_Send, "m_lifeState", LifeState_Dead);
+		TF2_ChangeClientTeam(this.iClient, TFTeam_Boss);
+		SetEntProp(this.iClient, Prop_Send, "m_lifeState", LifeState_Alive);
+		
+		//...and add them all back
+		iBuilding = MaxClients+1;
+		while ((iBuilding = FindEntityByClassname(iBuilding, "obj_*")) > MaxClients)
+		{
+			if (GetEntPropEnt(iBuilding, Prop_Send, "m_hBuilder") == this.iClient)
+				SDK_AddObject(this.iClient, iBuilding);
+		}
+		
+		//Update wearable teams
+		int iEntity = MaxClients+1;
+		while ((iEntity = FindEntityByClassname(iEntity, "tf_wearable*")) > MaxClients)
+			if (GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == this.iClient || GetEntPropEnt(iEntity, Prop_Send, "moveparent") == this.iClient)
+				SetEntProp(iEntity, Prop_Send, "m_iTeamNum", view_as<int>(TFTeam_Boss));
+		
+		for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
+		{
+			int iWeapon = TF2_GetItemInSlot(this.iClient, iSlot);
+			if (iWeapon > MaxClients)
+			{
+				//Change weapon teams
+				SetEntProp(iWeapon, Prop_Send, "m_iTeamNum", view_as<int>(TFTeam_Boss));
+				
+				//Remove attribs added from config, attribs added from TF2 itself is kept
+				int iAttribIndex[MAX_ATTRIBUTES_SENT];
+				int iCount = TF2Attrib_ListDefIndices(iWeapon, iAttribIndex, sizeof(iAttribIndex));
+				
+				for (int i = 0; i < iCount; i++)
+					TF2Attrib_RemoveByDefIndex(iWeapon, iAttribIndex[i]);
+				
+				TF2Attrib_ClearCache(iWeapon);
+			}
+		}
+		
+		//Refill health
+		SetEntProp(this.iClient, Prop_Send, "m_iHealth", SDK_GetMaxHealth(this.iClient));
+		
+		//Allow sentries to target this fella from now on
+		SetEntityFlags(this.iClient, (GetEntityFlags(this.iClient) & ~FL_NOTARGET));
+		
+		//Give crit resistance 
+		TF2_AddCondition(this.iClient, TFCond_DefenseBuffed, TFCondDuration_Infinite);
 	}
 	
 	public Action OnAttackDamage(int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
@@ -369,88 +441,10 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 	
 	public void Destroy()
 	{
-		g_hAnnouncerMinionTimer[this.iClient] = null;
-		
 		//Make them targetable by sentries, just in case
 		SetEntityFlags(this.iClient, (GetEntityFlags(this.iClient) & ~FL_NOTARGET));
 	}
 };
-
-public Action Timer_AnnouncerChangeTeam(Handle hTimer, int iClient)
-{
-	if (hTimer != g_hAnnouncerMinionTimer[iClient])
-		return;
-	
-	if (TF2_GetClientTeam(iClient) == TFTeam_Boss || TF2_GetClientTeam(iClient) <= TFTeam_Spectator || !IsPlayerAlive(iClient))
-		return;
-	
-	if (g_iAnnouncerMinionTimeLeft[iClient] > 0)
-	{
-		//Warning on about to become boss
-		PrintCenterText(iClient, "YOU'RE SWAPPING TEAMS IN %d SECOND%s", g_iAnnouncerMinionTimeLeft[iClient], g_iAnnouncerMinionTimeLeft[iClient] > 1 ? "S" : "");
-		g_iAnnouncerMinionTimeLeft[iClient]--;
-		g_hAnnouncerMinionTimer[iClient] = CreateTimer(1.0, Timer_AnnouncerChangeTeam, iClient);
-		return;
-	}
-	
-	//Need to detach buildings from engineers before switching teams so they don't explode
-	int iBuilding = MaxClients+1;
-	while ((iBuilding = FindEntityByClassname(iBuilding, "obj_*")) > MaxClients)
-	{
-		//Even when keeping the same builder, the "original builder" will be detached from the building
-		if (GetEntPropEnt(iBuilding, Prop_Send, "m_hBuilder") == iClient)
-			TF2_SetBuildingTeam(iBuilding, TFTeam_Boss);
-	}
-	
-	PrintCenterText(iClient, "YOU'RE NOW IN BOSS TEAM");
-	Client_AddFlag(iClient, ClientFlags_BossTeam);
-	
-	SetEntProp(iClient, Prop_Send, "m_lifeState", LifeState_Dead);
-	TF2_ChangeClientTeam(iClient, TFTeam_Boss);
-	SetEntProp(iClient, Prop_Send, "m_lifeState", LifeState_Alive);
-	
-	//...and add them all back
-	iBuilding = MaxClients+1;
-	while ((iBuilding = FindEntityByClassname(iBuilding, "obj_*")) > MaxClients)
-	{
-		if (GetEntPropEnt(iBuilding, Prop_Send, "m_hBuilder") == iClient)
-			SDK_AddObject(iClient, iBuilding);
-	}
-	
-	//Update wearable teams
-	int iEntity = MaxClients+1;
-	while ((iEntity = FindEntityByClassname(iEntity, "tf_wearable*")) > MaxClients)
-		if (GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity") == iClient || GetEntPropEnt(iEntity, Prop_Send, "moveparent") == iClient)
-			SetEntProp(iEntity, Prop_Send, "m_iTeamNum", view_as<int>(TFTeam_Boss));
-	
-	for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
-	{
-		int iWeapon = TF2_GetItemInSlot(iClient, iSlot);
-		if (iWeapon > MaxClients)
-		{
-			//Change weapon teams
-			SetEntProp(iWeapon, Prop_Send, "m_iTeamNum", view_as<int>(TFTeam_Boss));
-			
-			//Remove attribs added from config, attribs added from TF2 itself is kept
-			int iAttribIndex[MAX_ATTRIBUTES_SENT];
-			int iCount = TF2Attrib_ListDefIndices(iWeapon, iAttribIndex, sizeof(iAttribIndex));
-			
-			for (int i = 0; i < iCount; i++)
-				TF2Attrib_RemoveByDefIndex(iWeapon, iAttribIndex[i]);
-			
-			TF2Attrib_ClearCache(iWeapon);
-		}
-	}
-	
-	//Refill health
-	SetEntProp(iClient, Prop_Send, "m_iHealth", SDK_GetMaxHealth(iClient));
-	
-	//Allow sentries to target this fella from now on
-	SetEntityFlags(iClient, (GetEntityFlags(iClient) & ~FL_NOTARGET));
-	
-	//Give crit resistance 
-	TF2_AddCondition(iClient, TFCond_DefenseBuffed, TFCondDuration_Infinite);
-}
 
 public void Announcer_ShowAnnotation(int iTarget, char[] sMessage, float flDuration)
 {

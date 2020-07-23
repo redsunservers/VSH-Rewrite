@@ -1,5 +1,3 @@
-static float g_flZombieLastDamage[TF_MAXPLAYERS+1];
-
 methodmap CZombie < SaxtonHaleBase
 {
 	public CZombie(CZombie boss)
@@ -20,6 +18,15 @@ methodmap CZombie < SaxtonHaleBase
 		return true;
 	}
 	
+	public void TakeDamage()
+	{
+		if (!IsPlayerAlive(this.iClient))
+			return;
+		
+		SDKHooks_TakeDamage(this.iClient, 0, this.iClient, float(RoundToCeil(SDK_GetMaxHealth(this.iClient)*0.04)), DMG_PREVENT_PHYSICS_FORCE);
+		this.CallFunction("CreateTimer", 1.0, "CZombie", "TakeDamage");
+	}
+	
 	public void OnSpawn()
 	{
 		int iWeapon = this.CallFunction("CreateWeapon", 0, "tf_weapon_bat", 0, TFQual_Normal, "");
@@ -30,22 +37,14 @@ methodmap CZombie < SaxtonHaleBase
 		
 		SetVariantString("TLK_RESURRECTED");
 		AcceptEntityInput(this.iClient, "SpeakResponseConcept");
+		
+		this.TakeDamage();
 	}
 	
 	public void OnThink()
 	{
-		int iClient = this.iClient;
-		
-		if (!IsPlayerAlive(iClient)) return;
-		
-		if (g_flZombieLastDamage[iClient] == 0.0 || g_flZombieLastDamage[iClient] <= GetGameTime()-1.0)
-		{
-			SDKHooks_TakeDamage(iClient, 0, iClient, float(RoundToCeil(SDK_GetMaxHealth(iClient)*0.04)), DMG_PREVENT_PHYSICS_FORCE);
-			g_flZombieLastDamage[iClient] = GetGameTime();
-		}
-		
-		if (!TF2_IsPlayerInCondition(iClient, TFCond_Bleeding))
-			TF2_MakeBleed(iClient, iClient, 99999.0);
+		if (IsPlayerAlive(this.iClient) && !TF2_IsPlayerInCondition(this.iClient, TFCond_Bleeding))
+			TF2_MakeBleed(this.iClient, this.iClient, 99999.0);
 	}
 	
 	public Action OnAttackDamage(int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)

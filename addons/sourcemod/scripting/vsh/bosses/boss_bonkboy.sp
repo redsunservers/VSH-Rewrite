@@ -5,7 +5,7 @@ static int g_iBonkBoyModelMask;
 static int g_iBonkBoyModelShirt;
 static int g_iBonkBoyModelBag;
 
-static bool g_bBonkBoyRage[TF_MAXPLAYERS+1];
+static Handle g_hBonkBoyRageTimer[TF_MAXPLAYERS+1];
 
 static char g_strBonkBoyRoundStart[][] = {
 	"vo/scout_sf12_goodmagic07.mp3",
@@ -75,8 +75,6 @@ methodmap CBonkBoy < SaxtonHaleBase
 		boss.iHealthPerPlayer = 650;
 		boss.nClass = TFClass_Scout;
 		boss.iMaxRageDamage = 1500;
-		
-		g_bBonkBoyRage[boss.iClient] = false;
 	}
 	
 	public void GetBossName(char[] sName, int length)
@@ -149,7 +147,6 @@ methodmap CBonkBoy < SaxtonHaleBase
 		SetEntPropFloat(this.iClient, Prop_Send, "m_flHypeMeter", 100.0);
 		
 		this.flSpeed *= 1.5;
-		g_bBonkBoyRage[this.iClient] = true;
 		SetEntityMoveType(this.iClient, MOVETYPE_ISOMETRIC);
 		
 		int iMelee = TF2_GetItemInSlot(this.iClient, WeaponSlot_Melee);
@@ -158,22 +155,21 @@ methodmap CBonkBoy < SaxtonHaleBase
 			TF2Attrib_SetByDefIndex(iMelee, ATTRIB_FIRE_RATE, 0.4);	//firing speed
 			TF2Attrib_ClearCache(iMelee);
 		}
+		
+		this.CallFunction("KillTimer", g_hBonkBoyRageTimer[this.iClient]);
+		g_hBonkBoyRageTimer[this.iClient] = this.CallFunction("CreateTimer", this.bSuperRage ? 10.0 : 5.0, "CBonkBoy", "OnRageEnd");
 	}
 	
-	public void OnThink()
+	public void OnRageEnd()
 	{
-		if (g_bBonkBoyRage[this.iClient] && this.flRageLastTime < GetGameTime() - (this.bSuperRage ? 10.0 : 5.0))
+		this.flSpeed /= 1.5;
+		SetEntityMoveType(this.iClient, MOVETYPE_WALK);
+		
+		int iMelee = TF2_GetItemInSlot(this.iClient, WeaponSlot_Melee);
+		if (iMelee > MaxClients)
 		{
-			g_bBonkBoyRage[this.iClient] = false;
-			this.flSpeed /= 1.5;
-			SetEntityMoveType(this.iClient, MOVETYPE_WALK);
-			
-			int iMelee = TF2_GetItemInSlot(this.iClient, WeaponSlot_Melee);
-			if (iMelee > MaxClients)
-			{
-				TF2Attrib_RemoveByDefIndex(iMelee, ATTRIB_FIRE_RATE);	//firing speed
-				TF2Attrib_ClearCache(iMelee);
-			}
+			TF2Attrib_RemoveByDefIndex(iMelee, ATTRIB_FIRE_RATE);	//firing speed
+			TF2Attrib_ClearCache(iMelee);
 		}
 	}
 	

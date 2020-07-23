@@ -8,8 +8,7 @@ static float g_flBombSpawnRadius[TF_MAXPLAYERS+1];
 static float g_flBombRadius[TF_MAXPLAYERS+1];
 static float g_flBombDamage[TF_MAXPLAYERS+1];
 static float g_flNukeRadius[TF_MAXPLAYERS+1];
-static float g_flBombEndTime[TF_MAXPLAYERS+1];
-static float g_flLastExplosionTime[TF_MAXPLAYERS+1];
+static Handle g_hBombTimer[TF_MAXPLAYERS+1];
 
 methodmap CBomb < SaxtonHaleBase
 {
@@ -93,65 +92,67 @@ methodmap CBomb < SaxtonHaleBase
 		g_flBombRadius[ability.iClient] = 200.0;
 		g_flBombDamage[ability.iClient] = 150.0;
 		g_flNukeRadius[ability.iClient] = 200.0;
-		g_flBombEndTime[ability.iClient] = 0.0;
-		g_flLastExplosionTime[ability.iClient] = 0.0;
+		g_hBombTimer[ability.iClient] = null;
 	}
 
 	public void OnRage()
 	{
-		g_flBombEndTime[this.iClient] = GetGameTime() + this.flBombSpawnDuration;
 		FakeClientCommand(this.iClient, "taunt");
 		SetEntityMoveType(this.iClient, MOVETYPE_NONE);
 		
 		//Force thirdperson view
 		SetVariantInt(1);
 		AcceptEntityInput(this.iClient, "SetForcedTauntCam");
+		
+		if (!g_hBombTimer[this.iClient])
+		{
+			this.CallFunction("CreateTimer", this.flBombSpawnInterval, "CBomb", "DoExplosion");
+			this.CallFunction("KillTimer", g_hBombTimer[this.iClient]);
+		}
+		
+		g_hBombTimer[this.iClient] = this.CallFunction("CreateTimer", this.flBombSpawnDuration, "CBomb", "OnRageEnd");
 	}
 	
-	public void OnThink()
+	public void DoExplosion()
 	{
-		if (g_flBombEndTime[this.iClient] == 0.0) return;
+		if (!g_hBombTimer[this.iClient])
+			return;
 		
-		float flGameTime = GetGameTime();
-		if (flGameTime <= g_flBombEndTime[this.iClient])
+		float vecExplosionPos[3], vecExplosionOrigin[3];
+		GetClientAbsOrigin(this.iClient, vecExplosionOrigin);
+		
+		for (int i = 0; i < 2; i++)
 		{
-			if (g_flLastExplosionTime[this.iClient] != 0.0 && g_flLastExplosionTime[this.iClient]+this.flBombSpawnInterval > flGameTime) return;
+			vecExplosionPos = vecExplosionOrigin;
+			vecExplosionPos[0] += GetRandomFloat(-this.flBombSpawnRadius, this.flBombSpawnRadius);
+			vecExplosionPos[1] += GetRandomFloat(-this.flBombSpawnRadius, this.flBombSpawnRadius);
+			vecExplosionPos[2] += GetRandomFloat(-this.flBombSpawnRadius, this.flBombSpawnRadius);
 			
-			g_flLastExplosionTime[this.iClient] = flGameTime;
-			
-			float vecExplosionPos[3], vecExplosionOrigin[3];
+			char sSound[255];
+			Format(sSound, sizeof(sSound), "weapons/airstrike_small_explosion_0%i.wav", GetRandomInt(1,3));
+			TF2_Explode(this.iClient, vecExplosionPos, this.flBombDamage, this.flBombRadius, BOMB_PARTICLE, sSound);
+		}
+		
+		this.CallFunction("CreateTimer", this.flBombSpawnInterval, "CBomb", "DoExplosion");
+	}
+	
+	public void OnRageEnd()
+	{
+		if (this.bSuperRage)
+		{
+			float vecExplosionOrigin[3];
 			GetClientAbsOrigin(this.iClient, vecExplosionOrigin);
-			
-			for (int i = 0; i < 2; i++)
-			{
-				vecExplosionPos = vecExplosionOrigin;
-				vecExplosionPos[0] += GetRandomFloat(-this.flBombSpawnRadius, this.flBombSpawnRadius);
-				vecExplosionPos[1] += GetRandomFloat(-this.flBombSpawnRadius, this.flBombSpawnRadius);
-				vecExplosionPos[2] += GetRandomFloat(-this.flBombSpawnRadius, this.flBombSpawnRadius);
-				
-				char sSound[255];
-				Format(sSound, sizeof(sSound), "weapons/airstrike_small_explosion_0%i.wav", GetRandomInt(1,3));
-				TF2_Explode(this.iClient, vecExplosionPos, this.flBombDamage, this.flBombRadius, BOMB_PARTICLE, sSound);
-			}
+			TF2_Explode(this.iClient, vecExplosionOrigin, 9999999.0, this.flNukeRadius, BOMB_NUKE_PARTICLE, BOMB_NUKE_SOUND);
+			EmitSoundToAll(BOMB_NUKE_SOUND);
 		}
-		else
-		{
-			if (this.bSuperRage)
-			{
-				float vecExplosionOrigin[3];
-				GetClientAbsOrigin(this.iClient, vecExplosionOrigin);
-				TF2_Explode(this.iClient, vecExplosionOrigin, 9999999.0, this.flNukeRadius, BOMB_NUKE_PARTICLE, BOMB_NUKE_SOUND);
-				EmitSoundToAll(BOMB_NUKE_SOUND);
-			}
-			g_flBombEndTime[this.iClient] = 0.0;
-			g_flLastExplosionTime[this.iClient] = 0.0;
-			TF2_RemoveCondition(this.iClient, TFCond_Taunting);
-			SetEntityMoveType(this.iClient, MOVETYPE_WALK);
-			
-			//Set view back to first person
-			SetVariantInt(0);
-			AcceptEntityInput(this.iClient, "SetForcedTauntCam");
-		}
+		
+		g_hBombTimer[this.iClient] = null;
+		TF2_RemoveCondition(this.iClient, TFCond_Taunting);
+		SetEntityMoveType(this.iClient, MOVETYPE_WALK);
+		
+		//Set view back to first person
+		SetVariantInt(0);
+		AcceptEntityInput(this.iClient, "SetForcedTauntCam");
 	}
 	
 	public void Precache()

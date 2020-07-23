@@ -486,7 +486,7 @@ stock void TF2_SetBuildingTeam(int iBuilding, TFTeam nTeam, int iNewBuilder = -1
 	}
 }
 
-stock int TF2_CreateAndEquipWeapon(int iClient, int iIndex, char[] sClassnameTemp = NULL_STRING, int iLevel = 0, TFQuality iQuality = TFQual_Normal, char[] sAttrib = NULL_STRING, bool bAttrib = false)
+stock int TF2_CreateAndEquipWeapon(int iClient, int iIndex, const char[] sClassnameTemp = NULL_STRING, int iLevel = 0, TFQuality iQuality = TFQual_Normal, const char[] sAttrib = NULL_STRING, bool bAttrib = false)
 {
 	char sClassname[256];
 	if (StrEmpty(sClassnameTemp))
@@ -841,7 +841,7 @@ stock void BroadcastSoundToTeam(TFTeam nTeam, const char[] strSound)
 	}
 }
 
-stock bool StrEmpty(char[] sBuffer)
+stock bool StrEmpty(const char[] sBuffer)
 {
 	return sBuffer[0] == '\0';
 }

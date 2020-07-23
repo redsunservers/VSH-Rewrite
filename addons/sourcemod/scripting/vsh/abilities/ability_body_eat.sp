@@ -237,11 +237,11 @@ methodmap CBodyEat < SaxtonHaleBase
 		}
 	}
 	
-	public void OnEntityCreated(int iEntity, const char[] sClassname)
+	public void OnRagdollCreated(int iEntity)
 	{
-		if (g_bBodyBlockRagdoll && strcmp(sClassname, "tf_ragdoll") == 0)
+		if (g_bBodyBlockRagdoll)
 		{
-			AcceptEntityInput(iEntity, "Kill");
+			RemoveEntity(iEntity);
 			g_bBodyBlockRagdoll = false;
 		}
 	}
@@ -249,6 +249,7 @@ methodmap CBodyEat < SaxtonHaleBase
 	public void Precache()
 	{
 		PrecacheSound(BODY_EAT);
+		this.CallFunction("HookEntityCreated", "tf_ragdoll", "CBodyEat", "OnRagdollCreated");
 	}
 };
 

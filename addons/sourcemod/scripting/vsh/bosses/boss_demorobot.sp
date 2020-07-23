@@ -5,7 +5,7 @@
 #define DEMO_ROBOT_MODEL						"models/bots/demo/bot_demo.mdl"
 #define DEMO_ROBOT_GRENADE_LAUNCHER_SHOOT		"mvm/giant_demoman/giant_demoman_grenade_shoot.wav"
 
-static float g_flGrenadeLauncherRemoveTime[TF_MAXPLAYERS+1];
+static Handle g_hDemoRobotRageTimer[TF_MAXPLAYERS+1];
 
 static char g_strSoundRobotFootsteps[][] =
 {
@@ -88,7 +88,6 @@ methodmap CDemoRobot < SaxtonHaleBase
 		boss.iHealthPerPlayer = 800;
 		boss.nClass = TFClass_DemoMan;
 		boss.iMaxRageDamage = 2500;
-		g_flGrenadeLauncherRemoveTime[boss.iClient] = 0.0;
 	}
 	
 	public void GetBossName(char[] sName, int length)
@@ -189,9 +188,7 @@ methodmap CDemoRobot < SaxtonHaleBase
 	
 	public void OnRage()
 	{
-		int iClient = this.iClient;
-		
-		TF2_RemoveItemInSlot(iClient, WeaponSlot_Primary);
+		TF2_RemoveItemInSlot(this.iClient, WeaponSlot_Primary);
 		
 		char attribs[256];
 		Format(attribs, sizeof(attribs), "15 ; 1.0 ; 77 ; 0.0 ; 330 ; 4.0 ; 335 ; 996.0");
@@ -204,7 +201,7 @@ methodmap CDemoRobot < SaxtonHaleBase
 		int iWeapon = this.CallFunction("CreateWeapon", 206, "tf_weapon_grenadelauncher", 100, TFQual_Unusual, attribs);
 		if (iWeapon > MaxClients)
 		{
-			SetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
+			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
 			SetEntProp(iWeapon, Prop_Send, "m_iClip1", 1000);
 		}
 		/*
@@ -218,7 +215,7 @@ methodmap CDemoRobot < SaxtonHaleBase
 		335: clip size
 		*/
 		
-		int iMeleeWep = GetPlayerWeaponSlot(iClient, WeaponSlot_Melee);
+		int iMeleeWep = GetPlayerWeaponSlot(this.iClient, WeaponSlot_Melee);
 		if (iMeleeWep > MaxClients)
 		{
 			float flVal;
@@ -227,28 +224,23 @@ methodmap CDemoRobot < SaxtonHaleBase
 			TF2Attrib_SetByDefIndex(iMeleeWep, ATTRIB_MELEE_RANGE_MULTIPLIER, flVal);
 		}
 		
-		g_flGrenadeLauncherRemoveTime[iClient] = GetGameTime()+8.0;
+		this.CallFunction("KillTimer", g_hDemoRobotRageTimer[this.iClient]);
+		g_hDemoRobotRageTimer[this.iClient] = this.CallFunction("CreateTimer", 8.0, "CDemoRobot", "OnRageEnd");
 	}
 	
-	public void OnThink()
+	public void OnRageEnd()
 	{
-		int iClient = this.iClient;
+		TF2_RemoveItemInSlot(this.iClient, WeaponSlot_Primary);
 		
-		if (g_flGrenadeLauncherRemoveTime[iClient] != 0.0 && g_flGrenadeLauncherRemoveTime[iClient] <= GetGameTime())
+		int iMeleeWep = GetPlayerWeaponSlot(this.iClient, WeaponSlot_Melee);
+		if (iMeleeWep > MaxClients)
 		{
-			TF2_RemoveItemInSlot(iClient, WeaponSlot_Primary);
-			g_flGrenadeLauncherRemoveTime[iClient] = 0.0;
+			float flVal;
+			TF2_WeaponFindAttribute(iMeleeWep, ATTRIB_MELEE_RANGE_MULTIPLIER, flVal);
+			flVal /= DEMO_ROBOT_GIANT_SCALE;
+			TF2Attrib_SetByDefIndex(iMeleeWep, ATTRIB_MELEE_RANGE_MULTIPLIER, flVal);
 			
-			int iMeleeWep = GetPlayerWeaponSlot(iClient, WeaponSlot_Melee);
-			if (iMeleeWep > MaxClients)
-			{
-				float flVal;
-				TF2_WeaponFindAttribute(iMeleeWep, ATTRIB_MELEE_RANGE_MULTIPLIER, flVal);
-				flVal /= DEMO_ROBOT_GIANT_SCALE;
-				TF2Attrib_SetByDefIndex(iMeleeWep, ATTRIB_MELEE_RANGE_MULTIPLIER, flVal);
-				
-				SetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon", iMeleeWep);
-			}
+			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iMeleeWep);
 		}
 	}
 	

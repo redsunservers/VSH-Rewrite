@@ -43,15 +43,6 @@ methodmap CModifiersIce < SaxtonHaleBase
 			g_bIceRagdoll = true;
 	}
 	
-	public void OnEntityCreated(int iEntity, const char[] sClassname)
-	{
-		if (g_bIceRagdoll && strcmp(sClassname, "tf_ragdoll") == 0)
-		{
-			RequestFrame(Ice_RagdollSpawn, EntIndexToEntRef(iEntity));
-			g_bIceRagdoll = false;
-		}
-	}
-	
 	public Action OnTakeDamage(int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 	{
 		//OnTakeDamageAlive takes stomping as dealing damage through falling, so we only trigger the effect if the server deals damage
@@ -103,6 +94,20 @@ methodmap CModifiersIce < SaxtonHaleBase
 			return Plugin_Stop;
 		
 		return Plugin_Continue;
+	}
+	
+	public void OnRagdollCreated(int iEntity)
+	{
+		if (g_bIceRagdoll)
+		{
+			RequestFrame(Ice_RagdollSpawn, EntIndexToEntRef(iEntity));
+			g_bIceRagdoll = false;
+		}
+	}
+	
+	public void Precache()
+	{
+		this.CallFunction("HookEntityCreated", "tf_ragdoll", "CModifiersIce", "OnRagdollCreated");
 	}
 };
 

@@ -1,5 +1,6 @@
 static ArrayList g_aSpells[TF_MAXPLAYERS+1];
 static haleSpells g_rageSpells[TF_MAXPLAYERS+1];
+static haleSpells g_previousSpells[TF_MAXPLAYERS+1];
 static float g_flRageRequirement[TF_MAXPLAYERS+1];
 static bool g_bSpellsRage[TF_MAXPLAYERS+1];
 static float g_flSpellsCooldown[TF_MAXPLAYERS+1];
@@ -132,6 +133,26 @@ methodmap CWeaponSpells < SaxtonHaleBase
 		Hud_AddText(iClient, sMessage);
 	}
 	
+	public void ForceUseAction()
+	{
+		KeyValues kv;
+	
+		kv = new KeyValues("+use_action_slot_item_server");
+		FakeClientCommandKeyValues(this.iClient, kv);
+		delete kv;
+		
+		kv = new KeyValues("-use_action_slot_item_server");
+		FakeClientCommandKeyValues(this.iClient, kv);
+		delete kv;
+	}
+	
+	public void ForceUseActionRage()
+	{
+		g_bSpellsRage[this.iClient] = true;
+		this.ForceUseAction();
+		g_bSpellsRage[this.iClient] = false;
+	}
+	
 	public void OnRage()
 	{
 		if (g_rageSpells[this.iClient] == view_as<int>(haleSpells_Invalid))
@@ -142,27 +163,32 @@ methodmap CWeaponSpells < SaxtonHaleBase
 		//Set spellbook to specified rare
 		int iSpellbook = GetSpellbook(iClient);
 		if (iSpellbook == -1) return;
-		haleSpells spellIndex = view_as<haleSpells>(GetEntProp(iSpellbook, Prop_Send, "m_iSelectedSpellIndex"));
+		g_previousSpells[this.iClient] = view_as<haleSpells>(GetEntProp(iSpellbook, Prop_Send, "m_iSelectedSpellIndex"));
 		SetEntProp(iSpellbook, Prop_Send, "m_iSelectedSpellIndex", view_as<int>(g_rageSpells[iClient]));
 		
 		//Force player use spell
-		g_bSpellsRage[iClient] = true;
-		Client_ForceUseAction(iClient);
+		this.ForceUseActionRage();
 		float flDuration = 0.85;
 		
 		if (this.bSuperRage)
 		{
-			int iRef = EntIndexToEntRef(iClient);
-			CreateTimer(0.85, Timer_ForceUseAction, iRef);
-			CreateTimer(1.70, Timer_ForceUseAction, iRef);
+			//3 rare spells mhawawa
+			this.CallFunction("CreateTimer", 0.85, "CWeaponSpells", "ForceUseActionRage");
+			this.CallFunction("CreateTimer", 1.70, "CWeaponSpells", "ForceUseActionRage");
 			flDuration = 2.55;
 		}
 		
 		//Create timer to set spell back to what it used to be
-		DataPack data;
-		CreateDataTimer(flDuration, Timer_SetSpellIndex, data);
-		data.WriteCell(EntIndexToEntRef(iClient));
-		data.WriteCell(spellIndex);
+		this.CallFunction("CreateTimer", flDuration, "CWeaponSpells", "ResetSpellIndex");
+	}
+	
+	public void ResetSpellIndex()
+	{
+		int iSpellbook = GetSpellbook(this.iClient);
+		if (iSpellbook == -1)
+			return;
+		
+		SetEntProp(iSpellbook, Prop_Send, "m_iSelectedSpellIndex", g_previousSpells[this.iClient]);
 	}
 	
 	public Action OnCommandKeyValues(const char[] sCommand)
@@ -170,14 +196,10 @@ methodmap CWeaponSpells < SaxtonHaleBase
 		if (StrEqual(sCommand, "+use_action_slot_item_server"))
 		{
 			//Check whenever if we should allow him to use spell
-			int iClient = this.iClient;
 			
-			if (g_bSpellsRage[iClient])
-			{
-				//Rage
-				g_bSpellsRage[iClient] = false;
+			//Free rage spell
+			if (g_bSpellsRage[this.iClient])
 				return Plugin_Continue;
-			}
 			
 			float flRagePercentage = float(this.iRageDamage) / float(this.iMaxRageDamage);
 			if (flRagePercentage >= this.flRageRequirement && g_flSpellsLastUsed[this.iClient] <= GetGameTime()-this.flCooldown)
@@ -244,7 +266,7 @@ methodmap CWeaponSpells < SaxtonHaleBase
 		else if (button == IN_ATTACK2)
 		{
 			//Just another way to use spells rather than using default H key
-			Client_ForceUseAction(iClient);
+			this.ForceUseAction();
 		}
 	}
 };
@@ -258,40 +280,4 @@ stock int GetSpellbook(int iClient)
 			return iSpellbook;
 	
 	return -1;
-}
-
-public Action Timer_SetSpellIndex(Handle hTimer, DataPack data)
-{
-	data.Reset();
-	int iClient = EntRefToEntIndex(data.ReadCell());
-	haleSpells spellIndex = data.ReadCell();
-	
-	if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient)) return;
-	
-	int iSpellbook = GetSpellbook(iClient);
-	if (iSpellbook == -1) return;
-	
-	SetEntProp(iSpellbook, Prop_Send, "m_iSelectedSpellIndex", view_as<int>(spellIndex));
-}
-
-public Action Timer_ForceUseAction(Handle hTimer, int iRef)
-{
-	int iClient = EntRefToEntIndex(iRef);
-	if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient)) return;
-	
-	g_bSpellsRage[iClient] = true;
-	Client_ForceUseAction(iClient);
-}
-
-void Client_ForceUseAction(int iClient)
-{
-	KeyValues kv;
-	
-	kv = new KeyValues("+use_action_slot_item_server");
-	FakeClientCommandKeyValues(iClient, kv);
-	delete kv;
-	
-	kv = new KeyValues("-use_action_slot_item_server");
-	FakeClientCommandKeyValues(iClient, kv);
-	delete kv;
 }

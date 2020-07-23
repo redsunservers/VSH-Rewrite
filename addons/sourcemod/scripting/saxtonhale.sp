@@ -309,6 +309,7 @@ ArrayList g_aNextBoss;	//Arrays of NextBoss struct
 int g_iNextBossId;		//Newest created id
 
 bool g_bEnabled;
+bool g_bPrecached;
 bool g_bRoundStarted;
 bool g_bTF2Items;
 
@@ -441,6 +442,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/dome.sp"
 #include "vsh/event.sp"
 #include "vsh/forward.sp"
+#include "vsh/helpers.sp"
 #include "vsh/hud.sp"
 #include "vsh/native.sp"
 #include "vsh/network.sp"
@@ -525,6 +527,7 @@ public void OnPluginStart()
 	FuncHook_Init();
 	FuncNative_Init();
 	FuncStack_Init();
+	Helpers_Init();
 	Menu_Init();
 	NextBoss_Init();
 	Rank_Init();
@@ -590,7 +593,6 @@ public void OnPluginStart()
 	SaxtonHaleFunction("OnSpawn", ET_Ignore);
 	SaxtonHaleFunction("OnRage", ET_Ignore);
 	SaxtonHaleFunction("OnGiveNamedItem", ET_Single, Param_String, Param_Cell);
-	SaxtonHaleFunction("OnEntityCreated", ET_Ignore, Param_Cell, Param_String);
 	SaxtonHaleFunction("OnCommandKeyValues", ET_Hook, Param_String);
 	SaxtonHaleFunction("OnAttackCritical", ET_Hook, Param_Cell, Param_CellByRef);
 	SaxtonHaleFunction("OnVoiceCommand", ET_Hook, Param_String, Param_String);
@@ -656,6 +658,9 @@ public void OnPluginStart()
 	SaxtonHaleFunction("CalculateMaxHealth", ET_Single);
 	SaxtonHaleFunction("AddRage", ET_Ignore, Param_Cell);
 	SaxtonHaleFunction("CreateWeapon", ET_Single, Param_Cell, Param_String, Param_Cell, Param_Cell, Param_String);
+	SaxtonHaleFunction("HookEntityCreated", ET_Ignore, Param_String, Param_String, Param_String);
+	SaxtonHaleFunction("CreateTimer", ET_Ignore, Param_Float, Param_String, Param_String);
+	SaxtonHaleFunction("KillTimer", ET_Ignore, Param_Cell);
 	SaxtonHaleFunction("Destroy", ET_Ignore);
 	
 	//Register base constructor
@@ -926,6 +931,7 @@ public void OnMapStart()
 		}
 		
 		delete aClass;
+		g_bPrecached = true;
 
 		for (int i = 1; i <= 4; i++)
 		{
@@ -957,6 +963,12 @@ public void OnMapStart()
 	{
 		g_bEnabled = false;
 	}
+}
+
+public void OnMapEnd()
+{
+	g_bPrecached = false;
+	Helpers_MapEnd();
 }
 
 public void OnGameFrame()
@@ -996,10 +1008,7 @@ public void OnEntityCreated(int iEntity, const char[] sClassname)
 		return;
 	
 	Network_ResetEntity(iEntity);
-	
-	for (int iClient = 1; iClient <= MaxClients; iClient++)
-		if (SaxtonHale_IsValidBoss(iClient))
-			SaxtonHaleBase(iClient).CallFunction("OnEntityCreated", iEntity, sClassname);
+	Helpers_OnEntityCreated(iEntity, sClassname);
 	
 	if (StrContains(sClassname, "tf_projectile_") == 0)
 	{

@@ -70,18 +70,17 @@ methodmap CWeaponBall < SaxtonHaleBase
 			TF2_SetAmmo(this.iClient, WeaponSlot_Melee, this.iMaxBall);
 	}
 	
-	public void OnEntityCreated(int iEntity, const char[] sClassname)
+	public void OnBallCreated(int iEntity)
 	{
-		if (strcmp(sClassname, "tf_projectile_stun_ball") == 0)
-		{
-			SDK_HookBallImpact(iEntity, WeaponBall_BallImpact);	//To hook when ball impacts player
-			SDK_HookBallTouch(iEntity, WeaponBall_BallTouch);	//To hook when ball impacts building
-		}
+		SDK_HookBallImpact(iEntity, WeaponBall_BallImpact);	//To hook when ball impacts player
+		SDK_HookBallTouch(iEntity, WeaponBall_BallTouch);	//To hook when ball impacts building
 	}
 	
 	public void Precache()
 	{
 		g_iWeaponBallStunType = FindSendPropInfo("CTFStunBall", "m_iType");
+		
+		this.CallFunction("HookEntityCreated", "tf_projectile_stun_ball", "CWeaponBall", "OnBallCreated");
 	}
 };
 

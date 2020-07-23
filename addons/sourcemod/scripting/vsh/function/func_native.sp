@@ -241,6 +241,14 @@ public any FuncNative_RegisterClass(Handle hPlugin, int iNumParams)
 	
 	if (!FuncClass_Register(sClass, hPlugin, nClassType))
 		ThrowNativeError(SP_ERROR_NATIVE, "Methodmap Class (%s) already registered", sClass);
+	
+	if (g_bPrecached)
+	{
+		//If classes is already precached, do a late precache
+		SaxtonHaleBase boss = SaxtonHaleBase(0);
+		if (boss.StartFunction(sClass, "Precache"))
+			Call_Finish();
+	}
 }
 
 //void SaxtonHale_UnregisterClass(const char[] sClass);
@@ -257,6 +265,7 @@ public any FuncNative_UnregisterClass(Handle hPlugin, int iNumParams)
 		ThrowNativeError(SP_ERROR_NATIVE, "Unregister core class (%s) is not allowed", sClass);
 	
 	FuncClass_Unregister(sClass);
+	Helpers_Unregister(sClass);
 	NextBoss_RemoveMulti(sClass);
 }
 

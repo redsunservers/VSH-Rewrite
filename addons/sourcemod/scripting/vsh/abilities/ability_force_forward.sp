@@ -64,19 +64,6 @@ methodmap CForceForward < SaxtonHaleBase
 		ability.flSpeedSwimmingBonusMult = 1.05;
 		ability.flSpeedRageBonusMult = 1.25;
 		ability.flSpeedAbilityBonusMult = 1.5;
-		
-		int iEntity = 0;
-		while ((iEntity = FindEntityByClassname(iEntity, "trigger_push")) > MaxClients)
-		{
-			SDKHook(iEntity, SDKHook_StartTouch, OnCatapultStart);
-			SDKHook(iEntity, SDKHook_EndTouch, OnCatapultEnd);
-		}
-		iEntity = 0;
-		while ((iEntity = FindEntityByClassname(iEntity, "trigger_catapult")) > MaxClients)
-		{
-			SDKHook(iEntity, SDKHook_StartTouch, OnCatapultStart);
-			SDKHook(iEntity, SDKHook_EndTouch, OnCatapultEnd);
-		}
 	}
 	
 	public void OnThink()
@@ -151,27 +138,30 @@ methodmap CForceForward < SaxtonHaleBase
 		}
 	}
 	
-	public void OnEntityCreated(int iEntity, const char[] sClassname)
+	public void OnPushCreated(int iEntity)
 	{
-		if (StrEqual(sClassname, "trigger_catapult") || StrEqual(sClassname, "trigger_push"))
-		{
-			SDKHook(iEntity, SDKHook_StartTouch, OnCatapultStart);
-			SDKHook(iEntity, SDKHook_EndTouch, OnCatapultEnd);
-		}
+		SDKHook(iEntity, SDKHook_StartTouch, ForceForward_StartTouch);
+		SDKHook(iEntity, SDKHook_EndTouch, ForceForward_EndTouch);
+	}
+	
+	public void Precache()
+	{
+		this.CallFunction("HookEntityCreated", "trigger_push", "CForceForward", "OnPushCreated");
+		this.CallFunction("HookEntityCreated", "trigger_catapult", "CForceForward", "OnPushCreated");
 	}
 };
 
-public Action OnCatapultStart(int iEntity, int iClient)
+public Action ForceForward_StartTouch(int iEntity, int iClient)
 {
-	if (iClient <= MaxClients)
+	if (0 < iClient <= MaxClients)
 		g_bInCatapult[iClient] = true;
 	
 	return Plugin_Continue;
 }
 
-public Action OnCatapultEnd(int iEntity, int iClient)
+public Action ForceForward_EndTouch(int iEntity, int iClient)
 {
-	if (iClient <= MaxClients)
+	if (0 < iClient <= MaxClients)
 		g_bInCatapult[iClient] = false;
 	
 	return Plugin_Continue;
