@@ -4,7 +4,7 @@
 #define ITEM_GAS_PASSER					1180
 #define ATTRIB_LESSHEALING				734
 #define TF_DMG_AFTERBURN				DMG_PREVENT_PHYSICS_FORCE | DMG_BURN
-#define TF_DMG_GAS_AFTERBURN			1050632
+#define TF_DMG_GAS_AFTERBURN			DMG_BURN|DMG_PREVENT_PHYSICS_FORCE|DMG_ACID
 #define PYROCAR_BACKBURNER_ATTRIBUTES	"24 ; 1.0 ; 72 ; 0.5 ; 112 ; 0.25 ; 178 ; 0.7 ; 179 ; 1.0 ; 181 ; 1.0 ; 252 ; 0.5 ; 259 ; 1.0 ; 356 ; 1.0 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 1800.0 ; 862 ; 0.4 ; 863 ; 0.01 ; 865 ; 85 ; 214 ; %d"
 
 static char g_strPyrocarRoundStart[][] =  {
@@ -21,11 +21,7 @@ static char g_strPyrocarLose[][] =  {
 };
 
 static char g_strPyrocarRage[][] =  {
-	"vo/taunts/pyro_lollichop.mp3"
-};
-
-static char g_strPyrocarJump[][] =  {
-	"weapons/bumper_car_speed_boost_start.wav"
+	"misc/halloween/spell_blast_jump.wav"
 };
 
 static char g_strPyrocarKill[][] =  {
@@ -77,8 +73,7 @@ static float g_flPyrocarJetpackCharge[TF_MAXPLAYERS+1];
 static Handle g_hPyrocarHealTimer[TF_MAXPLAYERS+1];
 static Handle g_hGasTimer[TF_MAXPLAYERS+1];
 
-static bool g_bUnderGas[TF_MAXPLAYERS+1];
-static bool g_bMarkedForDeath[TF_MAXPLAYERS+1];
+static bool g_bUnderEffect[TF_MAXPLAYERS+1];
 
 methodmap CPyroCar < SaxtonHaleBase
 {
@@ -125,7 +120,6 @@ methodmap CPyroCar < SaxtonHaleBase
 			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", g_iPyrocarPrimary[this.iClient]);
 			//TF2_SetAmmo(this.iClient, WeaponSlot_Primary, 0);	//Reset ammo for TF2 to give correct amount of ammo
 		}
-		TF2Attrib_ClearCache(this.iClient);
 		
 		g_iPyrocarMelee[this.iClient] = -1;
 		g_flPyrocarGasCharge[this.iClient] = 0.0;
@@ -238,16 +232,16 @@ methodmap CPyroCar < SaxtonHaleBase
 		{
 			if (IsClientInGame(i) && IsPlayerAlive(i) && GetClientTeam(i) > 1 && GetClientTeam(i) != iTeam)
 			{
-				if(g_bUnderGas[i])
+				if(g_bUnderEffect[i])
+				{
 					TF2_AddCondition(i, TFCond_Gas, 0.25, this.iClient);
+					TF2_AddCondition(i, TFCond_MarkedForDeath, 0.25, this.iClient);
+				}
 				else if (TF2_IsPlayerInCondition(i, TFCond_Gas))
 				{
-					g_bUnderGas[i] = true;
-					g_bMarkedForDeath[i] = true;
+					g_bUnderEffect[i] = true;
 					g_hGasTimer[i] = CreateTimer(10.0, Timer_EffectEnd, i);
 				}
-				if(g_bMarkedForDeath[i])
-					TF2_AddCondition(i, TFCond_MarkedForDeath, 0.25, this.iClient);
 			}
 			
 		}
@@ -305,10 +299,10 @@ methodmap CPyroCar < SaxtonHaleBase
 	public Action OnAttackDamage(int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 	{
 		if (TF2_IsPlayerInCondition(victim, TFCond_Ubercharged)) return Plugin_Continue;
-		if (weapon == TF2_GetItemInSlot(this.iClient, WeaponSlot_Primary))
+		if (weapon == TF2_GetItemInSlot(this.iClient, WeaponSlot_Primary) && !(damagetype == TF_DMG_AFTERBURN || damagetype == TF_DMG_GAS_AFTERBURN))
 		{
 			//Give victim less healing while damaged by pyrocar
-			if (!g_hPyrocarHealTimer[victim] )
+			if (!g_hPyrocarHealTimer[victim])
 			{
 				TF2Attrib_SetByDefIndex(victim, ATTRIB_LESSHEALING, 0.5);
 				TF2Attrib_ClearCache(victim);
@@ -317,7 +311,7 @@ methodmap CPyroCar < SaxtonHaleBase
 			g_hPyrocarHealTimer[victim] = CreateTimer(0.2, Timer_RemoveLessHealing, GetClientSerial(victim));
 			
 			//Deal constant damage for flamethrower
-			damage = 5.5;
+			damage = 5.0;
 		}
 		
 		//Deal constant damage for afterburn
@@ -326,13 +320,22 @@ methodmap CPyroCar < SaxtonHaleBase
 			
 		g_flPyrocarGasCharge[this.iClient] += damage;
 			
-		//Buildings and any kind of crit deals 2.5x damage, bonus damage does not give extra gas charge
-		if (damagetype & DMG_CRIT || victim > MAXPLAYERS)
+		//Any kind of crit deals 2.5x damage, bonus damage does not give extra gas charge
+		if (damagetype & DMG_CRIT)
 		{
 			damage *= 2.5;
 		}
 			
 		return Plugin_Changed;
+	}
+	
+	public Action OnAttackBuilding(int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+	{
+		//Buildings take constant damage
+		if (weapon == TF2_GetItemInSlot(this.iClient, WeaponSlot_Primary))
+		{
+			damage = 13.0;
+		}
 	}
 	
 	public void GetSound(char[] sSound, int length, SaxtonHaleSound iSoundType)
@@ -346,12 +349,6 @@ methodmap CPyroCar < SaxtonHaleBase
 			case VSHSound_KillBuilding: strcopy(sSound, length, g_strPyrocarKillBuilding[GetRandomInt(0,sizeof(g_strPyrocarKillBuilding)-1)]);
 			case VSHSound_Lastman: strcopy(sSound, length, g_strPyrocarLastMan[GetRandomInt(0,sizeof(g_strPyrocarLastMan)-1)]);
 		}
-	}
-	
-	public void GetSoundAbility(char[] sSound, int length, const char[] sType)
-	{
-		if (strcmp(sType, "CFloatJump") == 0)
-			strcopy(sSound, length, g_strPyrocarJump[GetRandomInt(0,sizeof(g_strPyrocarJump)-1)]);
 	}
 	
 	public void GetSoundKill(char[] sSound, int length, TFClassType nClass)
@@ -390,7 +387,6 @@ methodmap CPyroCar < SaxtonHaleBase
 		for (int i = 0; i < sizeof(g_strPyrocarWin); i++) PrepareSound(g_strPyrocarWin[i]);
 		for (int i = 0; i < sizeof(g_strPyrocarLose); i++) PrepareSound(g_strPyrocarLose[i]);
 		for (int i = 0; i < sizeof(g_strPyrocarRage); i++) PrecacheSound(g_strPyrocarRage[i]);
-		for (int i = 0; i < sizeof(g_strPyrocarJump); i++) PrecacheSound(g_strPyrocarJump[i]);
 		for (int i = 0; i < sizeof(g_strPyrocarKill); i++) PrepareSound(g_strPyrocarKill[i]);
 		for (int i = 0; i < sizeof(g_strPyrocarKillBuilding); i++) PrepareSound(g_strPyrocarKillBuilding[i]);
 		for (int i = 0; i < sizeof(g_strPyrocarLastMan); i++) PrepareSound(g_strPyrocarLastMan[i]);
@@ -433,8 +429,7 @@ public Action Timer_EffectEnd(Handle hTimer, int iClient)
 {
 	if (IsClientInGame(iClient) && IsPlayerAlive(iClient))
 	{
-		g_bUnderGas[iClient] = false;
-		g_bMarkedForDeath[iClient] = false;
+		g_bUnderEffect[iClient] = false;
 		TF2_RemoveCondition(iClient, TFCond_Gas);
 		TF2_RemoveCondition(iClient, TFCond_MarkedForDeath);
 	}
