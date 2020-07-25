@@ -364,6 +364,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/abilities/ability_rage_bomb_projectile.sp"
 #include "vsh/abilities/ability_rage_conditions.sp"
 #include "vsh/abilities/ability_rage_freeze.sp"
+#include "vsh/abilities/ability_rage_gas.sp"
 #include "vsh/abilities/ability_rage_ghost.sp"
 #include "vsh/abilities/ability_rage_hop.sp"
 #include "vsh/abilities/ability_rage_light.sp"
@@ -711,6 +712,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("CModelOverride", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CRageAddCond", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CRageFreeze", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CRageGas", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CRageGhost", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CRageHop", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CLightRage", VSHClassType_Ability);
