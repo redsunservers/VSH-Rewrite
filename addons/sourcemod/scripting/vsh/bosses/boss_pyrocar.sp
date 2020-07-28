@@ -5,7 +5,7 @@
 #define ATTRIB_LESSHEALING				734
 #define TF_DMG_AFTERBURN				DMG_PREVENT_PHYSICS_FORCE | DMG_BURN
 #define TF_DMG_GAS_AFTERBURN			DMG_BURN|DMG_PREVENT_PHYSICS_FORCE|DMG_ACID
-#define PYROCAR_BACKBURNER_ATTRIBUTES	"24 ; 1.0 ; 72 ; 0.5 ; 112 ; 0.25 ; 178 ; 0.7 ; 179 ; 1.0 ; 181 ; 1.0 ; 252 ; 0.5 ; 259 ; 1.0 ; 356 ; 1.0 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 1800.0 ; 862 ; 0.4 ; 863 ; 0.01 ; 865 ; 85 ; 214 ; %d"
+#define PYROCAR_BACKBURNER_ATTRIBUTES	"24 ; 1.0 ; 72 ; 0.5 ; 112 ; 0.25 ; 178 ; 0.4 ; 179 ; 1.0 ; 181 ; 1.0 ; 252 ; 0.5 ; 259 ; 1.0 ; 356 ; 1.0 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 1800.0 ; 862 ; 0.4 ; 863 ; 0.01 ; 865 ; 85 ; 214 ; %d"
 
 static char g_strPyrocarRoundStart[][] =  {
 	"vsh_rewrite/pyrocar/pyrocar_intro.mp3", 
@@ -59,7 +59,7 @@ static int g_iCosmetics[] =  {
 	394 //Connoisseur's Cap
 };
 
-static float g_flGasMinCharge = 200.0;
+static float g_flGasMinCharge = 175.0;
 
 static int g_iPyrocarCosmetics[sizeof(g_iCosmetics)];
 
@@ -86,7 +86,7 @@ methodmap CPyroCar < SaxtonHaleBase
 		boss.iHealthPerPlayer = 800;
 		boss.nClass = TFClass_Pyro;
 		boss.iMaxRageDamage = 2500;
-		boss.flSpeed = 300.0;
+		boss.flSpeed = 350.0;
 	}
 	
 	public void GetBossName(char[] sName, int length)
@@ -106,7 +106,7 @@ methodmap CPyroCar < SaxtonHaleBase
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
 		StrCat(sInfo, length, "\n- Throws gas passers around you and gain a speed boost for 8 seconds");
-		StrCat(sInfo, length, "\n- 200%% Rage: Increases bonus speed and gas throwing rate");
+		StrCat(sInfo, length, "\n- 200%% Rage: Increases bonus speed and extends duration to 12 seconds");
 	}
 	
 	public void OnSpawn()
@@ -271,13 +271,13 @@ methodmap CPyroCar < SaxtonHaleBase
 		{
 			g_flPyrocarJetpackCharge[this.iClient] = GetEntPropFloat(this.iClient, Prop_Send, "m_flItemChargeMeter", 1);
 			if(g_flPyrocarJetpackCharge[this.iClient] < 100.0)
-				g_flPyrocarJetpackCharge[this.iClient] += 0.09;
+				g_flPyrocarJetpackCharge[this.iClient] += 0.1;
 			SetEntPropFloat(this.iClient, Prop_Send, "m_flItemChargeMeter", g_flPyrocarJetpackCharge[this.iClient], 1);
 		}
 		else
 		{
 			if(g_flPyrocarJetpackCharge[this.iClient] < 100.0)
-			g_flPyrocarJetpackCharge[this.iClient] += 0.09;
+			g_flPyrocarJetpackCharge[this.iClient] += 0.1;
 		}
 		
 	}
@@ -311,7 +311,7 @@ methodmap CPyroCar < SaxtonHaleBase
 			g_hPyrocarHealTimer[victim] = CreateTimer(0.2, Timer_RemoveLessHealing, GetClientSerial(victim));
 			
 			//Deal constant damage for flamethrower
-			damage = 5.0;
+			damage = 7.0;
 		}
 		
 		//Deal constant damage for afterburn
@@ -334,7 +334,7 @@ methodmap CPyroCar < SaxtonHaleBase
 		//Buildings take constant damage
 		if (weapon == TF2_GetItemInSlot(this.iClient, WeaponSlot_Primary))
 		{
-			damage = 13.0;
+			damage = 14.0;
 		}
 	}
 	
