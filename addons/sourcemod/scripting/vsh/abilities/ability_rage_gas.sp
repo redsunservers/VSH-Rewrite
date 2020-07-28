@@ -82,16 +82,19 @@ methodmap CRageGas < SaxtonHaleBase
 
 	public void OnRage()
 	{
-		g_flRageGasNext[this.iClient] = GetGameTime();
-		g_flRageGasEnd[this.iClient] = GetGameTime() + this.flDuration;
-		g_flPreviousSpeed[this.iClient] = this.flSpeed;
-		TF2_AddCondition(this.iClient, TFCond_SpeedBuffAlly, this.flDuration, this.iClient);
-		this.flSpeed *= 1.2;
-		if(this.bSuperRage)
+		float flRageDuration = this.flDuration;
+		if (this.bSuperRage)
 		{
-			TF2_AddCondition(this.iClient, TFCond_TeleportedGlow, this.flDuration, this.iClient);
+			flRageDuration * 1.5;
+			TF2_AddCondition(this.iClient, TFCond_TeleportedGlow, flRageDuration, this.iClient);
 			this.flSpeed *= 1.2;
 		}
+		
+		g_flRageGasNext[this.iClient] = GetGameTime();
+		g_flRageGasEnd[this.iClient] = GetGameTime() + flRageDuration;
+		g_flPreviousSpeed[this.iClient] = this.flSpeed;
+		TF2_AddCondition(this.iClient, TFCond_SpeedBuffAlly, flRageDuration, this.iClient);
+		this.flSpeed *= 1.2;
 	}
 	
 	public void OnThink()
