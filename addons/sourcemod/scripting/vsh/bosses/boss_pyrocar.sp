@@ -311,7 +311,7 @@ methodmap CPyroCar < SaxtonHaleBase
 			g_hPyrocarHealTimer[victim] = CreateTimer(0.2, Timer_RemoveLessHealing, GetClientSerial(victim));
 			
 			//Deal constant damage for flamethrower
-			damage = 7.0;
+			damage = 8.0;
 		}
 		
 		//Deal constant damage for afterburn
@@ -334,7 +334,7 @@ methodmap CPyroCar < SaxtonHaleBase
 		//Buildings take constant damage
 		if (weapon == TF2_GetItemInSlot(this.iClient, WeaponSlot_Primary))
 		{
-			damage = 13.0;
+			damage = 15.0;
 		}
 	}
 	
