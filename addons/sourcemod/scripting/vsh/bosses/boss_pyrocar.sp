@@ -86,7 +86,7 @@ methodmap CPyroCar < SaxtonHaleBase
 		boss.iHealthPerPlayer = 800;
 		boss.nClass = TFClass_Pyro;
 		boss.iMaxRageDamage = 2500;
-		boss.flSpeed = 300.0;
+		boss.flSpeed = 350.0;
 	}
 	
 	public void GetBossName(char[] sName, int length)
@@ -106,7 +106,7 @@ methodmap CPyroCar < SaxtonHaleBase
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
 		StrCat(sInfo, length, "\n- Throws gas passers around you and gain a speed boost for 8 seconds");
-		StrCat(sInfo, length, "\n- 200%% Rage: Increases bonus speed and gas throwing rate");
+		StrCat(sInfo, length, "\n- 200%% Rage: Increases bonus speed and extends duration to 12 seconds");
 	}
 	
 	public void OnSpawn()
@@ -271,13 +271,13 @@ methodmap CPyroCar < SaxtonHaleBase
 		{
 			g_flPyrocarJetpackCharge[this.iClient] = GetEntPropFloat(this.iClient, Prop_Send, "m_flItemChargeMeter", 1);
 			if(g_flPyrocarJetpackCharge[this.iClient] < 100.0)
-				g_flPyrocarJetpackCharge[this.iClient] += 0.09;
+				g_flPyrocarJetpackCharge[this.iClient] += 0.1;
 			SetEntPropFloat(this.iClient, Prop_Send, "m_flItemChargeMeter", g_flPyrocarJetpackCharge[this.iClient], 1);
 		}
 		else
 		{
 			if(g_flPyrocarJetpackCharge[this.iClient] < 100.0)
-			g_flPyrocarJetpackCharge[this.iClient] += 0.09;
+			g_flPyrocarJetpackCharge[this.iClient] += 0.1;
 		}
 		
 	}
@@ -311,7 +311,7 @@ methodmap CPyroCar < SaxtonHaleBase
 			g_hPyrocarHealTimer[victim] = CreateTimer(0.2, Timer_RemoveLessHealing, GetClientSerial(victim));
 			
 			//Deal constant damage for flamethrower
-			damage = 5.0;
+			damage = 7.0;
 		}
 		
 		//Deal constant damage for afterburn

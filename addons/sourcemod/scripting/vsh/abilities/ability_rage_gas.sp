@@ -74,7 +74,7 @@ methodmap CRageGas < SaxtonHaleBase
 		g_flRageGasNext[ability.iClient] = 0.0;
 		g_flRageGasEnd[ability.iClient] = 0.0;
 		
-		ability.flRate = 2.5;
+		ability.flRate = 1.5;
 		ability.flDuration = 8.0;
 		ability.flDistance = 600.0;
 		ability.flHeight = 700.0;
@@ -103,11 +103,8 @@ methodmap CRageGas < SaxtonHaleBase
 		if (flGameTime <= g_flRageGasEnd[this.iClient])
 		{
 			if (g_flRageGasNext[this.iClient] > flGameTime) return;
-		
-			if (this.bSuperRage)
-				g_flRageGasNext[this.iClient] = flGameTime + (this.flRate / 1.5);
-			else
-				g_flRageGasNext[this.iClient] = flGameTime + this.flRate;
+			
+			g_flRageGasNext[this.iClient] = flGameTime + this.flRate;
 			
 			float vecOrigin[3], vecVelocity[3], vecAngleVelocity[3];
 			GetClientAbsOrigin(this.iClient, vecOrigin);
