@@ -83,11 +83,11 @@ methodmap CSamyro < SaxtonHaleBase
 		StrCat(sInfo, length, "\nAbilities");
 		StrCat(sInfo, length, "\n- Passive Rage Gain");
 		StrCat(sInfo, length, "\n- Wall Climb");
-		StrCat(sInfo, length, "\n- Agility");
+		StrCat(sInfo, length, "\n- Agility powerup on secondary attack");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
 		StrCat(sInfo, length, "\n- Gain the Haste powerup and a defensive buff for 12 seconds");
-		StrCat(sInfo, length, "\n- Rage overrides Agility");
+		StrCat(sInfo, length, "\n- Rage overrides Agility powerup");
 		StrCat(sInfo, length, "\n- 200%% Rage: Become übercharged and extend duration by 2 seconds");
 	}
 	
