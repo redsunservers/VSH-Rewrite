@@ -68,8 +68,6 @@ methodmap CSamyro < SaxtonHaleBase
 		boss.iHealthPerPlayer = 650;
 		boss.nClass = TFClass_Pyro;
 		boss.iMaxRageDamage = 2500;
-		
-		AddCommandListener(Command_DropItem, "dropitem");
 	}
 	
 	public void GetBossName(char[] sName, int length)
@@ -196,12 +194,3 @@ methodmap CSamyro < SaxtonHaleBase
 		return true;
 	}
 };
-
-public Action Command_DropItem(int iClient, const char[] sCommand, int iArgs)
-{
-	//Prevent boss from dropping powerups
-	if (SaxtonHaleBase(iClient).bValid)
-		return Plugin_Handled;
-	
-	return Plugin_Continue;
-}
