@@ -429,11 +429,10 @@ public Action Timer_EffectEnd(Handle hTimer, int iClient)
 {
 	if (IsClientInGame(iClient) && IsPlayerAlive(iClient))
 	{
-		g_bUnderEffect[iClient] = false;
 		TF2_RemoveCondition(iClient, TFCond_Gas);
 		TF2_RemoveCondition(iClient, TFCond_MarkedForDeath);
 	}
-	g_hGasTimer[iClient] = null;
 	
-	return Plugin_Changed;
+	g_bUnderEffect[iClient] = false;
+	g_hGasTimer[iClient] = null;
 }
