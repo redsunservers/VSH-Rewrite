@@ -62,6 +62,7 @@ methodmap CSamyro < SaxtonHaleBase
 		rageCond.flRageCondSuperRageMultiplier = 14.0 / 12.0;
 		rageCond.AddCond(TFCond_RuneHaste);
 		rageCond.AddCond(TFCond_DefenseBuffed);
+		rageCond.AddCond(TFCond_Ubercharged, true);
 		
 		boss.iBaseHealth = 700;
 		boss.iHealthPerPlayer = 650;
@@ -140,19 +141,6 @@ methodmap CSamyro < SaxtonHaleBase
 		{
 			this.CallFunction("AddRage", 1);
 			g_flClientRageGainLastTime[this.iClient] = GetGameTime();
-		}
-	}
-	
-	public void OnRage()
-	{
-		//Übercharge on 200% rage
-		if (this.bSuperRage)
-		{
-			CRageAddCond rageCond = this.CallFunction("FindAbility", "CRageAddCond");
-			if (rageCond != INVALID_ABILITY)
-			{
-				TF2_AddCondition(this.iClient, TFCond_Ubercharged, rageCond.flRageCondDuration * rageCond.flRageCondSuperRageMultiplier);
-			}
 		}
 	}
 	
