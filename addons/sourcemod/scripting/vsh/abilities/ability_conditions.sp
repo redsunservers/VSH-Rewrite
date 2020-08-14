@@ -145,6 +145,11 @@ methodmap CAddCond < SaxtonHaleBase
 			{
 				TF2_RemoveCondition(this.iClient, g_aConditions[this.iClient].Get(i));
 			}
+			
+			//If conditions are removed due to rage, refund remaining duration as cooldown reduction
+			float flDurationRemaining = this.flCondCooldownWait - GetGameTime() - this.flCondCooldown + this.flCondDuration;
+			if (0 < flDurationRemaining < this.flCondDuration)
+				this.flCondCooldownWait -= flDurationRemaining;
 		}
 	}
 };
