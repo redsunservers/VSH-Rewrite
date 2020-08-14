@@ -354,8 +354,8 @@ ConVar tf_arena_preround_time;
 
 #include "vsh/abilities/ability_body_eat.sp"
 #include "vsh/abilities/ability_brave_jump.sp"
-#include "vsh/abilities/ability_dash_jump.sp"
 #include "vsh/abilities/ability_conditions.sp"
+#include "vsh/abilities/ability_dash_jump.sp"
 #include "vsh/abilities/ability_drop_model.sp"
 #include "vsh/abilities/ability_float_jump.sp"
 #include "vsh/abilities/ability_force_forward.sp"
