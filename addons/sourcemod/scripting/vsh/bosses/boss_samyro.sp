@@ -142,6 +142,18 @@ methodmap CSamyro < SaxtonHaleBase
 		}
 	}
 	
+	public void OnRage()
+	{
+		//Prevent boss from using secondary ability while rage is active by adding duration to cooldown
+		CAddCond abilityCond = this.CallFunction("FindAbility", "CAddCond");
+		CRageAddCond abilityRage = this.CallFunction("FindAbility", "CRageAddCond");
+		if (abilityCond != INVALID_ABILITY && abilityRage != INVALID_ABILITY)
+		{
+			float flRageDuration = this.bSuperRage ? abilityRage.flRageCondDuration * abilityRage.flRageCondSuperRageMultiplier : abilityRage.flRageCondDuration;
+			abilityCond.flCondCooldownWait += flRageDuration;
+		}
+	}
+	
 	public void GetSound(char[] sSound, int length, SaxtonHaleSound iSoundType)
 	{
 		switch (iSoundType)

@@ -1,5 +1,5 @@
-static float g_flCondCooldownWait[TF_MAXPLAYERS + 1];
 static float g_flCondCooldown[TF_MAXPLAYERS + 1];
+static float g_flCondCooldownWait[TF_MAXPLAYERS + 1];
 static float g_flCondDuration[TF_MAXPLAYERS + 1];
 static float g_flCondMaxCharge[TF_MAXPLAYERS + 1];
 static bool g_bRemoveOnRage[TF_MAXPLAYERS + 1];
@@ -16,6 +16,18 @@ methodmap CAddCond < SaxtonHaleBase
 		public set(float flVal)
 		{
 			g_flCondCooldown[this.iClient] = flVal;
+		}
+	}
+	
+	property float flCondCooldownWait
+	{
+		public get()
+		{
+			return g_flCondCooldownWait[this.iClient];
+		}
+		public set(float flVal)
+		{
+			g_flCondCooldownWait[this.iClient] = flVal;
 		}
 	}
 	
@@ -57,13 +69,12 @@ methodmap CAddCond < SaxtonHaleBase
 	
 	public CAddCond(CAddCond ability)
 	{
-		g_flCondCooldownWait[ability.iClient] = 0.0;
-		
 		if (g_aConditions[ability.iClient] == null)
 			g_aConditions[ability.iClient] = new ArrayList();
 		g_aConditions[ability.iClient].Clear();
 		
 		ability.flCondCooldown = 30.0;
+		ability.flCondCooldownWait = 0.0;
 		ability.flCondDuration = 8.0;
 		ability.flCondMaxCharge = 1.0;
 	}
@@ -81,13 +92,13 @@ methodmap CAddCond < SaxtonHaleBase
 		char sMessage[255];
 		int iCharge;
 		
-		if (g_flCondCooldownWait[this.iClient] < GetGameTime())
+		if (this.flCondCooldownWait < GetGameTime())
 		{
 			iCharge = RoundToFloor(this.flCondMaxCharge * 100.0);
 		}
 		else
 		{
-			float flPercentage = (g_flCondCooldownWait[this.iClient] - GetGameTime()) / this.flCondCooldown;
+			float flPercentage = (this.flCondCooldownWait - GetGameTime()) / this.flCondCooldown;
 			iCharge = RoundToFloor((this.flCondMaxCharge - flPercentage) * 100.0);
 		}
 		
@@ -103,10 +114,10 @@ methodmap CAddCond < SaxtonHaleBase
 	{
 		if (iButton == IN_ATTACK2 && GameRules_GetRoundState() != RoundState_Preround && !TF2_IsPlayerInCondition(this.iClient, TFCond_Dazed))
 		{
-			if (g_flCondCooldownWait[this.iClient] < GetGameTime())
-				g_flCondCooldownWait[this.iClient] = GetGameTime();
+			if (this.flCondCooldownWait < GetGameTime())
+				this.flCondCooldownWait = GetGameTime();
 			
-			float flPercentage = (g_flCondCooldownWait[this.iClient] - GetGameTime()) / this.flCondCooldown;
+			float flPercentage = (this.flCondCooldownWait - GetGameTime()) / this.flCondCooldown;
 			float flCharge = this.flCondMaxCharge - flPercentage;
 			
 			if (flCharge < 1.0)
@@ -117,7 +128,7 @@ methodmap CAddCond < SaxtonHaleBase
 				TF2_AddCondition(this.iClient, g_aConditions[this.iClient].Get(i), this.flCondDuration);
 			}
 			
-			g_flCondCooldownWait[this.iClient] += this.flCondCooldown;
+			this.flCondCooldownWait += this.flCondCooldown;
 			
 			char sSound[PLATFORM_MAX_PATH];
 			this.CallFunction("GetSoundAbility", sSound, sizeof(sSound), "CAddCond");
