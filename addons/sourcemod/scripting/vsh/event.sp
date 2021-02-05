@@ -97,7 +97,9 @@ public Action Event_RoundStart(Event event, const char[] sName, bool bDontBroadc
 		// Put every players in same team & pick the boss later
 		TF2_ForceTeamJoin(iClient, TFTeam_Attack);
 	}
-
+	
+	g_iTotalAttackCount = SaxtonHale_GetAliveAttackPlayers();
+	
 	NextBoss_SetNextBoss();	//Set boss
 
 	g_iTotalAttackCount = SaxtonHale_GetAliveAttackPlayers();	//Update amount of attack players

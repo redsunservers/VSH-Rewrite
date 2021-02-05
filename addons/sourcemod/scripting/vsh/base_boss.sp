@@ -86,7 +86,7 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 
 	public int CalculateMaxHealth()
 	{
-		return RoundToNearest((this.iBaseHealth + this.iHealthPerPlayer * SaxtonHale_GetAliveAttackPlayers()) * this.flHealthMultiplier);
+		return RoundToNearest((this.iBaseHealth + this.iHealthPerPlayer * g_iTotalAttackCount) * this.flHealthMultiplier);
 	}
 	
 	public void GetBossName(char[] sName, int length)
