@@ -60,7 +60,7 @@ static int g_iCosmetics[] =  {
 };
 
 static float g_flGasMinCharge = 200.0;
-static float g_flDistance = 1700.0;
+static float g_flDistance = 900.0;
 static int g_iMaxGasPassers = 5;
 
 static int g_iPyrocarCosmetics[sizeof(g_iCosmetics)];
@@ -402,10 +402,12 @@ methodmap CPyroCar < SaxtonHaleBase
 			int iBomb = CreateEntityByName("tf_projectile_jar_gas");
 			if (iBomb > MaxClients)
 			{
-				vecAngleVelocity[0] += 90.0;
-				GetAngleVectors(vecAngleVelocity, vecVelocity, vecVelocity, vecVelocity);
+				vecAngleVelocity[1] += 90.0;
+				GetAngleVectors(vecAngleVelocity, vecVelocity, vecVelocity, NULL_VECTOR);
 				
 				ScaleVector(vecVelocity, g_flDistance);
+				//Add up velocity to form an arc
+				vecVelocity[2] = g_flDistance * 0.45;
 				
 				SetEntProp(iBomb, Prop_Send, "m_iTeamNum", GetClientTeam(this.iClient));
 				SetEntPropEnt(iBomb, Prop_Send, "m_hOwnerEntity", this.iClient);
