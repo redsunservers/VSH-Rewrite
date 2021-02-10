@@ -60,7 +60,7 @@ static int g_iCosmetics[] =  {
 };
 
 static float g_flGasMinCharge = 200.0;
-static float g_flDistance = 1500.0;
+static float g_flDistance = 1700.0;
 static int g_iMaxGasPassers = 5;
 
 static int g_iPyrocarCosmetics[sizeof(g_iCosmetics)];
@@ -238,7 +238,7 @@ methodmap CPyroCar < SaxtonHaleBase
 		else
 		{
 			
-			Format(sMessage, sizeof(sMessage), "Press right click to use your gas! %0.2f%%.", flGasCharge);
+			Format(sMessage, sizeof(sMessage), "Press right click to throw your gas! %0.2f%%.", flGasCharge);
 			//Avoid dividing by 0
 			if (g_iMaxGasPassers > 1)
 			{
