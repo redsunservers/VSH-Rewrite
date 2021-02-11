@@ -5,7 +5,7 @@
 #define ATTRIB_LESSHEALING				734
 #define TF_DMG_AFTERBURN				DMG_PREVENT_PHYSICS_FORCE | DMG_BURN
 #define TF_DMG_GAS_AFTERBURN			DMG_BURN|DMG_PREVENT_PHYSICS_FORCE|DMG_ACID
-#define PYROCAR_BACKBURNER_ATTRIBUTES	"24 ; 1.0 ; 72 ; 0.5 ; 112 ; 0.25 ; 178 ; 0.4 ; 179 ; 1.0 ; 181 ; 1.0 ; 252 ; 0.5 ; 259 ; 1.0 ; 356 ; 1.0 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 1800.0 ; 862 ; 0.4 ; 863 ; 0.01 ; 865 ; 85 ; 214 ; %d"
+#define PYROCAR_BACKBURNER_ATTRIBUTES	"24 ; 1.0 ; 72 ; 0.5 ; 112 ; 0.25 ; 178 ; 0.4 ; 179 ; 1.0 ; 181 ; 1.0 ; 252 ; 0.5 ; 259 ; 1.0 ; 356 ; 1.0 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 1900.0 ; 862 ; 0.45 ; 863 ; 0.01 ; 865 ; 85 ; 214 ; %d"
 
 static char g_strPyrocarRoundStart[][] =  {
 	"vsh_rewrite/pyrocar/pyrocar_intro.mp3", 
@@ -59,7 +59,9 @@ static int g_iCosmetics[] =  {
 	394 //Connoisseur's Cap
 };
 
-static float g_flGasMinCharge = 175.0;
+static float g_flGasMinCharge = 200.0;
+static float g_flDistance = 1000.0;
+static int g_iMaxGasPassers = 5;
 
 static int g_iPyrocarCosmetics[sizeof(g_iCosmetics)];
 
@@ -97,15 +99,15 @@ methodmap CPyroCar < SaxtonHaleBase
 	public void GetBossInfo(char[] sInfo, int length)
 	{
 		StrCat(sInfo, length, "\nHealth: Medium");
-		StrCat(sInfo, length, "\nYour backburner does very little damage");
+		StrCat(sInfo, length, "\nYour backburner does little damage");
 		StrCat(sInfo, length, "\nDoused enemies take critical hits");
 		StrCat(sInfo, length, "\nYou can chain thermal thruster jumps");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nAbilities");
-		StrCat(sInfo, length, "\n- Deal damage to receive a gas passer");
+		StrCat(sInfo, length, "\n- Throw gas passer (Deal damage to gain up to 5)");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- Throws gas passers around you and gain a speed boost for 8 seconds");
+		StrCat(sInfo, length, "\n- Douses enemies around you and gain a speed boost for 8 seconds");
 		StrCat(sInfo, length, "\n- 200%% Rage: Increases bonus speed and extends duration to 12 seconds");
 	}
 	
@@ -201,31 +203,7 @@ methodmap CPyroCar < SaxtonHaleBase
 			}
 		}
 		
-		//Check if Gas Passer has been used
-		int iSecondaryWep = GetPlayerWeaponSlot(this.iClient, WeaponSlot_Secondary);
-		if (IsValidEntity(iSecondaryWep))
-		{
-			if (iSecondaryWep != g_iPyrocarJetpack[this.iClient] && GetEntPropFloat(this.iClient, Prop_Send, "m_flItemChargeMeter", 1) < 100.0)
-			{
-				TF2_RemoveItemInSlot(this.iClient, WeaponSlot_Secondary);
-				
-				g_iPyrocarJetpack[this.iClient] = this.CallFunction("CreateWeapon", ITEM_THERMAL_THRUSTER, "tf_weapon_rocketpack", 100, TFQual_Unusual, "259 ; 1.0 ; 872 ; 1.0 ; 873 ; 1.0");
-				SetEntPropFloat(this.iClient, Prop_Send, "m_flItemChargeMeter", g_flPyrocarJetpackCharge[this.iClient], 1);
-				
-				//Call client to reset HUD meter
-				Event event = CreateEvent("localplayer_pickup_weapon", true);
-				event.FireToClient(this.iClient);
-				event.Cancel();
-				
-				//Change active weapon
-				if (IsValidEntity(GetPlayerWeaponSlot(this.iClient, WeaponSlot_Primary)))
-					SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", g_iPyrocarPrimary[this.iClient]);
-				else
-					SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", g_iPyrocarMelee[this.iClient]);
-			}
-		}
-		
-		//Prevent gas to be removed
+		//Prevent marked-for-death to be removed
 		int iTeam = GetClientTeam(this.iClient);
 		
 		for (int i = 1; i <= MaxClients; i++)
@@ -234,7 +212,6 @@ methodmap CPyroCar < SaxtonHaleBase
 			{
 				if(g_bUnderEffect[i])
 				{
-					TF2_AddCondition(i, TFCond_Gas, 0.25, this.iClient);
 					TF2_AddCondition(i, TFCond_MarkedForDeath, 0.25, this.iClient);
 				}
 				else if (TF2_IsPlayerInCondition(i, TFCond_Gas))
@@ -251,16 +228,33 @@ methodmap CPyroCar < SaxtonHaleBase
 		
 		char sMessage[255];
 		int iColor[4];
-		if (g_flPyrocarGasCharge[this.iClient] < g_flGasMinCharge)
+		float flGasCharge = g_flPyrocarGasCharge[this.iClient]/g_flGasMinCharge * 100.0;
+		if (flGasCharge < 100.0)
 		{
-			Format(sMessage, sizeof(sMessage), "Deal damage to charge your gas: %0.2f%%.", g_flPyrocarGasCharge[this.iClient]/g_flGasMinCharge * 100.0);
+			Format(sMessage, sizeof(sMessage), "Deal damage to charge your gas: %0.2f%%.", flGasCharge);
 			iColor[0] = 255; iColor[1] = 255; iColor[2] = 255; iColor[3] = 255;
 			Hud_SetColor(this.iClient, iColor);
 		}
 		else
 		{
-			Format(sMessage, sizeof(sMessage), "Press right click to use your gas! %0.2f%%.", g_flPyrocarGasCharge[this.iClient]/g_flGasMinCharge * 100.0);
-			iColor[0] = 0; iColor[1] = 255; iColor[2] = 0; iColor[3] = 255;
+			
+			Format(sMessage, sizeof(sMessage), "Press right click to throw your gas! %0.2f%%.", flGasCharge);
+			//Avoid dividing by 0
+			if (g_iMaxGasPassers > 1)
+			{
+				//100% to 500%: green to yellow
+				iColor[0] = RoundToNearest((flGasCharge-100.0) * (255.0/((g_iMaxGasPassers-1) * 100.0)));
+				iColor[1] = 255;
+				iColor[2] = 0;
+			}
+			else
+			{
+				//100%: green
+				iColor[0] = 0;
+				iColor[1] = 255;
+				iColor[2] = 0;
+			}
+			
 			Hud_SetColor(this.iClient, iColor);
 		}
 		
@@ -316,10 +310,13 @@ methodmap CPyroCar < SaxtonHaleBase
 		
 		//Deal constant damage for afterburn
 		if (damagetype == TF_DMG_AFTERBURN || damagetype == TF_DMG_GAS_AFTERBURN)
-			damage = 1.75;
+			damage = 2.0;
 			
-		g_flPyrocarGasCharge[this.iClient] += damage;
+		if (g_flPyrocarGasCharge[this.iClient] <= g_iMaxGasPassers * g_flGasMinCharge)
+			g_flPyrocarGasCharge[this.iClient] += damage;
 			
+		if (g_flPyrocarGasCharge[this.iClient] > g_iMaxGasPassers * g_flGasMinCharge)
+			g_flPyrocarGasCharge[this.iClient] = g_iMaxGasPassers * g_flGasMinCharge;
 		//Any kind of crit deals 2.5x damage, bonus damage does not give extra gas charge
 		if (damagetype & DMG_CRIT)
 		{
@@ -334,7 +331,7 @@ methodmap CPyroCar < SaxtonHaleBase
 		//Buildings take constant damage
 		if (weapon == TF2_GetItemInSlot(this.iClient, WeaponSlot_Primary))
 		{
-			damage = 14.0;
+			damage = 17.0;
 		}
 	}
 	
@@ -398,13 +395,30 @@ methodmap CPyroCar < SaxtonHaleBase
 		{
 			g_flPyrocarGasCharge[this.iClient] -= g_flGasMinCharge;
 			
-			int iSecondaryWep = GetPlayerWeaponSlot(this.iClient, WeaponSlot_Secondary);
-			if (IsValidEntity(iSecondaryWep))
+			float vecOrigin[3], vecVelocity[3], vecAngleVelocity[3];
+			GetClientEyePosition(this.iClient, vecOrigin);
+			GetClientEyeAngles(this.iClient, vecAngleVelocity);
+			
+			int iBomb = CreateEntityByName("tf_projectile_jar_gas");
+			if (iBomb > MaxClients)
 			{
-				TF2_RemoveItemInSlot(this.iClient, WeaponSlot_Secondary);
+				vecAngleVelocity[0] += 180.0;
+				vecAngleVelocity[1] += 90.0;
+				GetAngleVectors(vecAngleVelocity, vecVelocity, vecVelocity, NULL_VECTOR);
 				
-				iSecondaryWep = this.CallFunction("CreateWeapon", ITEM_GAS_PASSER, "tf_weapon_jar_gas", 100, TFQual_Unusual, "");
-				SetEntPropFloat(this.iClient, Prop_Send, "m_flItemChargeMeter", 100.0, 1);
+				ScaleVector(vecVelocity, g_flDistance);
+				//Add up velocity to form an arc
+				vecVelocity[2] = g_flDistance * 0.4;
+				
+				SetEntProp(iBomb, Prop_Send, "m_iTeamNum", GetClientTeam(this.iClient));
+				SetEntPropEnt(iBomb, Prop_Send, "m_hOwnerEntity", this.iClient);
+				
+				DispatchSpawn(iBomb);
+				
+				GetClientEyeAngles(this.iClient, vecAngleVelocity);
+				TeleportEntity(iBomb, vecOrigin, vecAngleVelocity, vecVelocity);
+				
+				SetEntProp(iBomb, Prop_Send, "m_CollisionGroup", 24);
 			}
 		}
 	}

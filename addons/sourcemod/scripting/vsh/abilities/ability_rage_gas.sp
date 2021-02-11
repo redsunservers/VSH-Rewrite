@@ -1,11 +1,10 @@
-static float g_flRageGasNext[TF_MAXPLAYERS+1];
 static float g_flRageGasEnd[TF_MAXPLAYERS+1];
 static float g_flRageGasRate[TF_MAXPLAYERS+1];
 static float g_flRageGasDuration[TF_MAXPLAYERS+1];
-static float g_flRageGasDistance[TF_MAXPLAYERS+1];
-static float g_flRageGasHeight[TF_MAXPLAYERS+1];
+static float g_flRageSpeedMult[TF_MAXPLAYERS+1];
 static float g_flPreviousSpeed[TF_MAXPLAYERS+1];
 static float g_flNewSpeed[TF_MAXPLAYERS+1];
+static float g_flGasRadius[TF_MAXPLAYERS+1];
 
 methodmap CRageGas < SaxtonHaleBase
 {
@@ -45,56 +44,75 @@ methodmap CRageGas < SaxtonHaleBase
 		}
 	}
 	
-	property float flDistance
+	property float flRadius
 	{
-		public set (float flVal)
-		{
-			g_flRageGasDistance[this.iClient] = flVal;
-		}
 		public get()
 		{
-			return g_flRageGasDistance[this.iClient];
+			return g_flGasRadius[this.iClient];
+		}
+		public set(float val)
+		{
+			g_flGasRadius[this.iClient] = val;
 		}
 	}
 	
-	property float flHeight
+	property float flRageSpeedMult
 	{
 		public set (float flVal)
 		{
-			g_flRageGasHeight[this.iClient] = flVal;
+			g_flRageSpeedMult[this.iClient] = flVal;
 		}
 		public get()
 		{
-			return g_flRageGasHeight[this.iClient];
+			return g_flRageSpeedMult[this.iClient];
 		}
 	}
 		
 	public CRageGas(CRageGas ability)
 	{
-		g_flRageGasNext[ability.iClient] = 0.0;
 		g_flRageGasEnd[ability.iClient] = 0.0;
 		
-		ability.flRate = 1.5;
 		ability.flDuration = 8.0;
-		ability.flDistance = 600.0;
-		ability.flHeight = 700.0;
+		ability.flRageSpeedMult = 1.15;
+		ability.flRadius = 800.0;
 	}
 
 	public void OnRage()
 	{
+		int bossTeam = GetClientTeam(this.iClient);
+		float vecPos[3], vecTargetPos[3];
 		float flRageDuration = this.flDuration;
+		GetClientAbsOrigin(this.iClient, vecPos);
+		
 		if (this.bSuperRage)
 		{
-			flRageDuration * 1.5;
 			TF2_AddCondition(this.iClient, TFCond_TeleportedGlow, flRageDuration, this.iClient);
-			this.flSpeed *= 1.2;
+			this.flSpeed *= this.flRageSpeedMult;
 		}
 		
-		g_flRageGasNext[this.iClient] = GetGameTime();
+		for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
+		{
+			if (IsClientInGame(iVictim) && IsPlayerAlive(iVictim) && GetClientTeam(iVictim) != bossTeam && !TF2_IsUbercharged(iVictim))
+			{
+				GetClientAbsOrigin(iVictim, vecTargetPos);
+				
+				float flRadius = this.flRadius;
+				if (this.bSuperRage) flRadius *= 1.5;
+				if (this.bSuperRage) flRageDuration *= 1.5;
+				
+				float flDistance = GetVectorDistance(vecTargetPos, vecPos);
+				
+				if (flDistance <= flRadius)
+				{
+					TF2_AddCondition(iVictim, TFCond_Gas, flRageDuration, this.iClient);
+				}
+			}
+		}
+		
 		g_flRageGasEnd[this.iClient] = GetGameTime() + flRageDuration;
 		g_flPreviousSpeed[this.iClient] = this.flSpeed;
 		TF2_AddCondition(this.iClient, TFCond_SpeedBuffAlly, flRageDuration, this.iClient);
-		this.flSpeed *= 1.2;
+		this.flSpeed *= this.flRageSpeedMult;
 	}
 	
 	public void OnThink()
@@ -103,40 +121,7 @@ methodmap CRageGas < SaxtonHaleBase
 			return;
 		
 		float flGameTime = GetGameTime();
-		if (flGameTime <= g_flRageGasEnd[this.iClient])
-		{
-			if (g_flRageGasNext[this.iClient] > flGameTime) return;
-			
-			g_flRageGasNext[this.iClient] = flGameTime + this.flRate;
-			
-			float vecOrigin[3], vecVelocity[3], vecAngleVelocity[3];
-			GetClientAbsOrigin(this.iClient, vecOrigin);
-			vecOrigin[2] += 42.0;
-			
-			for (int i = 0; i < 8; i++)
-			{
-				int iBomb = CreateEntityByName("tf_projectile_jar_gas");
-				if (iBomb > MaxClients)
-				{
-					vecAngleVelocity[1] = float(45 * i);
-					
-					GetAngleVectors(vecAngleVelocity, vecVelocity, vecVelocity, NULL_VECTOR);
-					
-					ScaleVector(vecVelocity, this.flDistance);
-					vecVelocity[2] = this.flHeight;
-						
-					SetEntProp(iBomb, Prop_Send, "m_iTeamNum", GetClientTeam(this.iClient));
-					SetEntPropEnt(iBomb, Prop_Send, "m_hOwnerEntity", this.iClient);
-					
-					DispatchSpawn(iBomb);
-					
-					TeleportEntity(iBomb, vecOrigin, NULL_VECTOR, vecVelocity);
-					
-					SetEntProp(iBomb, Prop_Send, "m_CollisionGroup", 24);
-				}
-			}
-		}
-		else
+		if (flGameTime > g_flRageGasEnd[this.iClient])
 		{
 			g_flRageGasEnd[this.iClient] = 0.0;
 			this.flSpeed = g_flPreviousSpeed[this.iClient];
