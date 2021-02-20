@@ -189,7 +189,7 @@ void Dome_OnThink(int iClient)
 	
 	static int iOffset = -1;
 	if (iOffset == -1)
-		iOffset = FindDataMapInfo(iTrigger, "m_flCapTime"); // m_fTimeRemaining offset as this+4
+		iOffset = FindDataMapInfo(iTrigger, "m_flCapTime");
 	
 	TFTeam nCapturingTeam = view_as<TFTeam>(GetEntData(iTrigger, iOffset - 12));	// m_nCapturingTeam
 	if (TF2_GetClientTeam(iClient) != nCapturingTeam && nCapturingTeam > TFTeam_Spectator)
