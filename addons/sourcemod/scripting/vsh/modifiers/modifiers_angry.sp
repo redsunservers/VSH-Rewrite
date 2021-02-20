@@ -24,9 +24,9 @@ methodmap CModifiersAngry < SaxtonHaleBase
 	
 	public int GetRenderColor(int iColor[4])
 	{
-		iColor[0] = 192;
-		iColor[1] = 128;
-		iColor[2] = 56;
+		iColor[0] = 144;
+		iColor[1] = 96;
+		iColor[2] = 48;
 		iColor[3] = 255;
 	}
 	
