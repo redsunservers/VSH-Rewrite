@@ -18,7 +18,7 @@ methodmap CModifiersIce < SaxtonHaleBase
 	
 	public void GetModifiersInfo(char[] sInfo, int length)
 	{
-		StrCat(sInfo, length, "\nColor: Blue");
+		StrCat(sInfo, length, "\nColor: Light Blue");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\n- Every stomp slows nearby players");
 		StrCat(sInfo, length, "\n- Stomp deals no damage");
