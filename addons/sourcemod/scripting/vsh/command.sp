@@ -18,13 +18,15 @@ public void Command_Init()
 	Command_Create("multiboss", Command_MultiBoss);
 	Command_Create("modifiers", Command_Modifiers);
 	Command_Create("next", Command_HaleNext);
+	Command_Create("rank", Command_Rank);
 	Command_Create("credits", Command_Credits);
 	
 	Command_Create("settings", Command_Preferences);
 	Command_Create("preferences", Command_Preferences);
 	Command_Create("bosstoggle", Command_Preferences_Boss);
-	Command_Create("winstreak", Command_Preferences_Winstreak);
-	Command_Create("duo", Command_Preferences_Duo);
+	Command_Create("ranktoggle", Command_Preferences_Rank);
+	Command_Create("duo", Command_Preferences_Multi);
+	Command_Create("multi", Command_Preferences_Multi);
 	Command_Create("music", Command_Preferences_Music);
 	Command_Create("revival", Command_Preferences_Revival);
 	Command_Create("zombie", Command_Preferences_Revival);
@@ -162,6 +164,20 @@ public Action Command_HaleNext(int iClient, int iArgs)
 	return Plugin_Handled;
 }
 
+public Action Command_Rank(int iClient, int iArgs)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+
+	if (iClient == 0)
+	{
+		ReplyToCommand(iClient, "This Command can only be used ingame");
+		return Plugin_Handled;
+	}
+
+	Rank_DisplayClient(iClient, true);
+	return Plugin_Handled;
+}
+
 public Action Command_Preferences(int iClient, int iArgs)
 {
 	if (!g_bEnabled) return Plugin_Continue;
@@ -210,7 +226,7 @@ public Action Command_Preferences(int iClient, int iArgs)
 			}
 		}
 		
-		PrintToChat(iClient, "Invalid preferences entered", TEXT_TAG, TEXT_ERROR);
+		PrintToChat(iClient, "%s%s Invalid preferences entered", TEXT_TAG, TEXT_ERROR);
 		return Plugin_Handled;
 	}
 }
@@ -229,7 +245,7 @@ public Action Command_Preferences_Boss(int iClient, int iArgs)
 	return Plugin_Handled;
 }
 
-public Action Command_Preferences_Winstreak(int iClient, int iArgs)
+public Action Command_Preferences_Rank(int iClient, int iArgs)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
@@ -239,11 +255,11 @@ public Action Command_Preferences_Winstreak(int iClient, int iArgs)
 		return Plugin_Handled;
 	}
 
-	ClientCommand(iClient, "vsh_preferences winstreak");
+	ClientCommand(iClient, "vsh_preferences rank");
 	return Plugin_Handled;
 }
 
-public Action Command_Preferences_Duo(int iClient, int iArgs)
+public Action Command_Preferences_Multi(int iClient, int iArgs)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
@@ -253,7 +269,7 @@ public Action Command_Preferences_Duo(int iClient, int iArgs)
 		return Plugin_Handled;
 	}
 
-	ClientCommand(iClient, "vsh_preferences duo");
+	ClientCommand(iClient, "vsh_preferences multi");
 	return Plugin_Handled;
 }
 
