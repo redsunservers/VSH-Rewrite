@@ -43,7 +43,8 @@ methodmap CBlutarch < SaxtonHaleBase
 		CWeaponSpells weaponSpells = boss.CallFunction("CreateAbility", "CWeaponSpells");
 		weaponSpells.AddSpells(haleSpells_Bats);
 		weaponSpells.RageSpells(haleSpells_Meteor);
-		weaponSpells.flRageRequirement = 0.20;
+		weaponSpells.flRageRequirement = 0.0;
+		weaponSpells.flCooldown = 15.0;
 		
 		boss.iBaseHealth = 500;
 		boss.iHealthPerPlayer = 700;
@@ -73,7 +74,7 @@ methodmap CBlutarch < SaxtonHaleBase
 		StrCat(sInfo, length, "\nHealth: Low");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nAbilities");
-		StrCat(sInfo, length, "\n- Spells: alt-attack to use Bats spell for 20%% of rage");
+		StrCat(sInfo, length, "\n- Alt-attack to use Bats spell for 15 seconds cooldown");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
 		StrCat(sInfo, length, "\n- Summons a Meteor spell");
