@@ -187,8 +187,30 @@ void Dome_OnThink(int iClient)
 	if (iTrigger <= MaxClients)
 		return;
 	
+	static int iOffset = -1;
+	if (iOffset == -1)
+		iOffset = FindDataMapInfo(iTrigger, "m_flCapTime"); // m_fTimeRemaining offset as this+4
+	
+	TFTeam nCapturingTeam = view_as<TFTeam>(GetEntData(iTrigger, iOffset - 12));	// m_nCapturingTeam
+	if (TF2_GetClientTeam(iClient) != nCapturingTeam && nCapturingTeam > TFTeam_Spectator)
+	{
+		//Reversing capture
+		if (GetEntDataFloat(iTrigger, iOffset) * 2.0 < GetEntDataFloat(iTrigger, iOffset + 4))	// m_flCapTime & m_fTimeRemaining
+		{
+			//Reverse capture ended, force end touch
+			if (g_bDomeCapturing[iClient])
+			{
+				AcceptEntityInput(iTrigger, "EndTouch", iClient, iClient);
+				g_bDomeCapturing[iClient] = false;
+			}
+			
+			//Don't attempt call start touch
+			return;
+		}
+	}
+	
 	bool bTouch;
-	if (IsPlayerAlive(iClient) && TF2_GetClientTeam(iClient) > TFTeam_Spectator && IsClientInRange(iClient, g_vecDomeCP, g_ConfigConvar.LookupFloat("vsh_dome_cp_radius")))
+	if (IsPlayerAlive(iClient) && IsClientInRange(iClient, g_vecDomeCP, g_ConfigConvar.LookupFloat("vsh_dome_cp_radius")))
 	{
 		//Can client pos see dome center
 		float vecStart[3], vecEnd[3];
