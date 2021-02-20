@@ -181,7 +181,7 @@ public Action WeaponBall_OnTakeDamage(int victim, int &attacker, int &inflictor,
 		else if (g_flWeaponBallStunTime[victim] > 0.10)
 		{
 			//Not so home run
-			damage *= g_flWeaponBallStunTime[victim] * 8.0;
+			damage *= g_flWeaponBallStunTime[victim] * 3.0;
 			TF2_StunPlayer(victim, g_flWeaponBallStunTime[victim] * 8.0, _, TF_STUNFLAGS_SMALLBONK, attacker);
 		}
 		
