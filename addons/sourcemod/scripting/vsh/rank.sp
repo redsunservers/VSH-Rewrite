@@ -38,23 +38,24 @@ void Rank_RoundStart()
 	}
 }
 
-public void Rank_DisplayNextClient(int iClient)
+public void Rank_DisplayClient(int iClient, bool bTag = false)
 {
 	char sFormat[512];
-	Format(sFormat, sizeof(sFormat), "%s================%s\nYou are about to be the next boss!\n", TEXT_DARK, TEXT_COLOR);
+	if (bTag)
+		Format(sFormat, sizeof(sFormat), "%s%s You are currently at rank %s%d%s", TEXT_TAG, TEXT_COLOR, TEXT_DARK, Rank_GetCurrent(iClient), TEXT_COLOR);
+	else
+		Format(sFormat, sizeof(sFormat), "%sYou are currently at rank %s%d%s", TEXT_COLOR, TEXT_DARK, Rank_GetCurrent(iClient), TEXT_COLOR);
 	
 	SaxtonHaleNextBoss nextBoss = SaxtonHaleNextBoss(iClient);
-	
 	if (nextBoss.bSpecialClassRound)
-		Format(sFormat, sizeof(sFormat), "%sYour round will be a special class round, your rank %s%d%s will not change.", sFormat, TEXT_DARK, Rank_GetCurrent(iClient), TEXT_COLOR);
+		Format(sFormat, sizeof(sFormat), "%s, your next round will be a special class round, so it will not change.", sFormat);
 	else if (!Preferences_Get(iClient, Preferences_Rank))
-		Format(sFormat, sizeof(sFormat), "%sYour rank preference is disabled, your rank %s%d%s will not change.", sFormat, TEXT_DARK, Rank_GetCurrent(iClient), TEXT_COLOR);
+		Format(sFormat, sizeof(sFormat), "%s, your rank preference is disabled so it will not change.", sFormat);
 	else if (g_iTotalAttackCount < Rank_GetPlayerRequirement(iClient))
-		Format(sFormat, sizeof(sFormat), "%sYou need %s%d%s enemy players to have your rank %s%d%s changed.", sFormat, TEXT_DARK, Rank_GetPlayerRequirement(iClient), TEXT_COLOR, TEXT_DARK, Rank_GetCurrent(iClient), TEXT_COLOR);
+		Format(sFormat, sizeof(sFormat), "%s, you need %s%d%s enemy players to have your rank changed.", sFormat, TEXT_DARK, Rank_GetPlayerRequirement(iClient), TEXT_COLOR);
 	else
-		Format(sFormat, sizeof(sFormat), "%sYou are currently at rank %s%d%s.", sFormat, TEXT_DARK, Rank_GetCurrent(iClient), TEXT_COLOR);
+		Format(sFormat, sizeof(sFormat), "%s.");
 	
-	Format(sFormat, sizeof(sFormat), "%s%s\n================", sFormat, TEXT_DARK);
 	PrintToChat(iClient, sFormat);
 }
 
