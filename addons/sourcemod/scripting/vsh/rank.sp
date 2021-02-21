@@ -54,7 +54,7 @@ public void Rank_DisplayClient(int iClient, bool bTag = false)
 	else if (g_iTotalAttackCount < Rank_GetPlayerRequirement(iClient))
 		Format(sFormat, sizeof(sFormat), "%s, you need %s%d%s enemy players to have your rank changed.", sFormat, TEXT_DARK, Rank_GetPlayerRequirement(iClient), TEXT_COLOR);
 	else
-		Format(sFormat, sizeof(sFormat), "%s.");
+		Format(sFormat, sizeof(sFormat), "%s.", sFormat);
 	
 	PrintToChat(iClient, sFormat);
 }
