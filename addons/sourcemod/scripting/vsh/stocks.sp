@@ -853,6 +853,12 @@ stock void StrToLower(char[] sBuffer)
 		sBuffer[i] = CharToLower(sBuffer[i]);
 }
 
+stock void ColorToTextStr(const int iColor[4], char[] sBuffer, int iLength)
+{
+	//ignoring alpha
+	Format(sBuffer, iLength, "\x07%02X%02X%02X", iColor[0], iColor[1], iColor[2]);
+}
+
 stock void PrepareSound(const char[] sSoundPath)
 {
 	PrecacheSound(sSoundPath, true);

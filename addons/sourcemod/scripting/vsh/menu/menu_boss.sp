@@ -261,7 +261,7 @@ public int MenuBoss_SelectNextList(Menu hMenu, MenuAction action, int iClient, i
 	else if (StrEqual(sSelect, "clear"))
 	{
 		g_aNextBoss.Clear();
-		PrintToChatAll("%s%s %N cleared all next boss", TEXT_TAG, TEXT_COLOR, iClient);
+		PrintToChatAll("%s %s%N%s cleared all next boss", TEXT_TAG, TEXT_DARK, iClient, TEXT_COLOR);
 		MenuBoss_DisplayNextList(iClient);
 	}
 	else if (StrEqual(sSelect, "back"))
@@ -374,6 +374,17 @@ public void MenuBoss_CallbackNextModifiers(int iClient, MenuBossOption nOption, 
 		Format(g_menuBossSelect[iClient].sModifierType, sizeof(g_menuBossSelect[].sModifierType), "CModifiersNone");
 	}
 	
+	int iColor[4];
+	char sColor[16];
+	SaxtonHaleBase boss = SaxtonHaleBase(0);
+	boss.CallFunction("SetModifiersType", g_menuBossSelect[iClient].sModifierType);
+	boss.CallFunction("GetRenderColor", iColor);
+	
+	if (iColor[3])
+		ColorToTextStr(iColor, sColor, sizeof(sColor));
+	else
+		sColor = TEXT_DARK;
+	
 	if (view_as<MenuBossOption>(g_menuBossSelect[iClient].nOption[VSHClassType_Boss]) != MenuBossOption_Unknown)
 	{
 		//Add to list
@@ -385,14 +396,12 @@ public void MenuBoss_CallbackNextModifiers(int iClient, MenuBossOption nOption, 
 		//Print chat boss been set
 		char sBuffer[256];
 		nextBoss.GetName(sBuffer, sizeof(sBuffer));
-		PrintToChatAll("%s%s %N added next boss %s", TEXT_TAG, TEXT_COLOR, iClient, sBuffer);
+		PrintToChatAll("%s %s%N%s added next boss %s%s", TEXT_TAG, TEXT_DARK, iClient, TEXT_COLOR, sColor, sBuffer);
 	}
 	else if (view_as<MenuBossOption>(g_menuBossSelect[iClient].nOption[VSHClassType_BossMulti]) != MenuBossOption_Unknown)
 	{
 		//Add all bosses from multi to list
-		SaxtonHaleBase boss = SaxtonHaleBase(0);
 		boss.CallFunction("SetBossMultiType", g_menuBossSelect[iClient].sBossMultiType);
-		boss.CallFunction("SetModifiersType", g_menuBossSelect[iClient].sModifierType);
 		
 		ArrayList aList = new ArrayList(ByteCountToCells(MAX_TYPE_CHAR));
 		boss.CallFunction("GetBossMultiList", aList);
@@ -419,11 +428,11 @@ public void MenuBoss_CallbackNextModifiers(int iClient, MenuBossOption nOption, 
 		{
 			char sModifiersName[256];
 			boss.CallFunction("GetModifiersName", sModifiersName, sizeof(sModifiersName));
-			PrintToChatAll("%s%s %N added next multi boss %s %s", TEXT_TAG, TEXT_COLOR, iClient, sModifiersName, sBossMultiName);
+			PrintToChatAll("%s %s%N%s added next multi boss %s%s %s", TEXT_TAG, TEXT_DARK, iClient, TEXT_COLOR, sColor, sModifiersName, sBossMultiName);
 		}
 		else
 		{
-			PrintToChatAll("%s%s %N added next multi boss %s", TEXT_TAG, TEXT_COLOR, iClient, sBossMultiName);
+			PrintToChatAll("%s %s%N%s added next multi boss %s%s", TEXT_TAG, TEXT_DARK, iClient, TEXT_COLOR, sColor, sBossMultiName);
 		}
 	}
 	else
