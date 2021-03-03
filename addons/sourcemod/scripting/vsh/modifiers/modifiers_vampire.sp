@@ -35,8 +35,8 @@ methodmap CModifiersVampire < SaxtonHaleBase
 	
 	public int GetRenderColor(int iColor[4])
 	{
-		iColor[0] = 160;
-		iColor[1] = 144;
+		iColor[0] = 192;
+		iColor[1] = 96;
 		iColor[2] = 255;
 		iColor[3] = 255;
 	}

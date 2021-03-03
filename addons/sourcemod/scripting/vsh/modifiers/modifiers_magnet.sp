@@ -20,7 +20,7 @@ methodmap CModifiersMagnet < SaxtonHaleBase
 	
 	public void GetModifiersInfo(char[] sInfo, int length)
 	{
-		StrCat(sInfo, length, "\nColor: Blue");
+		StrCat(sInfo, length, "\nColor: Pink");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\n- Pulls itself and enemy player toward eachother");
 		StrCat(sInfo, length, "\n- 10%% movement speed penalty");
@@ -28,8 +28,8 @@ methodmap CModifiersMagnet < SaxtonHaleBase
 	
 	public int GetRenderColor(int iColor[4])
 	{
-		iColor[0] = 64;
-		iColor[1] = 144;
+		iColor[0] = 255;
+		iColor[1] = 128;
 		iColor[2] = 255;
 		iColor[3] = 255;
 	}

@@ -406,7 +406,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/modifiers/modifiers_electric.sp"
 #include "vsh/modifiers/modifiers_hot.sp"
 #include "vsh/modifiers/modifiers_ice.sp"
-#include "vsh/modifiers/modifiers_jump.sp"
+#include "vsh/modifiers/modifiers_jumper.sp"
 #include "vsh/modifiers/modifiers_magnet.sp"
 #include "vsh/modifiers/modifiers_overload.sp"
 #include "vsh/modifiers/modifiers_speed.sp"
@@ -731,7 +731,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("CModifiersElectric", VSHClassType_Modifier);
 	SaxtonHale_RegisterClass("CModifiersHot", VSHClassType_Modifier);
 	SaxtonHale_RegisterClass("CModifiersIce", VSHClassType_Modifier);
-	SaxtonHale_RegisterClass("CModifiersJump", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("CModifiersJumper", VSHClassType_Modifier);
 	SaxtonHale_RegisterClass("CModifiersMagnet", VSHClassType_Modifier);
 	SaxtonHale_RegisterClass("CModifiersOverload", VSHClassType_Modifier);
 	SaxtonHale_RegisterClass("CModifiersSpeed", VSHClassType_Modifier);

@@ -90,11 +90,8 @@ methodmap CDashJump < SaxtonHaleBase
 			if (flCharge < 1.0)
 				return;
 			
-			float vecAng[3];
+			float vecAng[3], vecVel[3];
 			GetClientEyeAngles(this.iClient, vecAng);
-			
-			float vecVel[3];
-			GetEntPropVector(this.iClient, Prop_Data, "m_vecVelocity", vecVel);
 			
 			vecVel[0] = Cosine(DegToRad(vecAng[0])) * Cosine(DegToRad(vecAng[1])) * this.flMaxForce;
 			vecVel[1] = Cosine(DegToRad(vecAng[0])) * Sine(DegToRad(vecAng[1])) * this.flMaxForce;
