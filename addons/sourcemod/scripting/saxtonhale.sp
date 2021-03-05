@@ -1210,7 +1210,7 @@ public void OnClientDisconnect(int iClient)
 {
 	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 	
-	if (boss.bValid && !boss.bMinion && Rank_IsEnabled())
+	if (Rank_GetClient() == iClient && Rank_IsEnabled())
 	{
 		//Ur not going anywhere kiddo
 		int iRank = Rank_GetCurrent(iClient) - 1;
@@ -1219,6 +1219,8 @@ public void OnClientDisconnect(int iClient)
 			PrintToChatAll("%s %s%N%s's rank has %sdecreased%s to %s%d%s!", TEXT_TAG, TEXT_DARK, iClient, TEXT_COLOR, TEXT_NEGATIVE, TEXT_COLOR, TEXT_DARK, iRank, TEXT_COLOR);
 			Rank_SetCurrent(iClient, iRank, true);
 		}
+		
+		Rank_ClearClient();
 	}
 	
 	if (boss.bValid)

@@ -1,5 +1,6 @@
 static bool g_bRankEnabled = false;
 static bool g_bRankHealth = false;
+static int g_iRankClient = 0;
 static int g_iRank[TF_MAXPLAYERS+1];
 
 void Rank_Init()
@@ -13,12 +14,14 @@ void Rank_RoundStart()
 {
 	g_bRankEnabled = false;
 	g_bRankHealth = false;
+	g_iRankClient = 0;
 	
 	// Enable health if main boss, rank is loaded and pref enabled
 	int iClient = GetMainBoss();
 	if (0 < iClient <= MaxClients && Rank_GetCurrent(iClient) >= 0 && Preferences_Get(iClient, VSHPreferences_Rank))
 	{
 		g_bRankHealth = true;
+		g_iRankClient = iClient;
 		
 		// Allow rank increase/decrease if not special round and enough players
 		if (!ClassLimit_IsSpecialRoundOn() && g_iTotalAttackCount >= Rank_GetPlayerRequirement(iClient))
@@ -97,6 +100,16 @@ void Rank_SetEnable(bool bValue)
 bool Rank_IsHealthEnabled()
 {
 	return g_bRankHealth;
+}
+
+int Rank_GetClient()
+{
+	return g_iRankClient;
+}
+
+void Rank_ClearClient()
+{
+	g_iRankClient = 0;
 }
 
 int Rank_GetPlayerRequirement(int iClient)

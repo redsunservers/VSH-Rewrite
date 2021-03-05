@@ -174,18 +174,14 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 	}
 	
 	//Play boss music if there is one
-	for (int iBoss = 1; iBoss <= MaxClients; iBoss++)
+	if (g_ConfigConvar.LookupInt("vsh_music_enable"))
 	{
-		if (SaxtonHale_IsValidBoss(iBoss, false))
+		for (int iBoss = 1; iBoss <= MaxClients; iBoss++)
 		{
-			SaxtonHaleBase boss = SaxtonHaleBase(iBoss);
-			
-			//Check if there still enough players while rank is on, otherwise quick snipe disable it
-			if (g_iTotalAttackCount < Rank_GetPlayerRequirement(iBoss))
-				Rank_SetEnable(false);
-			
-			if (g_ConfigConvar.LookupInt("vsh_music_enable"))
+			if (SaxtonHale_IsValidBoss(iBoss, false))
 			{
+				SaxtonHaleBase boss = SaxtonHaleBase(iBoss);
+				
 				float flMusicTime;
 				boss.CallFunction("GetMusicInfo", g_sBossMusic, sizeof(g_sBossMusic), flMusicTime);
 				if (!StrEmpty(g_sBossMusic))
@@ -202,7 +198,12 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 			}
 		}
 	}
-
+	
+	//Check if there still enough players while rank is on, otherwise quick snipe disable it
+	int iClientRank = Rank_GetClient();
+	if (iClientRank != 0 && g_iTotalAttackCount < Rank_GetPlayerRequirement(iClientRank))
+		Rank_SetEnable(false);
+	
 	//Refresh boss health from rank disable & player count
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
@@ -304,6 +305,7 @@ public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcas
 	}
 
 	int iMainBoss = GetMainBoss();
+	int iClientRank = Rank_GetClient();
 	
 	if (iWinningTeam == TFTeam_Boss)
 	{
@@ -318,14 +320,14 @@ public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcas
 					BroadcastSoundToTeam(TFTeam_Spectator, sSound);
 
 				Forward_BossWin(TFTeam_Boss);
-
-				if (Rank_IsEnabled())
-				{
-					int iRank = Rank_GetCurrent(iMainBoss) + 1;
-					PrintToChatAll("%s %s%N%s's rank has %sincreased%s to %s%d%s!", TEXT_TAG, TEXT_DARK, iMainBoss, TEXT_COLOR, TEXT_POSITIVE, TEXT_COLOR, TEXT_DARK, iRank, TEXT_COLOR);
-					Rank_SetCurrent(iMainBoss, iRank, true);
-				}
 			}
+		}
+		
+		if (iClientRank != 0 && Rank_IsEnabled())
+		{
+			int iRank = Rank_GetCurrent(iClientRank) + 1;
+			PrintToChatAll("%s %s%N%s's rank has %sincreased%s to %s%d%s!", TEXT_TAG, TEXT_DARK, iClientRank, TEXT_COLOR, TEXT_POSITIVE, TEXT_COLOR, TEXT_DARK, iRank, TEXT_COLOR);
+			Rank_SetCurrent(iClientRank, iRank, true);
 		}
 	}
 	else
@@ -341,21 +343,22 @@ public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcas
 					BroadcastSoundToTeam(TFTeam_Spectator, sSound);
 
 				Forward_BossLose(TFTeam_Boss);
-
-				if (Rank_IsEnabled())
-				{
-					int iRank = Rank_GetCurrent(iMainBoss) - 1;
-					if (iRank >= 0)
-					{
-						PrintToChatAll("%s %s%N%s's rank has %sdecreased%s to %s%d%s!", TEXT_TAG, TEXT_DARK, iMainBoss, TEXT_COLOR, TEXT_NEGATIVE, TEXT_COLOR, TEXT_DARK, iRank, TEXT_COLOR);
-						Rank_SetCurrent(iMainBoss, iRank, true);
-					}
-				}
+			}
+		}
+		
+		if (iClientRank != 0 && Rank_IsEnabled())
+		{
+			int iRank = Rank_GetCurrent(iClientRank) - 1;
+			if (iRank >= 0)
+			{
+				PrintToChatAll("%s %s%N%s's rank has %sdecreased%s to %s%d%s!", TEXT_TAG, TEXT_DARK, iClientRank, TEXT_COLOR, TEXT_NEGATIVE, TEXT_COLOR, TEXT_DARK, iRank, TEXT_COLOR);
+				Rank_SetCurrent(iClientRank, iRank, true);
 			}
 		}
 	}
 
 	Rank_SetEnable(false);
+	Rank_ClearClient();
 
 	ArrayList aPlayersList = new ArrayList();
 	
