@@ -22,7 +22,6 @@ bool Preferences_Set(int iClient, SaxtonHalePreferences nPreferences, bool bEnab
 		g_iPlayerPreferences[iClient] &= ~RoundToNearest(Pow(2.0, float(view_as<int>(nPreferences))));
 	
 	Cookies_SavePreferences(iClient, g_iPlayerPreferences[iClient]);
-	PrintToChat(iClient, "set %d", g_iPlayerPreferences[iClient]);
 	return true;
 }
 
@@ -31,6 +30,4 @@ void Preferences_SetAll(int iClient, int iPreferences)
 	//No checks if it -1, and no forwards. Be careful with it
 	
 	g_iPlayerPreferences[iClient] = iPreferences;
-	if (IsClientInGame(iClient))
-		PrintToChat(iClient, "pref %d", iPreferences);
 }
