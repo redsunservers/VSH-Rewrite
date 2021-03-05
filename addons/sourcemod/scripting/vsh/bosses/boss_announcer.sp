@@ -403,7 +403,6 @@ public Action Timer_AnnouncerChangeTeam(Handle hTimer, int iClient)
 	}
 	
 	PrintCenterText(iClient, "YOU'RE NOW IN BOSS TEAM");
-	Client_AddFlag(iClient, ClientFlags_BossTeam);
 	
 	SetEntProp(iClient, Prop_Send, "m_lifeState", LifeState_Dead);
 	TF2_ChangeClientTeam(iClient, TFTeam_Boss);

@@ -80,20 +80,18 @@ public Action Event_RoundStart(Event event, const char[] sName, bool bDontBroadc
 		SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 		if (boss.bValid)
 			boss.CallFunction("Destroy");
-
-		Client_RemoveFlag(iClient, ClientFlags_BossTeam);
-
+		
 		g_iPlayerDamage[iClient] = 0;
 		g_iPlayerAssistDamage[iClient] = 0;
 		g_iClientOwner[iClient] = 0;
-
+		
 		int iColor[4];
 		iColor[0] = 255; iColor[1] = 255; iColor[2] = 255; iColor[3] = 255;
 		Hud_SetColor(iClient, iColor);
-
+		
 		if (!IsClientInGame(iClient)) continue;
 		if (GetClientTeam(iClient) <= 1) continue;
-
+		
 		// Put every players in same team & pick the boss later
 		TF2_ForceTeamJoin(iClient, TFTeam_Attack);
 	}
@@ -507,18 +505,39 @@ public Action Event_PlayerSpawn(Event event, const char[] sName, bool bDontBroad
 		return;
 	}
 	
+	bool bRespawn;
 	TFClassType iOldClass = view_as<TFClassType>(event.GetInt("class"));
 	TFClassType iNewClass = ClassLimit_GetNewClass(iClient);
 	
 	if (iOldClass != iNewClass && iNewClass != TFClass_Unknown)
 	{
 		TF2_SetPlayerClass(iClient, iNewClass);
-		Frame_RespawnPlayer(GetClientUserId(iClient));
+		bRespawn = true;
+	}
+	
+	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
+	
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (SaxtonHale_IsValidBoss(i, false))
+		{
+			if (!boss.bValid && TF2_GetClientTeam(iClient) != TFTeam_Attack)
+			{
+				TF2_ChangeClientTeam(iClient, TFTeam_Attack);
+				bRespawn = true;
+			}
+			
+			break;
+		}
+	}
+	
+	if (bRespawn)
+	{
+		TF2_RespawnPlayer(iClient);
 		return;
 	}
-
+	
 	// Player spawned, if they are a boss, call their spawn function
-	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 	if (boss.bValid)
 		boss.CallFunction("OnSpawn");
 }
@@ -665,13 +684,9 @@ public Action Event_PlayerDeath(Event event, const char[] sName, bool bDontBroad
 		}
 	}
 	
-	//Reset flags
 	if (g_bRoundStarted && !bDeadRinger)
-	{
 		g_iClientOwner[iVictim] = 0;
-		Client_RemoveFlag(iVictim, ClientFlags_BossTeam);
-	}
-
+	
 	return Plugin_Changed;
 }
 
@@ -751,8 +766,6 @@ public Action Event_PlayerInventoryUpdate(Event event, const char[] sName, bool 
 	
 	if (SaxtonHale_IsValidAttack(iClient))
 		TagsCore_CallAll(iClient, TagsCall_Spawn);
-	
-	RequestFrame(Frame_VerifyTeam, GetClientUserId(iClient));
 }
 
 public Action Event_PlayerHurt(Event event, const char[] sName, bool bDontBroadcast)

@@ -288,10 +288,6 @@ void NextBoss_SetBoss(SaxtonHaleNextBoss nextBoss, ArrayList aNonBosses)
 	if (StrEmpty(sModifierType))
 		NextBoss_GetRandomModifiers(sModifierType, sizeof(sModifierType));
 	
-	// Allow them to join the boss team
-	Client_AddFlag(nextBoss.iClient, ClientFlags_BossTeam);
-	TF2_ForceTeamJoin(nextBoss.iClient, TFTeam_Boss);
-	
 	SaxtonHaleBase boss = SaxtonHaleBase(nextBoss.iClient);
 	if (boss.bValid)
 	{
@@ -316,7 +312,7 @@ void NextBoss_SetBoss(SaxtonHaleNextBoss nextBoss, ArrayList aNonBosses)
 	if (!StrEqual(sModifierType, "CModifiersNone") && !StrEmpty(sModifierType))
 		boss.CallFunction("CreateModifiers", sModifierType);
 	
-	TF2_RespawnPlayer(nextBoss.iClient);
+	TF2_ForceTeamJoin(nextBoss.iClient, TFTeam_Boss);
 	
 	//Display to client what boss you are for 10 seconds
 	MenuBoss_DisplayInfo(nextBoss.iClient, VSHClassType_Boss, sBossType, 10);
