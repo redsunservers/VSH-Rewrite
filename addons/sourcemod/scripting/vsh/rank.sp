@@ -16,7 +16,7 @@ void Rank_RoundStart()
 	
 	// Enable health if main boss, rank is loaded and pref enabled
 	int iClient = GetMainBoss();
-	if (0 < iClient <= MaxClients && Rank_GetCurrent(iClient) >= 0 && Preferences_Get(iClient, Preferences_Rank))
+	if (0 < iClient <= MaxClients && Rank_GetCurrent(iClient) >= 0 && Preferences_Get(iClient, VSHPreferences_Rank))
 	{
 		g_bRankHealth = true;
 		
@@ -49,7 +49,7 @@ public void Rank_DisplayClient(int iClient, bool bTag = false)
 	SaxtonHaleNextBoss nextBoss = SaxtonHaleNextBoss(iClient);
 	if (nextBoss.bSpecialClassRound)
 		Format(sFormat, sizeof(sFormat), "%s, your next round will be a special class round, so it will not change.", sFormat);
-	else if (!Preferences_Get(iClient, Preferences_Rank))
+	else if (!Preferences_Get(iClient, VSHPreferences_Rank))
 		Format(sFormat, sizeof(sFormat), "%s, your rank preference is disabled so it will not change.", sFormat);
 	else if (g_iTotalAttackCount < Rank_GetPlayerRequirement(iClient))
 		Format(sFormat, sizeof(sFormat), "%s, you need %s%d%s enemy players to have your rank changed.", sFormat, TEXT_DARK, Rank_GetPlayerRequirement(iClient), TEXT_COLOR);

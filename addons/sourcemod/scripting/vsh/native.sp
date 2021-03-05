@@ -29,6 +29,7 @@ void Native_AskLoad()
 	CreateNative("SaxtonHale_IsWinstreakEnable", Native_IsWinstreakEnable);
 	CreateNative("SaxtonHale_SetAdmin", Native_SetAdmin);
 	CreateNative("SaxtonHale_SetPunishment", Native_SetPunishment);
+	CreateNative("SaxtonHale_HasPreferences", Native_HasPreferences);
 }
 
 //SaxtonHaleNextBoss SaxtonHaleNextBoss.SaxtonHaleNextBoss(int iClient = 0);
@@ -342,6 +343,20 @@ public any Native_SetPunishment(Handle hPlugin, int iNumParams)
 		Client_AddFlag(iClient, ClientFlags_Punishment);
 	else
 		Client_RemoveFlag(iClient, ClientFlags_Punishment);
+}
+
+//SaxtonHale_HasPreferences(int iClient, SaxtonHalePreferences nPreferences);
+public any Native_HasPreferences(Handle hPlugin, int iNumParams)
+{
+	int iClient = GetNativeCell(1);
+	SaxtonHalePreferences nPreferences = GetNativeCell(2);
+	
+	if (iClient <= 0 || iClient > MaxClients)
+		ThrowNativeError(SP_ERROR_NATIVE, "Client index %d is invalid", iClient);
+	if (!IsClientConnected(iClient))
+		ThrowNativeError(SP_ERROR_NATIVE, "Client %d is not connected", iClient);
+	
+	return Preferences_Get(iClient, nPreferences);
 }
 
 //bool SaxtonHale_ForceSpecialRound(int iClient=0, TFClassType nClass=TFClass_Unknown);

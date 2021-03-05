@@ -650,7 +650,7 @@ native int SaxtonHale_GetAssistDamage(int iClient);
  * Set whoever client all preferences
  *
  * @param iClient	    	Client to set new preferences
- * @param preferences	    New preferences to set
+ * @param iPreferences	    New preferences to set
  * @error                   Invalid client index or client not connected
  */
 native void SaxtonHale_SetPreferences(int iClient, int iPreferences);
@@ -690,6 +690,24 @@ native void SaxtonHale_SetAdmin(int iClient, bool bEnable);
  * @error                   Invalid client index or client not connected
  */
 native void SaxtonHale_SetPunishment(int iClient, bool bEnable);
+
+enum SaxtonHalePreferences
+{
+	VSHPreferences_PickAsBoss,
+	VSHPreferences_Rank,
+	VSHPreferences_MultiBoss,
+	VSHPreferences_Music,
+	VSHPreferences_Revival,
+};
+
+/**
+ * Get whoever client has given preferences
+ *
+ * @param iClient	    	Client to set get preferences
+ * @param iPreferences	    Preferences to get
+ * @error                   Invalid client index or client not connected
+ */
+native bool SaxtonHale_HasPreferences(int iClient, SaxtonHalePreferences nPreferences);
 
 /**
  * Gets whoever client is a valid boss or not

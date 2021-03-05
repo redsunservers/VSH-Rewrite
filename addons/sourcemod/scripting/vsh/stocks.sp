@@ -82,7 +82,7 @@ stock ArrayList GetValidSummonableClients(bool bAllowBoss = false)
 		if (IsClientInGame(iClient)
 			&& TF2_GetClientTeam(iClient) > TFTeam_Spectator
 			&& !IsPlayerAlive(iClient)
-			&& Preferences_Get(iClient, Preferences_Revival)
+			&& Preferences_Get(iClient, VSHPreferences_Revival)
 			&& !Client_HasFlag(iClient, ClientFlags_Punishment))
 		{
 			if (!bAllowBoss)

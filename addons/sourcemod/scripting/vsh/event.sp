@@ -191,7 +191,7 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 				if (!StrEmpty(g_sBossMusic))
 				{
 					for (int i = 1; i <= MaxClients; i++)
-						if (IsClientInGame(i) && Preferences_Get(i, Preferences_Music))
+						if (IsClientInGame(i) && Preferences_Get(i, VSHPreferences_Music))
 							EmitSoundToClient(i, g_sBossMusic);
 					
 					if (flMusicTime > 0.0)

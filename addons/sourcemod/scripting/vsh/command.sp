@@ -199,14 +199,12 @@ public Action Command_Preferences(int iClient, int iArgs)
 		char sPreferences[64];
 		GetCmdArg(1, sPreferences, sizeof(sPreferences));
 		
-		for (int iPreferences = 0; iPreferences < sizeof(g_strPreferencesName); iPreferences++)
+		for (SaxtonHalePreferences nPreferences; nPreferences < view_as<SaxtonHalePreferences>(sizeof(g_strPreferencesName)); nPreferences++)
 		{
-			if (!StrEmpty(g_strPreferencesName[iPreferences]) && StrContains(g_strPreferencesName[iPreferences], sPreferences, false) == 0)
+			if (!StrEmpty(g_strPreferencesName[nPreferences]) && StrContains(g_strPreferencesName[nPreferences], sPreferences, false) == 0)
 			{
-				Preferences preferences = view_as<Preferences>(RoundToNearest(Pow(2.0, float(iPreferences))));
-				
-				bool bValue = !Preferences_Get(iClient, preferences);
-				if (Preferences_Set(iClient, preferences, bValue))
+				bool bValue = !Preferences_Get(iClient, nPreferences);
+				if (Preferences_Set(iClient, nPreferences, bValue))
 				{
 					char buffer[512];
 					
@@ -215,7 +213,7 @@ public Action Command_Preferences(int iClient, int iArgs)
 					else
 						Format(buffer, sizeof(buffer), "Disable");
 					
-					PrintToChat(iClient, "%s%s %s %s", TEXT_TAG, TEXT_COLOR, buffer, g_strPreferencesName[iPreferences]);
+					PrintToChat(iClient, "%s%s %s %s", TEXT_TAG, TEXT_COLOR, buffer, g_strPreferencesName[nPreferences]);
 					return Plugin_Handled;
 				}
 				else

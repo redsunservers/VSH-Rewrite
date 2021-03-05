@@ -85,15 +85,6 @@ enum ClientFlags ( <<=1 )
 	ClientFlags_Punishment,
 };
 
-enum Preferences ( <<=1 )
-{
-	Preferences_PickAsBoss = 1,
-	Preferences_Rank,
-	Preferences_MultiBoss,
-	Preferences_Music,
-	Preferences_Revival,
-};
-
 enum
 {
 	WeaponSlot_Primary = 0,
@@ -1154,7 +1145,7 @@ public Action Timer_Music(Handle hTimer, SaxtonHaleBase boss)
 			//Stop current music before playing another one
 			StopSound(iClient, SNDCHAN_AUTO, g_sBossMusic);
 			
-			if (Preferences_Get(iClient, Preferences_Music))
+			if (Preferences_Get(iClient, VSHPreferences_Music))
 				EmitSoundToClient(iClient, g_sBossMusic);
 		}
 	}
