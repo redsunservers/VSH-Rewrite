@@ -930,6 +930,7 @@ public __pl_saxtonhale_SetNTVOptional()
 	MarkNativeAsOptional("SaxtonHale_SetRank");
 	MarkNativeAsOptional("SaxtonHale_SetAdmin");
 	MarkNativeAsOptional("SaxtonHale_SetPunishment");
+	MarkNativeAsOptional("SaxtonHale_HasPreferences");
 	
 	MarkNativeAsOptional("SaxtonHale_InitFunction");
 	MarkNativeAsOptional("SaxtonHale_RegisterBoss");
