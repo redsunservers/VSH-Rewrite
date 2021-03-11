@@ -1,5 +1,6 @@
-#define VAMPIRE_GAIN	300		// int
-#define VAMPIRE_LOSS	40.0	// float
+//Values by % of max health
+#define VAMPIRE_GAIN	0.0175
+#define VAMPIRE_LOSS	0.002	//Per second
 
 static int g_iVampireCount = 0;
 static float g_flVampireHealthDrainBuffer[TF_MAXPLAYERS+1];
@@ -29,8 +30,8 @@ methodmap CModifiersVampire < SaxtonHaleBase
 	{
 		StrCat(sInfo, length, "\nColor: Purple");
 		StrCat(sInfo, length, "\n ");
-		StrCat(sInfo, length, "\n- Gain 300 health on player death");
-		StrCat(sInfo, length, "\n- Health decays 40 per second");
+		StrCat(sInfo, length, "\n- Gain health on player death");
+		StrCat(sInfo, length, "\n- Health decays over time");
 	}
 	
 	public int GetRenderColor(int iColor[4])
@@ -45,7 +46,7 @@ methodmap CModifiersVampire < SaxtonHaleBase
 	{
 		if (GameRules_GetRoundState() != RoundState_Preround && IsPlayerAlive(this.iClient))
 		{
-			g_flVampireHealthDrainBuffer[this.iClient] += GetGameFrameTime() * VAMPIRE_LOSS;
+			g_flVampireHealthDrainBuffer[this.iClient] += GetGameFrameTime() * float(this.iMaxHealth) * VAMPIRE_LOSS;
 			
 			if (g_flVampireHealthDrainBuffer[this.iClient] >= 1.0)
 			{
@@ -80,7 +81,7 @@ public Action Vampire_PlayerDeath(Event event, const char[] sName, bool bDontBro
 		if (Vampire_IsVampire(iClient) && IsPlayerAlive(iClient))
 		{
 			SaxtonHaleBase boss = SaxtonHaleBase(iClient);
-			boss.iHealth += VAMPIRE_GAIN;
+			boss.iHealth += RoundToNearest(float(boss.iMaxHealth) * VAMPIRE_GAIN);
 			
 			if (boss.iHealth > boss.iMaxHealth)
 				boss.iHealth = boss.iMaxHealth;
