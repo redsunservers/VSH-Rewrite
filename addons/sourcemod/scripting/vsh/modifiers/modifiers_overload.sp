@@ -2,8 +2,8 @@ methodmap CModifiersOverload < SaxtonHaleBase
 {
 	public CModifiersOverload(CModifiersOverload boss)
 	{
-		//Basically 175% required for super rage
-		boss.iMaxRageDamage = RoundToNearest(float(boss.iMaxRageDamage) * 1.75);
+		//Basically 165% required for super rage
+		boss.iMaxRageDamage = RoundToNearest(float(boss.iMaxRageDamage) * 1.65);
 		boss.flMaxRagePercentage = 1.0;	//Hard set 100% cap
 	}
 	
@@ -22,7 +22,7 @@ methodmap CModifiersOverload < SaxtonHaleBase
 		StrCat(sInfo, length, "\nColor: Orange");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\n- Normal Rage becomes Super Rage");
-		StrCat(sInfo, length, "\n- 75%% less rage gain");
+		StrCat(sInfo, length, "\n- 65%% less rage gain");
 		StrCat(sInfo, length, "\n- Rage percentage can't go above 100%%");
 	}
 	
