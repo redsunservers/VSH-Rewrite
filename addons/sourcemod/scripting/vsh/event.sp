@@ -1,3 +1,5 @@
+static bool g_bSpawnTeamSwitch;
+
 void Event_Init()
 {
 	HookEvent("teamplay_round_start", Event_RoundStart, EventHookMode_Pre);
@@ -20,14 +22,18 @@ void Event_Init()
 
 public Action Event_RoundStart(Event event, const char[] sName, bool bDontBroadcast)
 {
-	if (!g_bEnabled || GameRules_GetProp("m_bInWaitingForPlayers")) return;
-
+	g_bSpawnTeamSwitch = false;
+	
+	if (!g_bEnabled || GameRules_GetProp("m_bInWaitingForPlayers"))
+		return;
+	
 	// Start dome stuffs regardless if first round
 	Dome_RoundStart();
 
 	// Play one round of arena
-	if (g_iTotalRoundPlayed <= 0) return;
-
+	if (g_iTotalRoundPlayed <= 0)
+		return;
+	
 	// Arena has a very dumb logic, if all players from a team leave the round will end and then restart without reseting the game state...
 	// Catch that issue and don't run our logic!
 	int iRed = 0, iBlu = 0;
@@ -55,11 +61,13 @@ public Action Event_RoundStart(Event event, const char[] sName, bool bDontBroadc
 					TFTeam nTeam = TF2_GetClientTeam(iClient);
 					if (nTeam == TFTeam_Red)
 					{
+						g_bSpawnTeamSwitch = true;
 						TF2_ForceTeamJoin(iClient, TFTeam_Blue);
 						return;
 					}
 					else if (nTeam == TFTeam_Blue)
 					{
+						g_bSpawnTeamSwitch = true;
 						TF2_ForceTeamJoin(iClient, TFTeam_Red);
 						return;
 					}
@@ -69,7 +77,7 @@ public Action Event_RoundStart(Event event, const char[] sName, bool bDontBroadc
 		//If we reach that part, either nobody is in server or people in spectator
 		return;
 	}
-
+	
 	g_hTimerBossMusic = null;
 	g_bRoundStarted = false;
 
@@ -496,10 +504,13 @@ public Action Event_PlayerSpawn(Event event, const char[] sName, bool bDontBroad
 {
 	if (!g_bEnabled) return;
 	if (g_iTotalRoundPlayed <= 0) return;
-
+	
+	if (g_bSpawnTeamSwitch)
+		return;
+	
 	int iClient = GetClientOfUserId(event.GetInt("userid"));
-	int iTeam = GetClientTeam(iClient);
-	if (iTeam <= 1) return;
+	if (TF2_GetClientTeam(iClient) <= TFTeam_Spectator)
+		return;
 	
 	if (g_bRoundStarted && SaxtonHale_IsValidAttack(iClient))
 	{
