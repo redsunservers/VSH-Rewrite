@@ -24,7 +24,7 @@ methodmap CModifiersElectric < SaxtonHaleBase
 	public int GetRenderColor(int iColor[4])
 	{
 		iColor[0] = 255;
-		iColor[1] = 192;
+		iColor[1] = 255;
 		iColor[2] = 0;
 		iColor[3] = 255;
 	}

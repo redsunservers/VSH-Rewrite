@@ -142,7 +142,7 @@ void NextBoss_SetNextBoss()
 		
 		//Roll for multi boss
 		char sMultiBoss[MAX_TYPE_CHAR];
-		if (Preferences_Get(iMainBoss, Preferences_MultiBoss)
+		if (Preferences_Get(iMainBoss, VSHPreferences_MultiBoss)
 			&& GetRandomFloat(0.0, 1.0) <= g_ConfigConvar.LookupFloat("vsh_boss_chance_multi")
 			&& NextBoss_GetRandomMulti(sMultiBoss, sizeof(sMultiBoss)))
 		{
@@ -257,7 +257,7 @@ int NextBoss_GetNextClient(ArrayList aNonBosses, bool bMultiBoss = false)
 			//If client not in aNonBosses, client should already be boss, skip
 			iRank++;
 		}
-		else if (bMultiBoss && !Preferences_Get(iClient, Preferences_MultiBoss))
+		else if (bMultiBoss && !Preferences_Get(iClient, VSHPreferences_MultiBoss))
 		{
 			//We want to skip players not wanting to play as multi boss
 			iRank++;
@@ -288,10 +288,6 @@ void NextBoss_SetBoss(SaxtonHaleNextBoss nextBoss, ArrayList aNonBosses)
 	if (StrEmpty(sModifierType))
 		NextBoss_GetRandomModifiers(sModifierType, sizeof(sModifierType));
 	
-	// Allow them to join the boss team
-	Client_AddFlag(nextBoss.iClient, ClientFlags_BossTeam);
-	TF2_ForceTeamJoin(nextBoss.iClient, TFTeam_Boss);
-	
 	SaxtonHaleBase boss = SaxtonHaleBase(nextBoss.iClient);
 	if (boss.bValid)
 	{
@@ -316,7 +312,7 @@ void NextBoss_SetBoss(SaxtonHaleNextBoss nextBoss, ArrayList aNonBosses)
 	if (!StrEqual(sModifierType, "CModifiersNone") && !StrEmpty(sModifierType))
 		boss.CallFunction("CreateModifiers", sModifierType);
 	
-	TF2_RespawnPlayer(nextBoss.iClient);
+	TF2_ForceTeamJoin(nextBoss.iClient, TFTeam_Boss);
 	
 	//Display to client what boss you are for 10 seconds
 	MenuBoss_DisplayInfo(nextBoss.iClient, VSHClassType_Boss, sBossType, 10);
@@ -422,7 +418,7 @@ stock bool NextBoss_GetRandomMulti(char[] sBossMulti, int iLength)
 	//Count players with duo prefs
 	int iPlayersDuo = 0;
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
-		if (IsClientInGame(iClient) && TF2_GetClientTeam(iClient) > TFTeam_Spectator && Preferences_Get(iClient, Preferences_PickAsBoss) && Preferences_Get(iClient, Preferences_MultiBoss))
+		if (IsClientInGame(iClient) && TF2_GetClientTeam(iClient) > TFTeam_Spectator && Preferences_Get(iClient, VSHPreferences_PickAsBoss) && Preferences_Get(iClient, VSHPreferences_MultiBoss))
 			iPlayersDuo++;
 	
 	//Get list of all multi bosses

@@ -86,7 +86,7 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 
 	public int CalculateMaxHealth()
 	{
-		return RoundToNearest((this.iBaseHealth + this.iHealthPerPlayer * SaxtonHale_GetAliveAttackPlayers()) * this.flHealthMultiplier);
+		return RoundToNearest((this.iBaseHealth + this.iHealthPerPlayer * g_iTotalAttackCount) * this.flHealthMultiplier);
 	}
 	
 	public void GetBossName(char[] sName, int length)
@@ -137,9 +137,9 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 			flHUD[1] = 0.83;
 			
 			int iColor[4];
-			if (flRage >= 200.0)
+			if (flRage >= 200.0 || flRage >= this.flMaxRagePercentage * 100.0)
 			{
-				//200% rage, bright yellow
+				//200% rage or max, bright yellow
 				iColor[0] = 255;
 				iColor[1] = 255;
 				iColor[2] = 0;
@@ -248,11 +248,26 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 	public void OnRage()
 	{
 		this.flRageLastTime = GetGameTime();
-
-		int iNumRageRemove = RoundToFloor(float(this.iRageDamage)/float(this.iMaxRageDamage));
-		this.iRageDamage -= this.iMaxRageDamage * iNumRageRemove;
-		this.bSuperRage = (iNumRageRemove == 2);
-
+		this.bSuperRage = false;
+		
+		if (this.iRageDamage >= this.iMaxRageDamage * 2)
+		{
+			//Super rage by 200% or higher
+			this.bSuperRage = true;
+			this.iRageDamage -= this.iMaxRageDamage * 2;
+		}
+		else if (this.iRageDamage >= this.iMaxRageDamage * this.flMaxRagePercentage)
+		{
+			//Super rage by max rage percentage, but less than 200%
+			this.bSuperRage = true;
+			this.iRageDamage = 0;
+		}
+		else
+		{
+			//Normal rage
+			this.iRageDamage -= this.iMaxRageDamage;
+		}
+		
 		if (TF2_IsPlayerInCondition(this.iClient, TFCond_Dazed))
 			TF2_RemoveCondition(this.iClient, TFCond_Dazed); //Allow hale to escape permastun situations when using rage
 

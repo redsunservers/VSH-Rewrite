@@ -1,5 +1,6 @@
 static bool g_bRankEnabled = false;
 static bool g_bRankHealth = false;
+static int g_iRankClient = 0;
 static int g_iRank[TF_MAXPLAYERS+1];
 
 void Rank_Init()
@@ -13,12 +14,14 @@ void Rank_RoundStart()
 {
 	g_bRankEnabled = false;
 	g_bRankHealth = false;
+	g_iRankClient = 0;
 	
 	// Enable health if main boss, rank is loaded and pref enabled
 	int iClient = GetMainBoss();
-	if (0 < iClient <= MaxClients && Rank_GetCurrent(iClient) >= 0 && Preferences_Get(iClient, Preferences_Rank))
+	if (0 < iClient <= MaxClients && Rank_GetCurrent(iClient) >= 0 && Preferences_Get(iClient, VSHPreferences_Rank))
 	{
 		g_bRankHealth = true;
+		g_iRankClient = iClient;
 		
 		// Allow rank increase/decrease if not special round and enough players
 		if (!ClassLimit_IsSpecialRoundOn() && g_iTotalAttackCount >= Rank_GetPlayerRequirement(iClient))
@@ -38,23 +41,24 @@ void Rank_RoundStart()
 	}
 }
 
-public void Rank_DisplayNextClient(int iClient)
+public void Rank_DisplayClient(int iClient, bool bTag = false)
 {
 	char sFormat[512];
-	Format(sFormat, sizeof(sFormat), "%s================%s\nYou are about to be the next boss!\n", TEXT_DARK, TEXT_COLOR);
+	if (bTag)
+		Format(sFormat, sizeof(sFormat), "%s%s You are currently at rank %s%d%s", TEXT_TAG, TEXT_COLOR, TEXT_DARK, Rank_GetCurrent(iClient), TEXT_COLOR);
+	else
+		Format(sFormat, sizeof(sFormat), "%sYou are currently at rank %s%d%s", TEXT_COLOR, TEXT_DARK, Rank_GetCurrent(iClient), TEXT_COLOR);
 	
 	SaxtonHaleNextBoss nextBoss = SaxtonHaleNextBoss(iClient);
-	
 	if (nextBoss.bSpecialClassRound)
-		Format(sFormat, sizeof(sFormat), "%sYour round will be a special class round, your rank %s%d%s will not change.", sFormat, TEXT_DARK, Rank_GetCurrent(iClient), TEXT_COLOR);
-	else if (!Preferences_Get(iClient, Preferences_Rank))
-		Format(sFormat, sizeof(sFormat), "%sYour rank preference is disabled, your rank %s%d%s will not change.", sFormat, TEXT_DARK, Rank_GetCurrent(iClient), TEXT_COLOR);
+		Format(sFormat, sizeof(sFormat), "%s, your next round will be a special class round, so it will not change.", sFormat);
+	else if (!Preferences_Get(iClient, VSHPreferences_Rank))
+		Format(sFormat, sizeof(sFormat), "%s, your rank preference is disabled so it will not change.", sFormat);
 	else if (g_iTotalAttackCount < Rank_GetPlayerRequirement(iClient))
-		Format(sFormat, sizeof(sFormat), "%sYou need %s%d%s enemy players to have your rank %s%d%s changed.", sFormat, TEXT_DARK, Rank_GetPlayerRequirement(iClient), TEXT_COLOR, TEXT_DARK, Rank_GetCurrent(iClient), TEXT_COLOR);
+		Format(sFormat, sizeof(sFormat), "%s, you need %s%d%s enemy players to have your rank changed.", sFormat, TEXT_DARK, Rank_GetPlayerRequirement(iClient), TEXT_COLOR);
 	else
-		Format(sFormat, sizeof(sFormat), "%sYou are currently at rank %s%d%s.", sFormat, TEXT_DARK, Rank_GetCurrent(iClient), TEXT_COLOR);
+		Format(sFormat, sizeof(sFormat), "%s.", sFormat);
 	
-	Format(sFormat, sizeof(sFormat), "%s%s\n================", sFormat, TEXT_DARK);
 	PrintToChat(iClient, sFormat);
 }
 
@@ -96,6 +100,16 @@ void Rank_SetEnable(bool bValue)
 bool Rank_IsHealthEnabled()
 {
 	return g_bRankHealth;
+}
+
+int Rank_GetClient()
+{
+	return g_iRankClient;
+}
+
+void Rank_ClearClient()
+{
+	g_iRankClient = 0;
 }
 
 int Rank_GetPlayerRequirement(int iClient)

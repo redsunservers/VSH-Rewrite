@@ -57,7 +57,7 @@ static char g_strHaleKillEngineer[][] = {
 	"vsh_rewrite/saxton_hale/saxton_hale_132_kill_engie_1.mp3",
 	"vsh_rewrite/saxton_hale/saxton_hale_132_kill_engie_2.mp3",
 	"vsh_rewrite/saxton_hale/saxton_hale_responce_kill_eggineer1.mp3",
-	"vsh_rewrite/saxton_hale/saxton_hale_responce_kill_eggineer1.mp3"
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_kill_eggineer2.mp3"
 };
 
 static char g_strHaleKillMedic[][] = {

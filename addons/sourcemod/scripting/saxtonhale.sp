@@ -22,7 +22,7 @@
 
 #include "include/saxtonhale.inc"
 
-#define PLUGIN_VERSION 					"1.4.0"
+#define PLUGIN_VERSION 					"1.4.1"
 #define PLUGIN_VERSION_REVISION 		"manual"
 
 #if !defined SP_MAX_EXEC_PARAMS
@@ -81,18 +81,8 @@ const TFObjectMode TFObjectMode_Invalid = view_as<TFObjectMode>(-1);
 
 enum ClientFlags ( <<=1 )
 {
-	ClientFlags_BossTeam = 1,
-	ClientFlags_Admin,
+	ClientFlags_Admin = 1,
 	ClientFlags_Punishment,
-};
-
-enum Preferences ( <<=1 )
-{
-	Preferences_PickAsBoss = 1,
-	Preferences_Rank,
-	Preferences_MultiBoss,
-	Preferences_Music,
-	Preferences_Revival,
 };
 
 enum
@@ -364,6 +354,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/abilities/ability_rage_bomb_projectile.sp"
 #include "vsh/abilities/ability_rage_conditions.sp"
 #include "vsh/abilities/ability_rage_freeze.sp"
+#include "vsh/abilities/ability_rage_gas.sp"
 #include "vsh/abilities/ability_rage_ghost.sp"
 #include "vsh/abilities/ability_rage_hop.sp"
 #include "vsh/abilities/ability_rage_light.sp"
@@ -405,7 +396,9 @@ ConVar tf_arena_preround_time;
 #include "vsh/modifiers/modifiers_electric.sp"
 #include "vsh/modifiers/modifiers_hot.sp"
 #include "vsh/modifiers/modifiers_ice.sp"
-#include "vsh/modifiers/modifiers_jump.sp"
+#include "vsh/modifiers/modifiers_jumper.sp"
+#include "vsh/modifiers/modifiers_magnet.sp"
+#include "vsh/modifiers/modifiers_overload.sp"
 #include "vsh/modifiers/modifiers_speed.sp"
 #include "vsh/modifiers/modifiers_vampire.sp"
 
@@ -711,6 +704,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("CModelOverride", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CRageAddCond", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CRageFreeze", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CRageGas", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CRageGhost", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CRageHop", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CLightRage", VSHClassType_Ability);
@@ -727,7 +721,9 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("CModifiersElectric", VSHClassType_Modifier);
 	SaxtonHale_RegisterClass("CModifiersHot", VSHClassType_Modifier);
 	SaxtonHale_RegisterClass("CModifiersIce", VSHClassType_Modifier);
-	SaxtonHale_RegisterClass("CModifiersJump", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("CModifiersJumper", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("CModifiersMagnet", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("CModifiersOverload", VSHClassType_Modifier);
 	SaxtonHale_RegisterClass("CModifiersSpeed", VSHClassType_Modifier);
 	SaxtonHale_RegisterClass("CModifiersVampire", VSHClassType_Modifier);
 	
@@ -1084,40 +1080,6 @@ void Frame_InitVshPreRoundTimer(int iTime)
 	event.Fire();
 }
 
-void Frame_VerifyTeam(int userid)
-{
-	int iClient = GetClientOfUserId(userid);
-	if (iClient <= 0 || !IsClientInGame(iClient)) return;
-
-	TFTeam nTeam = TF2_GetClientTeam(iClient);
-	if (nTeam <= TFTeam_Spectator) return;
-
-	if (Client_HasFlag(iClient, ClientFlags_BossTeam))
-	{
-		if (nTeam == TFTeam_Attack)	//Check if player is in attack team, if so put it back to boss team
-		{
-			TF2_ChangeClientTeam(iClient, TFTeam_Boss);
-			TF2_RespawnPlayer(iClient);
-		}
-	}
-	else
-	{
-		if (nTeam == TFTeam_Boss)		//Check if attack players is in boss team, if so put it back to attack team
-		{
-			TF2_ChangeClientTeam(iClient, TFTeam_Attack);
-			TF2_RespawnPlayer(iClient);
-		}
-	}
-}
-
-void Frame_RespawnPlayer(int userid)
-{
-	int iClient = GetClientOfUserId(userid);
-	if (iClient <= 0 || !IsClientInGame(iClient) || GetClientTeam(iClient) <= 1) return;
-	
-	TF2_RespawnPlayer(iClient);
-}
-
 public void Frame_CallJarate(DataPack data)
 {
 	data.Reset();
@@ -1183,7 +1145,7 @@ public Action Timer_Music(Handle hTimer, SaxtonHaleBase boss)
 			//Stop current music before playing another one
 			StopSound(iClient, SNDCHAN_AUTO, g_sBossMusic);
 			
-			if (Preferences_Get(iClient, Preferences_Music))
+			if (Preferences_Get(iClient, VSHPreferences_Music))
 				EmitSoundToClient(iClient, g_sBossMusic);
 		}
 	}
@@ -1248,7 +1210,7 @@ public void OnClientDisconnect(int iClient)
 {
 	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 	
-	if (boss.bValid && !boss.bMinion && Rank_IsEnabled())
+	if (Rank_GetClient() == iClient && Rank_IsEnabled())
 	{
 		//Ur not going anywhere kiddo
 		int iRank = Rank_GetCurrent(iClient) - 1;
@@ -1257,6 +1219,8 @@ public void OnClientDisconnect(int iClient)
 			PrintToChatAll("%s %s%N%s's rank has %sdecreased%s to %s%d%s!", TEXT_TAG, TEXT_DARK, iClient, TEXT_COLOR, TEXT_NEGATIVE, TEXT_COLOR, TEXT_DARK, iRank, TEXT_COLOR);
 			Rank_SetCurrent(iClient, iRank, true);
 		}
+		
+		Rank_ClearClient();
 	}
 	
 	if (boss.bValid)

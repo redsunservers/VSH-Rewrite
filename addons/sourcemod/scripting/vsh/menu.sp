@@ -135,20 +135,18 @@ void Menu_DisplayPreferences(int iClient)
 	Menu hMenuPreferences = new Menu(Menu_SelectPreferences);
 	hMenuPreferences.SetTitle("Toggle Preferences");
 	
-	for (int iPreferences = 0; iPreferences < sizeof(g_strPreferencesName); iPreferences++)
+	for (SaxtonHalePreferences nPreferences; nPreferences < view_as<SaxtonHalePreferences>(sizeof(g_strPreferencesName)); nPreferences++)
 	{
-		if (StrEmpty(g_strPreferencesName[iPreferences]))
+		if (StrEmpty(g_strPreferencesName[nPreferences]))
 			continue;
 		
-		Preferences preferences = view_as<Preferences>(RoundToNearest(Pow(2.0, float(iPreferences))));
-		
 		char buffer[512];
-		if (Preferences_Get(iClient, preferences))
-			Format(buffer, sizeof(buffer), "%s (Enable)", g_strPreferencesName[iPreferences]);
+		if (Preferences_Get(iClient, nPreferences))
+			Format(buffer, sizeof(buffer), "%s (Enable)", g_strPreferencesName[nPreferences]);
 		else
-			Format(buffer, sizeof(buffer), "%s (Disable)", g_strPreferencesName[iPreferences]);
+			Format(buffer, sizeof(buffer), "%s (Disable)", g_strPreferencesName[nPreferences]);
 		
-		hMenuPreferences.AddItem(g_strPreferencesName[iPreferences], buffer);
+		hMenuPreferences.AddItem(g_strPreferencesName[nPreferences], buffer);
 	}
 	
 	hMenuPreferences.AddItem("back", "<- Back");
@@ -169,11 +167,11 @@ public int Menu_SelectPreferences(Menu hMenu, MenuAction action, int iClient, in
 	hMenu.GetItem(iSelect, sSelect, sizeof(sSelect));
 	
 	//Find preferences thats selected
-	for (int iPreferences = 0; iPreferences < sizeof(g_strPreferencesName); iPreferences++)
+	for (SaxtonHalePreferences nPreferences; nPreferences < view_as<SaxtonHalePreferences>(sizeof(g_strPreferencesName)); nPreferences++)
 	{
-		if (StrEqual(sSelect, g_strPreferencesName[iPreferences]))
+		if (StrEqual(sSelect, g_strPreferencesName[nPreferences]))
 		{
-			ClientCommand(iClient, "vsh_preferences %s", g_strPreferencesName[iPreferences]);
+			ClientCommand(iClient, "vsh_preferences %s", g_strPreferencesName[nPreferences]);
 			return;
 		}
 	}

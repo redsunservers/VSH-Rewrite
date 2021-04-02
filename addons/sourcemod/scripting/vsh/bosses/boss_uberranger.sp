@@ -437,14 +437,10 @@ public int UberRanger_SpawnBestPlayer(ArrayList aClients)
 		SaxtonHaleBase boss = SaxtonHaleBase(iBestClientIndex);
 		if (boss.bValid)
 			boss.CallFunction("Destroy");
-
-		//Allow them to join the boss team
-		Client_AddFlag(iBestClientIndex, ClientFlags_BossTeam);
-		TF2_ForceTeamJoin(iBestClientIndex, TFTeam_Boss);
-
+		
 		boss.CallFunction("CreateBoss", "CMinionRanger");
-		TF2_RespawnPlayer(iBestClientIndex);
-
+		TF2_ForceTeamJoin(iBestClientIndex, TFTeam_Boss);
+		
 		//Duration of this condition will reset when they move
 		TF2_AddCondition(iBestClientIndex, TFCond_UberchargedCanteen, 7.0);
 	}

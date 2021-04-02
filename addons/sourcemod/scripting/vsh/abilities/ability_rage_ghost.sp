@@ -6,14 +6,14 @@
 static float g_flGhostRadius[TF_MAXPLAYERS+1];
 static float g_flGhostDuration[TF_MAXPLAYERS+1];
 static float g_flGhostHealSteal[TF_MAXPLAYERS+1];
-static float g_flGhostHealGain[TF_MAXPLAYERS+1];
+static float g_flGhostHealGainMultiplier[TF_MAXPLAYERS+1];
 static float g_flGhostBuildingDrain[TF_MAXPLAYERS+1];
 static float g_flGhostPullStrength[TF_MAXPLAYERS+1];
 
 static float g_flGhostHealStartTime[TF_MAXPLAYERS+1][2048];
 static int g_iGhostHealStealCount[TF_MAXPLAYERS+1][2048];
-static int g_iGhostHealGainCount[TF_MAXPLAYERS+1][TF_MAXPLAYERS+1];
 
+static float g_flGhostHealGainBuffer[TF_MAXPLAYERS+1];
 static float g_flGhostLastSpookTime[TF_MAXPLAYERS+1];
 
 static bool g_bGhostEnable[TF_MAXPLAYERS+1];
@@ -59,15 +59,15 @@ methodmap CRageGhost < SaxtonHaleBase
 		}
 	}
 	
-	property float flHealGain
+	property float flHealGainMultiplier
 	{
 		public get()
 		{
-			return g_flGhostHealGain[this.iClient];
+			return g_flGhostHealGainMultiplier[this.iClient];
 		}
 		public set(float val)
 		{
-			g_flGhostHealGain[this.iClient] = val;
+			g_flGhostHealGainMultiplier[this.iClient] = val;
 		}
 	}
 	
@@ -108,7 +108,7 @@ methodmap CRageGhost < SaxtonHaleBase
 		ability.flRadius = 400.0;
 		ability.flDuration = 8.0;
 		ability.flHealSteal = 25.0;	//Steals hp per second
-		ability.flHealGain = 50.0;	//Gains hp per second
+		ability.flHealGainMultiplier = 2.0;	//Gains hp multiplied by amount of health stolen
 		ability.flBuildingDrain = 3.0;	//Building health drain multiplier based on flHealSteal, 0.0 or lower disables it
 		ability.flPullStrength = 10.0;	//Scale of pull strength, negative values push enemies away instead. Note that making it too weak will only pull players if they're airborne
 		
@@ -124,6 +124,8 @@ methodmap CRageGhost < SaxtonHaleBase
 		int iClient = this.iClient;
 		
 		g_bGhostEnable[iClient] = true;
+		g_flGhostHealGainBuffer[iClient] = 0.0;
+		
 		SetEntProp(iClient, Prop_Data, "m_takedamage", DAMAGE_NO);
 		
 		//Disable prop override if have one
@@ -237,20 +239,30 @@ methodmap CRageGhost < SaxtonHaleBase
 						//Calculate on heal steal
 						float flTimeGap = GetGameTime() - g_flGhostHealStartTime[iClient][iVictim];
 						
-						int iExpectedSteal = RoundToCeil(flTimeGap * flHealSteal);
-						if (iExpectedSteal > g_iGhostHealStealCount[iClient][iVictim])
+						float flExpectedSteal = flTimeGap * flHealSteal;
+						if (flExpectedSteal > g_iGhostHealStealCount[iClient][iVictim] + 1.0)
 						{
-							float flDamage = float(iExpectedSteal - g_iGhostHealStealCount[iClient][iVictim]);
+							float flDamage = flExpectedSteal - float(g_iGhostHealStealCount[iClient][iVictim]);
+							
+							int iHealth = GetEntProp(iVictim, Prop_Send, "m_iHealth");
 							SDKHooks_TakeDamage(iVictim, iClient, iClient, flDamage, DMG_PREVENT_PHYSICS_FORCE);
-							g_iGhostHealStealCount[iClient][iVictim] = iExpectedSteal;
-						}
-						
-						float flHealGain = (this.bSuperRage) ? this.flHealGain * 2 : this.flHealGain; //Health gain is only applied from other players, so it's down here rather than with the other super rage checks
-						int iExpectedGain = RoundToCeil(flTimeGap * flHealGain);
-						if (iExpectedGain > g_iGhostHealGainCount[iClient][iVictim])
-						{
-							Client_AddHealth(iClient, iExpectedGain - g_iGhostHealGainCount[iClient][iVictim]);
-							g_iGhostHealGainCount[iClient][iVictim] = iExpectedGain;
+							int iHealthLost = iHealth - GetEntProp(iVictim, Prop_Send, "m_iHealth");
+							
+							if (iHealthLost > 0)	//Health is lost
+							{
+								g_iGhostHealStealCount[iClient][iVictim] += iHealthLost;
+								g_flGhostHealGainBuffer[iClient] += float(iHealthLost) * this.flHealGainMultiplier;
+								int iExpectedGain = RoundToFloor(g_flGhostHealGainBuffer[iClient]);
+								if (iExpectedGain > 0)
+								{
+									Client_AddHealth(iClient, iExpectedGain);
+									g_flGhostHealGainBuffer[iClient] -= iExpectedGain;
+								}
+							}
+							else if (flDamage > 3.0)	//Player is prob ubered etc, just update steal count without giving boss health
+							{
+								g_iGhostHealStealCount[iClient][iVictim]++;
+							}
 						}
 					}
 				}
@@ -260,7 +272,6 @@ methodmap CRageGhost < SaxtonHaleBase
 				{
 					g_flGhostHealStartTime[iClient][iVictim] = 0.0;
 					g_iGhostHealStealCount[iClient][iVictim] = 0;
-					g_iGhostHealGainCount[iClient][iVictim] = 0;
 					Timer_EntityCleanup(null, g_iGhostParticleBeam[iClient][iVictim]);
 				}
 			}
@@ -405,9 +416,6 @@ methodmap CRageGhost < SaxtonHaleBase
 			{	
 				if (g_flGhostHealStartTime[iClient][iEntity] > 0.0)
 				{
-					if (iEntity <= MaxClients)
-						g_iGhostHealGainCount[iClient][iEntity] = 0;
-
 					g_iGhostHealStealCount[iClient][iEntity] = 0;
 					g_flGhostHealStartTime[iClient][iEntity] = 0.0;
 					Timer_EntityCleanup(null, g_iGhostParticleBeam[iClient][iEntity]);

@@ -33,7 +33,7 @@ bool Queue_IsClientAllowed(int iClient)
 		&& GetClientTeam(iClient) > 1			//Is client not in spectator
 		&& Queue_PlayerGetPoints(iClient) != -1	//Does client have his queue point loaded
 		&& !Client_HasFlag(iClient, ClientFlags_Punishment)	//Is client not in punishment
-		&& Preferences_Get(iClient, Preferences_PickAsBoss)	//Is client not in boss disable preferences
+		&& Preferences_Get(iClient, VSHPreferences_PickAsBoss)	//Is client not in boss disable preferences
 		&& (IsFakeClient(iClient) || (GetClientAvgLatency(iClient, NetFlow_Outgoing) * 1024.0) < g_ConfigConvar.LookupFloat("vsh_boss_ping_limit")))	//Is client under the ping limit
 	{
 		return true;
@@ -51,7 +51,7 @@ void Queue_AddPlayerPoints(int iClient, int iPoints)
 		PrintToChat(iClient, "%s%s Your queue points seems to be not loaded...", TEXT_TAG, TEXT_ERROR);
 		return;
 	}
-	else if (!Preferences_Get(iClient, Preferences_PickAsBoss))
+	else if (!Preferences_Get(iClient, VSHPreferences_PickAsBoss))
 	{
 		PrintToChat(iClient, "%s%s You have not been awarded any queue points based on your boss preferences.", TEXT_TAG, TEXT_COLOR);
 		return;

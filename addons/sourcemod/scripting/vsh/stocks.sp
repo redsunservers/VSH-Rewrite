@@ -82,7 +82,7 @@ stock ArrayList GetValidSummonableClients(bool bAllowBoss = false)
 		if (IsClientInGame(iClient)
 			&& TF2_GetClientTeam(iClient) > TFTeam_Spectator
 			&& !IsPlayerAlive(iClient)
-			&& Preferences_Get(iClient, Preferences_Revival)
+			&& Preferences_Get(iClient, VSHPreferences_Revival)
 			&& !Client_HasFlag(iClient, ClientFlags_Punishment))
 		{
 			if (!bAllowBoss)
@@ -238,7 +238,7 @@ stock int TF2_GetSlotFromWeapon(int iWeapon)
 
 stock int TF2_GetItemSlot(int iIndex, TFClassType nClass)
 {
-	int iSlot = TF2Econ_GetItemSlot(iIndex, nClass);
+	int iSlot = TF2Econ_GetItemLoadoutSlot(iIndex, nClass);
 	if (iSlot >= 0)
 	{
 		// Econ reports wrong slots for Engineer and Spy
@@ -851,6 +851,12 @@ stock void StrToLower(char[] sBuffer)
 	int iLength = strlen(sBuffer);
 	for (int i = 0; i < iLength; i++)
 		sBuffer[i] = CharToLower(sBuffer[i]);
+}
+
+stock void ColorToTextStr(const int iColor[4], char[] sBuffer, int iLength)
+{
+	//ignoring alpha
+	Format(sBuffer, iLength, "\x07%02X%02X%02X", iColor[0], iColor[1], iColor[2]);
 }
 
 stock void PrepareSound(const char[] sSoundPath)

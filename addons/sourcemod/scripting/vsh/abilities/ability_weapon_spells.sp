@@ -114,7 +114,12 @@ methodmap CWeaponSpells < SaxtonHaleBase
 		
 		char sMessage[128];
 		
-		if (flRagePercentage < this.flRageRequirement)
+		if (g_flSpellsLastUsed[this.iClient] > GetGameTime()-this.flCooldown)
+		{
+			int iSec = RoundToNearest(this.flCooldown - (GetGameTime() - g_flSpellsLastUsed[this.iClient]));
+			Format(sMessage, sizeof(sMessage), "Spell cooldown %i second%s remaining!", iSec, (iSec > 1) ? "s" : "");
+		}
+		else if (flRagePercentage < this.flRageRequirement)
 		{
 			Format(sMessage, sizeof(sMessage), "Not enough rage for spells!");
 		}

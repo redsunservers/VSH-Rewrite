@@ -208,7 +208,7 @@ stock void ClassLimit_SetSpecialRound(TFClassType nClass)
 		if (iOldClass != iNewClass)
 		{
 			TF2_SetPlayerClass(iClient, iNewClass);
-			Frame_RespawnPlayer(GetClientUserId(iClient));
+			TF2_RespawnPlayer(iClient);
 		}
 	}
 }

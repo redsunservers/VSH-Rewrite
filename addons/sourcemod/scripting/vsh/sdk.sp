@@ -328,7 +328,10 @@ public MRESReturn Hook_AllowedToHealTarget(int iMedigun, Handle hReturn, Handle 
 			
 			//Override heal result
 			int iResult;
-			if (StrContains(sClassname, "obj_") == 0 && GetEntProp(iHealTarget, Prop_Send, "m_iTeamNum") == GetClientTeam(iClient) && tParams.GetIntEx("healbuilding", iResult))
+			if (StrContains(sClassname, "obj_") == 0
+				&& GetEntProp(iHealTarget, Prop_Send, "m_iTeamNum") == GetClientTeam(iClient)
+				&& !GetEntProp(iHealTarget, Prop_Send, "m_bCarried")
+				&& tParams.GetIntEx("healbuilding", iResult))
 			{
 				bool bResult = !!iResult;
 				DHookSetReturn(hReturn, bResult);

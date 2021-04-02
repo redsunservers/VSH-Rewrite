@@ -88,20 +88,21 @@ public Action Console_JoinTeamCommand(int iClient, const char[] sCommand, int iA
 	bool bBoss = false;
 	for (int iBoss = 1; iBoss <= MaxClients; iBoss++)
 	{
-		if (SaxtonHale_IsValidBoss(iClient))
+		if (SaxtonHale_IsValidBoss(iBoss))
 		{
 			bBoss = true;
 			break;
 		}
 	}
 	
-	if (!bBoss) return Plugin_Continue;
+	if (!bBoss)
+		return Plugin_Continue;
 
-	if (Client_HasFlag(iClient, ClientFlags_BossTeam))
-		TF2_ChangeClientTeam(iClient, TFTeam_Boss);
-	else
-		TF2_ChangeClientTeam(iClient, TFTeam_Attack);
-
+	if (SaxtonHaleBase(iClient).bValid)
+		return Plugin_Handled;
+	
+	TF2_ChangeClientTeam(iClient, TFTeam_Attack);
+	
 	TFTeam nTeam = TF2_GetClientTeam(iClient);
 	ShowVGUIPanel(iClient, nTeam == TFTeam_Blue ? "class_blue" : "class_red");
 
