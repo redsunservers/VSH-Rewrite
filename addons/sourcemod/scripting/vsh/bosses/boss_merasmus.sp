@@ -125,7 +125,7 @@ methodmap CMerasmus < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- rocket jump spell");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- scares nearby players");
+		StrCat(sInfo, length, "\n- scares nearby players gives uber and crits");
 		StrCat(sInfo, length, "\n- 200%% Rage: extended radius and 7.5 scare time");
 	}
 	
