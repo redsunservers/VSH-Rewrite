@@ -98,7 +98,8 @@ methodmap CMerasmus < SaxtonHaleBase
 		CRageAddCond rageCond = boss.CallFunction("CreateAbility", "CRageAddCond");
 		rageCond.flRageCondDuration = 8.0;
 		rageCond.flRageCondSuperRageMultiplier = 1.0;
-		rageCond.AddCond(TFCond_UberchargedCanteen);
+		rageCond.AddCond(TFCond_UberchargedCanteen);	//Ubered while raged
+		rageCond.AddCond(TFCond_CritCanteen);	// Crits while raged
 		
 		boss.iBaseHealth = 800;
 		boss.iHealthPerPlayer = 800;
@@ -131,7 +132,7 @@ methodmap CMerasmus < SaxtonHaleBase
 	public void OnSpawn()
 	{
 		char attribs[128];
-		Format(attribs, sizeof(attribs), "2 ; 2.40 ; 252 ; 0.5 ; 259 ; 1.0");
+		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 610 ; 2.0");
 		int iWeapon = this.CallFunction("CreateWeapon", 3, "tf_weapon_club", 666, TFQual_Haunted, attribs);
 		if (iWeapon > MaxClients)
 		{
@@ -153,6 +154,7 @@ methodmap CMerasmus < SaxtonHaleBase
 		2: damage bonus
 		252: reduction in push force taken from damage
 		259: Deals 3x falling damage to the player you land on
+		610: increased air control
 		214: kill_eater
 		*/
 	}
