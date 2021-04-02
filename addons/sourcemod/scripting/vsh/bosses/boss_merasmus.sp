@@ -273,10 +273,10 @@ methodmap CMerasmus < SaxtonHaleBase
 		AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_staff.dx80.vtx");
 		AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_staff.dx90.vtx");
 		
-		AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_arms.sw.mdl");
-		AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_arms.sw.sw.vtx");
-		AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_arms.sw.vvd");
-		AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_arms.sw.dx80.vtx");
-		AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_arms.sw.dx90.vtx");
+		AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_arms.mdl");
+		AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_arms.sw.vtx");
+		AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_arms.vvd");
+		AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_arms.dx80.vtx");
+		AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_arms.dx90.vtx");
 	}
 };
