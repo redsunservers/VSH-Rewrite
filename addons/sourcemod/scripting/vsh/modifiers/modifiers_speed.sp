@@ -2,6 +2,7 @@ methodmap CModifiersSpeed < SaxtonHaleBase
 {
 	public CModifiersSpeed(CModifiersSpeed boss)
 	{
+		boss.flSpeed *= 1.08;
 		boss.flSpeedMult *= 3.0;
 		boss.iMaxRageDamage = RoundToNearest(float(boss.iMaxRageDamage) * 1.35);
 	}
@@ -15,7 +16,7 @@ methodmap CModifiersSpeed < SaxtonHaleBase
 	{
 		StrCat(sInfo, length, "\nColor: Green");
 		StrCat(sInfo, length, "\n ");
-		StrCat(sInfo, length, "\n- Much faster movement speed as the boss loses health");
+		StrCat(sInfo, length, "\n- Faster movement speed");
 		StrCat(sInfo, length, "\n- 35%% less rage gain");
 	}
 	
