@@ -1542,19 +1542,23 @@ public Action TF2_CalcIsAttackCritical(int iClient, int iWeapon, char[] sWepClas
 		int iIndex = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
 		int iSlot = TF2_GetItemSlot(iIndex, TF2_GetPlayerClass(iClient));
 		
-		TagsParams tParams = new TagsParams();
-		TagsCore_CallSlot(iClient, TagsCall_Attack, iSlot, tParams);
-		
-		//Override crit result
-		int iResult;
-		if (tParams.GetIntEx("attackcrit", iResult))
+		if (WeaponSlot_Primary <= iSlot <= WeaponSlot_BuilderEngie)
 		{
-			bResult = !!iResult;
+			TagsParams tParams = new TagsParams();
+			TagsCore_CallSlot(iClient, TagsCall_Attack, iSlot, tParams);
+			
+			//Override crit result
+			int iResult;
+			if (tParams.GetIntEx("attackcrit", iResult))
+			{
+				bResult = !!iResult;
+				delete tParams;
+				return Plugin_Changed;
+			}
+			
 			delete tParams;
-			return Plugin_Changed;
 		}
 		
-		delete tParams;
 		return Plugin_Continue;
 	}
 }
