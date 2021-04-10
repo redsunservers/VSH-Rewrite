@@ -4,7 +4,7 @@ methodmap CModifiersSpeed < SaxtonHaleBase
 	{
 		boss.flSpeed *= 1.08;
 		boss.flSpeedMult *= 3.0;
-		boss.iMaxRageDamage = RoundToNearest(float(boss.iMaxRageDamage) * 1.35);
+		boss.iMaxRageDamage = RoundToNearest(float(boss.iMaxRageDamage) * 1.2);
 	}
 	
 	public void GetModifiersName(char[] sName, int length)
@@ -17,7 +17,7 @@ methodmap CModifiersSpeed < SaxtonHaleBase
 		StrCat(sInfo, length, "\nColor: Green");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\n- Faster movement speed");
-		StrCat(sInfo, length, "\n- 35%% less rage gain");
+		StrCat(sInfo, length, "\n- 20%% less rage gain");
 	}
 	
 	public int GetRenderColor(int iColor[4])
