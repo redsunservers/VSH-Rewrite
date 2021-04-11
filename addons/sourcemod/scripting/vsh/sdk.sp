@@ -14,7 +14,7 @@ static Handle g_hSDKGetEquippedWearable;
 static Handle g_hSDKEquipWearable;
 static Handle g_hSDKAddObject;
 static Handle g_hSDKRemoveObject;
-	
+
 int g_iOffsetFuseTime = -1;
 
 static int g_iHookIdGiveNamedItem[TF_MAXPLAYERS+1];
