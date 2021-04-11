@@ -1,5 +1,5 @@
 //Models made by bentorianbezil
-#define MERASMUS_MODEL "models/player/vsh_rewrite/merasmus/merasmus.mdl"
+#define MERASMUS_MODEL "models/player/vsh_rewrite/merasmus/merasmus_v2.mdl"
 #define MERASMUS_MODEL_WAND "models/player/vsh_rewrite/merasmus/c_merasmus_staff.mdl"
 #define MERASMUS_MODEL_ARMS "models/player/vsh_rewrite/merasmus/c_merasmus_arms.mdl"
 
@@ -89,7 +89,9 @@ methodmap CMerasmus < SaxtonHaleBase
 {
 	public CMerasmus(CMerasmus boss)
 	{
+		boss.CallFunction("CreateAbility", "CTeleportView");
 		boss.CallFunction("CreateAbility", "CBombProjectile");
+		
 		CWeaponSpells weaponSpells = boss.CallFunction("CreateAbility", "CWeaponSpells");
 		weaponSpells.AddSpells(haleSpells_Jump);
 		weaponSpells.flRageRequirement = 0.0;

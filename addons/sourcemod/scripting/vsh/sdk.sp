@@ -7,13 +7,14 @@ static Handle g_hHookShouldBallTouch;
 static Handle g_hSDKGetMaxHealth;
 static Handle g_hSDKGetMaxAmmo;
 static Handle g_hSDKSendWeaponAnim;
+static Handle g_hSDKPlaySpecificSequence;
 static Handle g_hSDKGetMaxClip;
 static Handle g_hSDKRemoveWearable;
 static Handle g_hSDKGetEquippedWearable;
 static Handle g_hSDKEquipWearable;
 static Handle g_hSDKAddObject;
 static Handle g_hSDKRemoveObject;
-
+	
 int g_iOffsetFuseTime = -1;
 
 static int g_iHookIdGiveNamedItem[TF_MAXPLAYERS+1];
@@ -101,7 +102,15 @@ void SDK_Init()
 	g_hSDKSendWeaponAnim = EndPrepSDKCall();
 	if (g_hSDKSendWeaponAnim == null)
 		LogMessage("Failed to create call: CTFWeaponBase::SendWeaponAnim!");
-
+	
+	StartPrepSDKCall(SDKCall_Player);
+	PrepSDKCall_SetFromConf(hGameData, SDKConf_Signature, "CTFPlayer::PlaySpecificSequence");
+	PrepSDKCall_AddParameter(SDKType_String, SDKPass_Pointer);
+	PrepSDKCall_SetReturnInfo(SDKType_Bool, SDKPass_Plain);
+	g_hSDKPlaySpecificSequence = EndPrepSDKCall();
+	if (g_hSDKPlaySpecificSequence == null)
+		LogMessage("Failed to create call: CTFPlayer::PlaySpecificSequence!");
+	
 	// This call gets the maximum clip 1 for a given weapon
 	StartPrepSDKCall(SDKCall_Entity);
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "CTFWeaponBase::GetMaxClip1");
@@ -375,6 +384,11 @@ void SDK_SendWeaponAnim(int weapon, int anim)
 {
 	if (g_hSDKSendWeaponAnim != null)
 		SDKCall(g_hSDKSendWeaponAnim, weapon, anim);
+}
+
+bool SDKCall_PlaySpecificSequence(int iClient, const char[] sAnimationName)
+{
+	return SDKCall(g_hSDKPlaySpecificSequence, iClient, sAnimationName);
 }
 
 int SDK_GetMaxClip(int iWeapon)
