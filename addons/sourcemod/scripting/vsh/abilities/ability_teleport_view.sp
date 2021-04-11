@@ -43,8 +43,8 @@ methodmap CTeleportView < SaxtonHaleBase
 	public CTeleportView(CTeleportView ability)
 	{
 		//Default values, these can be changed if needed
-		ability.flCharge = 2.5;
-		ability.flCooldown = 3.0;
+		ability.flCharge = 2.0;
+		ability.flCooldown = 30.0;
 		
 		g_flTeleportViewStartCharge[ability.iClient] = 0.0;
 		g_flTeleportViewCooldownWait[ability.iClient] = GetGameTime() + ability.flCooldown;
