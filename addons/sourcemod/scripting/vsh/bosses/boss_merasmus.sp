@@ -124,11 +124,13 @@ methodmap CMerasmus < SaxtonHaleBase
 		StrCat(sInfo, length, "\nHealth: Medium");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nAbilities");
-		StrCat(sInfo, length, "\n- rocket jump spell");
+		StrCat(sInfo, length, "\n- Rocket Jump spell");
+		StrCat(sInfo, length, "\n- Teleport-View");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- scares nearby players gives uber and crits");
-		StrCat(sInfo, length, "\n- 200%% Rage: extended radius and 7.5 scare time");
+		StrCat(sInfo, length, "\n- Bomb projectiles at random directions from boss");
+		StrCat(sInfo, length, "\n- Self-Über and Crits for 8 seconds");
+		StrCat(sInfo, length, "\n- 200%% Rage: Doubled bomb projectiles spawn rate");
 	}
 	
 	public void OnSpawn()
