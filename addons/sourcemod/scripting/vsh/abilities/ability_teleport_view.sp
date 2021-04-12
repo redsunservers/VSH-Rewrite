@@ -209,10 +209,6 @@ methodmap CTeleportView < SaxtonHaleBase
 void TeleportView_ShowPos(int iClient, const float vecPos[3])
 {
 	//Show where boss will be teleported
-	int iColor[4];
-	iColor[1] = 255;
-	iColor[3] = 255;
-	
 	float vecStart[3], vecEnd[3], vecMins[3], vecMaxs[3];
 	GetClientAbsOrigin(iClient, vecStart);
 	GetClientMins(iClient, vecMins);
@@ -224,10 +220,10 @@ void TeleportView_ShowPos(int iClient, const float vecPos[3])
 	float flDiameter = vecMaxs[0] - vecMins[0];
 	
 	//Line effect
-	TE_SetupBeamPoints(vecStart, vecEnd, g_iSpritesLaserbeam, g_iSpritesGlow, 0, 10, 0.1, 3.0, 3.0, 10, 0.0, iColor, 10);
+	TE_SetupBeamPoints(vecStart, vecEnd, g_iSpritesLaserbeam, g_iSpritesGlow, 0, 10, 0.1, 3.0, 3.0, 10, 0.0, {0, 255, 0, 255}, 10);
 	TE_SendToClient(iClient);
 	
 	//Ring effect
-	TE_SetupBeamRingPoint(vecEnd, flDiameter, flDiameter + 1.0, g_iSpritesLaserbeam, g_iSpritesGlow, 0, 10, 0.1, 3.0, 0.0, iColor, 10, 0);
+	TE_SetupBeamRingPoint(vecEnd, flDiameter, flDiameter + 1.0, g_iSpritesLaserbeam, g_iSpritesGlow, 0, 10, 0.1, 3.0, 0.0, {0, 255, 0, 255}, 10, 0);
 	TE_SendToClient(iClient);
 }
