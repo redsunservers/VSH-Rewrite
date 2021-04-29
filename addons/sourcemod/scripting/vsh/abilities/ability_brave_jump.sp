@@ -175,7 +175,7 @@ methodmap CBraveJump < SaxtonHaleBase
 				TeleportEntity(this.iClient, NULL_VECTOR, NULL_VECTOR, vecVel);
 				
 				float flCooldownTime = (this.flCooldown*(float(this.iJumpCharge)/float(this.iMaxJumpCharge)));
-				if (flCooldownTime < 2.5) flCooldownTime = 2.5;
+				if (flCooldownTime < 7.0) flCooldownTime = 7.0;
 				g_flJumpCooldownWait[this.iClient] = GetGameTime()+flCooldownTime;
 				
 				this.iJumpCharge = 0;
