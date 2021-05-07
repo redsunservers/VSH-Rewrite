@@ -91,7 +91,7 @@ methodmap CGentleSpy < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- Super fast speed and high jump during cloak");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- Adds cloak meter to 50%%");
+		StrCat(sInfo, length, "\n- Adds 50%% to cloak meter");
 		StrCat(sInfo, length, "\n- Ambassador with high damage and penetrates");
 		StrCat(sInfo, length, "\n- 200%% Rage: Sets cloak meter to 100%%");
 	}

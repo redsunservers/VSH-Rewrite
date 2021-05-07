@@ -130,7 +130,7 @@ methodmap CMerasmus < SaxtonHaleBase
 		StrCat(sInfo, length, "\nRage");
 		StrCat(sInfo, length, "\n- Bomb projectiles at random directions from boss");
 		StrCat(sInfo, length, "\n- Self-Über and Crits for 8 seconds");
-		StrCat(sInfo, length, "\n- 200%% Rage: Doubled bomb projectiles spawn rate");
+		StrCat(sInfo, length, "\n- 200%% Rage: Doubled bomb projectile spawn rate");
 	}
 	
 	public void OnSpawn()

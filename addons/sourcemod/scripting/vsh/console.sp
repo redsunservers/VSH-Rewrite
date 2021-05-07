@@ -74,9 +74,9 @@ public Action Console_JoinTeamCommand(int iClient, const char[] sCommand, int iA
 		if (boss.bValid && IsPlayerAlive(iClient) && (g_bRoundStarted || GameRules_GetRoundState() == RoundState_Preround))
 		{
 			if (!boss.bMinion)
-				PrintToChat(iClient, "%s%s Do not suicide and waste round as Boss. Use !vshbosstoggle instead.", TEXT_TAG, TEXT_ERROR);
+				PrintToChat(iClient, "%s%s Please do not suicide and waste the round as Boss. Use !vshbosstoggle instead.", TEXT_TAG, TEXT_ERROR);
 			else
-				PrintToChat(iClient, "%s%s Do not suicide and play abnormally as Minion. Use !vshrevival instead if possible.", TEXT_TAG, TEXT_ERROR);
+				PrintToChat(iClient, "%s%s Please do not suicide and play abnormally as a Minion. Use !vshrevival instead if possible.", TEXT_TAG, TEXT_ERROR);
 			
 			return Plugin_Handled;
 		}

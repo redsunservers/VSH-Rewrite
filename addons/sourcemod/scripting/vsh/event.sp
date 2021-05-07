@@ -260,7 +260,7 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 		
 		//Get Boss name and health
 		boss.CallFunction("GetBossName", sBuffer, sizeof(sBuffer));
-		Format(sMessage, sizeof(sMessage), "%s %s with %d health!", sMessage, sBuffer, boss.iMaxHealth);
+		Format(sMessage, sizeof(sMessage), "%s %s with %d HP!", sMessage, sBuffer, boss.iMaxHealth);
 	
 		//Get rank
 		if (Rank_IsHealthEnabled() && Rank_GetCurrent(iClient) > 0)
@@ -456,9 +456,9 @@ public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcas
 			
 			//Format with health
 			if (IsPlayerAlive(iClient))
-				Format(sMessage, sizeof(sMessage), "%s %s had %d of %d health left", sMessage, sBuffer, boss.iHealth, boss.iMaxHealth);
+				Format(sMessage, sizeof(sMessage), "%s %s had %d of %d HP left", sMessage, sBuffer, boss.iHealth, boss.iMaxHealth);
 			else
-				Format(sMessage, sizeof(sMessage), "%s %s died with %d max health", sMessage, sBuffer, boss.iMaxHealth);
+				Format(sMessage, sizeof(sMessage), "%s %s died with %d max HP", sMessage, sBuffer, boss.iMaxHealth);
 		}
 	}
 

@@ -74,11 +74,11 @@ methodmap CRedmond < SaxtonHaleBase
 		StrCat(sInfo, length, "\nHealth: Low");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nAbilities");
-		StrCat(sInfo, length, "\n- Alt-attack to use Teleport spell for 5 seconds cooldown");
+		StrCat(sInfo, length, "\n- Alt-attack to use Teleport spell (5 second cooldown)");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- Summons a MONOCULUS! spell");
-		StrCat(sInfo, length, "\n- 200%% Rage: Summons 3 MONOCULUS! spells");
+		StrCat(sInfo, length, "\n- Grants a MONOCULUS! spell");
+		StrCat(sInfo, length, "\n- 200%% Rage: Grants 3 MONOCULUS! spells");
 	}
 	
 	public void OnDeath(Event eventInfo)

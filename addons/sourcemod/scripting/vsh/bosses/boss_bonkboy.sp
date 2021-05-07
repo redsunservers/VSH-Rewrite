@@ -93,12 +93,12 @@ methodmap CBonkBoy < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- Dash Jump");
 		StrCat(sInfo, length, "\n- Sandman deals crit to stunned players");
 		StrCat(sInfo, length, "\n- Fast recharge balls, able to hold 3 max");
-		StrCat(sInfo, length, "\n- Medium range ball stuns player and building, moonshot instakills");
+		StrCat(sInfo, length, "\n- Medium range balls stun players and buildings, moonshot instakills");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
 		StrCat(sInfo, length, "\n- Unlimited and greater mobility jumps");
 		StrCat(sInfo, length, "\n- Faster movement speed");
-		StrCat(sInfo, length, "\n- Unlimited ball");
+		StrCat(sInfo, length, "\n- Unlimited balls");
 		StrCat(sInfo, length, "\n- 200%% Rage: Extends duration from 5 to 10 seconds");
 	}
 	

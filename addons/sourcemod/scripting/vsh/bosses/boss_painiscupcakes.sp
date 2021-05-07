@@ -111,11 +111,11 @@ methodmap CPainisCupcake < SaxtonHaleBase
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nAbilities");
 		StrCat(sInfo, length, "\n- Brave Jump");
-		StrCat(sInfo, length, "\n- Holding reload key eats dead bodies to heal, depends on amount of damage player done, max 400");
+		StrCat(sInfo, length, "\n- Holding reload key eats dead bodies to heal up to 400 HP, recovered health depends on damage the player did");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
 		StrCat(sInfo, length, "\n- Übercharge and bright glow for 8 seconds");
-		StrCat(sInfo, length, "\n- Eats nearby bodies");
+		StrCat(sInfo, length, "\n- Automatically eats nearby bodies");
 		StrCat(sInfo, length, "\n- 200%% Rage: extends duration to 16 seconds");
 	}
 	

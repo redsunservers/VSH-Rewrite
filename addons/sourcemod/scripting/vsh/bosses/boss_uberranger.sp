@@ -90,7 +90,7 @@ methodmap CUberRanger < SaxtonHaleBase
 		StrCat(sInfo, length, "\nRage");
 		StrCat(sInfo, length, "\n- Übercharge for 5 seconds");
 		StrCat(sInfo, length, "\n- Summons a fellow Über Ranger");
-		StrCat(sInfo, length, "\n- Über Rangers are allowed to heal and über each other");
+		StrCat(sInfo, length, "\n- Über Rangers can heal and über each other");
 		StrCat(sInfo, length, "\n- 200%% Rage: extends über duration to 8 seconds and summons 3 Über Rangers");
 	}
 	

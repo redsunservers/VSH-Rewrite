@@ -11,7 +11,7 @@ void Menu_Init()
 	
 	// Error Menu
 	g_hMenuError = new Menu(Menu_SelectError);
-	g_hMenuError.SetTitle("You found an error menu your not suppose to be here, oops!\nYou probably want to tell an admin about this...");
+	g_hMenuError.SetTitle("You found an error menu - you're not supposed to be here... oops!\nYou probably want to tell an admin about this...");
 	g_hMenuError.AddItem("back", "<- Main Menu");
 	
 	// Main Menu
@@ -19,7 +19,7 @@ void Menu_Init()
 	g_hMenuMain.SetTitle("[VSH REWRITE] - %s.%s", PLUGIN_VERSION, PLUGIN_VERSION_REVISION);
 	g_hMenuMain.AddItem("class", "Class & Weapon Menu (!vshclass)");
 	g_hMenuMain.AddItem("boss", "Bosses Info (!vshboss)");
-	g_hMenuMain.AddItem("bossmulti", "Multi Bosses Info (!vshmultiboss)");
+	g_hMenuMain.AddItem("bossmulti", "Multi-Bosses Info (!vshmultiboss)");
 	g_hMenuMain.AddItem("modifiers", "Modifiers Info (!vshmodifiers)");
 	g_hMenuMain.AddItem("queue", "Queue List (!vshnext)");
 	g_hMenuMain.AddItem("preference", "Settings (!vshsettings)");
@@ -109,7 +109,7 @@ void Menu_DisplayQueue(int iClient)
 	if (iPoints >= 0)
 		Format(buffer, sizeof(buffer), "%s\nYour queue points: %i", buffer, iPoints);
 	else
-		Format(buffer, sizeof(buffer), "%s\nYour queue points is still loading, try again later", buffer, iPoints);
+		Format(buffer, sizeof(buffer), "%s\nYour queue points are still loading, try again later", buffer, iPoints);
 	
 	hMenuQueue.SetTitle(buffer);
 	hMenuQueue.AddItem("back", "<- Back");

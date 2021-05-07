@@ -5,7 +5,7 @@ static int g_iRank[TF_MAXPLAYERS+1];
 
 void Rank_Init()
 {
-	g_ConfigConvar.Create("vsh_boss_rank_health", "0.05", "How much precentage boss should lose health on every Rank", _, true, 0.0, true, 1.0);
+	g_ConfigConvar.Create("vsh_boss_rank_health", "0.05", "How much percentage boss should lose health on every Rank", _, true, 0.0, true, 1.0);
 
 	SaxtonHale_HookFunction("CalculateMaxHealth", Rank_CalculateMaxHealth);
 }
@@ -45,17 +45,17 @@ public void Rank_DisplayClient(int iClient, bool bTag = false)
 {
 	char sFormat[512];
 	if (bTag)
-		Format(sFormat, sizeof(sFormat), "%s%s You are currently at rank %s%d%s", TEXT_TAG, TEXT_COLOR, TEXT_DARK, Rank_GetCurrent(iClient), TEXT_COLOR);
+		Format(sFormat, sizeof(sFormat), "%s%s You are currently rank %s%d%s.", TEXT_TAG, TEXT_COLOR, TEXT_DARK, Rank_GetCurrent(iClient), TEXT_COLOR);
 	else
-		Format(sFormat, sizeof(sFormat), "%sYou are currently at rank %s%d%s", TEXT_COLOR, TEXT_DARK, Rank_GetCurrent(iClient), TEXT_COLOR);
+		Format(sFormat, sizeof(sFormat), "%sYou are currently rank %s%d%s.", TEXT_COLOR, TEXT_DARK, Rank_GetCurrent(iClient), TEXT_COLOR);
 	
 	SaxtonHaleNextBoss nextBoss = SaxtonHaleNextBoss(iClient);
 	if (nextBoss.bSpecialClassRound)
-		Format(sFormat, sizeof(sFormat), "%s, your next round will be a special class round, so it will not change.", sFormat);
+		Format(sFormat, sizeof(sFormat), "%s, the next round will be a special class round, so it will not change.", sFormat);
 	else if (!Preferences_Get(iClient, VSHPreferences_Rank))
 		Format(sFormat, sizeof(sFormat), "%s, your rank preference is disabled so it will not change.", sFormat);
 	else if (g_iTotalAttackCount < Rank_GetPlayerRequirement(iClient))
-		Format(sFormat, sizeof(sFormat), "%s, you need %s%d%s enemy players to have your rank changed.", sFormat, TEXT_DARK, Rank_GetPlayerRequirement(iClient), TEXT_COLOR);
+		Format(sFormat, sizeof(sFormat), "%s, you need %s%d%s enemy players to affect your rank.", sFormat, TEXT_DARK, Rank_GetPlayerRequirement(iClient), TEXT_COLOR);
 	else
 		Format(sFormat, sizeof(sFormat), "%s.", sFormat);
 	

@@ -1160,7 +1160,7 @@ public Action Timer_WelcomeMessage(Handle hTimer)
 	if (!g_bEnabled)
 		return Plugin_Stop;
 	
-	PrintToChatAll("%s%s Welcome to Versus Saxton Hale: Rewrite! \nType %s/vsh%s for more info about it.", TEXT_TAG, TEXT_COLOR, TEXT_DARK, TEXT_COLOR);
+	PrintToChatAll("%s%s Welcome to Versus Saxton Hale: Rewrite! \nType %s/vsh%s for more info.", TEXT_TAG, TEXT_COLOR, TEXT_DARK, TEXT_COLOR);
 	return Plugin_Continue;
 }
 

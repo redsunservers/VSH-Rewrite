@@ -31,7 +31,7 @@ void Hud_Think(int iClient)
 	if (!SaxtonHale_IsValidBoss(iClient, false))
 	{
 		//Display Boss's health to non-bosses regardless if dead or alive
-		Format(sMessage, sizeof(sMessage), "Boss Health: %i/%i", g_iHealthBarHealth, g_iHealthBarMaxHealth);
+		Format(sMessage, sizeof(sMessage), "Boss HP: %i/%i", g_iHealthBarHealth, g_iHealthBarMaxHealth);
 		
 		//Display boss's rage
 		if (g_bHudRage[iClient])
@@ -71,7 +71,7 @@ void Hud_Think(int iClient)
 		//Display Boss's health to other bosses if they're dead
 		if (!IsPlayerAlive(iClient))
 		{
-			Format(sMessage, sizeof(sMessage), "Boss Health: %i/%i", g_iHealthBarHealth, g_iHealthBarMaxHealth);
+			Format(sMessage, sizeof(sMessage), "Boss HP: %i/%i", g_iHealthBarHealth, g_iHealthBarMaxHealth);
 			Hud_AddText(iClient, sMessage, true);
 		}
 	}
@@ -85,7 +85,7 @@ void Hud_Think(int iClient)
 			if (g_iPlayerAssistDamage[iObserverTarget] <= 0)
 				Format(sMessage, sizeof(sMessage), "%N's Damage: %i", iObserverTarget, g_iPlayerDamage[iObserverTarget]);
 			else
-				Format(sMessage, sizeof(sMessage), "%N's Damage: %i Assist: %i", iObserverTarget, g_iPlayerDamage[iObserverTarget], g_iPlayerAssistDamage[iObserverTarget]);
+				Format(sMessage, sizeof(sMessage), "%N's Damage: %i (Assist: %i)", iObserverTarget, g_iPlayerDamage[iObserverTarget], g_iPlayerAssistDamage[iObserverTarget]);
 			
 			Hud_AddText(iClient, sMessage, true);
 		}

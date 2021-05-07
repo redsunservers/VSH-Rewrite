@@ -232,7 +232,7 @@ void MenuBoss_DisplayNextList(int iClient)
 	hAdminBossList.SetTitle(sBuffer);
 	hAdminBossList.AddItem("back", "<- back");
 	hAdminBossList.AddItem("boss", "Add New Boss");
-	hAdminBossList.AddItem("bossmulti", "Add New Multi Boss");
+	hAdminBossList.AddItem("bossmulti", "Add New Multi-Boss");
 	hAdminBossList.AddItem("clear", "Clear List");
 	hAdminBossList.Display(iClient, MENU_TIME_FOREVER);
 }
@@ -261,7 +261,7 @@ public int MenuBoss_SelectNextList(Menu hMenu, MenuAction action, int iClient, i
 	else if (StrEqual(sSelect, "clear"))
 	{
 		g_aNextBoss.Clear();
-		PrintToChatAll("%s %s%N%s cleared all next boss", TEXT_TAG, TEXT_DARK, iClient, TEXT_COLOR);
+		PrintToChatAll("%s %s%N%s cleared all queued bosses.", TEXT_TAG, TEXT_DARK, iClient, TEXT_COLOR);
 		MenuBoss_DisplayNextList(iClient);
 	}
 	else if (StrEqual(sSelect, "back"))
@@ -428,11 +428,11 @@ public void MenuBoss_CallbackNextModifiers(int iClient, MenuBossOption nOption, 
 		{
 			char sModifiersName[256];
 			boss.CallFunction("GetModifiersName", sModifiersName, sizeof(sModifiersName));
-			PrintToChatAll("%s %s%N%s added next multi boss %s%s %s", TEXT_TAG, TEXT_DARK, iClient, TEXT_COLOR, sColor, sModifiersName, sBossMultiName);
+			PrintToChatAll("%s %s%N%s added %s%s %s as the next multi-boss.", TEXT_TAG, TEXT_DARK, iClient, TEXT_COLOR, sColor, sModifiersName, sBossMultiName);
 		}
 		else
 		{
-			PrintToChatAll("%s %s%N%s added next multi boss %s%s", TEXT_TAG, TEXT_DARK, iClient, TEXT_COLOR, sColor, sBossMultiName);
+			PrintToChatAll("%s %s%N%s added %s%s as the next multi-boss.", TEXT_TAG, TEXT_DARK, iClient, TEXT_COLOR, sColor, sBossMultiName);
 		}
 	}
 	else
