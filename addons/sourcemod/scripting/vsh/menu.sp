@@ -142,9 +142,9 @@ void Menu_DisplayPreferences(int iClient)
 		
 		char buffer[512];
 		if (Preferences_Get(iClient, nPreferences))
-			Format(buffer, sizeof(buffer), "%s (Enable)", g_strPreferencesName[nPreferences]);
+			Format(buffer, sizeof(buffer), "%s (Enabled)", g_strPreferencesName[nPreferences]);
 		else
-			Format(buffer, sizeof(buffer), "%s (Disable)", g_strPreferencesName[nPreferences]);
+			Format(buffer, sizeof(buffer), "%s (Disabled)", g_strPreferencesName[nPreferences]);
 		
 		hMenuPreferences.AddItem(g_strPreferencesName[nPreferences], buffer);
 	}

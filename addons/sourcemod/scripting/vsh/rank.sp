@@ -51,9 +51,9 @@ public void Rank_DisplayClient(int iClient, bool bTag = false)
 	
 	SaxtonHaleNextBoss nextBoss = SaxtonHaleNextBoss(iClient);
 	if (nextBoss.bSpecialClassRound)
-		Format(sFormat, sizeof(sFormat), "%s, the next round will be a special class round, so it will not change.", sFormat);
+		Format(sFormat, sizeof(sFormat), "%s, the next round will be a special class round - your rank remains unchanged.", sFormat);
 	else if (!Preferences_Get(iClient, VSHPreferences_Rank))
-		Format(sFormat, sizeof(sFormat), "%s, your rank preference is disabled so it will not change.", sFormat);
+		Format(sFormat, sizeof(sFormat), "%s, your rank preference is disabled - your rank remains unchanged.", sFormat);
 	else if (g_iTotalAttackCount < Rank_GetPlayerRequirement(iClient))
 		Format(sFormat, sizeof(sFormat), "%s, you need %s%d%s enemy players to affect your rank.", sFormat, TEXT_DARK, Rank_GetPlayerRequirement(iClient), TEXT_COLOR);
 	else
