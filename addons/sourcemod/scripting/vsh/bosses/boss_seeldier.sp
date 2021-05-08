@@ -39,7 +39,7 @@ methodmap CSeeldier < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- Brave Jump");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- Summons 3 mini-SSeeldiers");
+		StrCat(sInfo, length, "\n- Summons 3 mini-Seeldiers");
 		StrCat(sInfo, length, "\n- 200%% Rage: Summons 6 mini-Seeldiers");
 	}
 	
