@@ -959,3 +959,16 @@ stock float Tags_GetAirblastPercentage(int iClient)
 	
 	return float(g_iTagsAirblastDamage[iClient]) / float(g_iTagsAirblastRequirement[iClient]);
 }
+
+void Tags_Stun(int iClient, int iTarget, TagsParams tParams)
+{
+	if (iTarget <= 0 || iTarget > MaxClients || !IsClientInGame(iTarget) || !IsPlayerAlive(iTarget))
+		return;
+	
+	float flDuration = tParams.GetFloat("duration");
+	float flSlowdown = tParams.GetFloat("slowdown");
+	int iStunflags = tParams.GetInt("type");
+
+	
+	TF2_StunPlayer(iTarget, flDuration, flSlowdown, iStunflags);
+}
