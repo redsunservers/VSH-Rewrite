@@ -482,7 +482,7 @@ public void Tags_Climb(int iClient, int iTarget, TagsParams tParams)
 	float flHeight = tParams.GetFloat("height");
 	int iMax = tParams.GetInt("max");
 	float flDamage = tParams.GetFloat("selfdamage");
-	float flHorizontalSpeedMult = tParams.GetFloat("speed");
+	float flHorizontalSpeedMult = tParams.GetFloat("horizontal", 1.0);
 	
 	if (iMax >= 0 && iMax <= g_iClimbAmount[iTarget])
 		return;
