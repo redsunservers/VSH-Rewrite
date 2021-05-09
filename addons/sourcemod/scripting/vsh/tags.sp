@@ -482,6 +482,7 @@ public void Tags_Climb(int iClient, int iTarget, TagsParams tParams)
 	float flHeight = tParams.GetFloat("height");
 	int iMax = tParams.GetInt("max");
 	float flDamage = tParams.GetFloat("selfdamage");
+	float flHorizontalSpeedMult = tParams.GetFloat("horizontal", 1.0);
 	
 	if (iMax >= 0 && iMax <= g_iClimbAmount[iTarget])
 		return;
@@ -519,6 +520,8 @@ public void Tags_Climb(int iClient, int iTarget, TagsParams tParams)
 	
 	float fVelocity[3];
 	GetEntPropVector(iTarget, Prop_Data, "m_vecVelocity", fVelocity);
+	fVelocity[0] *= flHorizontalSpeedMult;
+	fVelocity[1] *= flHorizontalSpeedMult;
 	fVelocity[2] = flHeight;
 	TeleportEntity(iTarget, NULL_VECTOR, NULL_VECTOR, fVelocity);
 	
