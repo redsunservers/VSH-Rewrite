@@ -92,7 +92,7 @@ methodmap CDemoPan < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- Passive Chargin' Targe, reload to charge");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- 5 seconds of force full control charging");
+		StrCat(sInfo, length, "\n- 5 seconds of force full-control charging");
 		StrCat(sInfo, length, "\n- 200%% Rage: extends duration to 10 seconds");
 	}
 	

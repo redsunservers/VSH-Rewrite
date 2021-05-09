@@ -107,7 +107,7 @@ methodmap CPyroCar < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- Throw gas passer (Deal damage to gain up to 5)");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- Douses enemies around you and gain a speed boost for 8 seconds");
+		StrCat(sInfo, length, "\n- Douses enemies around you and grants a speed boost for 8 seconds");
 		StrCat(sInfo, length, "\n- 200%% Rage: Increases bonus speed and extends duration to 12 seconds");
 	}
 	

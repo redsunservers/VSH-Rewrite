@@ -14,7 +14,7 @@ methodmap CSeeManSeeldier < SaxtonHaleBase
 	
 	public void GetBossMultiName(char[] sName, int length)
 	{
-		strcopy(sName, length, "SeeMan and Seeldier");
+		strcopy(sName, length, "Seeman and Seeldier");
 	}
 	
 	public void GetBossMultiInfo(char[] sInfo, int length)
@@ -26,10 +26,10 @@ methodmap CSeeManSeeldier < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- Brave Jump");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- Seeman frozen with Übercharge for 3 seconds with many small explosions around boss");
-		StrCat(sInfo, length, "\n- 200%% Rage: Seeman instakill nuke at end of rage");
-		StrCat(sInfo, length, "\n- Seeldlier summons 3 mini seeldiers");
-		StrCat(sInfo, length, "\n- 200%% Rage: Seeldlier summons 6 mini seeldiers");
+		StrCat(sInfo, length, "\n- Seeman is frozen with Übercharge for 3 seconds with small explosions around him");
+		StrCat(sInfo, length, "\n- 200%% Rage: Seeman gets an instakill nuke at end of rage");
+		StrCat(sInfo, length, "\n- Seeldlier summons 3 mini-Seeldiers");
+		StrCat(sInfo, length, "\n- 200%% Rage: Seeldlier summons 6 mini-Seeldiers");
 	}
 	
 	public void GetSound(char[] sSound, int length, SaxtonHaleSound iSoundType)

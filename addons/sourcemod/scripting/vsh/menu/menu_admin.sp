@@ -18,7 +18,7 @@ void MenuAdmin_Init()
 	
 	// Queue menu
 	g_hMenuAdminQueue = new Menu(MenuAdmin_SelectQueue);
-	g_hMenuAdminQueue.SetTitle("Give yourself queue amount");
+	g_hMenuAdminQueue.SetTitle("Add queue points to self");
 	g_hMenuAdminQueue.AddItem("1", "1");
 	g_hMenuAdminQueue.AddItem("5", "5");
 	g_hMenuAdminQueue.AddItem("10", "10");

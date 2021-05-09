@@ -39,7 +39,7 @@ methodmap CSeeMan < SaxtonHaleBase
 	
 	public void GetBossName(char[] sName, int length)
 	{
-		strcopy(sName, length, "SeeMan");
+		strcopy(sName, length, "Seeman");
 	}
 	
 	public void GetBossInfo(char[] sInfo, int length)
@@ -53,7 +53,7 @@ methodmap CSeeMan < SaxtonHaleBase
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
 		StrCat(sInfo, length, "\n- Frozen with Übercharge for 3 seconds");
-		StrCat(sInfo, length, "\n- Many small explosions around boss");
+		StrCat(sInfo, length, "\n- Lots of small explosions around boss");
 		StrCat(sInfo, length, "\n- 200%% Rage: instakill nuke at end of rage");
 	}
 	

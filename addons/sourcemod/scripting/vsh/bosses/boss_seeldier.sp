@@ -31,7 +31,7 @@ methodmap CSeeldier < SaxtonHaleBase
 	
 	public void GetBossInfo(char[] sInfo, int length)
 	{
-		StrCat(sInfo, length, "\nDuo Boss with SeeMan");
+		StrCat(sInfo, length, "\nDuo Boss with Seeman");
 		StrCat(sInfo, length, "\nMelee deals 124 damage");
 		StrCat(sInfo, length, "\nHealth: Low");
 		StrCat(sInfo, length, "\n ");
@@ -39,8 +39,8 @@ methodmap CSeeldier < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- Brave Jump");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- Summons 3 mini seeldiers");
-		StrCat(sInfo, length, "\n- 200%% Rage: Summons 6 mini seeldiers");
+		StrCat(sInfo, length, "\n- Summons 3 mini-Seeldiers");
+		StrCat(sInfo, length, "\n- 200%% Rage: Summons 6 mini-Seeldiers");
 	}
 	
 	public void OnSpawn()

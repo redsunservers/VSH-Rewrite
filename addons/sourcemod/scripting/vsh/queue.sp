@@ -48,7 +48,7 @@ void Queue_AddPlayerPoints(int iClient, int iPoints)
 {
 	if (g_iClientQueuePoints[iClient] == -1)
 	{
-		PrintToChat(iClient, "%s%s Your queue points seems to be not loaded...", TEXT_TAG, TEXT_ERROR);
+		PrintToChat(iClient, "%s%s Your queue points do not seem to have loaded.", TEXT_TAG, TEXT_ERROR);
 		return;
 	}
 	else if (!Preferences_Get(iClient, VSHPreferences_PickAsBoss))

@@ -2,3 +2,4 @@
 *.bat
 *.bin
 build/*
+.vscode

@@ -74,10 +74,10 @@ methodmap CPyromancers < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- Boost Jump");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- Scalded grants a degreaser for 8 seconds");
-		StrCat(sInfo, length, "\n- 200%% Rage: Scalded grants a buffed backburner with quick-switch for 8 seconds");
-		StrCat(sInfo, length, "\n- Scorched ignite all players within 500 units");
-		StrCat(sInfo, length, "\n- 200%% Rage: Scorched ignite all players on the map");
+		StrCat(sInfo, length, "\n- Scalded gets a degreaser for 8 seconds");
+		StrCat(sInfo, length, "\n- 200%% Rage: Scalded gets a buffed Backburner with quick-switch for 8 seconds");
+		StrCat(sInfo, length, "\n- Scorched ignites all players within 500 units");
+		StrCat(sInfo, length, "\n- 200%% Rage: Scorched ignites all players on the map");
 	}
 	
 	public void OnSpawn()
