@@ -844,6 +844,18 @@ public void Tags_ForceSuicide(int iClient, int iTarget, TagsParams tParams)
 	ForcePlayerSuicide(iTarget);
 }
 
+public void Tags_Stun(int iClient, int iTarget, TagsParams tParams)
+{
+	if (iTarget <= 0 || iTarget > MaxClients || !IsClientInGame(iTarget) || !IsPlayerAlive(iTarget))
+		return;
+	
+	float flDuration = tParams.GetFloat("duration");
+	float flSlowdown = tParams.GetFloat("slowdown");
+	int iStunflags = tParams.GetInt("type", 1);
+
+	TF2_StunPlayer(iTarget, flDuration, flSlowdown, iStunflags);
+}
+
 //---------------------------
 
 public void Frame_AreaOfRange(DataPack data)
