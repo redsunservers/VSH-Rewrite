@@ -1,6 +1,6 @@
 #define SEEMAN_MODEL						"models/player/kirillian/boss/seeman_fix.mdl"
-#define SEEMAN_RAGE_SND						"vsh_rewrite/seeman/rage.wav"
-#define SEEMAN_SEE_SND						"vsh_rewrite/seeman/see.wav"
+#define SEEMAN_RAGE_SND						"vsh_rewrite/seeman/rage.mp3"
+#define SEEMAN_SEE_SND						"vsh_rewrite/seeman/see.mp3"
 
 methodmap CSeeMan < SaxtonHaleBase
 {
