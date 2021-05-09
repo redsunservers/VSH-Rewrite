@@ -8,11 +8,6 @@ methodmap CModifiersMagnet < SaxtonHaleBase
 		boss.flSpeed *= 0.9; //370 -> 333
 	}
 	
-	public bool IsModifiersHidden()
-	{
-		return true;
-	}
-	
 	public void GetModifiersName(char[] sName, int length)
 	{
 		strcopy(sName, length, "Magnet");

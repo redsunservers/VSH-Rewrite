@@ -9,11 +9,6 @@ methodmap CModifiersJumper < SaxtonHaleBase
 		TF2Attrib_SetByDefIndex(boss.iClient, ATTRIB_NO_JUMP, 1.0);
 	}
 	
-	public bool IsModifiersHidden()
-	{
-		return true;
-	}
-	
 	public void GetModifiersName(char[] sName, int length)
 	{
 		strcopy(sName, length, "Jumper");
