@@ -7,11 +7,6 @@ methodmap CModifiersOverload < SaxtonHaleBase
 		boss.flMaxRagePercentage = 1.0;	//Hard set 100% cap
 	}
 	
-	public bool IsModifiersHidden()
-	{
-		return true;
-	}
-	
 	public void GetModifiersName(char[] sName, int length)
 	{
 		strcopy(sName, length, "Overload");
