@@ -1,5 +1,5 @@
 #define SEELDIER_MODEL						"models/player/kirillian/boss/seeldier_fix.mdl"
-#define SEELDIER_SEE_SND					"vsh_rewrite/seeldier/see.wav"
+#define SEELDIER_SEE_SND					"vsh_rewrite/seeldier/see.mp3"
 
 methodmap CSeeldier < SaxtonHaleBase
 {

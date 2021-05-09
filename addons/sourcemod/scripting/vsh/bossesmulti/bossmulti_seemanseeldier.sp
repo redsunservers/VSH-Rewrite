@@ -1,4 +1,4 @@
-#define SEE_BOSSES_INTRO_SND				"vsh_rewrite/seeman/intro.wav"
+#define SEE_BOSSES_INTRO_SND				"vsh_rewrite/seeman/intro.mp3"
 
 methodmap CSeeManSeeldier < SaxtonHaleBase
 {
