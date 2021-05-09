@@ -644,7 +644,7 @@ public void Tags_RemoveRage(int iClient, int iTarget, TagsParams tParams)
 		return;
 	
 	int iAmount = tParams.GetInt("amount");
-	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
+	SaxtonHaleBase boss = SaxtonHaleBase(iTarget);
 	boss.CallFunction("AddRage", -iAmount);
 }
 
