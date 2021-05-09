@@ -969,6 +969,5 @@ public void Tags_Stun(int iClient, int iTarget, TagsParams tParams)
 	float flSlowdown = tParams.GetFloat("slowdown");
 	int iStunflags = tParams.GetInt("type", 1);
 
-	
 	TF2_StunPlayer(iTarget, flDuration, flSlowdown, iStunflags);
 }
