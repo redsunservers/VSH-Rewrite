@@ -960,7 +960,7 @@ stock float Tags_GetAirblastPercentage(int iClient)
 	return float(g_iTagsAirblastDamage[iClient]) / float(g_iTagsAirblastRequirement[iClient]);
 }
 
-void Tags_Stun(int iClient, int iTarget, TagsParams tParams)
+public void Tags_Stun(int iClient, int iTarget, TagsParams tParams)
 {
 	if (iTarget <= 0 || iTarget > MaxClients || !IsClientInGame(iTarget) || !IsPlayerAlive(iTarget))
 		return;
