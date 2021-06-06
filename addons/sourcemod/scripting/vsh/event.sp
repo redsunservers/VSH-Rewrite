@@ -480,6 +480,8 @@ public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcas
 
 public void Event_PointCaptured(Event event, const char[] sName, bool bDontBroadcast)
 {
+	if (!g_bEnabled) return;
+	
 	TFTeam nTeam = view_as<TFTeam>(event.GetInt("team"));
 	Dome_SetTeam(nTeam);
 }
