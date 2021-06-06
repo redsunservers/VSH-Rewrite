@@ -246,6 +246,8 @@ stock bool TraceFilter_Dome(int iEntity, int iMask, any iData)
 
 bool Dome_Start(int iCP = 0)
 {
+	if (!g_bEnabled) return false;
+	
 	if (g_flDomeStart != 0.0)	//Check if we already have dome enabled, if so return false
 		return false;
 
@@ -406,6 +408,8 @@ public void Dome_Frame_Prepare()
 
 public void Dome_Frame_Shrink()
 {
+	if (!g_bEnabled) return;
+	
 	if (g_flDomeStart == 0.0)
 		return;
 
@@ -468,6 +472,8 @@ public void Dome_Frame_Shrink()
 
 public Action Dome_TimerBleed(Handle hTimer)
 {
+	if (!g_bEnabled) return Plugin_Continue;
+	
 	if (g_hDomeTimerBleed != hTimer)
 		return Plugin_Stop;
 
