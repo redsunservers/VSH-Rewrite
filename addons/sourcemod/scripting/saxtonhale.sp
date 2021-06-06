@@ -1583,6 +1583,8 @@ public Action TF2Items_OnGiveNamedItem(int client, char[] classname, int itemDef
 
 Action GiveNamedItem(int iClient, const char[] sClassname, int iIndex)
 {
+	if (!g_bEnabled) return Plugin_Continue;
+	
 	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 	if (boss.bValid)
 		return boss.CallFunction("OnGiveNamedItem", sClassname, iIndex);
