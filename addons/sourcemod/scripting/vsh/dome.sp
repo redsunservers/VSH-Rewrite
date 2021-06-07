@@ -113,11 +113,15 @@ public Action Dome_TriggerTouch(int iTrigger, int iToucher)
 
 public Action Dome_OnCapEnabled(const char[] output, int caller, int activator, float delay)
 {
+	if (!g_bEnabled) return;
+	
 	Dome_Start();
 }
 
 public Action Dome_BlockOutput(const char[] output, int caller, int activator, float delay)
 {
+	if (!g_bEnabled) return Plugin_Continue; //Don't block outside of VSH
+	
 	//Always block this function, maps may assume round ended
 	return Plugin_Handled;
 }
