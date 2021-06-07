@@ -113,11 +113,15 @@ public Action Dome_TriggerTouch(int iTrigger, int iToucher)
 
 public Action Dome_OnCapEnabled(const char[] output, int caller, int activator, float delay)
 {
+	if (!g_bEnabled) return;
+	
 	Dome_Start();
 }
 
 public Action Dome_BlockOutput(const char[] output, int caller, int activator, float delay)
 {
+	if (!g_bEnabled) return Plugin_Continue; //Don't block outside of VSH
+	
 	//Always block this function, maps may assume round ended
 	return Plugin_Handled;
 }
@@ -246,8 +250,6 @@ stock bool TraceFilter_Dome(int iEntity, int iMask, any iData)
 
 bool Dome_Start(int iCP = 0)
 {
-	if (!g_bEnabled) return false;
-	
 	if (g_flDomeStart != 0.0)	//Check if we already have dome enabled, if so return false
 		return false;
 
@@ -408,8 +410,6 @@ public void Dome_Frame_Prepare()
 
 public void Dome_Frame_Shrink()
 {
-	if (!g_bEnabled) return;
-	
 	if (g_flDomeStart == 0.0)
 		return;
 
@@ -472,8 +472,6 @@ public void Dome_Frame_Shrink()
 
 public Action Dome_TimerBleed(Handle hTimer)
 {
-	if (!g_bEnabled) return Plugin_Continue;
-	
 	if (g_hDomeTimerBleed != hTimer)
 		return Plugin_Stop;
 
