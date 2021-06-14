@@ -59,6 +59,11 @@ static int g_iCosmetics[] =  {
 	394 //Connoisseur's Cap
 };
 
+static int g_iGasThrowCharge[TF_MAXPLAYERS+1];
+static int g_iGasThrowBuildCharge = 1;
+static int g_iGasThrowChargeMax = 100;
+static bool g_bGasHoldingChargeButton[TF_MAXPLAYERS+1];
+
 static float g_flGasMinCharge = 200.0;
 static float g_flDistance = 1000.0;
 static int g_iMaxGasPassers = 5;
@@ -116,7 +121,7 @@ methodmap CPyroCar < SaxtonHaleBase
 		char attribs[256];
 		Format(attribs, sizeof(attribs), PYROCAR_BACKBURNER_ATTRIBUTES, GetRandomInt(9999, 99999));
 		g_iPyrocarPrimary[this.iClient] = this.CallFunction("CreateWeapon", ITEM_BACKBURNER, "tf_weapon_flamethrower", 100, TFQual_Strange, attribs);
-		g_iPyrocarJetpack[this.iClient] = this.CallFunction("CreateWeapon", ITEM_THERMAL_THRUSTER, "tf_weapon_rocketpack", 100, TFQual_Unusual, "259 ; 1.0 ; 872 ; 1.0 ; 873 ; 1.0");
+		g_iPyrocarJetpack[this.iClient] = this.CallFunction("CreateWeapon", ITEM_THERMAL_THRUSTER, "tf_weapon_rocketpack", 100, TFQual_Unusual, "259 ; 1.0 ; 870 ; 1.0 ; 872 ; 1.0 ; 873 ; 1.0");
 		if (g_iPyrocarPrimary[this.iClient] > MaxClients)
 		{
 			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", g_iPyrocarPrimary[this.iClient]);
@@ -237,8 +242,7 @@ methodmap CPyroCar < SaxtonHaleBase
 		}
 		else
 		{
-			
-			Format(sMessage, sizeof(sMessage), "Press right click to throw your gas! %0.2f%%.", flGasCharge);
+			Format(sMessage, sizeof(sMessage), "Hold right click to throw your gas! %0.2f%%.", flGasCharge);
 			//Avoid dividing by 0
 			if (g_iMaxGasPassers > 1)
 			{
@@ -258,6 +262,13 @@ methodmap CPyroCar < SaxtonHaleBase
 			Hud_SetColor(this.iClient, iColor);
 		}
 		
+		if (g_iGasThrowCharge[this.iClient] > 0)
+		{
+			Format(sMessage, sizeof(sMessage), "Gas throw power: %0.2f%%. Hold to throw your gas can further.", float(g_iGasThrowCharge[this.iClient]));
+			iColor[0] = 255; iColor[1] = 255; iColor[2] = 255; iColor[3] = 255;
+			Hud_SetColor(this.iClient, iColor);
+		}
+		
 		Hud_AddText(this.iClient, sMessage);
 		
 		//Jetpack regen
@@ -273,6 +284,12 @@ methodmap CPyroCar < SaxtonHaleBase
 			if(g_flPyrocarJetpackCharge[this.iClient] < 100.0)
 			g_flPyrocarJetpackCharge[this.iClient] += 0.1;
 		}
+		
+		if (g_bGasHoldingChargeButton[this.iClient] && g_flPyrocarGasCharge[this.iClient] >= g_flGasMinCharge)
+			g_iGasThrowCharge[this.iClient] += g_iGasThrowBuildCharge;
+			
+		if (g_iGasThrowCharge[this.iClient] >= g_iGasThrowChargeMax)
+			ThrowGas(this.iClient);
 		
 	}
 	
@@ -389,38 +406,26 @@ methodmap CPyroCar < SaxtonHaleBase
 		for (int i = 0; i < sizeof(g_strPyrocarLastMan); i++) PrepareSound(g_strPyrocarLastMan[i]);
 	}
 	
-	public void OnButtonPress(int button)
+	public void OnButtonRelease(int button)
 	{
+		if (TF2_IsPlayerInCondition(this.iClient, TFCond_Dazed))//Can't throw if stunned
+		{
+			g_iGasThrowCharge[this.iClient] = 0;
+			return;
+		}
+		
 		if (button == IN_ATTACK2 && g_flPyrocarGasCharge[this.iClient] > g_flGasMinCharge && g_iPyrocarJetpack[this.iClient] == GetPlayerWeaponSlot(this.iClient, WeaponSlot_Secondary))
 		{
-			g_flPyrocarGasCharge[this.iClient] -= g_flGasMinCharge;
-			
-			float vecOrigin[3], vecVelocity[3], vecAngleVelocity[3];
-			GetClientEyePosition(this.iClient, vecOrigin);
-			GetClientEyeAngles(this.iClient, vecAngleVelocity);
-			
-			int iBomb = CreateEntityByName("tf_projectile_jar_gas");
-			if (iBomb > MaxClients)
-			{
-				vecAngleVelocity[0] += 180.0;
-				vecAngleVelocity[1] += 90.0;
-				GetAngleVectors(vecAngleVelocity, vecVelocity, vecVelocity, NULL_VECTOR);
-				
-				ScaleVector(vecVelocity, g_flDistance);
-				//Add up velocity to form an arc
-				vecVelocity[2] = g_flDistance * 0.4;
-				
-				SetEntProp(iBomb, Prop_Send, "m_iTeamNum", GetClientTeam(this.iClient));
-				SetEntPropEnt(iBomb, Prop_Send, "m_hOwnerEntity", this.iClient);
-				
-				DispatchSpawn(iBomb);
-				
-				GetClientEyeAngles(this.iClient, vecAngleVelocity);
-				TeleportEntity(iBomb, vecOrigin, vecAngleVelocity, vecVelocity);
-				
-				SetEntProp(iBomb, Prop_Send, "m_CollisionGroup", 24);
-			}
+			ThrowGas(this.iClient);
 		}
+	}
+	
+	public void OnButtonHold(int button)
+	{
+		if (button == IN_ATTACK2 && !TF2_IsPlayerInCondition(this.iClient, TFCond_Dazed))
+			g_bGasHoldingChargeButton[this.iClient] = true;
+		else
+			g_bGasHoldingChargeButton[this.iClient] = false;
 	}
 };
 
@@ -450,3 +455,40 @@ public Action Timer_EffectEnd(Handle hTimer, int iClient)
 	g_bUnderEffect[iClient] = false;
 	g_hGasTimer[iClient] = null;
 }
+
+public void ThrowGas(int iClient)
+{
+	g_flPyrocarGasCharge[iClient] -= g_flGasMinCharge;
+	
+	float vecOrigin[3], vecVelocity[3], vecAngleVelocity[3];
+	GetClientEyePosition(iClient, vecOrigin);
+	GetClientEyeAngles(iClient, vecAngleVelocity);
+	
+	int iBomb = CreateEntityByName("tf_projectile_jar_gas");
+	if (iBomb > MaxClients)
+	{
+		vecAngleVelocity[0] += 180.0;
+		vecAngleVelocity[1] += 90.0;
+		GetAngleVectors(vecAngleVelocity, vecVelocity, vecVelocity, NULL_VECTOR);
+		
+		if(g_iGasThrowCharge[iClient] < 20)
+			ScaleVector(vecVelocity, g_flDistance * float(g_iGasThrowCharge[iClient])/20.0);
+		else
+			ScaleVector(vecVelocity, g_flDistance);
+		//Add up velocity to form an arc
+		vecVelocity[2] = g_flDistance * (0.4 + float(g_iGasThrowCharge[iClient])/200.0);
+			
+		SetEntProp(iBomb, Prop_Send, "m_iTeamNum", GetClientTeam(iClient));
+		SetEntPropEnt(iBomb, Prop_Send, "m_hOwnerEntity", iClient);
+		
+		DispatchSpawn(iBomb);
+		
+		GetClientEyeAngles(iClient, vecAngleVelocity);
+		TeleportEntity(iBomb, vecOrigin, vecAngleVelocity, vecVelocity);
+		
+		SetEntProp(iBomb, Prop_Send, "m_CollisionGroup", 24);
+	}
+	
+	g_iGasThrowCharge[iClient] = 0;
+}
+
