@@ -84,21 +84,15 @@ methodmap CRageGas < SaxtonHaleBase
 		float flRageDuration = this.flDuration;
 		GetClientAbsOrigin(this.iClient, vecPos);
 		
-		if (this.bSuperRage)
-		{
-			TF2_AddCondition(this.iClient, TFCond_TeleportedGlow, flRageDuration, this.iClient);
-			this.flSpeed *= this.flRageSpeedMult;
-		}
+		float flRadius = this.flRadius;
+		if (this.bSuperRage) flRadius *= 1.5;
+		if (this.bSuperRage) flRageDuration *= 1.5;
 		
 		for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
 		{
 			if (IsClientInGame(iVictim) && IsPlayerAlive(iVictim) && GetClientTeam(iVictim) != bossTeam && !TF2_IsUbercharged(iVictim))
 			{
 				GetClientAbsOrigin(iVictim, vecTargetPos);
-				
-				float flRadius = this.flRadius;
-				if (this.bSuperRage) flRadius *= 1.5;
-				if (this.bSuperRage) flRageDuration *= 1.5;
 				
 				float flDistance = GetVectorDistance(vecTargetPos, vecPos);
 				
@@ -109,10 +103,21 @@ methodmap CRageGas < SaxtonHaleBase
 			}
 		}
 		
+		if (g_flRageGasEnd[this.iClient] == 0.0)
+		{
+			g_flPreviousSpeed[this.iClient] = this.flSpeed;
+			this.flSpeed *= this.flRageSpeedMult;
+			
+			if (this.bSuperRage)
+			{
+			TF2_AddCondition(this.iClient, TFCond_TeleportedGlow, flRageDuration, this.iClient);
+			this.flSpeed *= this.flRageSpeedMult;
+			}
+		}
+		
 		g_flRageGasEnd[this.iClient] = GetGameTime() + flRageDuration;
-		g_flPreviousSpeed[this.iClient] = this.flSpeed;
+		
 		TF2_AddCondition(this.iClient, TFCond_SpeedBuffAlly, flRageDuration, this.iClient);
-		this.flSpeed *= this.flRageSpeedMult;
 	}
 	
 	public void OnThink()
