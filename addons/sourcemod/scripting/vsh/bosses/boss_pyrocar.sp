@@ -289,7 +289,7 @@ methodmap CPyroCar < SaxtonHaleBase
 			g_iGasThrowCharge[this.iClient] += g_iGasThrowBuildCharge;
 			
 		if (g_iGasThrowCharge[this.iClient] >= g_iGasThrowChargeMax)
-			ThrowGas(this.iClient);
+			g_iGasThrowCharge[this.iClient] = g_iGasThrowChargeMax;
 		
 	}
 	
