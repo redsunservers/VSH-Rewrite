@@ -381,8 +381,12 @@ methodmap CPyroCar < SaxtonHaleBase
 			
 			if (IsClientInGame(iClient))
 			{
-				TF2Attrib_RemoveByDefIndex(iClient, ATTRIB_LESSHEALING);
-				TF2Attrib_ClearCache(iClient);
+				TF2Attrib_RemoveByDefIndex(GetPlayerWeaponSlot(iClient, WeaponSlot_Primary), ATTRIB_LESSHEALING);
+				TF2Attrib_ClearCache(GetPlayerWeaponSlot(iClient, WeaponSlot_Primary));
+				TF2Attrib_RemoveByDefIndex(GetPlayerWeaponSlot(iClient, WeaponSlot_Secondary), ATTRIB_LESSHEALING);
+				TF2Attrib_ClearCache(GetPlayerWeaponSlot(iClient, WeaponSlot_Secondary));
+				TF2Attrib_RemoveByDefIndex(GetPlayerWeaponSlot(iClient, WeaponSlot_Melee), ATTRIB_LESSHEALING);
+				TF2Attrib_ClearCache(GetPlayerWeaponSlot(iClient, WeaponSlot_Melee));
 			}
 		}
 	}
