@@ -344,6 +344,7 @@ ConVar tf_arena_preround_time;
 
 #include "vsh/abilities/ability_body_eat.sp"
 #include "vsh/abilities/ability_brave_jump.sp"
+#include "vsh/abilities/ability_conditions.sp"
 #include "vsh/abilities/ability_dash_jump.sp"
 #include "vsh/abilities/ability_drop_model.sp"
 #include "vsh/abilities/ability_float_jump.sp"
@@ -381,6 +382,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/bosses/boss_pyromancer_scorched.sp"
 #include "vsh/bosses/boss_pyromancer_scalded.sp"
 #include "vsh/bosses/boss_redmond.sp"
+#include "vsh/bosses/boss_samyro.sp"
 #include "vsh/bosses/boss_seeldier.sp"
 #include "vsh/bosses/boss_seeman.sp"
 #include "vsh/bosses/boss_uberranger.sp"
@@ -673,6 +675,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("CPainisCupcake", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CPyroCar", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CRedmond", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("CSamyro", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CScaldedPyromancer", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CScorchedPyromancer", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CSeeldier", VSHClassType_Boss);
@@ -693,6 +696,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("CZombie", VSHClassType_Boss);
 	
 	//Register ability
+	SaxtonHale_RegisterClass("CAddCond", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CBodyEat", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CBomb", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CBombProjectile", VSHClassType_Ability);

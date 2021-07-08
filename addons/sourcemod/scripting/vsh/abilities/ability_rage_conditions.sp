@@ -28,15 +28,18 @@ methodmap CRageAddCond < SaxtonHaleBase
 		}
 	}
 	
-	public void AddCond(TFCond cond)
+	public void AddCond(TFCond cond, bool bSuperRage = false)
 	{
-		g_aConditions[this.iClient].Push(cond);
+		int iLength = g_aConditions[this.iClient].Length;
+		g_aConditions[this.iClient].Resize(iLength+1);
+		g_aConditions[this.iClient].Set(iLength, cond, 0);
+		g_aConditions[this.iClient].Set(iLength, bSuperRage, 1);
 	}
 	
 	public CRageAddCond(CRageAddCond ability)
 	{
 		if (g_aConditions[ability.iClient] == null)
-			g_aConditions[ability.iClient] = new ArrayList();
+			g_aConditions[ability.iClient] = new ArrayList(2);
 		g_aConditions[ability.iClient].Clear();
 		
 		g_flRageCondDuration[ability.iClient] = 5.0;
@@ -52,6 +55,11 @@ methodmap CRageAddCond < SaxtonHaleBase
 			flDuration *= this.flRageCondSuperRageMultiplier;
 		
 		for (int i = 0; i < iLength; i++)
-			TF2_AddCondition(this.iClient, g_aConditions[this.iClient].Get(i), flDuration);
+		{
+			bool bSuperRageCond = g_aConditions[this.iClient].Get(i, 1);
+			
+			if (!bSuperRageCond || bSuperRageCond && this.bSuperRage)
+				TF2_AddCondition(this.iClient, g_aConditions[this.iClient].Get(i, 0), flDuration);
+		}
 	}
 };
