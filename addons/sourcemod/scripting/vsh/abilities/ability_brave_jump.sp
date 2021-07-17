@@ -110,7 +110,7 @@ methodmap CBraveJump < SaxtonHaleBase
 		ability.iJumpChargeBuild = 4;
 		ability.flMaxHeight = 1100.0;
 		ability.flMaxDistance = 0.45;
-		ability.flCooldown = 7.0;
+		ability.flCooldown = 9.0;
 		ability.flEyeAngleRequirement = -25.0;	//How far up should the boss look for the ability to trigger? Minimum value is -89.0 (all the way up)
 	}
 	
@@ -175,7 +175,7 @@ methodmap CBraveJump < SaxtonHaleBase
 				TeleportEntity(this.iClient, NULL_VECTOR, NULL_VECTOR, vecVel);
 				
 				float flCooldownTime = (this.flCooldown*(float(this.iJumpCharge)/float(this.iMaxJumpCharge)));
-				if (flCooldownTime < 2.5) flCooldownTime = 2.5;
+				if (flCooldownTime < 5.5) flCooldownTime = 5.5;
 				g_flJumpCooldownWait[this.iClient] = GetGameTime()+flCooldownTime;
 				
 				this.iJumpCharge = 0;
