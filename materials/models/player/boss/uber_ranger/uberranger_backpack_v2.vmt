@@ -10,7 +10,7 @@
 	"$blendtintbybasealpha" "1" 
  	"$blendtintcoloroverbase" "0"  
 
-	"$colortint_base" "{230 230 230}"  
+	"$colortint_base" "{255 255 255}"  
 	"$colortint_tmp" "[0 0 0]"
 
 // 	"$bbqamount" "1"	
