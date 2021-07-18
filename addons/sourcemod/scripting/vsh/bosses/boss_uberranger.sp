@@ -62,8 +62,8 @@ methodmap CUberRanger < SaxtonHaleBase
 		rageCond.flRageCondSuperRageMultiplier = 1.6;	//8 seconds
 		rageCond.AddCond(TFCond_UberchargedCanteen);
 		
-		boss.iBaseHealth = 650;
-		boss.iHealthPerPlayer = 550;
+		boss.iBaseHealth = 700;
+		boss.iHealthPerPlayer = 650;
 		boss.nClass = TFClass_Medic;
 		boss.iMaxRageDamage = 2500;
 		boss.bCanBeHealed = true;
@@ -81,7 +81,7 @@ methodmap CUberRanger < SaxtonHaleBase
 	
 	public void GetBossInfo(char[] sInfo, int length)
 	{
-		StrCat(sInfo, length, "\nHealth: Very Low");
+		StrCat(sInfo, length, "\nHealth: Low");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nAbilities");
 		StrCat(sInfo, length, "\n- Brave Jump");
@@ -96,19 +96,26 @@ methodmap CUberRanger < SaxtonHaleBase
 	
 	public void OnSpawn()
 	{
-		//Bosses and minions can't be overhealed, so a -max overheal attribute for the Medigun isn't needed
-		this.CallFunction("CreateWeapon", 211, "tf_weapon_medigun", 100, TFQual_Collectors, "");
+		char sAttribs[64];
+		strcopy(sAttribs, sizeof(sAttribs), "9 ; 0.25");
+		this.CallFunction("CreateWeapon", 211, "tf_weapon_medigun", 100, TFQual_Collectors, sAttribs);
 		
-		char sAttribs[128];
-		Format(sAttribs, sizeof(sAttribs), "2 ; 2.80 ; 69 ; 0.5 ; 252 ; 0.5 ; 259 ; 1.0");
-		int iWeapon = this.CallFunction("CreateWeapon", 173, "tf_weapon_bonesaw", 100, TFQual_Collectors, sAttribs);
+		/*
+		Medigun attribute:
+		
+		9: ubercharge rate penalty
+		*/
+		
+		strcopy(sAttribs, sizeof(sAttribs), "2 ; 2.80 ; 17 ; 0.1 ; 69 ; 0.5 ; 252 ; 0.5 ; 259 ; 1.0");
+		int iWeapon = this.CallFunction("CreateWeapon", 37, "tf_weapon_bonesaw", 100, TFQual_Collectors, sAttribs);
 		if (iWeapon > MaxClients)
 			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
 			
 		/*
-		Vitasaw attributes:
+		Ubersaw attributes:
 		
 		2: damage bonus
+		17: add uber on hit
 		69: health from healers reduced
 		252: reduction in push force taken from damage
 		259: Deals 3x falling damage to the player you land on
@@ -132,6 +139,7 @@ methodmap CUberRanger < SaxtonHaleBase
  		iWearable = this.CallFunction("CreateWeapon", 315, "tf_wearable", GetRandomInt(1, 100), TFQual_Normal, sWhitePaint);	//Blighted Beak
 		if (iWearable > MaxClients)
 			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iUberRangerBlightedBeak);
+
 	}
 	
 	public void GetModel(char[] sModel, int length)
@@ -161,7 +169,7 @@ methodmap CUberRanger < SaxtonHaleBase
 		//Give priority to players who have the highest scores
 		for (int iSelection = 0; iSelection < iLength; iSelection++)
 		{	
-			//Spawn and teleport the replacement to the boss
+			//Spawn and teleport the minion to the boss
 			int iClient = UberRanger_SpawnBestPlayer(aValidMinions);
 			
 			if (iClient > 0)		
@@ -254,12 +262,13 @@ methodmap CMinionRanger < SaxtonHaleBase
 		boss.flWeighDownTimer = -1.0;
 		boss.bCanBeHealed = true;
 		boss.bMinion = true;
+		boss.bHealthPerPlayerAliveOnly = true;
 		
-		g_bUberRangerPlayerWasSummoned[boss.iClient] = true;	//Mark the player as summoned so he won't become a miniboss again in this round
+		g_bUberRangerPlayerWasSummoned[boss.iClient] = true;	//Mark the player as summoned so they won't become a miniboss again in this round
 		g_bUberRangerMinionHasMoved[boss.iClient] = false;		//Will check if the player has moved to determine if they're AFK or not
 		g_iUberRangerMinionAFKTimeLeft[boss.iClient] = 6;		//The player has 6 seconds to move after being summoned, else they'll be taken as AFK and replaced by someone else
 		
-		EmitSoundToClient(boss.iClient, SOUND_ALERT);			//Alert player as he spawned
+		EmitSoundToClient(boss.iClient, SOUND_ALERT);			//Alert player as they (re)spawned
 	}
 	
 	public bool IsBossHidden()
@@ -269,10 +278,18 @@ methodmap CMinionRanger < SaxtonHaleBase
 	
 	public void OnSpawn()
 	{
-		this.CallFunction("CreateWeapon", 211, "tf_weapon_medigun", 10, TFQual_Collectors, "");
 		
-		char sAttribs[128];
-		Format(sAttribs, sizeof(sAttribs), "2 ; 1.25 ; 5 ; 1.2 ; 17 ; 0.25 ; 252 ; 0.5 ; 259 ; 1.0");
+		char sAttribs[64];
+		strcopy(sAttribs, sizeof(sAttribs), "9 ; 0.25");
+		this.CallFunction("CreateWeapon", 211, "tf_weapon_medigun", 100, TFQual_Collectors, sAttribs);
+		
+		/*
+		Medigun attribute:
+		
+		9: ubercharge rate penalty
+		*/
+		
+		strcopy(sAttribs, sizeof(sAttribs), "2 ; 1.25 ; 5 ; 1.2 ; 17 ; 0.25 ; 252 ; 0.5 ; 259 ; 1.0");
 		int iWeapon = this.CallFunction("CreateWeapon", 37, "tf_weapon_bonesaw", 10, TFQual_Collectors, sAttribs);
 		if (iWeapon > MaxClients)
 			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);

@@ -33,6 +33,7 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 		this.bMinion = false;
 		this.bModel = true;
 		this.bCanBeHealed = false;
+		this.bHealthPerPlayerAliveOnly = false;
 		this.nClass = TFClass_Unknown;
 
 		strcopy(g_sClientBossType[this.iClient], sizeof(g_sClientBossType[]), type);
@@ -86,7 +87,13 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 
 	public int CalculateMaxHealth()
 	{
-		return RoundToNearest((this.iBaseHealth + this.iHealthPerPlayer * g_iTotalAttackCount) * this.flHealthMultiplier);
+		int iHealth;
+		if (this.bHealthPerPlayerAliveOnly)
+			iHealth = RoundToNearest((this.iBaseHealth + this.iHealthPerPlayer * SaxtonHale_GetAliveAttackPlayers()) * this.flHealthMultiplier);
+		else
+			iHealth = RoundToNearest((this.iBaseHealth + this.iHealthPerPlayer * g_iTotalAttackCount) * this.flHealthMultiplier);
+		
+		return iHealth;
 	}
 	
 	public void GetBossName(char[] sName, int length)

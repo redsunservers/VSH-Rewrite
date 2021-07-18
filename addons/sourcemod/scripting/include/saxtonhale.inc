@@ -239,6 +239,13 @@ methodmap SaxtonHaleBase
 		public native set(bool val);
 	}
 	
+	// Retrieve/Set whether the boss' max health calculation should consider currently-living players or the playercount at the beginning of the round
+	property bool bHealthPerPlayerAliveOnly
+	{
+		public native get();
+		public native set(bool val);
+	}
+	
 	// Retrieve/Set whenever if boss is allowed to be healed from healing sources
 	property bool bCanBeHealed
 	{
@@ -864,6 +871,8 @@ public __pl_saxtonhale_SetNTVOptional()
 	MarkNativeAsOptional("SaxtonHaleBase.bModel.set");
 	MarkNativeAsOptional("SaxtonHaleBase.bCanBeHealed.get");
 	MarkNativeAsOptional("SaxtonHaleBase.bCanBeHealed.set");
+	MarkNativeAsOptional("SaxtonHaleBase.bHealthPerPlayerAliveOnly.get");
+	MarkNativeAsOptional("SaxtonHaleBase.bHealthPerPlayerAliveOnly.set");
 	MarkNativeAsOptional("SaxtonHaleBase.flSpeed.get");
 	MarkNativeAsOptional("SaxtonHaleBase.flSpeed.set");
 	MarkNativeAsOptional("SaxtonHaleBase.flSpeedMult.get");
