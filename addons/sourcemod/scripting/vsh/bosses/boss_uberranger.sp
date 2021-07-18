@@ -95,7 +95,7 @@ methodmap CUberRanger < SaxtonHaleBase
 	public void OnSpawn()
 	{
 		char sAttribs[64];
-		strcopy(sAttribs, sizeof(sAttribs), "9 ; 0.25");
+		strcopy(sAttribs, sizeof(sAttribs), "9 ; 0.4");
 		this.CallFunction("CreateWeapon", 211, "tf_weapon_medigun", 100, TFQual_Collectors, sAttribs);
 		
 		/*
@@ -262,7 +262,7 @@ methodmap CMinionRanger < SaxtonHaleBase
 	{
 		
 		char sAttribs[64];
-		strcopy(sAttribs, sizeof(sAttribs), "9 ; 0.25");
+		strcopy(sAttribs, sizeof(sAttribs), "9 ; 0.4");
 		this.CallFunction("CreateWeapon", 211, "tf_weapon_medigun", 100, TFQual_Collectors, sAttribs);
 		
 		/*
