@@ -1,9 +1,7 @@
-#define RANGER_MODEL 		"models/player/vsh_rewrite/uber_ranger/uber_ranger.mdl"
+#define RANGER_MODEL 		"models/player/vsh_rewrite/uber_ranger/uber_ranger_v2.mdl"
 #define RANGER_THEME 		"vsh_rewrite/uber_ranger/uberrangers_music.mp3"
 #define RANGER_RAGESOUND 	"mvm/mvm_tele_deliver.wav"
 
-static int g_iUberRangerPrussianPickelhaube;
-static int g_iUberRangerBlightedBeak;
 static int g_iUberRangerMinionAFKTimeLeft[TF_MAXPLAYERS+1];
 
 static ArrayList g_aUberRangerColorList;
@@ -125,21 +123,6 @@ methodmap CUberRanger < SaxtonHaleBase
 		int iColor[4] = { 230, 230, 230, 255 };
 		
 		SetEntityRenderColor(this.iClient, iColor[0], iColor[1], iColor[2], iColor[3]);
-		
-		int iWearable = -1;
-		
-		//Interestingly, painting the cosmetics directly doesn't seem to make them white, so we paint it through attributes in this case
-		char sWhitePaint[16];
-		Format(sWhitePaint, sizeof(sWhitePaint), "142 ; 15132390"); 
-		
-		iWearable = this.CallFunction("CreateWeapon", 50, "tf_wearable", GetRandomInt(1, 100), TFQual_Normal, sWhitePaint);		//Prussian Pickelhaube
-		if (iWearable > MaxClients)
-			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iUberRangerPrussianPickelhaube);
-		
- 		iWearable = this.CallFunction("CreateWeapon", 315, "tf_wearable", GetRandomInt(1, 100), TFQual_Normal, sWhitePaint);	//Blighted Beak
-		if (iWearable > MaxClients)
-			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iUberRangerBlightedBeak);
-
 	}
 	
 	public void GetModel(char[] sModel, int length)
@@ -212,10 +195,6 @@ methodmap CUberRanger < SaxtonHaleBase
 	public void Precache()
 	{
 		PrecacheModel(RANGER_MODEL);
-		
-		g_iUberRangerPrussianPickelhaube = PrecacheModel("models/player/items/medic/medic_helmet.mdl");
-		g_iUberRangerBlightedBeak = PrecacheModel("models/player/items/medic/medic_blighted_beak.mdl");
-		
 		PrepareSound(RANGER_THEME);
 		PrecacheSound(RANGER_RAGESOUND);
 		
@@ -226,19 +205,22 @@ methodmap CUberRanger < SaxtonHaleBase
 		for (int i = 0; i < sizeof(g_strUberRangerBackStabbed); i++) PrecacheSound(g_strUberRangerBackStabbed[i]);
 		for (int i = 0; i < sizeof(g_strUberRangerJump); i++) PrecacheSound(g_strUberRangerJump[i]);
 		
-		AddFileToDownloadsTable("materials/models/player/boss/uber_ranger/uberranger_backpack.vmt");
-		AddFileToDownloadsTable("materials/models/player/boss/uber_ranger/uberranger_backpack.vtf");
-		AddFileToDownloadsTable("materials/models/player/boss/uber_ranger/uberranger_body.vmt");
-		AddFileToDownloadsTable("materials/models/player/boss/uber_ranger/uberranger_body.vtf");
-		AddFileToDownloadsTable("materials/models/player/boss/uber_ranger/uberranger_head.vmt");
-		AddFileToDownloadsTable("materials/models/player/boss/uber_ranger/uberranger_head.vtf");
+		AddFileToDownloadsTable("materials/models/player/boss/uber_ranger/uberranger_backpack_v2.vmt");
+		AddFileToDownloadsTable("materials/models/player/boss/uber_ranger/uberranger_backpack_v2.vtf");
+		AddFileToDownloadsTable("materials/models/player/boss/uber_ranger/uberranger_body_v2.vmt");
+		AddFileToDownloadsTable("materials/models/player/boss/uber_ranger/uberranger_body_v2.vtf");
+		AddFileToDownloadsTable("materials/models/player/boss/uber_ranger/uberranger_head_v2.vmt");
+		AddFileToDownloadsTable("materials/models/player/boss/uber_ranger/uberranger_head_v2.vtf");
+		AddFileToDownloadsTable("materials/models/player/boss/uber_ranger/uberranger_beak.vmt");
+		AddFileToDownloadsTable("materials/models/player/boss/uber_ranger/uberranger_beak_leather.vmt");
+		AddFileToDownloadsTable("materials/models/player/boss/uber_ranger/uberranger_helmet.vmt");
 		
-		AddFileToDownloadsTable("models/player/vsh_rewrite/uber_ranger/uber_ranger.mdl");
-		AddFileToDownloadsTable("models/player/vsh_rewrite/uber_ranger/uber_ranger.sw.vtx");
-		AddFileToDownloadsTable("models/player/vsh_rewrite/uber_ranger/uber_ranger.vvd");
-		AddFileToDownloadsTable("models/player/vsh_rewrite/uber_ranger/uber_ranger.phy");
-		AddFileToDownloadsTable("models/player/vsh_rewrite/uber_ranger/uber_ranger.dx80.vtx");
-		AddFileToDownloadsTable("models/player/vsh_rewrite/uber_ranger/uber_ranger.dx90.vtx");
+		AddFileToDownloadsTable("models/player/vsh_rewrite/uber_ranger/uber_ranger_v2.mdl");
+		AddFileToDownloadsTable("models/player/vsh_rewrite/uber_ranger/uber_ranger_v2.sw.vtx");
+		AddFileToDownloadsTable("models/player/vsh_rewrite/uber_ranger/uber_ranger_v2.vvd");
+		AddFileToDownloadsTable("models/player/vsh_rewrite/uber_ranger/uber_ranger_v2.phy");
+		AddFileToDownloadsTable("models/player/vsh_rewrite/uber_ranger/uber_ranger_v2.dx80.vtx");
+		AddFileToDownloadsTable("models/player/vsh_rewrite/uber_ranger/uber_ranger_v2.dx90.vtx");
 	}
 	
 	public void Destroy()
@@ -319,26 +301,6 @@ methodmap CMinionRanger < SaxtonHaleBase
 		//Round started check is there so it doesn't show up when spawning on the next round as well
 		if (GameRules_GetRoundState() != RoundState_Preround)
 			CreateTimer(3.0, Timer_EntityCleanup, TF2_CreateGlow(this.iClient, iColor));
-		
-		//Another interesting thing: SetEntityRenderColor applies a color on top of the color it's already set for paintable models
-		//So for the color of the cosmetics to match the color of the Medic, we paint them white via an attribute then apply the random color
-		char sWhitePaint[16];
-		Format(sWhitePaint, sizeof(sWhitePaint), "142 ; 15132390");
-		int iWearable = -1;
-		
-		iWearable = this.CallFunction("CreateWeapon", 50, "tf_wearable", GetRandomInt(1, 100), TFQual_Normal, sWhitePaint);		//Prussian Pickelhaube
-		if (iWearable > MaxClients)
-		{
-			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iUberRangerPrussianPickelhaube);
-			SetEntityRenderColor(iWearable, iColor[0], iColor[1], iColor[2], iColor[3]);
-		}
-		
-		iWearable = this.CallFunction("CreateWeapon", 315, "tf_wearable", GetRandomInt(1, 100), TFQual_Normal, sWhitePaint);	//Blighted Beak
-		if (iWearable > MaxClients)
-		{
-			SetEntProp(iWearable, Prop_Send, "m_nModelIndexOverrides", g_iUberRangerBlightedBeak);
-			SetEntityRenderColor(iWearable, iColor[0], iColor[1], iColor[2], iColor[3]);
-		}
 		
 		g_hUberRangerMinionAFKTimer[this.iClient] = CreateTimer(0.0, Timer_UberRanger_ReplaceMinion, this.iClient);
 	}

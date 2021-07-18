@@ -1,6 +1,6 @@
 "VertexLitGeneric"
 {
-	"$basetexture" "models/player/boss/uber_ranger/uberranger_head"
+	"$basetexture" "models/player/boss/uber_ranger/uberranger_head_v2"
 	"$bumpmap"    "models/player/shared/shared_normal"
 		"$detail" "effects/tiledfire/fireLayeredSlowTiled512.vtf"	
 	"$detailscale" "1"
@@ -11,7 +11,7 @@
  	"$blendtintcoloroverbase" "0"  
 
 	"$colortint_base" "{255 255 255}"  
-	"$colortint_tmp" "[0 0 0]" 
+	"$colortint_tmp" "[0 0 0]"
 
 	"$yellow" "0"
 	"$one" "1"
