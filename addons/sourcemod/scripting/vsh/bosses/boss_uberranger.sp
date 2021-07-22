@@ -244,7 +244,7 @@ methodmap CMinionRanger < SaxtonHaleBase
 		boss.flWeighDownTimer = -1.0;
 		boss.bCanBeHealed = true;
 		boss.bMinion = true;
-		boss.bHealthPerPlayerAliveOnly = true;
+		boss.bHealthPerPlayerAlive = true;
 		
 		g_bUberRangerPlayerWasSummoned[boss.iClient] = true;	//Mark the player as summoned so they won't become a miniboss again in this round
 		g_bUberRangerMinionHasMoved[boss.iClient] = false;		//Will check if the player has moved to determine if they're AFK or not
