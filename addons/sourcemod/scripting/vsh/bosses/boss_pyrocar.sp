@@ -336,7 +336,7 @@ methodmap CPyroCar < SaxtonHaleBase
 			g_hPyrocarHealTimer[victim] = CreateTimer(0.4, Timer_RemoveLessHealing, GetClientSerial(victim));
 			
 			//Deal constant damage for flamethrower
-			damage = 7.0;
+			damage = 8.0;
 		}
 		
 		//Deal constant damage for afterburn
