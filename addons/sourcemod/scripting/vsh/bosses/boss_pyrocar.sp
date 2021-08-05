@@ -307,30 +307,14 @@ methodmap CPyroCar < SaxtonHaleBase
 			//Give victim less healing while damaged by pyrocar
 			if (!g_hPyrocarHealTimer[victim])
 			{
-				if (IsValidEdict(GetPlayerWeaponSlot(this.iClient, WeaponSlot_Primary)))
+				for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
 				{
-					TF2Attrib_RemoveByDefIndex(GetPlayerWeaponSlot(this.iClient, WeaponSlot_Primary), ATTRIB_LESSHEALING);
-					TF2Attrib_ClearCache(GetPlayerWeaponSlot(this.iClient, WeaponSlot_Primary));
-				}
-				if (IsValidEdict(GetPlayerWeaponSlot(this.iClient, WeaponSlot_Secondary)))
-				{
-					TF2Attrib_RemoveByDefIndex(GetPlayerWeaponSlot(this.iClient, WeaponSlot_Secondary), ATTRIB_LESSHEALING);
-					TF2Attrib_ClearCache(GetPlayerWeaponSlot(this.iClient, WeaponSlot_Secondary));
-				}
-				if (IsValidEdict(GetPlayerWeaponSlot(this.iClient, WeaponSlot_Melee)))
-				{
-					TF2Attrib_RemoveByDefIndex(GetPlayerWeaponSlot(this.iClient, WeaponSlot_Melee), ATTRIB_LESSHEALING);
-					TF2Attrib_ClearCache(GetPlayerWeaponSlot(this.iClient, WeaponSlot_Melee));
-				}
-				if (IsValidEdict(GetPlayerWeaponSlot(this.iClient, WeaponSlot_PDABuild)))
-				{
-					TF2Attrib_RemoveByDefIndex(GetPlayerWeaponSlot(this.iClient, WeaponSlot_PDABuild), ATTRIB_LESSHEALING);
-					TF2Attrib_ClearCache(GetPlayerWeaponSlot(this.iClient, WeaponSlot_PDABuild));
-				}
-				if (IsValidEdict(GetPlayerWeaponSlot(this.iClient, WeaponSlot_PDADestroy)))
-				{
-					TF2Attrib_RemoveByDefIndex(GetPlayerWeaponSlot(this.iClient, WeaponSlot_PDADestroy), ATTRIB_LESSHEALING);
-					TF2Attrib_ClearCache(GetPlayerWeaponSlot(this.iClient, WeaponSlot_PDADestroy));
+					int iWeapon = GetPlayerWeaponSlot(this.iClient, iSlot);
+					if (iWeapon > MaxClients)
+					{
+						TF2Attrib_SetByDefIndex(iWeapon, ATTRIB_LESSHEALING, 0.5);
+						TF2Attrib_ClearCache(iWeapon);
+					}
 				}
 			}
 			
@@ -401,30 +385,14 @@ methodmap CPyroCar < SaxtonHaleBase
 			
 			if (IsClientInGame(iClient))
 			{
-				if (IsValidEdict(GetPlayerWeaponSlot(iClient, WeaponSlot_Primary)))
+				for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
 				{
-					TF2Attrib_RemoveByDefIndex(GetPlayerWeaponSlot(iClient, WeaponSlot_Primary), ATTRIB_LESSHEALING);
-					TF2Attrib_ClearCache(GetPlayerWeaponSlot(iClient, WeaponSlot_Primary));
-				}
-				if (IsValidEdict(GetPlayerWeaponSlot(iClient, WeaponSlot_Secondary)))
-				{
-					TF2Attrib_RemoveByDefIndex(GetPlayerWeaponSlot(iClient, WeaponSlot_Secondary), ATTRIB_LESSHEALING);
-					TF2Attrib_ClearCache(GetPlayerWeaponSlot(iClient, WeaponSlot_Secondary));
-				}
-				if (IsValidEdict(GetPlayerWeaponSlot(iClient, WeaponSlot_Melee)))
-				{
-					TF2Attrib_RemoveByDefIndex(GetPlayerWeaponSlot(iClient, WeaponSlot_Melee), ATTRIB_LESSHEALING);
-					TF2Attrib_ClearCache(GetPlayerWeaponSlot(iClient, WeaponSlot_Melee));
-				}
-				if (IsValidEdict(GetPlayerWeaponSlot(iClient, WeaponSlot_PDABuild)))
-				{
-					TF2Attrib_RemoveByDefIndex(GetPlayerWeaponSlot(iClient, WeaponSlot_PDABuild), ATTRIB_LESSHEALING);
-					TF2Attrib_ClearCache(GetPlayerWeaponSlot(iClient, WeaponSlot_PDABuild));
-				}
-				if (IsValidEdict(GetPlayerWeaponSlot(iClient, WeaponSlot_PDADestroy)))
-				{
-					TF2Attrib_RemoveByDefIndex(GetPlayerWeaponSlot(iClient, WeaponSlot_PDADestroy), ATTRIB_LESSHEALING);
-					TF2Attrib_ClearCache(GetPlayerWeaponSlot(iClient, WeaponSlot_PDADestroy));
+					int iWeapon = GetPlayerWeaponSlot(this.iClient, iSlot);
+					if (iWeapon > MaxClients)
+					{
+						TF2Attrib_RemoveByDefIndex(iWeapon, ATTRIB_LESSHEALING);
+						TF2Attrib_ClearCache(iWeapon);
+					}
 				}
 			}
 		}
@@ -471,30 +439,14 @@ public Action Timer_RemoveLessHealing(Handle hTimer, int iSerial)
 		
 		if (IsClientInGame(iClient))
 		{
-			if (IsValidEdict(GetPlayerWeaponSlot(iClient, WeaponSlot_Primary)))
+			for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
 			{
-				TF2Attrib_RemoveByDefIndex(GetPlayerWeaponSlot(iClient, WeaponSlot_Primary), ATTRIB_LESSHEALING);
-				TF2Attrib_ClearCache(GetPlayerWeaponSlot(iClient, WeaponSlot_Primary));
-			}
-			if (IsValidEdict(GetPlayerWeaponSlot(iClient, WeaponSlot_Secondary)))
-			{
-				TF2Attrib_RemoveByDefIndex(GetPlayerWeaponSlot(iClient, WeaponSlot_Secondary), ATTRIB_LESSHEALING);
-				TF2Attrib_ClearCache(GetPlayerWeaponSlot(iClient, WeaponSlot_Secondary));
-			}
-			if (IsValidEdict(GetPlayerWeaponSlot(iClient, WeaponSlot_Melee)))
-			{
-				TF2Attrib_RemoveByDefIndex(GetPlayerWeaponSlot(iClient, WeaponSlot_Melee), ATTRIB_LESSHEALING);
-				TF2Attrib_ClearCache(GetPlayerWeaponSlot(iClient, WeaponSlot_Melee));
-			}
-			if (IsValidEdict(GetPlayerWeaponSlot(iClient, WeaponSlot_PDABuild)))
-			{
-				TF2Attrib_RemoveByDefIndex(GetPlayerWeaponSlot(iClient, WeaponSlot_PDABuild), ATTRIB_LESSHEALING);
-				TF2Attrib_ClearCache(GetPlayerWeaponSlot(iClient, WeaponSlot_PDABuild));
-			}
-			if (IsValidEdict(GetPlayerWeaponSlot(iClient, WeaponSlot_PDADestroy)))
-			{
-				TF2Attrib_RemoveByDefIndex(GetPlayerWeaponSlot(iClient, WeaponSlot_PDADestroy), ATTRIB_LESSHEALING);
-				TF2Attrib_ClearCache(GetPlayerWeaponSlot(iClient, WeaponSlot_PDADestroy));
+				int iWeapon = GetPlayerWeaponSlot(iClient, iSlot);
+				if (iWeapon > MaxClients)
+				{
+					TF2Attrib_RemoveByDefIndex(iWeapon, ATTRIB_LESSHEALING);
+					TF2Attrib_ClearCache(iWeapon);
+				}
 			}
 		}
 	}
