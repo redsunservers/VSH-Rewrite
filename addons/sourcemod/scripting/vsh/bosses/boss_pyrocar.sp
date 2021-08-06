@@ -6,6 +6,7 @@
 #define TF_DMG_AFTERBURN				DMG_PREVENT_PHYSICS_FORCE | DMG_BURN
 #define TF_DMG_GAS_AFTERBURN			DMG_BURN|DMG_PREVENT_PHYSICS_FORCE|DMG_ACID
 #define PYROCAR_BACKBURNER_ATTRIBUTES	"24 ; 1.0 ; 72 ; 0.5 ; 112 ; 0.25 ; 178 ; 0.2 ; 179 ; 1.0 ; 181 ; 1.0 ; 252 ; 0.5 ; 259 ; 1.0 ; 356 ; 1.0 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 1850.0 ; 862 ; 0.45 ; 863 ; 0.01 ; 865 ; 85 ; 214 ; %d"
+#define PYROCAR_HEALINGREDUCTION		0.5
 
 static char g_strPyrocarRoundStart[][] =  {
 	"vsh_rewrite/pyrocar/pyrocar_intro.mp3", 
@@ -88,6 +89,7 @@ methodmap CPyroCar < SaxtonHaleBase
 		boss.nClass = TFClass_Pyro;
 		boss.iMaxRageDamage = 2500;
 		boss.flSpeed = 350.0;
+		boss.flSpeedMult = 0.08;
 	}
 	
 	public void GetBossName(char[] sName, int length)
@@ -243,7 +245,6 @@ methodmap CPyroCar < SaxtonHaleBase
 					g_hGasTimer[i] = CreateTimer(10.0, Timer_EffectEnd, i);
 				}
 			}
-			
 		}
 		
 		//Handle Pyrocar's M2 ability
@@ -286,30 +287,16 @@ methodmap CPyroCar < SaxtonHaleBase
 		if (g_iPyrocarJetpack[this.iClient] == GetPlayerWeaponSlot(this.iClient, WeaponSlot_Secondary))
 		{
 			g_flPyrocarJetpackCharge[this.iClient] = GetEntPropFloat(this.iClient, Prop_Send, "m_flItemChargeMeter", 1);
-			if(g_flPyrocarJetpackCharge[this.iClient] < 100.0)
-				g_flPyrocarJetpackCharge[this.iClient] += 0.1;
+			if (g_flPyrocarJetpackCharge[this.iClient] < 100.0)
+				g_flPyrocarJetpackCharge[this.iClient] += 0.15;
 			SetEntPropFloat(this.iClient, Prop_Send, "m_flItemChargeMeter", g_flPyrocarJetpackCharge[this.iClient], 1);
 		}
 		else
 		{
-			if(g_flPyrocarJetpackCharge[this.iClient] < 100.0)
-			g_flPyrocarJetpackCharge[this.iClient] += 0.2;
+			if (g_flPyrocarJetpackCharge[this.iClient] < 100.0)
+			g_flPyrocarJetpackCharge[this.iClient] += 0.15;
 		}
 		
-	}
-	
-	public Action OnTakeDamage(int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
-	{
-		char sWeaponClassName[32];
-		if (inflictor >= 0)
-			GetEdictClassname(inflictor, sWeaponClassName, sizeof(sWeaponClassName));
-		
-		//It's ugly but there's no other way
-		float flHealingRate = 0.5;
-		if (TF2_IsPlayerInCondition(this.iClient, TFCond_Milked) && this.iClient != attacker && TF2_FindAttribute(attacker, ATTRIB_LESSHEALING, flHealingRate))
-			Client_AddHealth(attacker, -RoundToNearest(damage - damage/flHealingRate));
-		
-		return Plugin_Continue;
 	}
 	
 	public Action OnAttackDamage(int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
@@ -320,19 +307,26 @@ methodmap CPyroCar < SaxtonHaleBase
 			//Give victim less healing while damaged by pyrocar
 			if (!g_hPyrocarHealTimer[victim])
 			{
-				TF2Attrib_SetByDefIndex(victim, ATTRIB_LESSHEALING, 0.5);
-				TF2Attrib_ClearCache(victim);
+				for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
+				{
+					int iWeapon = GetPlayerWeaponSlot(this.iClient, iSlot);
+					if (iWeapon > MaxClients)
+					{
+						TF2Attrib_SetByDefIndex(iWeapon, ATTRIB_LESSHEALING, 0.5);
+						TF2Attrib_ClearCache(iWeapon);
+					}
+				}
 			}
 			
-			g_hPyrocarHealTimer[victim] = CreateTimer(0.2, Timer_RemoveLessHealing, GetClientSerial(victim));
+			g_hPyrocarHealTimer[victim] = CreateTimer(0.4, Timer_RemoveLessHealing, GetClientSerial(victim));
 			
 			//Deal constant damage for flamethrower
-			damage = 7.0;
+			damage = 8.0;
 		}
 		
 		//Deal constant damage for afterburn
 		if (damagetype == TF_DMG_AFTERBURN || damagetype == TF_DMG_GAS_AFTERBURN)
-			damage = 1.4;
+			damage = 2.0;
 			
 		if (g_flPyrocarGasCharge[this.iClient] <= g_iMaxGasPassers * g_flGasMinCharge)
 			g_flPyrocarGasCharge[this.iClient] += damage;
@@ -353,7 +347,7 @@ methodmap CPyroCar < SaxtonHaleBase
 		//Buildings take constant damage
 		if (weapon == TF2_GetItemInSlot(this.iClient, WeaponSlot_Primary))
 		{
-			damage = 17.0;
+			damage = 20.0;
 		}
 	}
 	
@@ -391,8 +385,15 @@ methodmap CPyroCar < SaxtonHaleBase
 			
 			if (IsClientInGame(iClient))
 			{
-				TF2Attrib_RemoveByDefIndex(iClient, ATTRIB_LESSHEALING);
-				TF2Attrib_ClearCache(iClient);
+				for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
+				{
+					int iWeapon = GetPlayerWeaponSlot(this.iClient, iSlot);
+					if (iWeapon > MaxClients)
+					{
+						TF2Attrib_RemoveByDefIndex(iWeapon, ATTRIB_LESSHEALING);
+						TF2Attrib_ClearCache(iWeapon);
+					}
+				}
 			}
 		}
 	}
@@ -438,8 +439,15 @@ public Action Timer_RemoveLessHealing(Handle hTimer, int iSerial)
 		
 		if (IsClientInGame(iClient))
 		{
-			TF2Attrib_RemoveByDefIndex(iClient, ATTRIB_LESSHEALING);
-			TF2Attrib_ClearCache(iClient);
+			for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
+			{
+				int iWeapon = GetPlayerWeaponSlot(iClient, iSlot);
+				if (iWeapon > MaxClients)
+				{
+					TF2Attrib_RemoveByDefIndex(iWeapon, ATTRIB_LESSHEALING);
+					TF2Attrib_ClearCache(iWeapon);
+				}
+			}
 		}
 	}
 }
