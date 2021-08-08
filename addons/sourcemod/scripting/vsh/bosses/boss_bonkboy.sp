@@ -99,13 +99,14 @@ methodmap CBonkBoy < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- Unlimited and greater mobility jumps");
 		StrCat(sInfo, length, "\n- Faster movement speed");
 		StrCat(sInfo, length, "\n- Unlimited balls");
+		StrCat(sInfo, length, "\n- Bat stuns and knockback players");
 		StrCat(sInfo, length, "\n- 200%% Rage: Extends duration from 5 to 10 seconds");
 	}
 	
 	public void OnSpawn()
 	{
 		char attribs[256];
-		Format(attribs, sizeof(attribs), "2 ; 3.54 ; 252 ; 0.5 ; 259 ; 1.0 ; 38 ; 1.0 ; 278 ; 0.33 ; 437 ; 65536.0 ; 524 ; 1.2 ; 551 ; 1.0");
+		Format(attribs, sizeof(attribs), "2 ; 3.54 ; 252 ; 0.5 ; 259 ; 1.0 ; 38 ; 1.0 ; 278 ; 0.5 ; 437 ; 65536.0 ; 524 ; 1.2 ; 551 ; 1.0");
 		int iWeapon = this.CallFunction("CreateWeapon", 44, "tf_weapon_bat_wood", 1, TFQual_Collectors, attribs);
 		if (iWeapon > MaxClients)
 			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
@@ -155,7 +156,7 @@ methodmap CBonkBoy < SaxtonHaleBase
 		int iMelee = TF2_GetItemInSlot(this.iClient, WeaponSlot_Melee);
 		if (iMelee > MaxClients)
 		{
-			TF2Attrib_SetByDefIndex(iMelee, ATTRIB_FIRE_RATE, 0.4);	//firing speed
+			TF2Attrib_SetByDefIndex(iMelee, ATTRIB_FIRE_RATE, 0.7);	//firing speed
 			TF2Attrib_ClearCache(iMelee);
 		}
 	}
@@ -174,6 +175,26 @@ methodmap CBonkBoy < SaxtonHaleBase
 				TF2Attrib_RemoveByDefIndex(iMelee, ATTRIB_FIRE_RATE);	//firing speed
 				TF2Attrib_ClearCache(iMelee);
 			}
+		}
+	}
+	
+	public Action OnAttackDamage(int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+	{
+		if (g_bBonkBoyRage[this.iClient] && weapon > MaxClients && TF2_GetItemInSlot(this.iClient, WeaponSlot_Melee) == weapon && damagecustom == 0)
+		{
+			TF2_StunPlayer(victim, 5.0, _, TF_STUNFLAGS_SMALLBONK, this.iClient);
+			
+			float vecEye[3], vecVel[3], vecVictim[3];
+			GetClientEyeAngles(this.iClient, vecEye);
+			
+			vecEye[0] = ((vecEye[0] + 90.0) / 3.0) - 90.0;	//Move eye angle more upward
+			
+			GetAngleVectors(vecEye, vecVel, NULL_VECTOR, NULL_VECTOR);
+			ScaleVector(vecVel, 500.0);
+			
+			GetEntPropVector(this.iClient, Prop_Data, "m_vecVelocity", vecVictim);
+			AddVectors(vecVictim, vecVel, vecVictim);
+			TeleportEntity(victim, NULL_VECTOR, NULL_VECTOR, vecVictim);
 		}
 	}
 	
