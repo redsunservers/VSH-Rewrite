@@ -65,8 +65,6 @@
 #define FL_EDICT_DONTSEND	(1<<4)	// don't transmit this entity
 #define FL_EDICT_PVSCHECK	(1<<5)	// always transmit entity, but cull against PVS
 
-#define FSOLID_TRIGGER		0x0008
-
 #define TEXT_TAG			"\x07E19300[\x07E17100VSH REWRITE\x07E19300]\x01"
 #define TEXT_COLOR			"\x07E19F00"
 #define TEXT_DARK			"\x07E17100"

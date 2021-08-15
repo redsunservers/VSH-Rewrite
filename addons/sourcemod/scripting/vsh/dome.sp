@@ -509,12 +509,8 @@ public Action Dome_TimerBleed(Handle hTimer)
 				if (flDamage < 1.0)
 					flDamage = 1.0;
 				
-				//Deal damage with trigger_hurt as attacker to bypass invulnerability
-				int iTriggerHurt = CreateEntityByName("trigger_hurt");
-				SetEntProp(iTriggerHurt, Prop_Data, "m_usSolidFlags", FSOLID_TRIGGER);
-				SDKHooks_TakeDamage(iClient, 0, iTriggerHurt, flDamage, DMG_PREVENT_PHYSICS_FORCE);
-				RemoveEntity(iTriggerHurt);
-				
+				//Deal damage
+				SDKHooks_TakeDamage(iClient, 0, iClient, flDamage, DMG_PREVENT_PHYSICS_FORCE);
 				EmitSoundToClient(iClient, DOME_NEARBY_SOUND);
 			}
 		}
