@@ -1,8 +1,6 @@
 #define VAGINEER_MODEL		"models/player/saxton_hale/vagineer_v150.mdl"
 #define VAGINEER_KILL_SOUND "vsh_rewrite/vagineer/vagineer_kill.mp3"
 
-static float g_flVagineerSentryHealthDecay[TF_MAXPLAYERS+1] = 0.0;
-
 static char g_strVagineerRageMusic[][] = {
 	"vsh_rewrite/vagineer/vagineer_rage_music_1.mp3",
 	"vsh_rewrite/vagineer/vagineer_rage_music_2.mp3",
@@ -54,6 +52,7 @@ methodmap CVagineer < SaxtonHaleBase
 	public CVagineer(CVagineer boss)
 	{
 		boss.CallFunction("CreateAbility", "CBraveJump");
+		boss.CallFunction("CreateAbility", "CWeaponSentry");
 		CScareRage scareAbility = boss.CallFunction("CreateAbility", "CScareRage");
 		scareAbility.flRadius = 200.0;
 		
@@ -61,8 +60,6 @@ methodmap CVagineer < SaxtonHaleBase
 		boss.iHealthPerPlayer = 700;
 		boss.nClass = TFClass_Engineer;
 		boss.iMaxRageDamage = 2500;
-		
-		g_flVagineerSentryHealthDecay[boss.iClient] = 0.0;
 	}
 	
 	public void GetBossName(char[] sName, int length)
@@ -78,16 +75,13 @@ methodmap CVagineer < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- Brave Jump");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- Builds Sentry with faster firing speed, health scales based on players alive");
+		StrCat(sInfo, length, "\n- Builds Level 1 Sentry with faster rotate and firing speed, health scales based on players alive");
 		StrCat(sInfo, length, "\n- Scares players at small range for 5 seconds");
-		StrCat(sInfo, length, "\n- 200%% Rage: 50%% extra Sentry health, larger scare range and extends duration to 7.5 seconds");
+		StrCat(sInfo, length, "\n- 200%% Rage: Level 2 Sentry, larger scare range and extends duration to 7.5 seconds");
 	}
 	
 	public void OnSpawn()
 	{
-		SetEntProp(this.iClient, Prop_Send, "m_iAmmo", 0, 4, 3);
-		this.CallFunction("CreateWeapon", 25, "tf_weapon_pda_engineer_build", 100, TFQual_Unusual, "");
-		
 		char attribs[256];
 		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 93 ; 0.0 ; 95 ; 0.0 ; 343 ; 0.5 ; 353 ; 1.0 ; 436 ; 1.0 ; 464 ; 10.0 ; 2043 ; 0.0");
 		int iWeapon = this.CallFunction("CreateWeapon", 7, "tf_weapon_wrench", 100, TFQual_Collectors, attribs);
@@ -108,15 +102,6 @@ methodmap CVagineer < SaxtonHaleBase
 		464: Sentry build speed increased
 		2043: slower upgrade rate
 		*/
-	}
-	
-	public Action OnGiveNamedItem(const char[] sClassname, int iIndex)
-	{
-		//Allow keep tf_weapon_builder
-		if (StrEqual(sClassname, "tf_weapon_builder"))
-			return Plugin_Continue;
-		
-		return Plugin_Handled;
 	}
 	
 	public void GetModel(char[] sModel, int length)
@@ -165,86 +150,6 @@ methodmap CVagineer < SaxtonHaleBase
 		return Plugin_Continue;
 	}
 	
-	public Action OnBuild(TFObjectType nType, TFObjectMode nMode)
-	{
-		if (nType == TFObject_Sentry)	//Allow sentry to be built, block otherwise
-			return Plugin_Continue;
-		
-		return Plugin_Handled;
-	}
-	
-	public Action OnBuildObject(Event event)
-	{
-		int iEntity = event.GetInt("index");
-		int iAliveCount = SaxtonHale_GetAliveAttackPlayers();
-		
-		int iSentryHealth = iAliveCount * 150 + 200;
-		if (iSentryHealth > 1800)
-			iSentryHealth = 1800;
-			
-		if (this.bSuperRage)
-			iSentryHealth = RoundToNearest(float(iSentryHealth) * 1.5);
-		
-		SetVariantInt(iSentryHealth);
-		AcceptEntityInput(iEntity, "SetHealth");	//Sets sentry health
-		SDK_RemoveObject(this.iClient, iEntity);	//Make the boss not the sentry's original owner so he gets to potentially build more of them
-		
-		return Plugin_Continue;
-	}
-	
-	public Action OnObjectSapped(Event event)
-	{
-		int iVictim = GetClientOfUserId(event.GetInt("ownerid"));
-		
-		int iSentry = MaxClients+1;
-		while((iSentry = FindEntityByClassname(iSentry, "obj_sentrygun")) > MaxClients)
-			if (GetEntPropEnt(iSentry, Prop_Send, "m_hBuilder") == iVictim)
-				SetEntProp(iSentry, Prop_Send, "m_bDisabled", 0);
-	}
-	
-	public void OnRage()
-	{
-		SetEntProp(this.iClient, Prop_Send, "m_iAmmo", 130, 4, 3);
-		FakeClientCommand(this.iClient, "build 2 0");
-	}
-	
-	public void OnThink()
-	{
-		Hud_AddText(this.iClient, "Use your rage to build sentry at a safe place!");
-		
-		if (g_flVagineerSentryHealthDecay[this.iClient] < GetGameTime() - 0.01)
-		{
-			int iSentry = MaxClients+1;
-			while((iSentry = FindEntityByClassname(iSentry, "obj_sentrygun")) > MaxClients)
-			{
-				//Wait until the sentry is fully built to drain HP so it doesn't explode while being carried
-				//m_iState: 0 is being carried or in the process of building, 1 is idle (can be either enabled or disabled), 2 is shooting at a target or being wrangled, 3 is in the process of upgrading
-				if (GetEntPropEnt(iSentry, Prop_Send, "m_hBuilder") == this.iClient && GetEntProp(iSentry, Prop_Send, "m_iState") > 0)
-				{
-					SetVariantInt(1);
-					AcceptEntityInput(iSentry, "RemoveHealth");
-					g_flVagineerSentryHealthDecay[this.iClient] = GetGameTime();
-					
-					if (GetEntPropFloat(iSentry, Prop_Send, "m_flModelScale") != 1.22)
-						SetEntPropFloat(iSentry, Prop_Send, "m_flModelScale", 1.22);
-				}
-			}
-		}
-	}
-	
-	public void Destroy()
-	{
-		int iSentry = MaxClients+1;
-		while((iSentry = FindEntityByClassname(iSentry, "obj_sentrygun")) > MaxClients)
-		{
-			if (GetEntPropEnt(iSentry, Prop_Send, "m_hBuilder") == this.iClient)
-			{
-				SetVariantInt(999999);
-				AcceptEntityInput(iSentry, "RemoveHealth");
-			}
-		}
-	}
-		
 	public void Precache()
 	{
 		PrepareSound(VAGINEER_KILL_SOUND);
