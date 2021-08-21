@@ -365,6 +365,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/abilities/ability_weapon_ball.sp"
 #include "vsh/abilities/ability_weapon_charge.sp"
 #include "vsh/abilities/ability_weapon_fists.sp"
+#include "vsh/abilities/ability_weapon_sentry.sp"
 #include "vsh/abilities/ability_weapon_spells.sp"
 
 #include "vsh/bosses/boss_announcer.sp"
@@ -716,6 +717,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("CWeaponBall", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CWeaponCharge", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CWeaponFists", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CWeaponSentry", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CWeaponSpells", VSHClassType_Ability);
 	
 	//Register modifiers
