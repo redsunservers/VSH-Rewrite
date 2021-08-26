@@ -278,8 +278,8 @@ methodmap CAnnouncer < SaxtonHaleBase
 	}
 };
 
-static Handle g_hAnnouncerMinionTimer[TF_MAXPLAYERS+1];
-static int g_iAnnouncerMinionTimeLeft[TF_MAXPLAYERS+1];
+static Handle g_hAnnouncerMinionTimer[TF_MAXPLAYERS];
+static int g_iAnnouncerMinionTimeLeft[TF_MAXPLAYERS];
 
 methodmap CAnnouncerMinion < SaxtonHaleBase
 {

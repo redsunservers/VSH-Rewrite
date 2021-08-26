@@ -2,11 +2,11 @@
 
 static int g_iWeaponBallStunType;
 
-static int g_iWeaponBallMax[TF_MAXPLAYERS+1];
-static float g_flWeaponBallDuration[TF_MAXPLAYERS+1];
-static float g_flWeaponBallRageEnd[TF_MAXPLAYERS+1];
-static float g_flWeaponBallStunTime[TF_MAXPLAYERS+1];
-static int g_iWeaponBallThrower[TF_MAXPLAYERS+1];
+static int g_iWeaponBallMax[TF_MAXPLAYERS];
+static float g_flWeaponBallDuration[TF_MAXPLAYERS];
+static float g_flWeaponBallRageEnd[TF_MAXPLAYERS];
+static float g_flWeaponBallStunTime[TF_MAXPLAYERS];
+static int g_iWeaponBallThrower[TF_MAXPLAYERS];
 
 methodmap CWeaponBall < SaxtonHaleBase
 {

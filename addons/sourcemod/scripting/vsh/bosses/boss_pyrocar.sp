@@ -65,17 +65,17 @@ static int g_iMaxGasPassers = 5;
 
 static int g_iPyrocarCosmetics[sizeof(g_iCosmetics)];
 
-static int g_iPyrocarPrimary[TF_MAXPLAYERS+1];
-static int g_iPyrocarJetpack[TF_MAXPLAYERS+1];
-static int g_iPyrocarMelee[TF_MAXPLAYERS+1];
+static int g_iPyrocarPrimary[TF_MAXPLAYERS];
+static int g_iPyrocarJetpack[TF_MAXPLAYERS];
+static int g_iPyrocarMelee[TF_MAXPLAYERS];
 
-static float g_flPyrocarGasCharge[TF_MAXPLAYERS+1];
-static float g_flPyrocarJetpackCharge[TF_MAXPLAYERS+1];
+static float g_flPyrocarGasCharge[TF_MAXPLAYERS];
+static float g_flPyrocarJetpackCharge[TF_MAXPLAYERS];
 
-static Handle g_hPyrocarHealTimer[TF_MAXPLAYERS+1];
-static Handle g_hGasTimer[TF_MAXPLAYERS+1];
+static Handle g_hPyrocarHealTimer[TF_MAXPLAYERS];
+static Handle g_hGasTimer[TF_MAXPLAYERS];
 
-static bool g_bUnderEffect[TF_MAXPLAYERS+1];
+static bool g_bUnderEffect[TF_MAXPLAYERS];
 
 methodmap CPyroCar < SaxtonHaleBase
 {

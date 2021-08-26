@@ -17,7 +17,7 @@ static Handle g_hSDKRemoveObject;
 
 int g_iOffsetFuseTime = -1;
 
-static int g_iHookIdGiveNamedItem[TF_MAXPLAYERS+1];
+static int g_iHookIdGiveNamedItem[TF_MAXPLAYERS];
 
 void SDK_Init()
 {

@@ -1,15 +1,15 @@
 #define ATTRIB_PUSHRESISTANCE	252
 #define ATTRIB_AIRCONTROL 		610
 
-static float g_flJumpPower[TF_MAXPLAYERS+1];
-static float g_flRageHopMaxHeight[TF_MAXPLAYERS+1];
-static float g_flRageHopMaxDistance[TF_MAXPLAYERS+1];
-static float g_flBombDamage[TF_MAXPLAYERS+1];
-static float g_flBombRadius[TF_MAXPLAYERS+1];
-static float g_flHopEndTime[TF_MAXPLAYERS+1];
-static bool g_bStompEnabled[TF_MAXPLAYERS+1];
-static float g_flDuration[TF_MAXPLAYERS+1];
-static float g_vecPeakVel[TF_MAXPLAYERS+1];
+static float g_flJumpPower[TF_MAXPLAYERS];
+static float g_flRageHopMaxHeight[TF_MAXPLAYERS];
+static float g_flRageHopMaxDistance[TF_MAXPLAYERS];
+static float g_flBombDamage[TF_MAXPLAYERS];
+static float g_flBombRadius[TF_MAXPLAYERS];
+static float g_flHopEndTime[TF_MAXPLAYERS];
+static bool g_bStompEnabled[TF_MAXPLAYERS];
+static float g_flDuration[TF_MAXPLAYERS];
+static float g_vecPeakVel[TF_MAXPLAYERS];
 
 methodmap CRageHop < SaxtonHaleBase
 {

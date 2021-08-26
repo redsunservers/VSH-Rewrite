@@ -1,4 +1,4 @@
-static float g_flClientAngryLastTime[TF_MAXPLAYERS+1];
+static float g_flClientAngryLastTime[TF_MAXPLAYERS];
 
 methodmap CModifiersAngry < SaxtonHaleBase
 {

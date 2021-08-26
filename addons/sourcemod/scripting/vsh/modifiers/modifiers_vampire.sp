@@ -3,7 +3,7 @@
 #define VAMPIRE_LOSS	0.002	//Per second
 
 static int g_iVampireCount = 0;
-static float g_flVampireHealthDrainBuffer[TF_MAXPLAYERS+1];
+static float g_flVampireHealthDrainBuffer[TF_MAXPLAYERS];
 
 methodmap CModifiersVampire < SaxtonHaleBase
 {

@@ -1,14 +1,14 @@
-static int g_iBackstabCount[TF_MAXPLAYERS+1][TF_MAXPLAYERS+1];
-static int g_iClimbAmount[TF_MAXPLAYERS+1];
-static int g_iZombieUsed[TF_MAXPLAYERS+1];
-static float g_flUberBeforeHealingBuilding[TF_MAXPLAYERS+1];
-static float g_flDispenserBoost[TF_MAXPLAYERS+1];
+static int g_iBackstabCount[TF_MAXPLAYERS][TF_MAXPLAYERS];
+static int g_iClimbAmount[TF_MAXPLAYERS];
+static int g_iZombieUsed[TF_MAXPLAYERS];
+static float g_flUberBeforeHealingBuilding[TF_MAXPLAYERS];
+static float g_flDispenserBoost[TF_MAXPLAYERS];
 
-static bool g_bTagsLunchbox[TF_MAXPLAYERS+1];
+static bool g_bTagsLunchbox[TF_MAXPLAYERS];
 
-static int g_iTagsAirblastRequirement[TF_MAXPLAYERS+1];
-static int g_iTagsAirblastDamage[TF_MAXPLAYERS+1];
-static FlamethrowerState g_nTagsAirblastState[TF_MAXPLAYERS+1];
+static int g_iTagsAirblastRequirement[TF_MAXPLAYERS];
+static int g_iTagsAirblastDamage[TF_MAXPLAYERS];
+static FlamethrowerState g_nTagsAirblastState[TF_MAXPLAYERS];
 
 static ArrayList g_aAttrib;	//Arrays of active attribs to be removed later
 

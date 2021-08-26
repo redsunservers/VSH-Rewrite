@@ -1,5 +1,5 @@
 ArrayList g_aTags;	//Arrays of every tags
-ArrayList g_aTagsClient[TF_MAXPLAYERS+1][view_as<int>(TagsCall)][WeaponSlot_BuilderEngie+1];	//List of tags id from g_aTags builted to call from each clients
+ArrayList g_aTagsClient[TF_MAXPLAYERS][view_as<int>(TagsCall)][WeaponSlot_BuilderEngie+1];	//List of tags id from g_aTags builted to call from each clients
 
 TagsFunction g_tFunctions;	//List of all functions and overrides
 

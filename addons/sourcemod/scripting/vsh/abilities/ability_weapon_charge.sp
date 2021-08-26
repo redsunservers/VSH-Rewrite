@@ -1,12 +1,12 @@
 #define ATTRIB_CHARGE_DURATION_SEC		202
 #define ATTRIB_FULL_TURN_CONTROL		639
 
-static float g_flChargeRageDuration[TF_MAXPLAYERS+1];
-static float g_flChargePreviousSound[TF_MAXPLAYERS+1];
-static bool g_bChargeIsCharging[TF_MAXPLAYERS+1] = false;
+static float g_flChargeRageDuration[TF_MAXPLAYERS];
+static float g_flChargePreviousSound[TF_MAXPLAYERS];
+static bool g_bChargeIsCharging[TF_MAXPLAYERS] = false;
 
-static bool g_bChargeRage[TF_MAXPLAYERS+1] = false;
-static bool g_bChargeJump[TF_MAXPLAYERS+1] = false;
+static bool g_bChargeRage[TF_MAXPLAYERS] = false;
+static bool g_bChargeJump[TF_MAXPLAYERS] = false;
 
 methodmap CWeaponCharge < SaxtonHaleBase
 {

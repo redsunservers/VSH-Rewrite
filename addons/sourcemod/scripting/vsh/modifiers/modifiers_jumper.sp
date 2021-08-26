@@ -1,6 +1,6 @@
 #define ATTRIB_NO_JUMP	819
 
-static float g_flJumpCooldown[TF_MAXPLAYERS+1];
+static float g_flJumpCooldown[TF_MAXPLAYERS];
 
 methodmap CModifiersJumper < SaxtonHaleBase
 {

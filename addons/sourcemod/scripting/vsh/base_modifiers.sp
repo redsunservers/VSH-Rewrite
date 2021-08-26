@@ -1,4 +1,4 @@
-static char g_sClientModifiersType[TF_MAXPLAYERS+1][64];
+static char g_sClientModifiersType[TF_MAXPLAYERS][64];
 
 methodmap SaxtonHaleModifiers < SaxtonHaleBase
 {

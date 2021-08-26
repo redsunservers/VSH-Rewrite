@@ -5,12 +5,12 @@
 #define FREEZE_PARTICLE_02 "xms_icicle_impact_dryice"
 #define FREEZE_PARTICLE_03 "xmas_ornament_glitter_alt"
 
-static float g_flAbilityRadius[TF_MAXPLAYERS + 1];
-static float g_flSlowDuration[TF_MAXPLAYERS + 1];
-static float g_flSlowPercentage[TF_MAXPLAYERS + 1];
-static float g_flFreezeDuration[TF_MAXPLAYERS + 1];
-static float g_flRageFreezeSuperRageMultiplier[TF_MAXPLAYERS + 1];
-static bool g_bFreezeAffected[TF_MAXPLAYERS + 1];
+static float g_flAbilityRadius[TF_MAXPLAYERS];
+static float g_flSlowDuration[TF_MAXPLAYERS];
+static float g_flSlowPercentage[TF_MAXPLAYERS];
+static float g_flFreezeDuration[TF_MAXPLAYERS];
+static float g_flRageFreezeSuperRageMultiplier[TF_MAXPLAYERS];
+static bool g_bFreezeAffected[TF_MAXPLAYERS];
 
 methodmap CRageFreeze < SaxtonHaleBase
 {

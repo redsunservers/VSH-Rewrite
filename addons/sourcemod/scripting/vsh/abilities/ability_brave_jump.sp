@@ -1,12 +1,12 @@
-static int g_iBraveJumpCharge[TF_MAXPLAYERS+1];
-static int g_iBraveJumpMaxCharge[TF_MAXPLAYERS+1];
-static int g_iBraveJumpChargeBuild[TF_MAXPLAYERS+1];
-static float g_flBraveJumpMaxHeight[TF_MAXPLAYERS+1];
-static float g_flBraveJumpMaxDistance[TF_MAXPLAYERS+1];
-static float g_flJumpCooldown[TF_MAXPLAYERS+1];
-static float g_flJumpCooldownWait[TF_MAXPLAYERS+1];
-static float g_flBraveJumpEyeAngleRequirement[TF_MAXPLAYERS+1];
-static bool g_bBraveJumpHoldingChargeButton[TF_MAXPLAYERS+1];
+static int g_iBraveJumpCharge[TF_MAXPLAYERS];
+static int g_iBraveJumpMaxCharge[TF_MAXPLAYERS];
+static int g_iBraveJumpChargeBuild[TF_MAXPLAYERS];
+static float g_flBraveJumpMaxHeight[TF_MAXPLAYERS];
+static float g_flBraveJumpMaxDistance[TF_MAXPLAYERS];
+static float g_flJumpCooldown[TF_MAXPLAYERS];
+static float g_flJumpCooldownWait[TF_MAXPLAYERS];
+static float g_flBraveJumpEyeAngleRequirement[TF_MAXPLAYERS];
+static bool g_bBraveJumpHoldingChargeButton[TF_MAXPLAYERS];
 
 methodmap CBraveJump < SaxtonHaleBase
 {

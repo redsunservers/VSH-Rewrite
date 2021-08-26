@@ -1,4 +1,4 @@
-static char g_sDropModelPath[TF_MAXPLAYERS+1][PLATFORM_MAX_PATH];
+static char g_sDropModelPath[TF_MAXPLAYERS][PLATFORM_MAX_PATH];
 
 methodmap CDropModel < SaxtonHaleBase
 {

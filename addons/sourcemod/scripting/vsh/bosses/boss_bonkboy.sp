@@ -5,7 +5,7 @@ static int g_iBonkBoyModelMask;
 static int g_iBonkBoyModelShirt;
 static int g_iBonkBoyModelBag;
 
-static bool g_bBonkBoyRage[TF_MAXPLAYERS+1];
+static bool g_bBonkBoyRage[TF_MAXPLAYERS];
 
 static char g_strBonkBoyRoundStart[][] = {
 	"vo/scout_sf12_goodmagic07.mp3",

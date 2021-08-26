@@ -7,12 +7,12 @@ enum TeleportViewMode
 	TeleportViewMode_Teleported
 }
 
-static TeleportViewMode g_nTeleportViewMode[TF_MAXPLAYERS+1];
-static float g_vecTeleportViewPos[TF_MAXPLAYERS+1][3];
-static float g_flTeleportViewCharge[TF_MAXPLAYERS+1];
-static float g_flTeleportViewStartCharge[TF_MAXPLAYERS+1];
-static float g_flTeleportViewCooldown[TF_MAXPLAYERS+1];
-static float g_flTeleportViewCooldownWait[TF_MAXPLAYERS+1];
+static TeleportViewMode g_nTeleportViewMode[TF_MAXPLAYERS];
+static float g_vecTeleportViewPos[TF_MAXPLAYERS][3];
+static float g_flTeleportViewCharge[TF_MAXPLAYERS];
+static float g_flTeleportViewStartCharge[TF_MAXPLAYERS];
+static float g_flTeleportViewCooldown[TF_MAXPLAYERS];
+static float g_flTeleportViewCooldownWait[TF_MAXPLAYERS];
 
 methodmap CTeleportView < SaxtonHaleBase
 {

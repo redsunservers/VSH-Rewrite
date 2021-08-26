@@ -1,7 +1,7 @@
-static float g_flLightRageDuration[TF_MAXPLAYERS+1];
-static float g_flLightRageRadius[TF_MAXPLAYERS+1];
-static int g_iRageLightColor[TF_MAXPLAYERS+1][4];
-static int g_iRageLightBrigthness[TF_MAXPLAYERS+1];
+static float g_flLightRageDuration[TF_MAXPLAYERS];
+static float g_flLightRageRadius[TF_MAXPLAYERS];
+static int g_iRageLightColor[TF_MAXPLAYERS][4];
+static int g_iRageLightBrigthness[TF_MAXPLAYERS];
 
 methodmap CLightRage < SaxtonHaleBase
 {

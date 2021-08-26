@@ -4,14 +4,14 @@
 
 static int g_iUberRangerPrussianPickelhaube;
 static int g_iUberRangerBlightedBeak;
-static int g_iUberRangerMinionAFKTimeLeft[TF_MAXPLAYERS+1];
+static int g_iUberRangerMinionAFKTimeLeft[TF_MAXPLAYERS];
 
 static ArrayList g_aUberRangerColorList;
 
-static Handle g_hUberRangerMinionAFKTimer[TF_MAXPLAYERS+1];
+static Handle g_hUberRangerMinionAFKTimer[TF_MAXPLAYERS];
 
-static bool g_bUberRangerPlayerWasSummoned[TF_MAXPLAYERS+1];
-static bool g_bUberRangerMinionHasMoved[TF_MAXPLAYERS+1];
+static bool g_bUberRangerPlayerWasSummoned[TF_MAXPLAYERS];
+static bool g_bUberRangerMinionHasMoved[TF_MAXPLAYERS];
 
 static char g_strUberRangerRoundStart[][] = {
 	"vo/medic_battlecry05.mp3"

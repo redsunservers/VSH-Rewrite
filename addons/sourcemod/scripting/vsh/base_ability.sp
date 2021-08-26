@@ -1,6 +1,6 @@
 #define MAX_BOSS_ABILITY 	8
 
-static char g_sAbilityType[TF_MAXPLAYERS+1][MAX_BOSS_ABILITY][64];
+static char g_sAbilityType[TF_MAXPLAYERS][MAX_BOSS_ABILITY][64];
 
 methodmap SaxtonHaleAbility < SaxtonHaleBase
 {

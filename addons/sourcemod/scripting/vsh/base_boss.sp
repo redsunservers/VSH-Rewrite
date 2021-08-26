@@ -1,13 +1,13 @@
-static char g_sClientBossType[TF_MAXPLAYERS+1][64];
-static char g_sClientBossRageMusic[TF_MAXPLAYERS+1][255];
+static char g_sClientBossType[TF_MAXPLAYERS][64];
+static char g_sClientBossRageMusic[TF_MAXPLAYERS][255];
 
-static bool g_bClientBossWeighDownForce[TF_MAXPLAYERS+1];
+static bool g_bClientBossWeighDownForce[TF_MAXPLAYERS];
 
-static float g_flClientBossWeighDownTimer[TF_MAXPLAYERS+1];
-static float g_flClientBossRageMusicVolume[TF_MAXPLAYERS+1];
+static float g_flClientBossWeighDownTimer[TF_MAXPLAYERS];
+static float g_flClientBossRageMusicVolume[TF_MAXPLAYERS];
 
-static Handle g_hClientBossModelTimer[TF_MAXPLAYERS+1];
-static Handle g_hClientBossRageMusicTime[TF_MAXPLAYERS+1];
+static Handle g_hClientBossModelTimer[TF_MAXPLAYERS];
+static Handle g_hClientBossRageMusicTime[TF_MAXPLAYERS];
 
 methodmap SaxtonHaleBoss < SaxtonHaleBase
 {
