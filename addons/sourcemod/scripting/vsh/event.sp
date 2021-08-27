@@ -93,12 +93,8 @@ public Action Event_RoundStart(Event event, const char[] sName, bool bDontBroadc
 		g_iPlayerAssistDamage[iClient] = 0;
 		g_iClientOwner[iClient] = 0;
 		
-		int iColor[4];
-		iColor[0] = 255; iColor[1] = 255; iColor[2] = 255; iColor[3] = 255;
-		Hud_SetColor(iClient, iColor);
-		
-		if (!IsClientInGame(iClient)) continue;
-		if (GetClientTeam(iClient) <= 1) continue;
+		if (!IsClientInGame(iClient) || TF2_GetClientTeam(iClient) <= TFTeam_Spectator)
+			continue;
 		
 		// Put every players in same team & pick the boss later
 		TF2_ForceTeamJoin(iClient, TFTeam_Attack);
@@ -322,7 +318,7 @@ public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcas
 			SaxtonHaleBase boss = SaxtonHaleBase(iMainBoss);
 			if (boss.bValid)
 			{
-				char sSound[255];
+				char sSound[PLATFORM_MAX_PATH];
 				boss.CallFunction("GetSound", sSound, sizeof(sSound), VSHSound_Win);
 				if (!StrEmpty(sSound))
 					BroadcastSoundToTeam(TFTeam_Spectator, sSound);
@@ -345,7 +341,7 @@ public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcas
 			SaxtonHaleBase boss = SaxtonHaleBase(iMainBoss);
 			if (boss.bValid)
 			{
-				char sSound[255];
+				char sSound[PLATFORM_MAX_PATH];
 				boss.CallFunction("GetSound", sSound, sizeof(sSound), VSHSound_Lose);
 				if (!StrEmpty(sSound))
 					BroadcastSoundToTeam(TFTeam_Spectator, sSound);
@@ -582,7 +578,7 @@ public Action Event_DestroyObject(Event event, const char[] sName, bool bDontBro
 	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 	if (boss.bValid)
 	{
-		char sSound[255];
+		char sSound[PLATFORM_MAX_PATH];
 		boss.CallFunction("GetSound", sSound, sizeof(sSound), VSHSound_KillBuilding);
 		if (!StrEmpty(sSound))
 			EmitSoundToAll(sSound, iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
@@ -635,6 +631,24 @@ public Action Event_PlayerDeath(Event event, const char[] sName, bool bDontBroad
 		//Call boss death
 		bossVictim.CallFunction("OnDeath", event);
 		CheckForceAttackWin(iVictim);
+		
+		for (int iClient = 1; iClient <= MaxClients; iClient++)
+		{
+			if (iVictim != iClient && SaxtonHale_IsValidBoss(iClient, false))
+			{
+				char sSound[PLATFORM_MAX_PATH];
+				if (IsPlayerAlive(iClient))	//There another main boss alive, call death sound
+					bossVictim.CallFunction("GetSound", sSound, sizeof(sSound), VSHSound_Death);
+				
+				if (StrEmpty(sSound))	//Otherwise just use lose sound
+					bossVictim.CallFunction("GetSound", sSound, sizeof(sSound), VSHSound_Lose);
+				
+				if (!StrEmpty(sSound))
+					BroadcastSoundToTeam(TFTeam_Spectator, sSound);
+				
+				break;
+			}
+		}
 	}
 	
 	if (0 < iAttacker <= MaxClients && iVictim != iAttacker && IsClientInGame(iAttacker))
@@ -654,7 +668,7 @@ public Action Event_PlayerDeath(Event event, const char[] sName, bool bDontBroad
 			//Play boss kill voiceline
 			if ((GetRandomInt(0, 1)) && 0 < iAttacker <= MaxClients && bossAttacker.bValid)
 			{
-				char sSound[255];
+				char sSound[PLATFORM_MAX_PATH];
 				bossAttacker.CallFunction("GetSoundKill", sSound, sizeof(sSound), TF2_GetPlayerClass(iVictim));
 				if (!StrEmpty(sSound))
 					EmitSoundToAll(sSound, iAttacker, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
@@ -684,7 +698,7 @@ public Action Event_PlayerDeath(Event event, const char[] sName, bool bDontBroad
 			SaxtonHaleBase boss = SaxtonHaleBase(iBoss);
 			if (iBoss != 0 && boss.bValid)
 			{
-				char sSound[255];
+				char sSound[PLATFORM_MAX_PATH];
 				boss.CallFunction("GetSound", sSound, sizeof(sSound), VSHSound_Lastman);
 				if (!StrEmpty(sSound))
 					BroadcastSoundToTeam(TFTeam_Spectator, sSound);

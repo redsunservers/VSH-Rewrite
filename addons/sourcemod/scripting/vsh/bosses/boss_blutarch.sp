@@ -81,28 +81,6 @@ methodmap CBlutarch < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- 200%% Rage: Summons 3 Meteor spells");
 	}
 	
-	public void OnDeath(Event eventInfo)
-	{
-		if (!g_bRoundStarted) return;
-		
-		for (int iClient = 1; iClient <= MaxClients; iClient++)
-		{
-			SaxtonHaleBase boss = SaxtonHaleBase(iClient);
-			if (boss.bValid && IsPlayerAlive(iClient))
-			{
-				char sType[128];
-				boss.CallFunction("GetBossType", sType, sizeof(sType));
-				if (StrEqual(sType, "CRedmond"))
-				{
-					char sSound[PLATFORM_MAX_PATH];
-					strcopy(sSound, sizeof(sSound), g_strBlutarchDeath[GetRandomInt(0,sizeof(g_strBlutarchDeath)-1)]);
-					BroadcastSoundToTeam(TFTeam_Spectator, sSound);
-					return;
-				}
-			}
-		}
-	}
-	
 	public void GetModel(char[] sModel, int length)
 	{
 		strcopy(sModel, length, BLUTARCH_MODEL);
@@ -117,6 +95,7 @@ methodmap CBlutarch < SaxtonHaleBase
 			case VSHSound_Rage: strcopy(sSound, length, g_strBlutarchRage[GetRandomInt(0,sizeof(g_strBlutarchRage)-1)]);
 			case VSHSound_Lastman: strcopy(sSound, length, g_strBlutarchLastMan[GetRandomInt(0,sizeof(g_strBlutarchLastMan)-1)]);
 			case VSHSound_Backstab: strcopy(sSound, length, g_strBlutarchBackstabbed[GetRandomInt(0,sizeof(g_strBlutarchBackstabbed)-1)]);
+			case VSHSound_Death: strcopy(sSound, length, g_strBlutarchDeath[GetRandomInt(0,sizeof(g_strBlutarchDeath)-1)]);
 		}
 	}
 	

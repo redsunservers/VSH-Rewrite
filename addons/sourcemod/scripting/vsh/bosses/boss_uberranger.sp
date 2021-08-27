@@ -66,7 +66,6 @@ methodmap CUberRanger < SaxtonHaleBase
 		boss.iHealthPerPlayer = 550;
 		boss.nClass = TFClass_Medic;
 		boss.iMaxRageDamage = 2500;
-		boss.bCanBeHealed = true;
 		
 		for (int i = 1; i <= MaxClients; i++)
 			g_bUberRangerPlayerWasSummoned[i] = false;
@@ -196,9 +195,9 @@ methodmap CUberRanger < SaxtonHaleBase
 		time = 235.0;
 	}
 	
-	public void OnThink()
+	public void GetHudText(char[] sMessage, int iLength)
 	{		
-		Hud_AddText(this.iClient, "Use your Medigun to heal your companions!");
+		StrCat(sMessage, iLength, "\nUse your Medigun to heal your companions!");
 	}
 	
 	public void Precache()
@@ -252,7 +251,6 @@ methodmap CMinionRanger < SaxtonHaleBase
 		boss.nClass = TFClass_Medic;
 		boss.iMaxRageDamage = -1;
 		boss.flWeighDownTimer = -1.0;
-		boss.bCanBeHealed = true;
 		boss.bMinion = true;
 		
 		g_bUberRangerPlayerWasSummoned[boss.iClient] = true;	//Mark the player as summoned so he won't become a miniboss again in this round
@@ -350,15 +348,12 @@ methodmap CMinionRanger < SaxtonHaleBase
 			strcopy(sSound, length, g_strUberRangerJump[GetRandomInt(0,sizeof(g_strUberRangerJump)-1)]);
 	}
 	
-	public void OnThink()
+	public void GetHudText(char[] sMessage, int iLength)
 	{
-		char sMessage[64];
 		if (!g_bUberRangerMinionHasMoved[this.iClient])
-			Format(sMessage, sizeof(sMessage), "You have %d second%s to move before getting replaced!", g_iUberRangerMinionAFKTimeLeft[this.iClient], g_iUberRangerMinionAFKTimeLeft[this.iClient] != 1 ? "s" : "");
+			Format(sMessage, iLength, "%s\nYou have %d second%s to move before getting replaced!", sMessage, g_iUberRangerMinionAFKTimeLeft[this.iClient], g_iUberRangerMinionAFKTimeLeft[this.iClient] != 1 ? "s" : "");
 		else
-			Format(sMessage, sizeof(sMessage), "Use your Medigun to heal your companions!");
-			
-		Hud_AddText(this.iClient, sMessage);
+			StrCat(sMessage, iLength, "\nUse your Medigun to heal your companions!");
 	}
 	
 	public void OnDeath()

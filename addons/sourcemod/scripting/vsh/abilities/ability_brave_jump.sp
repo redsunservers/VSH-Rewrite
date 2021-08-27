@@ -4,6 +4,7 @@ static int g_iBraveJumpChargeBuild[TF_MAXPLAYERS];
 static float g_flBraveJumpMaxHeight[TF_MAXPLAYERS];
 static float g_flBraveJumpMaxDistance[TF_MAXPLAYERS];
 static float g_flJumpCooldown[TF_MAXPLAYERS];
+static float g_flJumpMinCooldown[TF_MAXPLAYERS];
 static float g_flJumpCooldownWait[TF_MAXPLAYERS];
 static float g_flBraveJumpEyeAngleRequirement[TF_MAXPLAYERS];
 static bool g_bBraveJumpHoldingChargeButton[TF_MAXPLAYERS];
@@ -60,6 +61,18 @@ methodmap CBraveJump < SaxtonHaleBase
 		}
 	}
 	
+	property float flMinCooldown
+	{
+		public get()
+		{
+			return g_flJumpMinCooldown[this.iClient];
+		}
+		public set(float val)
+		{
+			g_flJumpMinCooldown[this.iClient] = val;
+		}
+	}
+	
 	property float flMaxHeight
 	{
 		public get()
@@ -111,37 +124,39 @@ methodmap CBraveJump < SaxtonHaleBase
 		ability.flMaxHeight = 1100.0;
 		ability.flMaxDistance = 0.45;
 		ability.flCooldown = 9.0;
+		ability.flMinCooldown = 5.5;
 		ability.flEyeAngleRequirement = -25.0;	//How far up should the boss look for the ability to trigger? Minimum value is -89.0 (all the way up)
 	}
 	
 	public void OnThink()
 	{
-		if (GameRules_GetRoundState() == RoundState_Preround) return;
+		if (GameRules_GetRoundState() == RoundState_Preround)
+			return;
 		
 		if (g_flJumpCooldownWait[this.iClient] == 0.0)	//Round started, start cooldown
 			g_flJumpCooldownWait[this.iClient] = GetGameTime()+this.flCooldown;
 		
-		char sMessage[255];
-		if (this.iJumpCharge > 0)
-			Format(sMessage, sizeof(sMessage), "Jump charge: %0.2f%%. Look up and stand up to use super-jump.", (float(this.iJumpCharge)/float(this.iMaxJumpCharge))*100.0);
-		else
-			Format(sMessage, sizeof(sMessage), "Hold right click to use your super-jump!");
-		
-		if (g_flJumpCooldownWait[this.iClient] != 0.0 && g_flJumpCooldownWait[this.iClient] > GetGameTime())
-		{
-			float flRemainingTime = g_flJumpCooldownWait[this.iClient]-GetGameTime();
-			int iSec = RoundToNearest(flRemainingTime);
-			Format(sMessage, sizeof(sMessage), "Super-jump cooldown %i second%s remaining!", iSec, (iSec > 1) ? "s" : "");
-			Hud_AddText(this.iClient, sMessage);
-			return;
-		}
-		
-		Hud_AddText(this.iClient, sMessage);
-		
-		if (g_bBraveJumpHoldingChargeButton[this.iClient])
+		if (g_flJumpCooldownWait[this.iClient] <= GetGameTime() && g_bBraveJumpHoldingChargeButton[this.iClient])
 			this.iJumpCharge += this.iJumpChargeBuild;
 		else
 			this.iJumpCharge -= this.iJumpChargeBuild*2;
+	}
+	
+	public void GetHudText(char[] sMessage, int iLength)
+	{
+		if (g_flJumpCooldownWait[this.iClient] != 0.0 && g_flJumpCooldownWait[this.iClient] > GetGameTime())
+		{
+			int iSec = RoundToNearest(g_flJumpCooldownWait[this.iClient]-GetGameTime());
+			Format(sMessage, iLength, "%s\nSuper-jump cooldown %i second%s remaining!", sMessage, iSec, (iSec > 1) ? "s" : "");
+		}
+		else if (this.iJumpCharge > 0)
+		{
+			Format(sMessage, iLength, "%s\nJump charge: %0.2f%%. Look up and stand up to use super-jump.", sMessage, (float(this.iJumpCharge)/float(this.iMaxJumpCharge))*100.0);
+		}
+		else
+		{
+			Format(sMessage, iLength, "%s\nHold right click to use your super-jump!", sMessage);
+		}
 	}
 	
 	public void OnButtonHold(int button)
@@ -176,7 +191,9 @@ methodmap CBraveJump < SaxtonHaleBase
 				TeleportEntity(this.iClient, NULL_VECTOR, NULL_VECTOR, vecVel);
 				
 				float flCooldownTime = (this.flCooldown*(float(this.iJumpCharge)/float(this.iMaxJumpCharge)));
-				if (flCooldownTime < 5.5) flCooldownTime = 5.5;
+				if (flCooldownTime < this.flMinCooldown)
+					flCooldownTime = this.flMinCooldown;
+				
 				g_flJumpCooldownWait[this.iClient] = GetGameTime()+flCooldownTime;
 				
 				this.iJumpCharge = 0;

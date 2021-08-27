@@ -83,8 +83,8 @@ methodmap CScorchedPyromancer < SaxtonHaleBase
 		}
 	}
 	
-	public void OnThink()
+	public void GetHudText(char[] sMessage, int iLength)
 	{
-		Hud_AddText(this.iClient, "HINT: Stay near the other Pyromancer so they can crit ignited players!");
+		StrCat(sMessage, iLength, "\nStay near the other Pyromancer so they can crit ignited players!");
 	}
 }

@@ -150,6 +150,7 @@ enum SaxtonHaleSound
 	VSHSound_KillBuilding,
 	VSHSound_Lastman,
 	VSHSound_Backstab,
+	VSHSound_Death,
 };
 
 /**
@@ -234,13 +235,6 @@ methodmap SaxtonHaleBase
 	
 	// Retrieve/Set whenever if boss should have custom model, and remove cosmetics
 	property bool bModel
-	{
-		public native get();
-		public native set(bool val);
-	}
-	
-	// Retrieve/Set whenever if boss is allowed to be healed from healing sources
-	property bool bCanBeHealed
 	{
 		public native get();
 		public native set(bool val);
@@ -862,8 +856,6 @@ public __pl_saxtonhale_SetNTVOptional()
 	MarkNativeAsOptional("SaxtonHaleBase.bSuperRage.set");
 	MarkNativeAsOptional("SaxtonHaleBase.bModel.get");
 	MarkNativeAsOptional("SaxtonHaleBase.bModel.set");
-	MarkNativeAsOptional("SaxtonHaleBase.bCanBeHealed.get");
-	MarkNativeAsOptional("SaxtonHaleBase.bCanBeHealed.set");
 	MarkNativeAsOptional("SaxtonHaleBase.flSpeed.get");
 	MarkNativeAsOptional("SaxtonHaleBase.flSpeed.set");
 	MarkNativeAsOptional("SaxtonHaleBase.flSpeedMult.get");

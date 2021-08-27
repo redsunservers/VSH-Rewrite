@@ -236,50 +236,41 @@ methodmap CBrutalSniper < SaxtonHaleBase
 	
 	public void OnThink()
 	{
-		int iClient = this.iClient;
-		
-		int iActiveWeapon = GetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon");
+		int iActiveWeapon = GetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon");
 		
 		//Crit if holding Bushwacka
 		if (IsValidEntity(iActiveWeapon) && GetEntProp(iActiveWeapon, Prop_Send, "m_iItemDefinitionIndex") == ITEM_BUSHWACKA)
-			TF2_AddCondition(iClient, TFCond_CritOnDamage, 0.05);
+			TF2_AddCondition(this.iClient, TFCond_CritOnDamage, 0.05);
+	}
+	
+	public void GetHudText(char[] sMessage, int iLength)
+	{
+		int iWeapon = TF2_GetItemInSlot(this.iClient, WeaponSlot_Melee);
+		if (iWeapon <= MaxClients)
+			return;
 		
-		char sMessage[255];
-		int iColor[4];
-		
-		int iWeapon = TF2_GetItemInSlot(iClient, WeaponSlot_Melee);
-		
-		if (iWeapon <= MaxClients) return;
-		
-		int iIndex = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
-		switch(iIndex)
+		switch (GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex"))
 		{
-			case ITEM_KUKRI:
-			{
-				Format(sMessage, sizeof(sMessage), "Kukri: Default");
-				iColor[0] = 192; iColor[1] = 192; iColor[2] = 192;
-			}
-			case ITEM_TRIBALMAN_SHIV:
-			{
-				Format(sMessage, sizeof(sMessage), "Tribalman Shiv: 10 seconds bleed, 15%% dmg penalty");
-				iColor[0] = 192; iColor[1] = 32; iColor[2] = 0;
-			}
-			case ITEM_BUSHWACKA:
-			{
-				Format(sMessage, sizeof(sMessage), "Bushwacka: Always crit, 20%% dmg vulnerability");
-				iColor[0] = 224; iColor[1] = 160; iColor[2] = 0;
-			}
-			case ITEM_SHAHANSHAH:
-			{
-				Format(sMessage, sizeof(sMessage), "Shahanshah: +15%% dmg when <50%% health, -15%% dmg when >50%% health");
-				iColor[0] = 144; iColor[1] = 92; iColor[2] = 0;
-			}
+			case ITEM_KUKRI: StrCat(sMessage, iLength, "\nKukri: Default");
+			case ITEM_TRIBALMAN_SHIV: StrCat(sMessage, iLength, "\nTribalman Shiv: 10 seconds bleed, 15%% dmg penalty");
+			case ITEM_BUSHWACKA: StrCat(sMessage, iLength, "\nBushwacka: Always crit, 20%% dmg vulnerability");
+			case ITEM_SHAHANSHAH: StrCat(sMessage, iLength, "\nShahanshah: +15%% dmg when <50%% health, -15%% dmg when >50%% health");
 		}
+	}
+	
+	public void GetHudColor(int iColor[4])
+	{
+		int iWeapon = TF2_GetItemInSlot(this.iClient, WeaponSlot_Melee);
+		if (iWeapon <= MaxClients)
+			return;
 		
-		iColor[3] = 255;
-		
-		Hud_AddText(iClient, sMessage);
-		Hud_SetColor(iClient, iColor);
+		switch (GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex"))
+		{
+			case ITEM_KUKRI: iColor = {192, 192, 192, 255};
+			case ITEM_TRIBALMAN_SHIV: iColor = {192, 32, 0, 255};
+			case ITEM_BUSHWACKA: iColor = {224, 160, 0, 255};
+			case ITEM_SHAHANSHAH: iColor = {144, 92, 0, 255};
+		}
 	}
 	
 	public void OnRage()

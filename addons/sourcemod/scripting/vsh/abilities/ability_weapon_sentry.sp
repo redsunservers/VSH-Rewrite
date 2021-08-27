@@ -70,8 +70,6 @@ methodmap CWeaponSentry < SaxtonHaleBase
 	
 	public void OnThink()
 	{
-		Hud_AddText(this.iClient, "Use your rage to build sentry!");
-		
 		int iSentry = MaxClients+1;
 		while((iSentry = FindEntityByClassname(iSentry, "obj_sentrygun")) > MaxClients)
 		{
@@ -139,6 +137,11 @@ methodmap CWeaponSentry < SaxtonHaleBase
 				}
 			}
 		}
+	}
+	
+	public void GetHudText(char[] sMessage, int iLength)
+	{
+		StrCat(sMessage, iLength, "\nUse your rage to build sentry!");
 	}
 	
 	public void Destroy()

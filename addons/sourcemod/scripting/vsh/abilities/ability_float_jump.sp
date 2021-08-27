@@ -131,12 +131,6 @@ methodmap CFloatJump < SaxtonHaleBase
 	{
 		if (GameRules_GetRoundState() == RoundState_Preround) return;
 		
-		char sMessage[255];
-		if (this.iJumpCharge > 0)
-			Format(sMessage, sizeof(sMessage), "Float charge: %0.2f%%.", (float(this.iJumpCharge)/float(this.iMaxJumpCharge))*100.0);
-		else
-			Format(sMessage, sizeof(sMessage), "Hold right click to use your float jump!");
-		
 		if (g_flFloatJumpEndTime[this.iClient] < GetGameTime() && GetEntityGravity(this.iClient) != 1.0 && GetEntityFlags(this.iClient) & FL_ONGROUND)
 		{
 			//Ability ended and pyrocar landed on ground
@@ -159,23 +153,32 @@ methodmap CFloatJump < SaxtonHaleBase
 			TeleportEntity(this.iClient, NULL_VECTOR, NULL_VECTOR, vecVel);
 		}
 		
+		if (g_flFloatJumpCooldownWait[this.iClient] <= GetGameTime())
+		{
+			g_flFloatJumpCooldownWait[this.iClient] = 0.0;
+			
+			if (g_bFloatJumpHoldingChargeButton[this.iClient])
+				this.iJumpCharge += this.iJumpChargeBuild;
+			else
+				this.iJumpCharge -= this.iJumpChargeBuild*2;
+		}
+	}
+	
+	public void GetHudText(char[] sMessage, int iLength)
+	{
 		if (g_flFloatJumpCooldownWait[this.iClient] != 0.0 && g_flFloatJumpCooldownWait[this.iClient] > GetGameTime())
 		{
-			float flRemainingTime = g_flFloatJumpCooldownWait[this.iClient]-GetGameTime();
-			int iSec = RoundToNearest(flRemainingTime);
-			Format(sMessage, sizeof(sMessage), "Float cooldown %i second%s remaining!", iSec, (iSec > 1) ? "s" : "");
-			Hud_AddText(this.iClient, sMessage);
-			return;
+			int iSec = RoundToNearest(g_flFloatJumpCooldownWait[this.iClient]-GetGameTime());
+			Format(sMessage, iLength, "%s\nFloat cooldown %i second%s remaining!", sMessage, iSec, (iSec > 1) ? "s" : "");
 		}
-		
-		Hud_AddText(this.iClient, sMessage);
-		
-		g_flFloatJumpCooldownWait[this.iClient] = 0.0;
-		
-		if (g_bFloatJumpHoldingChargeButton[this.iClient])
-			this.iJumpCharge += this.iJumpChargeBuild;
+		else if (this.iJumpCharge > 0)
+		{
+			Format(sMessage, iLength, "%s\nFloat charge: %0.2f%%.", sMessage, (float(this.iJumpCharge)/float(this.iMaxJumpCharge))*100.0);
+		}
 		else
-			this.iJumpCharge -= this.iJumpChargeBuild*2;
+		{
+			Format(sMessage, iLength, "%s\nHold right click to use your float jump!", sMessage);
+		}
 	}
 	
 	public void OnButtonPress(int button)

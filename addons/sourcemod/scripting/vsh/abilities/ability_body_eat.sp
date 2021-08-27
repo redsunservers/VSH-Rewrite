@@ -147,15 +147,12 @@ methodmap CBodyEat < SaxtonHaleBase
 		g_aBodyEntity.Push(EntIndexToEntRef(iRagdoll));
 		
 		//Create glow to body
-		Network_CreateEntityGlow(iRagdoll, sModel, iColor, BodyGlow_Transmit);
+		TF2_CreateEntityGlow(iRagdoll, sModel, iColor);
 		SetEntProp(iRagdoll, Prop_Data, "m_CollisionGroup", COLLISION_GROUP_DEBRIS_TRIGGER);
 		SDK_AlwaysTransmitEntity(iRagdoll);
 		
 		//Kill body from timer
 		CreateTimer(30.0, Timer_EntityCleanup, EntIndexToEntRef(iRagdoll));
-		
-		//SendProxy_Hook(iRagdoll, "m_CollisionGroup", Prop_Int, Body_FakeCollisionGroup);
-		//SDKHook(iRagdoll, SDKHook_ShouldCollide, Body_ShouldCollide);
 	}
 	
 	public void EatBody(int iEnt)
@@ -216,8 +213,6 @@ methodmap CBodyEat < SaxtonHaleBase
 	
 	public void OnThink()
 	{
-		Hud_AddText(this.iClient, "Aim at dead bodies and press reload to heal up!");
-		
 		float lastRageTime = this.flRageLastTime;
 		float eatDuration = this.flEatRageDuration;
 		if (this.bSuperRage)
@@ -237,6 +232,11 @@ methodmap CBodyEat < SaxtonHaleBase
 		}
 	}
 	
+	public void GetHudText(char[] sMessage, int iLength)
+	{
+		StrCat(sMessage, iLength, "\nAim at dead bodies and press reload to heal up!");
+	}
+	
 	public void OnEntityCreated(int iEntity, const char[] sClassname)
 	{
 		if (g_bBodyBlockRagdoll && strcmp(sClassname, "tf_ragdoll") == 0)
@@ -251,25 +251,3 @@ methodmap CBodyEat < SaxtonHaleBase
 		PrecacheSound(BODY_EAT);
 	}
 };
-
-public Action Body_FakeCollisionGroup(int entity, const char[] PropName, int &iValue, int element)
-{
-	iValue = COLLISION_GROUP_DEBRIS_TRIGGER;
-	return Plugin_Changed;
-}
-
-public bool Body_ShouldCollide(int entity, int collisiongroup, int contentsmask, bool originalResult)
-{
-	if ((contentsmask & MASK_PLAYERSOLID))
-		return false;
-	return originalResult;
-}
-
-public Action BodyGlow_Transmit(int iGlow, int iClient)
-{
-	if (!Network_ClientHasSeenEntity(iClient, iGlow)) return Plugin_Continue;
-	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
-	if (boss.bValid && boss.CallFunction("FindAbility", "CBodyEat") != INVALID_ABILITY) return Plugin_Continue;
-	
-	return Plugin_Handled;
-}

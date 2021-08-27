@@ -76,14 +76,11 @@ methodmap CTeleportView < SaxtonHaleBase
 				TeleportEntity(this.iClient, g_vecTeleportViewPos[this.iClient], NULL_VECTOR, NULL_VECTOR);
 				
 				SDKCall_PlaySpecificSequence(this.iClient, "teleport_in");
-				
-				Hud_AddText(this.iClient, "Teleport-view: TELEPORTED.");
 				return;
 			}
 			
 			//Progress in teleporting
 			TeleportView_ShowPos(this.iClient, g_vecTeleportViewPos[this.iClient]);
-			Hud_AddText(this.iClient, "Teleport-view: TELEPORTING.");
 			return;
 		}
 		else if (g_nTeleportViewMode[this.iClient] == TeleportViewMode_Teleported)
@@ -100,25 +97,16 @@ methodmap CTeleportView < SaxtonHaleBase
 			}
 			
 			//Progress into finishing
-			Hud_AddText(this.iClient, "Teleport-view: TELEPORTED.");
 			return;
 		}
 		else if (g_flTeleportViewCooldownWait[this.iClient] != 0.0 && g_flTeleportViewCooldownWait[this.iClient] > GetGameTime())
 		{
 			//Teleport in cooldown
-			
-			int iSec = RoundToNearest(g_flTeleportViewCooldownWait[this.iClient] - GetGameTime());
-			
-			char sMessage[255];
-			Format(sMessage, sizeof(sMessage), "Teleport-view cooldown %i second%s remaining!", iSec, (iSec > 1) ? "s" : "");
-			Hud_AddText(this.iClient, sMessage);
 			return;
 		}
 		else if (g_flTeleportViewStartCharge[this.iClient] == 0.0)
 		{
 			//Can use teleport, but not charging
-			
-			Hud_AddText(this.iClient, "Hold reload to use your teleport-view!");
 			return;
 		}
 		
@@ -155,17 +143,7 @@ methodmap CTeleportView < SaxtonHaleBase
 		TR_TraceHullFilter(vecEndPos, vecFloorPos, vecMins, vecMaxs, MASK_PLAYERSOLID, TraceRay_DontHitEntity, this.iClient);
 		TR_GetEndPosition(vecEndPos);
 		
-		if (flCharge < this.flCharge)
-		{
-			//Charging to teleport
-			
-			float flPercentage = (GetGameTime() - g_flTeleportViewStartCharge[this.iClient]) / this.flCharge;
-			
-			char sMessage[255];
-			Format(sMessage, sizeof(sMessage), "Teleport-view: %0.2f%%.", flPercentage * 100.0);
-			Hud_AddText(this.iClient, sMessage);
-		}
-		else
+		if (flCharge >= this.flCharge)
 		{
 			//Start teleport anim
 			
@@ -177,12 +155,41 @@ methodmap CTeleportView < SaxtonHaleBase
 			
 			TF2_AddCondition(this.iClient, TFCond_FreezeInput, 3.0);
 			TF2_AddCondition(this.iClient, TFCond_UberchargedCanteen, 3.0);
-			
-			Hud_AddText(this.iClient, "Teleport-view: TELEPORTING.");
 		}
 		
 		//Show where to teleport
 		TeleportView_ShowPos(this.iClient, vecEndPos);
+	}
+	
+	public void GetHudText(char[] sMessage, int iLength)
+	{
+		if (g_nTeleportViewMode[this.iClient] == TeleportViewMode_Teleporting)
+		{
+			//Progress in teleporting
+			StrCat(sMessage, iLength, "\nTeleport-view: TELEPORTING.");
+		}
+		else if (g_nTeleportViewMode[this.iClient] == TeleportViewMode_Teleported)
+		{
+			//Progress into finishing
+			StrCat(sMessage, iLength, "\nTeleport-view: TELEPORTED.");
+		}
+		else if (g_flTeleportViewCooldownWait[this.iClient] != 0.0 && g_flTeleportViewCooldownWait[this.iClient] > GetGameTime())
+		{
+			//Teleport in cooldown
+			int iSec = RoundToNearest(g_flTeleportViewCooldownWait[this.iClient] - GetGameTime());
+			Format(sMessage, iLength, "%s\nTeleport-view cooldown %i second%s remaining!", sMessage, iSec, (iSec > 1) ? "s" : "");
+		}
+		else if (g_flTeleportViewStartCharge[this.iClient] == 0.0)
+		{
+			//Can use teleport, but not charging
+			StrCat(sMessage, iLength, "\nHold reload to use your teleport-view!");
+		}
+		else
+		{
+			//Charging to teleport
+			float flPercentage = (GetGameTime() - g_flTeleportViewStartCharge[this.iClient]) / this.flCharge;
+			Format(sMessage, iLength, "%s\nTeleport-view: %0.2f%%.", sMessage, flPercentage * 100.0);
+		}
 	}
 	
 	public void OnButtonHold(int button)

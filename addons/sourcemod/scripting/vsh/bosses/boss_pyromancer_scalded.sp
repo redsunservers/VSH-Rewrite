@@ -127,11 +127,6 @@ methodmap CScaldedPyromancer < SaxtonHaleBase
 	
 	public void OnThink()
 	{
-		if (GetGameTime() <= g_flFlamethrowerRemoveTime[this.iClient] && GetGameTime() >= (g_flFlamethrowerRemoveTime[this.iClient] - RAGE_DURATION))
-			Hud_AddText(this.iClient, "HINT: Use your axe to crit players after igniting them!");
-		else
-			Hud_AddText(this.iClient, "HINT: Stay near the other Pyromancer so you can crit the ignited players!");
-		
 		if (g_flFlamethrowerRemoveTime[this.iClient] != 0.0 && g_flFlamethrowerRemoveTime[this.iClient] <= GetGameTime())
 		{
 			g_flFlamethrowerRemoveTime[this.iClient] = 0.0;
@@ -141,5 +136,13 @@ methodmap CScaldedPyromancer < SaxtonHaleBase
 			if (iMeleeWep > MaxClients)
 				SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iMeleeWep);
 		}
+	}
+	
+	public void GetHudText(char[] sMessage, int iLength)
+	{
+		if (GetGameTime() <= g_flFlamethrowerRemoveTime[this.iClient] && GetGameTime() >= (g_flFlamethrowerRemoveTime[this.iClient] - RAGE_DURATION))
+			StrCat(sMessage, iLength, "\nUse your axe to crit players after igniting them!");
+		else
+			StrCat(sMessage, iLength, "\nStay near the other Pyromancer so you can crit the ignited players!");
 	}
 }

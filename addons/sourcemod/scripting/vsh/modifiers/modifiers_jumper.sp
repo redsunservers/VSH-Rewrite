@@ -62,20 +62,19 @@ methodmap CModifiersJumper < SaxtonHaleBase
 	{
 		if (g_flJumpCooldown[this.iClient] != 0.0 && GetGameTime() > g_flJumpCooldown[this.iClient])
 			g_flJumpCooldown[this.iClient] = 0.0;
-		
-		char sMessage[256];
+	}
+	
+	public void GetHudText(char[] sMessage, int iLength)
+	{
 		if (g_flJumpCooldown[this.iClient] == 0.0)
 		{
-			Format(sMessage, sizeof(sMessage), "Press spacebar to leap!");
+			StrCat(sMessage, iLength, "\nPress spacebar to leap!");
 		}
 		else
 		{
-			float flRemainingTime = g_flJumpCooldown[this.iClient]-GetGameTime();
-			int iSec = RoundToNearest(flRemainingTime);
-			Format(sMessage, sizeof(sMessage), "Leap cooldown %i second%s remaining!", iSec, (iSec > 1) ? "s" : "");
+			int iSec = RoundToNearest(g_flJumpCooldown[this.iClient]-GetGameTime());
+			Format(sMessage, iLength, "%s\nLeap cooldown %i second%s remaining!", sMessage, iSec, (iSec > 1) ? "s" : "");
 		}
-		
-		Hud_AddText(this.iClient, sMessage);
 	}
 	
 	public void Destroy()
