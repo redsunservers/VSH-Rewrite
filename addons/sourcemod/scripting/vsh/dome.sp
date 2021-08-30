@@ -220,7 +220,7 @@ void Dome_OnThink(int iClient)
 		float vecStart[3], vecEnd[3];
 		GetClientAbsOrigin(iClient, vecStart);
 		vecEnd = g_vecDomeCP;
-		vecEnd[2] += 8.0;
+		vecEnd[2] += 32.0;
 		TR_TraceRayFilter(vecStart, vecEnd, MASK_PLAYERSOLID, RayType_EndPoint, TraceFilter_Dome);
 		if (!TR_DidHit())
 		{
