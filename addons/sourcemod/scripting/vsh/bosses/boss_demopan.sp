@@ -73,7 +73,7 @@ methodmap CDemoPan < SaxtonHaleBase
 		boss.iBaseHealth = 800;
 		boss.iHealthPerPlayer = 800;
 		boss.nClass = TFClass_DemoMan;
-		boss.iMaxRageDamage = 3000;
+		boss.iMaxRageDamage = 2500;
 		
 		g_flDemoPanPreviousKill[boss.iClient] = 0.0;
 	}
