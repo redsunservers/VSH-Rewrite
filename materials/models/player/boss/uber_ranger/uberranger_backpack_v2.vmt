@@ -1,9 +1,9 @@
 "VertexLitGeneric"
 {
-	"$basetexture" "models/player/boss/uber_ranger/uberranger_head"
-	"$bumpmap"    "models/player/shared/shared_normal"
+	"$basetexture"	"models/player/boss/uber_ranger/uberranger_backpack_v2"
+	"$basemapalphaphongmask" "1"
 		"$detail" "effects/tiledfire/fireLayeredSlowTiled512.vtf"	
-	"$detailscale" "1"
+	"$detailscale" "2"
 	"$detailblendfactor" .01
 	"$detailblendmode" 6
 
@@ -11,10 +11,15 @@
  	"$blendtintcoloroverbase" "0"  
 
 	"$colortint_base" "{255 255 255}"  
-	"$colortint_tmp" "[0 0 0]" 
+	"$colortint_tmp" "[0 0 0]"
 
-	"$yellow" "0"
-	"$one" "1"
+// 	"$bbqamount" "1"	
+// 	"$two" "2.35"
+// 	"$one" "1"
+// 	"$absburnminusone" "1"
+// 	"$burnminusone" "1"
+// 	"$finalburnlevel" "1"
+// 	"$burnlevel" "0"
 
 
 	"$phong" "1"
@@ -31,6 +36,8 @@
 
 	// Cloaking
 	"$cloakPassEnabled" "1"
+
+	"$yellow" "0"
 
 	"Proxies"
 	{
