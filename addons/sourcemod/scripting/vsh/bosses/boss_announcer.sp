@@ -289,7 +289,6 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 		boss.iMaxRageDamage = -1;
 		boss.flWeighDownTimer = -1.0;
 		boss.bMinion = true;
-		boss.bCanBeHealed = true;
 		boss.bModel = false;
 		
 		g_iAnnouncerMinionTimeLeft[boss.iClient] = 6;	//6 seconds before swapping to boss team
@@ -351,6 +350,18 @@ methodmap CAnnouncerMinion < SaxtonHaleBase
 	public Action OnBuild(TFObjectType nType, TFObjectMode nMode)
 	{
 		//Let them build normally
+		return Plugin_Continue;
+	}
+	
+	public Action CanHealTarget(int iTarget, bool &bResult)
+	{
+		//Don't allow heal main bosses
+		if (SaxtonHale_IsValidBoss(iTarget, false))
+		{
+			bResult = false;
+			return Plugin_Changed;
+		}
+		
 		return Plugin_Continue;
 	}
 	

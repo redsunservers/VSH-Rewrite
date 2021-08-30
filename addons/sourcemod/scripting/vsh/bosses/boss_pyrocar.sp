@@ -248,40 +248,8 @@ methodmap CPyroCar < SaxtonHaleBase
 		}
 		
 		//Handle Pyrocar's M2 ability
-		if (GameRules_GetRoundState() == RoundState_Preround) return;
-		
-		char sMessage[255];
-		int iColor[4];
-		float flGasCharge = g_flPyrocarGasCharge[this.iClient]/g_flGasMinCharge * 100.0;
-		if (flGasCharge < 100.0)
-		{
-			Format(sMessage, sizeof(sMessage), "Deal damage to charge your gas: %0.2f%%.", flGasCharge);
-			iColor[0] = 255; iColor[1] = 255; iColor[2] = 255; iColor[3] = 255;
-			Hud_SetColor(this.iClient, iColor);
-		}
-		else
-		{
-			Format(sMessage, sizeof(sMessage), "Hold right click to throw your gas! %0.2f%%.", flGasCharge);
-			//Avoid dividing by 0
-			if (g_iMaxGasPassers > 1)
-			{
-				//100% to 500%: green to yellow
-				iColor[0] = RoundToNearest((flGasCharge-100.0) * (255.0/((g_iMaxGasPassers-1) * 100.0)));
-				iColor[1] = 255;
-				iColor[2] = 0;
-			}
-			else
-			{
-				//100%: green
-				iColor[0] = 0;
-				iColor[1] = 255;
-				iColor[2] = 0;
-			}
-			
-			Hud_SetColor(this.iClient, iColor);
-		}
-		
-		Hud_AddText(this.iClient, sMessage);
+		if (GameRules_GetRoundState() == RoundState_Preround)
+			return;
 		
 		//Jetpack regen
 		if (g_iPyrocarJetpack[this.iClient] == GetPlayerWeaponSlot(this.iClient, WeaponSlot_Secondary))
@@ -294,9 +262,41 @@ methodmap CPyroCar < SaxtonHaleBase
 		else
 		{
 			if (g_flPyrocarJetpackCharge[this.iClient] < 100.0)
-			g_flPyrocarJetpackCharge[this.iClient] += 0.15;
+				g_flPyrocarJetpackCharge[this.iClient] += 0.15;
 		}
 		
+	}
+	
+	public void GetHudText(char[] sMessage, int iLength)
+	{
+		float flGasCharge = g_flPyrocarGasCharge[this.iClient]/g_flGasMinCharge * 100.0;
+		if (flGasCharge < 100.0)
+			Format(sMessage, iLength, "%s\nDeal damage to charge your gas: %0.2f%%.", sMessage, flGasCharge);
+		else
+			Format(sMessage, iLength, "%s\nHold right click to throw your gas! %0.2f%%.", sMessage, flGasCharge);
+	}
+	
+	public void GetHudColor(int iColor[4])
+	{
+		float flGasCharge = g_flPyrocarGasCharge[this.iClient]/g_flGasMinCharge * 100.0;
+		if (flGasCharge < 100.0)
+		{
+			iColor = {255, 255, 255, 255};
+		}
+		else if (g_iMaxGasPassers > 1)
+		{
+			//Avoid dividing by 0
+			//100% to 500%: green to yellow
+			iColor[0] = RoundToNearest((flGasCharge-100.0) * (255.0/((g_iMaxGasPassers-1) * 100.0)));
+			iColor[1] = 255;
+			iColor[2] = 0;
+			iColor[3] = 255;
+		}
+		else
+		{
+			//100%: green
+			iColor = {0, 255, 0, 255};
+		}
 	}
 	
 	public Action OnAttackDamage(int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)

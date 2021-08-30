@@ -178,7 +178,7 @@ void SDK_Init()
 	if (hHook == null)
 		LogMessage("Failed to create hook: CWeaponMedigun::AllowedToHealTarget!");
 	else
-		DHookEnableDetour(hHook, false, Hook_AllowedToHealTarget);
+		DHookEnableDetour(hHook, true, Hook_AllowedToHealTarget);
 	
 	delete hHook;
 	
@@ -187,7 +187,7 @@ void SDK_Init()
 	if (hHook == null)
 		LogMessage("Failed to create hook: CObjectDispenser::CouldHealTarget!");
 	else
-		DHookEnableDetour(hHook, false, Hook_CouldHealTarget);
+		DHookEnableDetour(hHook, true, Hook_CouldHealTarget);
 	
 	delete hHook;
 	delete hGameData;
@@ -319,10 +319,23 @@ public MRESReturn Hook_AllowedToHealTarget(int iMedigun, Handle hReturn, Handle 
 	
 	if (0 < iClient <= MaxClients && IsClientInGame(iClient))
 	{
-		SaxtonHaleBase boss = SaxtonHaleBase(iHealTarget);
-		if (0 < iHealTarget <= MaxClients && boss.bValid && !boss.bCanBeHealed)
+		SaxtonHaleBase boss = SaxtonHaleBase(iClient);
+		if (boss.bValid)
 		{
-			//Dont allow medics heal boss
+			bool bReturn = DHookGetReturn(hReturn);
+			Action action = boss.CallFunction("CanHealTarget", iHealTarget, bReturn);
+			if (action >= Plugin_Changed)
+			{
+				DHookSetReturn(hReturn, bReturn);
+				return MRES_Supercede;
+			}
+			
+			return MRES_Ignored;
+		}
+		
+		if (SaxtonHale_IsValidBoss(iHealTarget))
+		{
+			//Never allow heal boss from any other sources
 			DHookSetReturn(hReturn, false);
 			return MRES_Supercede;
 		}
@@ -357,14 +370,28 @@ public MRESReturn Hook_AllowedToHealTarget(int iMedigun, Handle hReturn, Handle 
 
 public MRESReturn Hook_CouldHealTarget(int iDispenser, Handle hReturn, Handle hParams)
 {
+	int iClient = GetEntPropEnt(iDispenser, Prop_Send, "m_hBuilder");
 	int iHealTarget = DHookGetParam(hParams, 1);
 	
-	if (0 < iHealTarget <= MaxClients)
+	if (0 < iClient <= MaxClients)
 	{
-		SaxtonHaleBase boss = SaxtonHaleBase(iHealTarget);
-		if (boss.bValid && !boss.bCanBeHealed)
+		SaxtonHaleBase boss = SaxtonHaleBase(iClient);
+		if (boss.bValid)
 		{
-			//Dont allow dispensers heal boss
+			bool bReturn = DHookGetReturn(hReturn);
+			Action action = boss.CallFunction("CanHealTarget", iHealTarget, bReturn);
+			if (action >= Plugin_Changed)
+			{
+				DHookSetReturn(hReturn, bReturn);
+				return MRES_Supercede;
+			}
+			
+			return MRES_Ignored;
+		}
+		
+		if (SaxtonHale_IsValidBoss(iHealTarget))
+		{
+			//Never allow heal boss from any other sources
 			DHookSetReturn(hReturn, false);
 			return MRES_Supercede;
 		}

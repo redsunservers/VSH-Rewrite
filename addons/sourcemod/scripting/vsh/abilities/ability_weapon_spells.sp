@@ -103,38 +103,37 @@ methodmap CWeaponSpells < SaxtonHaleBase
 		}
 	}
 	
-	public void OnThink()
+	public void GetHudText(char[] sMessage, int iLength)
 	{
-		int iClient = this.iClient;
-		
-		int iSpellbook = GetSpellbook(iClient);
-		if (iSpellbook <= MaxClients) return;
+		int iSpellbook = GetSpellbook(this.iClient);
+		if (iSpellbook <= MaxClients)
+			return;
 		
 		float flRagePercentage = float(this.iRageDamage) / float(this.iMaxRageDamage);
-		
-		char sMessage[128];
 		
 		if (g_flSpellsLastUsed[this.iClient] > GetGameTime()-this.flCooldown)
 		{
 			int iSec = RoundToNearest(this.flCooldown - (GetGameTime() - g_flSpellsLastUsed[this.iClient]));
-			Format(sMessage, sizeof(sMessage), "Spell cooldown %i second%s remaining!", iSec, (iSec > 1) ? "s" : "");
+			Format(sMessage, iLength, "%s\nSpell cooldown %i second%s remaining!", sMessage, iSec, (iSec > 1) ? "s" : "");
 		}
 		else if (flRagePercentage < this.flRageRequirement)
 		{
-			Format(sMessage, sizeof(sMessage), "Not enough rage for spells!");
+			Format(sMessage, iLength, "%s\nNot enough rage for spells!", sMessage);
 		}
 		else
 		{
 			int iSpellIndex = GetEntProp(iSpellbook, Prop_Send, "m_iSelectedSpellIndex");
-			if (iSpellIndex < 0) return;
-			Format(sMessage, sizeof(sMessage), "Spell: %s", g_strSpellsName[iSpellIndex]);
+			if (iSpellIndex < 0)
+				return;
+			
+			Format(sMessage, iLength, "%s\nSpell: %s", sMessage, g_strSpellsName[iSpellIndex]);
 		}
 		
-		Format(sMessage, sizeof(sMessage), "%s\nUse attack2 for spell", sMessage);
-		if (g_aSpells[iClient].Length > 1) Format(sMessage, sizeof(sMessage), "%s, and reload to change current spell!", sMessage);
-		else Format(sMessage, sizeof(sMessage), "%s!", sMessage);
-		
-		Hud_AddText(iClient, sMessage);
+		Format(sMessage, iLength, "%s\nUse attack2 for spell", sMessage);
+		if (g_aSpells[this.iClient].Length > 1)
+			Format(sMessage, iLength, "%s, and reload to change current spell!", sMessage);
+		else
+			Format(sMessage, iLength, "%s!", sMessage);
 	}
 	
 	public void OnRage()

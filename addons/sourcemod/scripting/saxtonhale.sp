@@ -22,7 +22,7 @@
 
 #include "include/saxtonhale.inc"
 
-#define PLUGIN_VERSION 					"1.4.2"
+#define PLUGIN_VERSION 					"1.5.0"
 #define PLUGIN_VERSION_REVISION 		"manual"
 
 #if !defined SP_MAX_EXEC_PARAMS
@@ -379,8 +379,6 @@ ConVar tf_arena_preround_time;
 #include "vsh/bosses/boss_horsemann.sp"
 #include "vsh/bosses/boss_painiscupcakes.sp"
 #include "vsh/bosses/boss_pyrocar.sp"
-#include "vsh/bosses/boss_pyromancer_scorched.sp"
-#include "vsh/bosses/boss_pyromancer_scalded.sp"
 #include "vsh/bosses/boss_redmond.sp"
 #include "vsh/bosses/boss_seeldier.sp"
 #include "vsh/bosses/boss_seeman.sp"
@@ -391,7 +389,6 @@ ConVar tf_arena_preround_time;
 #include "vsh/bosses/boss_merasmus.sp"
 
 #include "vsh/bossesmulti/bossmulti_mannbrothers.sp"
-#include "vsh/bossesmulti/bossmulti_pyromancers.sp"
 #include "vsh/bossesmulti/bossmulti_seemanseeldier.sp"
 
 #include "vsh/modifiers/modifiers_angry.sp"
@@ -438,7 +435,6 @@ ConVar tf_arena_preround_time;
 #include "vsh/forward.sp"
 #include "vsh/hud.sp"
 #include "vsh/native.sp"
-#include "vsh/network.sp"
 #include "vsh/nextboss.sp"
 #include "vsh/preferences.sp"
 #include "vsh/property.sp"
@@ -589,7 +585,10 @@ public void OnPluginStart()
 	SaxtonHaleFunction("OnCommandKeyValues", ET_Hook, Param_String);
 	SaxtonHaleFunction("OnAttackCritical", ET_Hook, Param_Cell, Param_CellByRef);
 	SaxtonHaleFunction("OnVoiceCommand", ET_Hook, Param_String, Param_String);
+	SaxtonHaleFunction("OnStartTouch", ET_Hook, Param_Cell);
 	SaxtonHaleFunction("OnWeaponSwitchPost", ET_Ignore, Param_Cell);
+	SaxtonHaleFunction("OnConditionAdded", ET_Ignore, Param_Cell);
+	SaxtonHaleFunction("OnConditionRemoved", ET_Ignore, Param_Cell);
 	
 	func = SaxtonHaleFunction("OnSoundPlayed", ET_Hook, Param_Array, Param_CellByRef, Param_String, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_String, Param_CellByRef);
 	func.SetParam(1, Param_Array, VSHArrayType_Static, MAXPLAYERS);
@@ -646,9 +645,16 @@ public void OnPluginStart()
 	func = SaxtonHaleFunction("GetRageMusicInfo", ET_Ignore, Param_String, Param_Cell, Param_FloatByRef);
 	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
 	
+	func = SaxtonHaleFunction("GetHudText", ET_Ignore, Param_String, Param_Cell);
+	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
+	
+	func = SaxtonHaleFunction("GetHudColor", ET_Ignore, Param_Array);
+	func.SetParam(1, Param_Array, VSHArrayType_Static, 4);
+	
 	//Misc functions
 	SaxtonHaleFunction("Precache", ET_Ignore);
 	SaxtonHaleFunction("CalculateMaxHealth", ET_Single);
+	SaxtonHaleFunction("CanHealTarget", ET_Hook, Param_Cell, Param_CellByRef);
 	SaxtonHaleFunction("AddRage", ET_Ignore, Param_Cell);
 	SaxtonHaleFunction("CreateWeapon", ET_Single, Param_Cell, Param_String, Param_Cell, Param_Cell, Param_String);
 	SaxtonHaleFunction("Destroy", ET_Ignore);
@@ -674,8 +680,6 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("CPainisCupcake", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CPyroCar", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CRedmond", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CScaldedPyromancer", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CScorchedPyromancer", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CSeeldier", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CSeeMan", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CUberRanger", VSHClassType_Boss);
@@ -684,7 +688,6 @@ public void OnPluginStart()
 	
 	//Register multi bosses
 	SaxtonHale_RegisterClass("CMannBrothers", VSHClassType_BossMulti);
-	SaxtonHale_RegisterClass("CPyromancers", VSHClassType_BossMulti);
 	SaxtonHale_RegisterClass("CSeeManSeeldier", VSHClassType_BossMulti);
 	
 	//Register minions
@@ -995,11 +998,14 @@ public void OnEntityCreated(int iEntity, const char[] sClassname)
 	if (!g_bEnabled || iEntity <= 0 || iEntity > 2048)
 		return;
 	
-	Network_ResetEntity(iEntity);
-	
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
 		if (SaxtonHale_IsValidBoss(iClient))
 			SaxtonHaleBase(iClient).CallFunction("OnEntityCreated", iEntity, sClassname);
+	
+	if (StrContains(sClassname, "tf_projectile_healing_bolt") == 0)
+	{
+		SDKHook(iEntity, SDKHook_StartTouch, Crossbow_OnTouch);
+	}
 	
 	if (StrContains(sClassname, "tf_projectile_") == 0)
 	{
@@ -1035,6 +1041,42 @@ public void OnEntityCreated(int iEntity, const char[] sClassname)
 	}
 }
 
+public Action Crossbow_OnTouch(int iEntity, int iToucher)
+{
+	if (iToucher <= 0 || iToucher > MaxClients || !IsClientInGame(iToucher))
+		return Plugin_Continue;
+	
+	int iClient = GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity");
+	if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient))
+		return Plugin_Continue;
+	
+	if (GetClientTeam(iClient) == GetClientTeam(iToucher))
+	{
+		if (SaxtonHale_IsValidBoss(iClient))
+		{
+			bool bReturn = true;
+			Action action = SaxtonHaleBase(iClient).CallFunction("CanHealTarget", iToucher, bReturn);
+			if (action >= Plugin_Changed && !bReturn)
+			{
+				RemoveEntity(iEntity);
+				return Plugin_Handled;
+			}
+			else
+			{
+				return Plugin_Continue;
+			}
+		}
+		
+		if (SaxtonHale_IsValidBoss(iToucher))
+		{
+			RemoveEntity(iEntity);
+			return Plugin_Handled;
+		}
+	}
+	
+	return Plugin_Continue;
+}
+
 public Action ItemPack_OnTouch(int iEntity, int iToucher)
 {
 	if (!g_bEnabled) return Plugin_Continue;
@@ -1045,12 +1087,6 @@ public Action ItemPack_OnTouch(int iEntity, int iToucher)
 		return Plugin_Handled;
 
 	return Plugin_Continue;
-}
-
-public void OnEntityDestroyed(int iEntity)
-{
-	if (0 < iEntity < 2049)
-		Network_ResetEntity(iEntity);
 }
 
 void Frame_InitVshPreRoundTimer(int iTime)
@@ -1105,6 +1141,9 @@ public void TF2_OnConditionAdded(int iClient, TFCond nCond)
 	if (!g_bEnabled) return;
 	if (g_iTotalRoundPlayed <= 0) return;
 	
+	if (SaxtonHale_IsValidBoss(iClient))
+		SaxtonHaleBase(iClient).CallFunction("OnConditionAdded", nCond);
+	
 	if (!g_ConfigConvar.LookupInt("vsh_rps_enable"))
 	{
 		if (GetEntProp(iClient, Prop_Send, "m_iTauntItemDefIndex") == ITEM_ROCK_PAPER_SCISSORS)
@@ -1113,6 +1152,15 @@ public void TF2_OnConditionAdded(int iClient, TFCond nCond)
 			PrintToChat(iClient, "%s%s Rock, Paper, Scissors taunt is disabled in this gamemode", TEXT_TAG, TEXT_ERROR);
 		}
 	}
+}
+
+public void TF2_OnConditionRemoved(int iClient, TFCond nCond)
+{
+	if (!g_bEnabled) return;
+	if (g_iTotalRoundPlayed <= 0) return;
+	
+	if (SaxtonHale_IsValidBoss(iClient))
+		SaxtonHaleBase(iClient).CallFunction("OnConditionRemoved", nCond);
 }
 
 public Action Timer_RoundStartSound(Handle hTimer, int iClient)
@@ -1176,8 +1224,6 @@ public Action Timer_EntityCleanup(Handle hTimer, int iRef)
 
 public void OnClientConnected(int iClient)
 {
-	Network_ResetClient(iClient);
-
 	g_iPlayerDamage[iClient] = 0;
 	g_iPlayerAssistDamage[iClient] = 0;
 	g_iClientFlags[iClient] = 0;
@@ -1198,6 +1244,7 @@ public void OnClientPutInServer(int iClient)
 	SDK_HookGiveNamedItem(iClient);
 	SDKHook(iClient, SDKHook_PreThink, Client_OnThink);
 	SDKHook(iClient, SDKHook_OnTakeDamageAlive, Client_OnTakeDamageAlive);
+	SDKHook(iClient, SDKHook_StartTouch, Client_OnStartTouch);
 	SDKHook(iClient, SDKHook_WeaponSwitchPost, Client_OnWeaponSwitchPost);
 	
 	Cookies_OnClientJoin(iClient);
@@ -1405,6 +1452,19 @@ public Action Client_OnTakeDamageAlive(int victim, int &attacker, int &inflictor
 		}
 	}
 	return finalAction;
+}
+
+public Action Client_OnStartTouch(int iClient, int iToucher)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
+	
+	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
+	
+	if (0 < iClient <= MaxClients && boss.bValid)
+		return boss.CallFunction("OnStartTouch", iToucher);
+	
+	return Plugin_Continue;
 }
 
 public Action Client_OnWeaponSwitchPost(int iClient, int iWeapon)

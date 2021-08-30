@@ -102,31 +102,32 @@ methodmap CTeleportSwap < SaxtonHaleBase
 	
 	public void OnThink()
 	{
-		if (GameRules_GetRoundState() == RoundState_Preround) return;
-		
-		char sMessage[255];
-		if (this.iCharge > 0)
-			Format(sMessage, sizeof(sMessage), "Teleport-swap: %0.2f%%. Look up and stand up to use teleport-swap.", (float(this.iCharge)/float(this.iMaxCharge))*100.0);
-		else
-			Format(sMessage, sizeof(sMessage), "Hold right click to use your teleport-swap!");
-		
+		if (g_flTeleportSwapCooldownWait[this.iClient] <= GetGameTime())
+		{
+			g_flTeleportSwapCooldownWait[this.iClient] = 0.0;
+			
+			if (g_bTeleportSwapHoldingChargeButton[this.iClient])
+				this.iCharge += this.iChargeBuild;
+			else
+				this.iCharge -= this.iChargeBuild*2;
+		}
+	}
+	
+	public void GetHudText(char[] sMessage, int iLength)
+	{
 		if (g_flTeleportSwapCooldownWait[this.iClient] != 0.0 && g_flTeleportSwapCooldownWait[this.iClient] > GetGameTime())
 		{
-			float flRemainingTime = g_flTeleportSwapCooldownWait[this.iClient]-GetGameTime();
-			int iSec = RoundToNearest(flRemainingTime);
-			Format(sMessage, sizeof(sMessage), "Teleport-swap cooldown %i second%s remaining!", iSec, (iSec > 1) ? "s" : "");
-			Hud_AddText(this.iClient, sMessage);
-			return;
+			int iSec = RoundToNearest(g_flTeleportSwapCooldownWait[this.iClient]-GetGameTime());
+			Format(sMessage, iLength, "%s\nTeleport-swap cooldown %i second%s remaining!", sMessage, iSec, (iSec > 1) ? "s" : "");
 		}
-		
-		Hud_AddText(this.iClient, sMessage);
-		
-		g_flTeleportSwapCooldownWait[this.iClient] = 0.0;
-		
-		if (g_bTeleportSwapHoldingChargeButton[this.iClient])
-			this.iCharge += this.iChargeBuild;
+		else if (this.iCharge > 0)
+		{
+			Format(sMessage, iLength, "%s\nTeleport-swap: %0.2f%%. Look up and stand up to use teleport-swap.", sMessage, (float(this.iCharge)/float(this.iMaxCharge))*100.0);
+		}
 		else
-			this.iCharge -= this.iChargeBuild*2;
+		{
+			Format(sMessage, iLength, "%s\nHold right click to use your teleport-swap!", sMessage);
+		}
 	}
 	
 	public void OnButtonHold(int button)

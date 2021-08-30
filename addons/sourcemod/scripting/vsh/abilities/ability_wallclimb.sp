@@ -113,8 +113,8 @@ methodmap CWallClimb < SaxtonHaleBase
 		TeleportEntity(iClient, NULL_VECTOR, NULL_VECTOR, vecVelocity);
 	}
 	
-	public void OnThink()
+	public void GetHudText(char[] sMessage, int iLength)
 	{
-		Hud_AddText(this.iClient, "Climb walls by hitting them with your melee weapon!");
+		StrCat(sMessage, iLength, "\nClimb walls by hitting them with your melee weapon!");
 	}
 };

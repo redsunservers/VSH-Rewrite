@@ -218,13 +218,12 @@ methodmap CGentleSpy < SaxtonHaleBase
 	
 	public void OnThink()
 	{
-		int iClient = this.iClient;
-		
-		float flCloak = GetEntPropFloat(iClient, Prop_Send, "m_flCloakMeter");
-		if (flCloak < 0.5) flCloak = 0.0;
+		float flCloak = GetEntPropFloat(this.iClient, Prop_Send, "m_flCloakMeter");
+		if (flCloak < 0.5)
+			flCloak = 0.0;
 		
 		//Cloak regen rate attribute didnt take into effect until proper cloak done, shitty temp fix below aeiou
-		if (!g_bFirstCloak[iClient])
+		if (!g_bFirstCloak[this.iClient])
 		{
 			if (flCloak > 75.0)
 				flCloak = 100.0;
@@ -233,62 +232,64 @@ methodmap CGentleSpy < SaxtonHaleBase
 			else
 				flCloak = 0.0;
 			
-			SetEntPropFloat(iClient, Prop_Send, "m_flCloakMeter", flCloak);
+			SetEntPropFloat(this.iClient, Prop_Send, "m_flCloakMeter", flCloak);
 		}
 				
-		if (TF2_IsPlayerInCondition(iClient, TFCond_Cloaked) || TF2_IsPlayerInCondition(iClient, TFCond_CloakFlicker))
+		if (TF2_IsPlayerInCondition(this.iClient, TFCond_Cloaked) || TF2_IsPlayerInCondition(this.iClient, TFCond_CloakFlicker))
 		{	
-			if (!g_bIsCloaked[iClient])
+			if (!g_bIsCloaked[this.iClient])
 			{
 				//Cloak started
-				g_bFirstCloak[iClient] = true;
-				g_bIsCloaked[iClient] = true;
+				g_bFirstCloak[this.iClient] = true;
+				g_bIsCloaked[this.iClient] = true;
 				this.flSpeed *= 1.4;
-				//TF2_AddCondition(iClient, TFCond_DefenseBuffMmmph, -1.0);
+				//TF2_AddCondition(this.iClient, TFCond_DefenseBuffMmmph, -1.0);
 
-				int iInvisWatch = GetPlayerWeaponSlot(iClient, WeaponSlot_InvisWatch);
+				int iInvisWatch = GetPlayerWeaponSlot(this.iClient, WeaponSlot_InvisWatch);
 				if (iInvisWatch > MaxClients && IsValidEntity(iInvisWatch))
 					TF2Attrib_SetByDefIndex(iInvisWatch, ATTRIB_JUMP_HEIGHT, 3.0);
 			}
 			
 			//Remove all cond in the list if have one
 			for (int i = 0; i < sizeof(g_nGentleSpyCloak); i++)
-				if (TF2_IsPlayerInCondition(iClient, g_nGentleSpyCloak[i]))
-					TF2_RemoveCondition(iClient, g_nGentleSpyCloak[i]);
+				if (TF2_IsPlayerInCondition(this.iClient, g_nGentleSpyCloak[i]))
+					TF2_RemoveCondition(this.iClient, g_nGentleSpyCloak[i]);
 		}
 		else
 		{					
-			if (g_bIsCloaked[iClient])
+			if (g_bIsCloaked[this.iClient])
 			{
 				//Cloak ended
-				g_bIsCloaked[iClient] = false;
+				g_bIsCloaked[this.iClient] = false;
 				this.flSpeed /= 1.4;
-				//TF2_RemoveCondition(iClient, TFCond_DefenseBuffMmmph);
+				//TF2_RemoveCondition(this.iClient, TFCond_DefenseBuffMmmph);
 				
-				int iInvisWatch = GetPlayerWeaponSlot(iClient, WeaponSlot_InvisWatch);
+				int iInvisWatch = GetPlayerWeaponSlot(this.iClient, WeaponSlot_InvisWatch);
 				if (iInvisWatch > MaxClients && IsValidEntity(iInvisWatch))
 					TF2Attrib_RemoveByDefIndex(iInvisWatch, ATTRIB_JUMP_HEIGHT);
 			}
 		}
-		
-		//Hud
-		if (GameRules_GetRoundState() == RoundState_Preround) return;
-		
-		char sMessage[256];
-		Format(sMessage, sizeof(sMessage), "%0.0f%%%% Cloak", flCloak);
+	}
+	
+	public void GetHudText(char[] sMessage, int iLength)
+	{
+		float flCloak = GetEntPropFloat(this.iClient, Prop_Send, "m_flCloakMeter");
 		if (flCloak > 99.5)
-			Format(sMessage, sizeof(sMessage), "%s: You can use cloak!", sMessage);
+			Format(sMessage, iLength, "%s\n%0.0f%%%% Cloak: You can use cloak!", sMessage, flCloak);
 		else if (flCloak < 10.5)
-			Format(sMessage, sizeof(sMessage), "%s: Gain cloak by using rage!", sMessage);
+			Format(sMessage, iLength, "%s\n%0.0f%%%% Cloak: Gain cloak by using rage!", sMessage, flCloak);
+		else
+			Format(sMessage, iLength, "%s\n%0.0f%%%% Cloak", sMessage);
+	}
+	
+	public void GetHudColor(int iColor[4])
+	{
+		float flCloak = GetEntPropFloat(this.iClient, Prop_Send, "m_flCloakMeter");
 		
-		int iColor[4];
 		iColor[0] = RoundToNearest(2.55 * (100.0 - flCloak));
 		iColor[1] = 255;
 		iColor[2] = RoundToNearest(2.55 * (100.0 - flCloak));
 		iColor[3] = 255;
-		
-		Hud_AddText(iClient, sMessage);
-		Hud_SetColor(iClient, iColor);
 	}
 	
 	public Action OnAttackDamage(int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)

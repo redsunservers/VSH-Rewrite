@@ -51,12 +51,8 @@ methodmap CDashJump < SaxtonHaleBase
 		ability.flMaxForce = 700.0;
 	}
 	
-	public void OnThink()
+	public void GetHudText(char[] sMessage, int iLength)
 	{
-		if (GameRules_GetRoundState() == RoundState_Preround)
-			return;
-		
-		char sMessage[255];
 		int iCharge;
 		
 		if (g_flDashJumpCooldownWait[this.iClient] < GetGameTime())
@@ -70,11 +66,9 @@ methodmap CDashJump < SaxtonHaleBase
 		}
 		
 		if (iCharge >= 100)
-			Format(sMessage, sizeof(sMessage), "Dash charge: %d%%%% - Press reload to use your dash!", iCharge);
+			Format(sMessage, iLength, "%s\nDash charge: %d%%%% - Press reload to use your dash!", sMessage, iCharge);
 		else
-			Format(sMessage, sizeof(sMessage), "Dash charge: %d%%%%", iCharge);
-		
-		Hud_AddText(this.iClient, sMessage);
+			Format(sMessage, iLength, "%s\nDash charge: %d%%%%", sMessage, iCharge);
 	}
 	
 	public void OnButtonPress(int iButton)
