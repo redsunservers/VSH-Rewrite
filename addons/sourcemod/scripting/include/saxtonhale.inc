@@ -303,6 +303,13 @@ methodmap SaxtonHaleBase
 		public native set(float val);
 	}
 	
+	// Retrieve/Set health exponential to calculate
+	property float flHealthExponential
+	{
+		public native get();
+		public native set(float val);
+	}
+	
 	// Retrieve/Set health multiplier to calculate 
 	property float flHealthMultiplier
 	{
@@ -881,6 +888,8 @@ public __pl_saxtonhale_SetNTVOptional()
 	MarkNativeAsOptional("SaxtonHaleBase.flRageLastTime.set");
 	MarkNativeAsOptional("SaxtonHaleBase.flMaxRagePercentage.get");
 	MarkNativeAsOptional("SaxtonHaleBase.flMaxRagePercentage.set");
+	MarkNativeAsOptional("SaxtonHaleBase.flHealthExponential.get");
+	MarkNativeAsOptional("SaxtonHaleBase.flHealthExponential.set");
 	MarkNativeAsOptional("SaxtonHaleBase.flHealthMultiplier.get");
 	MarkNativeAsOptional("SaxtonHaleBase.flHealthMultiplier.set");
 	MarkNativeAsOptional("SaxtonHaleBase.iMaxHealth.get");

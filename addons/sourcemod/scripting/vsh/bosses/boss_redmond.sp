@@ -46,8 +46,8 @@ methodmap CRedmond < SaxtonHaleBase
 		weaponSpells.flRageRequirement = 0.0;
 		weaponSpells.flCooldown = 5.0;
 		
-		boss.iBaseHealth = 500;
-		boss.iHealthPerPlayer = 700;
+		boss.iHealthPerPlayer = 550;
+		boss.flHealthExponential = 1.05;
 		boss.nClass = TFClass_Spy;
 		boss.iMaxRageDamage = 2500;
 	}

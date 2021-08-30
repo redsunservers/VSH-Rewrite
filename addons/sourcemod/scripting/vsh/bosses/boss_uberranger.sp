@@ -60,8 +60,8 @@ methodmap CUberRanger < SaxtonHaleBase
 		rageCond.flRageCondSuperRageMultiplier = 1.6;	//8 seconds
 		rageCond.AddCond(TFCond_UberchargedCanteen);
 		
-		boss.iBaseHealth = 700;
-		boss.iHealthPerPlayer = 650;
+		boss.iHealthPerPlayer = 500;
+		boss.flHealthExponential = 1.05;
 		boss.nClass = TFClass_Medic;
 		boss.iMaxRageDamage = 2500;
 		

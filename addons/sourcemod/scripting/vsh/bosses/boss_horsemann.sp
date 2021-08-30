@@ -81,8 +81,8 @@ methodmap CHorsemann < SaxtonHaleBase
 		modelOverride.flScale = 0.5;
 		*/
 		
-		boss.iBaseHealth = 700;
-		boss.iHealthPerPlayer = 650;
+		boss.iHealthPerPlayer = 500;
+		boss.flHealthExponential = 1.05;
 		boss.nClass = TFClass_DemoMan;
 		boss.iMaxRageDamage = 3000;
 	}

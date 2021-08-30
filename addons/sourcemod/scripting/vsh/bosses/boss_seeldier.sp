@@ -8,8 +8,8 @@ methodmap CSeeldier < SaxtonHaleBase
 		boss.CallFunction("CreateAbility", "CWeaponFists");
 		boss.CallFunction("CreateAbility", "CBraveJump");
 		
-		boss.iBaseHealth = 500;
-		boss.iHealthPerPlayer = 700;
+		boss.iHealthPerPlayer = 550;
+		boss.flHealthExponential = 1.05;
 		boss.nClass = TFClass_Soldier;
 		boss.iMaxRageDamage = 2000;
 	}

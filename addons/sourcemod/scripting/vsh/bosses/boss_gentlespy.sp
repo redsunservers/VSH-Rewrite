@@ -68,8 +68,8 @@ methodmap CGentleSpy < SaxtonHaleBase
 {
 	public CGentleSpy(CGentleSpy boss)
 	{
-		boss.iBaseHealth = 800;
-		boss.iHealthPerPlayer = 800;
+		boss.iHealthPerPlayer = 600;
+		boss.flHealthExponential = 1.05;
 		boss.nClass = TFClass_Spy;
 		boss.iMaxRageDamage = 2000;
 		

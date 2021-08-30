@@ -56,8 +56,8 @@ methodmap CVagineer < SaxtonHaleBase
 		CScareRage scareAbility = boss.CallFunction("CreateAbility", "CScareRage");
 		scareAbility.flRadius = 200.0;
 		
-		boss.iBaseHealth = 750;
-		boss.iHealthPerPlayer = 700;
+		boss.iHealthPerPlayer = 550;
+		boss.flHealthExponential = 1.05;
 		boss.nClass = TFClass_Engineer;
 		boss.iMaxRageDamage = 2500;
 	}

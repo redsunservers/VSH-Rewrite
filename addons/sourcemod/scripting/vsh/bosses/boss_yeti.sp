@@ -56,8 +56,8 @@ methodmap CYeti < SaxtonHaleBase
 		rageCond.flRageCondDuration = rageFreeze.flSlowDuration + rageFreeze.flFreezeDuration;
 		rageCond.flRageCondSuperRageMultiplier = rageFreeze.flRageFreezeSuperRageMultiplier;
 		
-		boss.iBaseHealth = 800;
-		boss.iHealthPerPlayer = 850;
+		boss.iHealthPerPlayer = 650;
+		boss.flHealthExponential = 1.05;
 		boss.nClass = TFClass_Heavy;
 		boss.iMaxRageDamage = 2500;
 	}
