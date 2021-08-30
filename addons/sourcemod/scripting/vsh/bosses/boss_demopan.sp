@@ -89,7 +89,7 @@ methodmap CDemoPan < SaxtonHaleBase
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nAbilities");
 		StrCat(sInfo, length, "\n- Brave Jump");
-		StrCat(sInfo, length, "\n- Passive Chargin' Targe, reload to charge");
+		StrCat(sInfo, length, "\n- Chargin' Targe with large knockback on impact, reload to charge");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
 		StrCat(sInfo, length, "\n- 5 seconds of force full-control charging");
