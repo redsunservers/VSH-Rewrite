@@ -1,12 +1,12 @@
-static int g_iBraveJumpCharge[TF_MAXPLAYERS+1];
-static int g_iBraveJumpMaxCharge[TF_MAXPLAYERS+1];
-static int g_iBraveJumpChargeBuild[TF_MAXPLAYERS+1];
-static float g_flBraveJumpMaxHeight[TF_MAXPLAYERS+1];
-static float g_flBraveJumpMaxDistance[TF_MAXPLAYERS+1];
-static float g_flJumpCooldown[TF_MAXPLAYERS+1];
-static float g_flJumpCooldownWait[TF_MAXPLAYERS+1];
-static float g_flBraveJumpEyeAngleRequirement[TF_MAXPLAYERS+1];
-static bool g_bBraveJumpHoldingChargeButton[TF_MAXPLAYERS+1];
+static int g_iBraveJumpCharge[TF_MAXPLAYERS];
+static int g_iBraveJumpMaxCharge[TF_MAXPLAYERS];
+static int g_iBraveJumpChargeBuild[TF_MAXPLAYERS];
+static float g_flBraveJumpMaxHeight[TF_MAXPLAYERS];
+static float g_flBraveJumpMaxDistance[TF_MAXPLAYERS];
+static float g_flJumpCooldown[TF_MAXPLAYERS];
+static float g_flJumpCooldownWait[TF_MAXPLAYERS];
+static float g_flBraveJumpEyeAngleRequirement[TF_MAXPLAYERS];
+static bool g_bBraveJumpHoldingChargeButton[TF_MAXPLAYERS];
 
 methodmap CBraveJump < SaxtonHaleBase
 {
@@ -118,6 +118,9 @@ methodmap CBraveJump < SaxtonHaleBase
 	{
 		if (GameRules_GetRoundState() == RoundState_Preround) return;
 		
+		if (g_flJumpCooldownWait[this.iClient] == 0.0)	//Round started, start cooldown
+			g_flJumpCooldownWait[this.iClient] = GetGameTime()+this.flCooldown;
+		
 		char sMessage[255];
 		if (this.iJumpCharge > 0)
 			Format(sMessage, sizeof(sMessage), "Jump charge: %0.2f%%. Look up and stand up to use super-jump.", (float(this.iJumpCharge)/float(this.iMaxJumpCharge))*100.0);
@@ -134,8 +137,6 @@ methodmap CBraveJump < SaxtonHaleBase
 		}
 		
 		Hud_AddText(this.iClient, sMessage);
-		
-		g_flJumpCooldownWait[this.iClient] = 0.0;
 		
 		if (g_bBraveJumpHoldingChargeButton[this.iClient])
 			this.iJumpCharge += this.iJumpChargeBuild;

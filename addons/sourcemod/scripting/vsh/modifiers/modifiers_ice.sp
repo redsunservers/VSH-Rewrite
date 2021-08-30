@@ -3,7 +3,7 @@
 #define ICE_RANGE 250.0
 
 static bool g_bIceRagdoll;
-static float g_flClientIceSlowdown[TF_MAXPLAYERS+1];
+static float g_flClientIceSlowdown[TF_MAXPLAYERS];
 
 methodmap CModifiersIce < SaxtonHaleBase
 {

@@ -1,6 +1,6 @@
-static char g_sHudText[TF_MAXPLAYERS+1][256];
-static int g_iHudColor[TF_MAXPLAYERS+1][4];
-static bool g_bHudRage[TF_MAXPLAYERS+1] = true;
+static char g_sHudText[TF_MAXPLAYERS][256];
+static int g_iHudColor[TF_MAXPLAYERS][4];
+static bool g_bHudRage[TF_MAXPLAYERS] = true;
 
 void Hud_SetRageView(int iClient, bool bEnable)
 {

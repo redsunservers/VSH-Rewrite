@@ -1,4 +1,4 @@
-static int g_iPlayerPreferences[TF_MAXPLAYERS+1] = -1;
+static int g_iPlayerPreferences[TF_MAXPLAYERS] = -1;
 
 bool Preferences_Get(int iClient, SaxtonHalePreferences nPreferences)
 {

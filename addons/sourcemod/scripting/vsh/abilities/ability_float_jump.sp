@@ -1,14 +1,14 @@
-static int g_iFloatJumpCharge[TF_MAXPLAYERS+1];
-static int g_iFloatJumpMaxCharge[TF_MAXPLAYERS+1];
-static int g_iFloatJumpChargeBuild[TF_MAXPLAYERS+1];
-static float g_flFloatJumpMaxDistance[TF_MAXPLAYERS+1];
-static float g_flFloatJumpMaxHeight[TF_MAXPLAYERS+1];
-static float g_flFloatJumpCooldown[TF_MAXPLAYERS+1];
-static float g_flFloatJumpCooldownWait[TF_MAXPLAYERS+1];
-static float g_flFloatJumpEndTime[TF_MAXPLAYERS+1];
-static float g_flFloatJumpDuration[TF_MAXPLAYERS+1];
-static float g_flFloatJumpGravity[TF_MAXPLAYERS+1];
-static bool g_bFloatJumpHoldingChargeButton[TF_MAXPLAYERS+1];
+static int g_iFloatJumpCharge[TF_MAXPLAYERS];
+static int g_iFloatJumpMaxCharge[TF_MAXPLAYERS];
+static int g_iFloatJumpChargeBuild[TF_MAXPLAYERS];
+static float g_flFloatJumpMaxDistance[TF_MAXPLAYERS];
+static float g_flFloatJumpMaxHeight[TF_MAXPLAYERS];
+static float g_flFloatJumpCooldown[TF_MAXPLAYERS];
+static float g_flFloatJumpCooldownWait[TF_MAXPLAYERS];
+static float g_flFloatJumpEndTime[TF_MAXPLAYERS];
+static float g_flFloatJumpDuration[TF_MAXPLAYERS];
+static float g_flFloatJumpGravity[TF_MAXPLAYERS];
+static bool g_bFloatJumpHoldingChargeButton[TF_MAXPLAYERS];
 
 methodmap CFloatJump < SaxtonHaleBase
 {

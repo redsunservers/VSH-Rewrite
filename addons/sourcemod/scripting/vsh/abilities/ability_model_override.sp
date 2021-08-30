@@ -1,8 +1,8 @@
-static bool g_bModelOverrideEnable[TF_MAXPLAYERS+1];
-static int g_iModelOverrideRef[TF_MAXPLAYERS+1][2];
-static int g_iModelOverrideSkin[TF_MAXPLAYERS+1];
-static float g_flModelOverrideScale[TF_MAXPLAYERS+1];
-static char g_sModelOverrideModel[TF_MAXPLAYERS+1][PLATFORM_MAX_PATH];
+static bool g_bModelOverrideEnable[TF_MAXPLAYERS];
+static int g_iModelOverrideRef[TF_MAXPLAYERS][2];
+static int g_iModelOverrideSkin[TF_MAXPLAYERS];
+static float g_flModelOverrideScale[TF_MAXPLAYERS];
+static char g_sModelOverrideModel[TF_MAXPLAYERS][PLATFORM_MAX_PATH];
 
 methodmap CModelOverride < SaxtonHaleBase
 {

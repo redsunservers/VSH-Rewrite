@@ -36,7 +36,7 @@
 #define MAXLEN_CONFIG_VALUE 			256		//Config: Max string buffer size for individual values
 #define MAXLEN_CONFIG_VALUEARRAY		1024	//Config: Max string buffer size for groups of values
 
-#define TF_MAXPLAYERS					32
+#define TF_MAXPLAYERS					34	//32 clients + 1 for 0/world/console + 1 for replay/SourceTV
 #define MAX_ATTRIBUTES_SENT 			20
 
 #define ATTRIB_MELEE_RANGE_MULTIPLIER	264
@@ -311,12 +311,12 @@ int g_iHealthBarHealth;
 int g_iHealthBarMaxHealth;
 
 //Player data
-int g_iPlayerLastButtons[TF_MAXPLAYERS+1];
-int g_iPlayerDamage[TF_MAXPLAYERS+1];
-int g_iPlayerAssistDamage[TF_MAXPLAYERS+1];
-int g_iClientOwner[TF_MAXPLAYERS+1];
+int g_iPlayerLastButtons[TF_MAXPLAYERS];
+int g_iPlayerDamage[TF_MAXPLAYERS];
+int g_iPlayerAssistDamage[TF_MAXPLAYERS];
+int g_iClientOwner[TF_MAXPLAYERS];
 
-int g_iClientFlags[TF_MAXPLAYERS+1];
+int g_iClientFlags[TF_MAXPLAYERS];
 
 //Game state data
 int g_iTotalRoundPlayed;
@@ -365,6 +365,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/abilities/ability_weapon_ball.sp"
 #include "vsh/abilities/ability_weapon_charge.sp"
 #include "vsh/abilities/ability_weapon_fists.sp"
+#include "vsh/abilities/ability_weapon_sentry.sp"
 #include "vsh/abilities/ability_weapon_spells.sp"
 
 #include "vsh/bosses/boss_announcer.sp"
@@ -716,6 +717,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("CWeaponBall", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CWeaponCharge", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CWeaponFists", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("CWeaponSentry", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("CWeaponSpells", VSHClassType_Ability);
 	
 	//Register modifiers

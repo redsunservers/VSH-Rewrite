@@ -1,4 +1,4 @@
-static char g_sClientBossMultiType[TF_MAXPLAYERS+1][64];
+static char g_sClientBossMultiType[TF_MAXPLAYERS][64];
 
 methodmap SaxtonHaleBossMulti < SaxtonHaleBase
 {

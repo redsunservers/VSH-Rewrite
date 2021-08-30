@@ -3,23 +3,23 @@
 #define PARTICLE_BEAM_BLU	"medicgun_beam_blue"
 #define PARTICLE_BEAM_RED	"medicgun_beam_red"
 
-static float g_flGhostRadius[TF_MAXPLAYERS+1];
-static float g_flGhostDuration[TF_MAXPLAYERS+1];
-static float g_flGhostHealSteal[TF_MAXPLAYERS+1];
-static float g_flGhostHealGainMultiplier[TF_MAXPLAYERS+1];
-static float g_flGhostBuildingDrain[TF_MAXPLAYERS+1];
-static float g_flGhostPullStrength[TF_MAXPLAYERS+1];
+static float g_flGhostRadius[TF_MAXPLAYERS];
+static float g_flGhostDuration[TF_MAXPLAYERS];
+static float g_flGhostHealSteal[TF_MAXPLAYERS];
+static float g_flGhostHealGainMultiplier[TF_MAXPLAYERS];
+static float g_flGhostBuildingDrain[TF_MAXPLAYERS];
+static float g_flGhostPullStrength[TF_MAXPLAYERS];
 
-static float g_flGhostHealStartTime[TF_MAXPLAYERS+1][2048];
-static int g_iGhostHealStealCount[TF_MAXPLAYERS+1][2048];
+static float g_flGhostHealStartTime[TF_MAXPLAYERS][2048];
+static int g_iGhostHealStealCount[TF_MAXPLAYERS][2048];
 
-static float g_flGhostHealGainBuffer[TF_MAXPLAYERS+1];
-static float g_flGhostLastSpookTime[TF_MAXPLAYERS+1];
+static float g_flGhostHealGainBuffer[TF_MAXPLAYERS];
+static float g_flGhostLastSpookTime[TF_MAXPLAYERS];
 
-static bool g_bGhostEnable[TF_MAXPLAYERS+1];
+static bool g_bGhostEnable[TF_MAXPLAYERS];
 
-static int g_iGhostParticleBeam[TF_MAXPLAYERS+1][2048];
-static int g_iGhostParticleCentre[TF_MAXPLAYERS+1];
+static int g_iGhostParticleBeam[TF_MAXPLAYERS][2048];
+static int g_iGhostParticleCentre[TF_MAXPLAYERS];
 
 methodmap CRageGhost < SaxtonHaleBase
 {

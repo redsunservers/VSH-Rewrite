@@ -1,11 +1,11 @@
-static int g_iTeleportSwapCharge[TF_MAXPLAYERS+1];
-static int g_iTeleportSwapMaxCharge[TF_MAXPLAYERS+1];
-static int g_iTeleportSwapChargeBuild[TF_MAXPLAYERS+1];
-static float g_flTeleportSwapCooldown[TF_MAXPLAYERS+1];
-static float g_flTeleportSwapStunDuration[TF_MAXPLAYERS+1];
-static float g_flTeleportSwapCooldownWait[TF_MAXPLAYERS+1];
-static float g_flTeleportSwapEyeAngleRequirement[TF_MAXPLAYERS+1];
-static bool g_bTeleportSwapHoldingChargeButton[TF_MAXPLAYERS+1];
+static int g_iTeleportSwapCharge[TF_MAXPLAYERS];
+static int g_iTeleportSwapMaxCharge[TF_MAXPLAYERS];
+static int g_iTeleportSwapChargeBuild[TF_MAXPLAYERS];
+static float g_flTeleportSwapCooldown[TF_MAXPLAYERS];
+static float g_flTeleportSwapStunDuration[TF_MAXPLAYERS];
+static float g_flTeleportSwapCooldownWait[TF_MAXPLAYERS];
+static float g_flTeleportSwapEyeAngleRequirement[TF_MAXPLAYERS];
+static bool g_bTeleportSwapHoldingChargeButton[TF_MAXPLAYERS];
 
 methodmap CTeleportSwap < SaxtonHaleBase
 {

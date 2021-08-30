@@ -2,14 +2,14 @@
 #define BOMB_PARTICLE		"ExplosionCore_MidAir"
 #define BOMB_NUKE_SOUND 	"misc/doomsday_missile_explosion.wav"
 
-static float g_flBombSpawnInterval[TF_MAXPLAYERS+1];
-static float g_flBombSpawnDuration[TF_MAXPLAYERS+1];
-static float g_flBombSpawnRadius[TF_MAXPLAYERS+1];
-static float g_flBombRadius[TF_MAXPLAYERS+1];
-static float g_flBombDamage[TF_MAXPLAYERS+1];
-static float g_flNukeRadius[TF_MAXPLAYERS+1];
-static float g_flBombEndTime[TF_MAXPLAYERS+1];
-static float g_flLastExplosionTime[TF_MAXPLAYERS+1];
+static float g_flBombSpawnInterval[TF_MAXPLAYERS];
+static float g_flBombSpawnDuration[TF_MAXPLAYERS];
+static float g_flBombSpawnRadius[TF_MAXPLAYERS];
+static float g_flBombRadius[TF_MAXPLAYERS];
+static float g_flBombDamage[TF_MAXPLAYERS];
+static float g_flNukeRadius[TF_MAXPLAYERS];
+static float g_flBombEndTime[TF_MAXPLAYERS];
+static float g_flLastExplosionTime[TF_MAXPLAYERS];
 
 methodmap CBomb < SaxtonHaleBase
 {

@@ -5,7 +5,7 @@
 
 static const float RAGE_DURATION = 8.0;
 
-static float g_flFlamethrowerRemoveTime[TF_MAXPLAYERS+1];
+static float g_flFlamethrowerRemoveTime[TF_MAXPLAYERS];
 
 static CRageAddCond addCond;
 

@@ -1,7 +1,7 @@
-static float g_flDashJumpCooldownWait[TF_MAXPLAYERS+1];
-static float g_flDashJumpCooldown[TF_MAXPLAYERS+1];
-static float g_flDashJumpMaxCharge[TF_MAXPLAYERS+1];
-static float g_flDashJumpMaxForce[TF_MAXPLAYERS+1];
+static float g_flDashJumpCooldownWait[TF_MAXPLAYERS];
+static float g_flDashJumpCooldown[TF_MAXPLAYERS];
+static float g_flDashJumpMaxCharge[TF_MAXPLAYERS];
+static float g_flDashJumpMaxForce[TF_MAXPLAYERS];
 
 methodmap CDashJump < SaxtonHaleBase
 {

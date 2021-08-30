@@ -1,9 +1,9 @@
-static ArrayList g_aSpells[TF_MAXPLAYERS+1];
-static haleSpells g_rageSpells[TF_MAXPLAYERS+1];
-static float g_flRageRequirement[TF_MAXPLAYERS+1];
-static bool g_bSpellsRage[TF_MAXPLAYERS+1];
-static float g_flSpellsCooldown[TF_MAXPLAYERS+1];
-static float g_flSpellsLastUsed[TF_MAXPLAYERS+1];
+static ArrayList g_aSpells[TF_MAXPLAYERS];
+static haleSpells g_rageSpells[TF_MAXPLAYERS];
+static float g_flRageRequirement[TF_MAXPLAYERS];
+static bool g_bSpellsRage[TF_MAXPLAYERS];
+static float g_flSpellsCooldown[TF_MAXPLAYERS];
+static float g_flSpellsLastUsed[TF_MAXPLAYERS];
 
 enum haleSpells
 {

@@ -1,6 +1,6 @@
-static float g_flRageCondDuration[TF_MAXPLAYERS+1];
-static float g_flRageCondSuperRageMultiplier[TF_MAXPLAYERS+1];
-static ArrayList g_aConditions[TF_MAXPLAYERS+1];
+static float g_flRageCondDuration[TF_MAXPLAYERS];
+static float g_flRageCondSuperRageMultiplier[TF_MAXPLAYERS];
+static ArrayList g_aConditions[TF_MAXPLAYERS];
 
 methodmap CRageAddCond < SaxtonHaleBase
 {

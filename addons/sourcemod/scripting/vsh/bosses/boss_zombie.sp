@@ -1,4 +1,4 @@
-static float g_flZombieLastDamage[TF_MAXPLAYERS+1];
+static float g_flZombieLastDamage[TF_MAXPLAYERS];
 
 methodmap CZombie < SaxtonHaleBase
 {

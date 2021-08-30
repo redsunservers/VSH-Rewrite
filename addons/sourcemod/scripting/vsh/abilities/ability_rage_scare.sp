@@ -1,10 +1,10 @@
-static float g_flScareRadius[TF_MAXPLAYERS+1];
-static float g_flScareDuration[TF_MAXPLAYERS+1];
-static int g_iScareStunFlags[TF_MAXPLAYERS+1];
-static float g_flScareRadiusClass[TF_MAXPLAYERS+1][10];
-static float g_flScareDurationClass[TF_MAXPLAYERS+1][10];
-static int g_iScareStunFlagsClass[TF_MAXPLAYERS+1][10];
-static TFClassType g_nScareClass[TF_MAXPLAYERS+1];
+static float g_flScareRadius[TF_MAXPLAYERS];
+static float g_flScareDuration[TF_MAXPLAYERS];
+static int g_iScareStunFlags[TF_MAXPLAYERS];
+static float g_flScareRadiusClass[TF_MAXPLAYERS][10];
+static float g_flScareDurationClass[TF_MAXPLAYERS][10];
+static int g_iScareStunFlagsClass[TF_MAXPLAYERS][10];
+static TFClassType g_nScareClass[TF_MAXPLAYERS];
 
 methodmap CScareRage < SaxtonHaleBase
 {

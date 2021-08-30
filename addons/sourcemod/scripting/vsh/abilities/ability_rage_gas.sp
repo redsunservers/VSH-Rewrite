@@ -1,10 +1,10 @@
-static float g_flRageGasEnd[TF_MAXPLAYERS+1];
-static float g_flRageGasRate[TF_MAXPLAYERS+1];
-static float g_flRageGasDuration[TF_MAXPLAYERS+1];
-static float g_flRageSpeedMult[TF_MAXPLAYERS+1];
-static float g_flPreviousSpeed[TF_MAXPLAYERS+1];
-static float g_flNewSpeed[TF_MAXPLAYERS+1];
-static float g_flGasRadius[TF_MAXPLAYERS+1];
+static float g_flRageGasEnd[TF_MAXPLAYERS];
+static float g_flRageGasRate[TF_MAXPLAYERS];
+static float g_flRageGasDuration[TF_MAXPLAYERS];
+static float g_flRageSpeedMult[TF_MAXPLAYERS];
+static float g_flPreviousSpeed[TF_MAXPLAYERS];
+static float g_flNewSpeed[TF_MAXPLAYERS];
+static float g_flGasRadius[TF_MAXPLAYERS];
 
 methodmap CRageGas < SaxtonHaleBase
 {

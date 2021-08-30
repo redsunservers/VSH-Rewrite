@@ -1,9 +1,9 @@
 #define IMPACT_SOUND "player/taunt_yeti_land.wav"
 #define IMPACT_PARTICLE "hammer_impact_button"
 
-static float g_flImpactRadius[TF_MAXPLAYERS + 1];
-static float g_flImpactDamage[TF_MAXPLAYERS + 1];
-static float flImpactLaunchVelocity[TF_MAXPLAYERS + 1];
+static float g_flImpactRadius[TF_MAXPLAYERS];
+static float g_flImpactDamage[TF_MAXPLAYERS];
+static float flImpactLaunchVelocity[TF_MAXPLAYERS];
 
 methodmap CGroundPound < SaxtonHaleBase
 {

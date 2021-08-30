@@ -1,11 +1,11 @@
 #define ITEM_NEON_ANNIHILATOR			813
 
-static float g_flRageEndTime[TF_MAXPLAYERS+1];
-static float g_flSpeedRageBonusMult[TF_MAXPLAYERS+1];
-static float g_flRageDuration[TF_MAXPLAYERS+1];
-static float g_flSpeedAbilityBonusMult[TF_MAXPLAYERS+1];
-static float g_flSpeedSwimmingBonusMult[TF_MAXPLAYERS+1];
-static bool g_bInCatapult[TF_MAXPLAYERS+1];
+static float g_flRageEndTime[TF_MAXPLAYERS];
+static float g_flSpeedRageBonusMult[TF_MAXPLAYERS];
+static float g_flRageDuration[TF_MAXPLAYERS];
+static float g_flSpeedAbilityBonusMult[TF_MAXPLAYERS];
+static float g_flSpeedSwimmingBonusMult[TF_MAXPLAYERS];
+static bool g_bInCatapult[TF_MAXPLAYERS];
 
 methodmap CForceForward < SaxtonHaleBase
 {

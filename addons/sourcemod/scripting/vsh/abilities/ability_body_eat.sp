@@ -5,10 +5,10 @@
 static bool g_bBodyBlockRagdoll;
 static ArrayList g_aBodyEntity;
 
-static int g_iMaxHeal[TF_MAXPLAYERS+1];
-static float g_flMaxEatDistance[TF_MAXPLAYERS+1];
-static float g_flEatRageDuration[TF_MAXPLAYERS+1];
-static float g_flEatRageRadius[TF_MAXPLAYERS+1];
+static int g_iMaxHeal[TF_MAXPLAYERS];
+static float g_flMaxEatDistance[TF_MAXPLAYERS];
+static float g_flEatRageDuration[TF_MAXPLAYERS];
+static float g_flEatRageRadius[TF_MAXPLAYERS];
 
 methodmap CBodyEat < SaxtonHaleBase
 {

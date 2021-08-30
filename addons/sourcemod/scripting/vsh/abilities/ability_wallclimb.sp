@@ -1,7 +1,7 @@
-static float g_flWallClimbMaxHeight[TF_MAXPLAYERS+1];
-static float g_flWallClimbMaxDistance[TF_MAXPLAYERS+1];
-static float g_flWallClimbHorizontalSpeedMult[TF_MAXPLAYERS+1];
-static float g_flWallClimbMaxHorizontalVelocity[TF_MAXPLAYERS+1];
+static float g_flWallClimbMaxHeight[TF_MAXPLAYERS];
+static float g_flWallClimbMaxDistance[TF_MAXPLAYERS];
+static float g_flWallClimbHorizontalSpeedMult[TF_MAXPLAYERS];
+static float g_flWallClimbMaxHorizontalVelocity[TF_MAXPLAYERS];
 
 methodmap CWallClimb < SaxtonHaleBase
 {

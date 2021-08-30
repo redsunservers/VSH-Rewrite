@@ -65,17 +65,17 @@ static int g_iMaxGasPassers = 5;
 
 static int g_iPyrocarCosmetics[sizeof(g_iCosmetics)];
 
-static int g_iPyrocarPrimary[TF_MAXPLAYERS+1];
-static int g_iPyrocarJetpack[TF_MAXPLAYERS+1];
-static int g_iPyrocarMelee[TF_MAXPLAYERS+1];
+static int g_iPyrocarPrimary[TF_MAXPLAYERS];
+static int g_iPyrocarJetpack[TF_MAXPLAYERS];
+static int g_iPyrocarMelee[TF_MAXPLAYERS];
 
-static float g_flPyrocarGasCharge[TF_MAXPLAYERS+1];
-static float g_flPyrocarJetpackCharge[TF_MAXPLAYERS+1];
+static float g_flPyrocarGasCharge[TF_MAXPLAYERS];
+static float g_flPyrocarJetpackCharge[TF_MAXPLAYERS];
 
-static Handle g_hPyrocarHealTimer[TF_MAXPLAYERS+1];
-static Handle g_hGasTimer[TF_MAXPLAYERS+1];
+static Handle g_hPyrocarHealTimer[TF_MAXPLAYERS];
+static Handle g_hGasTimer[TF_MAXPLAYERS];
 
-static bool g_bUnderEffect[TF_MAXPLAYERS+1];
+static bool g_bUnderEffect[TF_MAXPLAYERS];
 
 methodmap CPyroCar < SaxtonHaleBase
 {
@@ -89,6 +89,7 @@ methodmap CPyroCar < SaxtonHaleBase
 		boss.nClass = TFClass_Pyro;
 		boss.iMaxRageDamage = 2500;
 		boss.flSpeed = 350.0;
+		boss.flSpeedMult = 0.08;
 	}
 	
 	public void GetBossName(char[] sName, int length)
@@ -287,13 +288,13 @@ methodmap CPyroCar < SaxtonHaleBase
 		{
 			g_flPyrocarJetpackCharge[this.iClient] = GetEntPropFloat(this.iClient, Prop_Send, "m_flItemChargeMeter", 1);
 			if (g_flPyrocarJetpackCharge[this.iClient] < 100.0)
-				g_flPyrocarJetpackCharge[this.iClient] += 0.125;
+				g_flPyrocarJetpackCharge[this.iClient] += 0.15;
 			SetEntPropFloat(this.iClient, Prop_Send, "m_flItemChargeMeter", g_flPyrocarJetpackCharge[this.iClient], 1);
 		}
 		else
 		{
 			if (g_flPyrocarJetpackCharge[this.iClient] < 100.0)
-			g_flPyrocarJetpackCharge[this.iClient] += 0.125;
+			g_flPyrocarJetpackCharge[this.iClient] += 0.15;
 		}
 		
 	}
@@ -306,23 +307,26 @@ methodmap CPyroCar < SaxtonHaleBase
 			//Give victim less healing while damaged by pyrocar
 			if (!g_hPyrocarHealTimer[victim])
 			{
-				TF2Attrib_SetByDefIndex(GetPlayerWeaponSlot(victim, WeaponSlot_Primary), ATTRIB_LESSHEALING, PYROCAR_HEALINGREDUCTION);
-				TF2Attrib_ClearCache(GetPlayerWeaponSlot(victim, WeaponSlot_Primary));
-				TF2Attrib_SetByDefIndex(GetPlayerWeaponSlot(victim, WeaponSlot_Secondary), ATTRIB_LESSHEALING, PYROCAR_HEALINGREDUCTION);
-				TF2Attrib_ClearCache(GetPlayerWeaponSlot(victim, WeaponSlot_Secondary));
-				TF2Attrib_SetByDefIndex(GetPlayerWeaponSlot(victim, WeaponSlot_Melee), ATTRIB_LESSHEALING, PYROCAR_HEALINGREDUCTION);
-				TF2Attrib_ClearCache(GetPlayerWeaponSlot(victim, WeaponSlot_Melee));
+				for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
+				{
+					int iWeapon = GetPlayerWeaponSlot(this.iClient, iSlot);
+					if (iWeapon > MaxClients)
+					{
+						TF2Attrib_SetByDefIndex(iWeapon, ATTRIB_LESSHEALING, 0.5);
+						TF2Attrib_ClearCache(iWeapon);
+					}
+				}
 			}
 			
 			g_hPyrocarHealTimer[victim] = CreateTimer(0.4, Timer_RemoveLessHealing, GetClientSerial(victim));
 			
 			//Deal constant damage for flamethrower
-			damage = 7.0;
+			damage = 8.0;
 		}
 		
 		//Deal constant damage for afterburn
 		if (damagetype == TF_DMG_AFTERBURN || damagetype == TF_DMG_GAS_AFTERBURN)
-			damage = 1.4;
+			damage = 2.0;
 			
 		if (g_flPyrocarGasCharge[this.iClient] <= g_iMaxGasPassers * g_flGasMinCharge)
 			g_flPyrocarGasCharge[this.iClient] += damage;
@@ -343,7 +347,7 @@ methodmap CPyroCar < SaxtonHaleBase
 		//Buildings take constant damage
 		if (weapon == TF2_GetItemInSlot(this.iClient, WeaponSlot_Primary))
 		{
-			damage = 17.0;
+			damage = 20.0;
 		}
 	}
 	
@@ -381,12 +385,15 @@ methodmap CPyroCar < SaxtonHaleBase
 			
 			if (IsClientInGame(iClient))
 			{
-				TF2Attrib_RemoveByDefIndex(GetPlayerWeaponSlot(iClient, WeaponSlot_Primary), ATTRIB_LESSHEALING);
-				TF2Attrib_ClearCache(GetPlayerWeaponSlot(iClient, WeaponSlot_Primary));
-				TF2Attrib_RemoveByDefIndex(GetPlayerWeaponSlot(iClient, WeaponSlot_Secondary), ATTRIB_LESSHEALING);
-				TF2Attrib_ClearCache(GetPlayerWeaponSlot(iClient, WeaponSlot_Secondary));
-				TF2Attrib_RemoveByDefIndex(GetPlayerWeaponSlot(iClient, WeaponSlot_Melee), ATTRIB_LESSHEALING);
-				TF2Attrib_ClearCache(GetPlayerWeaponSlot(iClient, WeaponSlot_Melee));
+				for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
+				{
+					int iWeapon = GetPlayerWeaponSlot(this.iClient, iSlot);
+					if (iWeapon > MaxClients)
+					{
+						TF2Attrib_RemoveByDefIndex(iWeapon, ATTRIB_LESSHEALING);
+						TF2Attrib_ClearCache(iWeapon);
+					}
+				}
 			}
 		}
 	}
@@ -432,12 +439,15 @@ public Action Timer_RemoveLessHealing(Handle hTimer, int iSerial)
 		
 		if (IsClientInGame(iClient))
 		{
-			TF2Attrib_RemoveByDefIndex(GetPlayerWeaponSlot(iClient, WeaponSlot_Primary), ATTRIB_LESSHEALING);
-			TF2Attrib_ClearCache(GetPlayerWeaponSlot(iClient, WeaponSlot_Primary));
-			TF2Attrib_RemoveByDefIndex(GetPlayerWeaponSlot(iClient, WeaponSlot_Secondary), ATTRIB_LESSHEALING);
-			TF2Attrib_ClearCache(GetPlayerWeaponSlot(iClient, WeaponSlot_Secondary));
-			TF2Attrib_RemoveByDefIndex(GetPlayerWeaponSlot(iClient, WeaponSlot_Melee), ATTRIB_LESSHEALING);
-			TF2Attrib_ClearCache(GetPlayerWeaponSlot(iClient, WeaponSlot_Melee));
+			for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
+			{
+				int iWeapon = GetPlayerWeaponSlot(iClient, iSlot);
+				if (iWeapon > MaxClients)
+				{
+					TF2Attrib_RemoveByDefIndex(iWeapon, ATTRIB_LESSHEALING);
+					TF2Attrib_ClearCache(iWeapon);
+				}
+			}
 		}
 	}
 }

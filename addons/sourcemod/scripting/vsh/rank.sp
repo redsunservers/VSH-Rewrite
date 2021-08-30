@@ -1,7 +1,7 @@
 static bool g_bRankEnabled = false;
 static bool g_bRankHealth = false;
 static int g_iRankClient = 0;
-static int g_iRank[TF_MAXPLAYERS+1];
+static int g_iRank[TF_MAXPLAYERS];
 
 void Rank_Init()
 {

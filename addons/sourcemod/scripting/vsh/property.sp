@@ -1,25 +1,25 @@
-static bool g_bValid[TF_MAXPLAYERS+1];
-static bool g_bModifiers[TF_MAXPLAYERS+1];
-static bool g_bMinion[TF_MAXPLAYERS+1];
-static bool g_bSuperRage[TF_MAXPLAYERS+1];
-static bool g_bModel[TF_MAXPLAYERS+1];
-static bool g_bCanBeHealed[TF_MAXPLAYERS+1];
-static bool g_bHealthPerPlayerAlive[TF_MAXPLAYERS+1];
-static float g_flSpeed[TF_MAXPLAYERS+1];
-static float g_flSpeedMult[TF_MAXPLAYERS+1];
-static float g_flEnvDamageCap[TF_MAXPLAYERS+1];
-static float g_flWeighDownTimer[TF_MAXPLAYERS+1];
-static float g_flWeighDownForce[TF_MAXPLAYERS+1];
-static float g_flGlowTime[TF_MAXPLAYERS+1];
-static float g_flRageLastTime[TF_MAXPLAYERS+1];
-static float g_flMaxRagePercentage[TF_MAXPLAYERS+1];
-static float g_flHealthMultiplier[TF_MAXPLAYERS+1];
-static int g_iMaxHealth[TF_MAXPLAYERS+1];
-static int g_iBaseHealth[TF_MAXPLAYERS+1];
-static int g_iHealthPerPlayer[TF_MAXPLAYERS+1];
-static int g_iRageDamage[TF_MAXPLAYERS+1];
-static int g_iMaxRageDamage[TF_MAXPLAYERS+1];
-static TFClassType g_nClass[TF_MAXPLAYERS+1];
+static bool g_bValid[TF_MAXPLAYERS];
+static bool g_bModifiers[TF_MAXPLAYERS];
+static bool g_bMinion[TF_MAXPLAYERS];
+static bool g_bSuperRage[TF_MAXPLAYERS];
+static bool g_bModel[TF_MAXPLAYERS];
+static bool g_bCanBeHealed[TF_MAXPLAYERS];
+static bool g_bHealthPerPlayerAlive[TF_MAXPLAYERS];
+static float g_flSpeed[TF_MAXPLAYERS];
+static float g_flSpeedMult[TF_MAXPLAYERS];
+static float g_flEnvDamageCap[TF_MAXPLAYERS];
+static float g_flWeighDownTimer[TF_MAXPLAYERS];
+static float g_flWeighDownForce[TF_MAXPLAYERS];
+static float g_flGlowTime[TF_MAXPLAYERS];
+static float g_flRageLastTime[TF_MAXPLAYERS];
+static float g_flMaxRagePercentage[TF_MAXPLAYERS];
+static float g_flHealthMultiplier[TF_MAXPLAYERS];
+static int g_iMaxHealth[TF_MAXPLAYERS];
+static int g_iBaseHealth[TF_MAXPLAYERS];
+static int g_iHealthPerPlayer[TF_MAXPLAYERS];
+static int g_iRageDamage[TF_MAXPLAYERS];
+static int g_iMaxRageDamage[TF_MAXPLAYERS];
+static TFClassType g_nClass[TF_MAXPLAYERS];
 
 void Property_AskLoad()
 {

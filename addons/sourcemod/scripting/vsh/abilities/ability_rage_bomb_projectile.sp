@@ -1,14 +1,14 @@
 #define BOMBPROJECTILE_MODEL	"models/props_lakeside_event/bomb_temp.mdl"
 
-static float g_flBombProjectileNext[TF_MAXPLAYERS+1];
-static float g_flBombProjectileEnd[TF_MAXPLAYERS+1];
-static float g_flBombProjectileRate[TF_MAXPLAYERS+1];
-static float g_flBombProjectileDuration[TF_MAXPLAYERS+1];
-static float g_flBombProjectileRadius[TF_MAXPLAYERS+1];
-static float g_flBombProjectileDamage[TF_MAXPLAYERS+1];
-static float g_flBombProjectileMaxDistance[TF_MAXPLAYERS+1];
-static float g_flBombProjectileMinHeight[TF_MAXPLAYERS+1];
-static float g_flBombProjectileMaxHeight[TF_MAXPLAYERS+1];
+static float g_flBombProjectileNext[TF_MAXPLAYERS];
+static float g_flBombProjectileEnd[TF_MAXPLAYERS];
+static float g_flBombProjectileRate[TF_MAXPLAYERS];
+static float g_flBombProjectileDuration[TF_MAXPLAYERS];
+static float g_flBombProjectileRadius[TF_MAXPLAYERS];
+static float g_flBombProjectileDamage[TF_MAXPLAYERS];
+static float g_flBombProjectileMaxDistance[TF_MAXPLAYERS];
+static float g_flBombProjectileMinHeight[TF_MAXPLAYERS];
+static float g_flBombProjectileMaxHeight[TF_MAXPLAYERS];
 
 methodmap CBombProjectile < SaxtonHaleBase
 {

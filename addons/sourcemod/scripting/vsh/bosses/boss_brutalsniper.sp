@@ -7,7 +7,7 @@
 #define ITEM_BUSHWACKA		232
 #define ITEM_SHAHANSHAH		401
 
-static int g_iBrutalSniperWeaponCooldown[TF_MAXPLAYERS+1][BRUTALSNIPER_MAXWEAPONS];
+static int g_iBrutalSniperWeaponCooldown[TF_MAXPLAYERS][BRUTALSNIPER_MAXWEAPONS];
 
 static char g_strBrutalSniperRoundStart[][] = {
 	"vo/sniper_specialweapon08.mp3"

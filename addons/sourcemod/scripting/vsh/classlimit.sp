@@ -1,8 +1,8 @@
 static bool g_bClassLimit = false;		//Whenever if Class limit is enabled
 static TFClassType g_nSpecialRoundClass = TFClass_Unknown;	//Class for current special round, TFClass_Unknown if not on
 
-static TFClassType g_classMain[TF_MAXPLAYERS+1];
-static TFClassType g_classDesired[TF_MAXPLAYERS+1];
+static TFClassType g_classMain[TF_MAXPLAYERS];
+static TFClassType g_classDesired[TF_MAXPLAYERS];
 
 static ConVar g_cvClassLimit[view_as<int>(TFClassType)];
 
