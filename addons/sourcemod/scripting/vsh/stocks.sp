@@ -45,17 +45,24 @@ stock int Client_GetEyeTarget(int iClient)
 	return iHit;
 }
 
-stock bool TraceRay_DontHitEntity(int iEntity, int contentsMask, int data)
+stock bool TraceRay_DontHitEntity(int iEntity, int iMask, int iData)
 {
-	if (iEntity == data) return false;
-
-	return true;
+	return iEntity != iData;
 }
 
-stock bool TraceRay_DontHitPlayers(int entity, int mask, any data)
+stock bool TraceRay_DontHitPlayers(int iEntity, int iMask, int iData)
 {
-	if (entity > 0 && entity <= MaxClients) return false;
-	return true;
+	return iEntity <= 0 || iEntity > MaxClients;
+}
+
+stock bool TraceRay_HitEnemyPlayersAndObjects(int iEntity, int iMask, int iClient)
+{
+	if (0 < iEntity <= MaxClients)
+		return GetClientTeam(iEntity) != GetClientTeam(iClient);
+	
+	char sClassname[256];
+	GetEntityClassname(iEntity, sClassname, sizeof(sClassname));
+	return StrContains(sClassname, "obj_") == 0 && GetEntProp(iEntity, Prop_Send, "m_iTeamNum") != GetClientTeam(iClient);
 }
 
 stock int GetMainBoss()

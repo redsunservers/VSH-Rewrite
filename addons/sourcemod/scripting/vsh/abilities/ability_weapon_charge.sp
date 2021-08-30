@@ -3,10 +3,9 @@
 
 static float g_flChargeRageDuration[TF_MAXPLAYERS];
 static float g_flChargePreviousSound[TF_MAXPLAYERS];
-static bool g_bChargeIsCharging[TF_MAXPLAYERS] = false;
-
-static bool g_bChargeRage[TF_MAXPLAYERS] = false;
-static bool g_bChargeJump[TF_MAXPLAYERS] = false;
+static bool g_bChargeIsCharging[TF_MAXPLAYERS];
+static bool g_bChargeRage[TF_MAXPLAYERS];
+static bool g_bChargeJump[TF_MAXPLAYERS];
 
 methodmap CWeaponCharge < SaxtonHaleBase
 {
@@ -26,7 +25,6 @@ methodmap CWeaponCharge < SaxtonHaleBase
 	{
 		g_flChargeRageDuration[ability.iClient] = 5.0;
 		g_flChargePreviousSound[ability.iClient] = 0.0;
-		g_bChargeIsCharging[ability.iClient] = false;
 		g_bChargeRage[ability.iClient] = false;
 	}
 	
@@ -56,12 +54,16 @@ methodmap CWeaponCharge < SaxtonHaleBase
 				g_flChargePreviousSound[iClient] = GetGameTime();
 			}
 			
-			//Make sure boss is still charging during rage
-			if (!TF2_IsPlayerInCondition(iClient, TFCond_Charging))
+			float vecVel[3];
+			GetEntPropVector(iClient, Prop_Data, "m_vecVelocity", vecVel);
+			float flSpeed = GetVectorLength(vecVel);
+			if (flSpeed < 300.0 && TF2_IsPlayerInCondition(iClient, TFCond_Charging))
+				TF2_RemoveCondition(iClient, TFCond_Charging);
+			
+			if (!g_bChargeIsCharging[this.iClient])	//TF2_IsPlayerInCondition can be a lie when it comes to OnConditionAdded/OnConditionRemoved
 			{
-				float flTimeLeft = flDuration - (GetGameTime() - this.flRageLastTime);
-				SetEntPropFloat(iClient, Prop_Send, "m_flChargeMeter", (flTimeLeft / flDuration) * 100.0);
-				
+				//Make sure boss is still charging during rage
+				SetEntPropFloat(this.iClient, Prop_Send, "m_flChargeMeter", 100.0);
 				TF2_AddCondition(this.iClient, TFCond_Charging, TFCondDuration_Infinite);
 			}
 		}
@@ -81,23 +83,6 @@ methodmap CWeaponCharge < SaxtonHaleBase
 				TF2Attrib_ClearCache(iWeapon);
 			}
 		}
-		
-		if (TF2_IsPlayerInCondition(iClient, TFCond_Charging))
-		{
-			if (!g_bChargeIsCharging[iClient])
-			{
-				g_bChargeIsCharging[iClient] = true;
-				this.flSpeed *= 2.0;
-			}
-		}
-		else
-		{
-			if (g_bChargeIsCharging[iClient])
-			{
-				g_bChargeIsCharging[iClient] = false;
-				this.flSpeed /= 2.0;
-			}
-		}
 	}
 	
 	public void GetHudText(char[] sMessage, int iLength)
@@ -107,11 +92,10 @@ methodmap CWeaponCharge < SaxtonHaleBase
 	
 	public void OnRage()
 	{
-		int iClient = this.iClient;
 		float flDuration = this.flRageDuration * (this.bSuperRage ? 2 : 1);
 		
 		//Give Chargin Targe extra duration and full turn control
-		int iWeapon = TF2_GetItemInSlot(iClient, WeaponSlot_Secondary);
+		int iWeapon = TF2_GetItemInSlot(this.iClient, WeaponSlot_Secondary);
 		if (IsValidEdict(iWeapon))
 		{
 			TF2Attrib_SetByDefIndex(iWeapon, ATTRIB_CHARGE_DURATION_SEC, flDuration - 1.5);	//1.5 sec from Chargin Targe normal duration
@@ -120,7 +104,7 @@ methodmap CWeaponCharge < SaxtonHaleBase
 		}
 		
 		//Force boss to charge in Think()
-		g_bChargeRage[iClient] = true;
+		g_bChargeRage[this.iClient] = true;
 	}
 	
 	public void OnButton(int &buttons)
@@ -139,38 +123,79 @@ methodmap CWeaponCharge < SaxtonHaleBase
 		}
 	}
 	
-	public Action OnStartTouch(int iToucher)
+	public void OnConditionAdded(TFCond nCond)
 	{
-		if (TF2_IsPlayerInCondition(this.iClient, TFCond_Charging))
+		if (nCond == TFCond_Charging)
 		{
-			if (0 < iToucher <= MaxClients && GetClientTeam(this.iClient) != GetClientTeam(iToucher) && GetClientTeam(iToucher) > 1)
+			g_bChargeIsCharging[this.iClient] = true;
+			this.flSpeed *= 2.0;
+			
+			if (g_bChargeRage[this.iClient])
 			{
-				//Deal damage a frame later, otherwise possible crash
-				DataPack data = new DataPack();
-				data.WriteCell(EntIndexToEntRef(this.iClient));
-				data.WriteCell(EntIndexToEntRef(iToucher));
-				
-				RequestFrame(Charge_BashDamage, data);
+				float flDuration = this.flRageDuration * (this.bSuperRage ? 2 : 1);
+				float flTimeLeft = flDuration - (GetGameTime() - this.flRageLastTime);
+				SetEntPropFloat(this.iClient, Prop_Send, "m_flChargeMeter", (flTimeLeft / flDuration) * 100.0);
 			}
-			else if (iToucher > MaxClients && IsValidEdict(iToucher))
+		}
+	}
+	
+	public void OnConditionRemoved(TFCond nCond)
+	{
+		if (nCond == TFCond_Charging)
+		{
+			g_bChargeIsCharging[this.iClient] = false;
+			this.flSpeed /= 2.0;
+		}
+		
+		if (nCond == TFCond_Charging && !(g_bChargeJump[this.iClient] && GetEntityFlags(this.iClient) & FL_ONGROUND))
+		{
+			//Find player infront of it
+			
+			float vecStart[3], vecEnd[3], vecAngles[3], vecForward[3];
+			GetClientAbsOrigin(this.iClient, vecStart);			
+			vecStart[2] += 32.0;
+			
+			GetClientEyeAngles(this.iClient, vecAngles);
+			vecAngles[0] = 0.0;
+			GetAngleVectors(vecAngles, vecForward, NULL_VECTOR, NULL_VECTOR);
+			ScaleVector(vecForward, 48.0);
+			AddVectors(vecStart, vecForward, vecEnd);
+			
+			//Trace
+			TR_TraceHullFilter(vecStart, vecEnd, view_as<float>({-24.0, -24.0, -24.0}), view_as<float>({24.0, 24.0, 24.0}), MASK_PLAYERSOLID, TraceRay_HitEnemyPlayersAndObjects, this.iClient);
+			
+			if (TR_DidHit())
 			{
-				//Check if building, and deal damage
-				char sClassname[256];
-				GetEntityClassname(iToucher, sClassname, sizeof(sClassname));
-				if (StrEqual(sClassname, "obj_sentrygun") || StrEqual(sClassname, "obj_dispenser") || StrEqual(sClassname, "obj_teleporter"))
+				int iWeapon = TF2_GetItemInSlot(this.iClient, WeaponSlot_Secondary);
+				int iEntity = TR_GetEntityIndex();
+				
+				if (0 < iEntity <= MaxClients)
 				{
-					int iTeam = GetEntProp(iToucher, Prop_Send, "m_iTeamNum");
-					if (iTeam != GetClientTeam(this.iClient) && iTeam > 1)
-					{
-						DataPack data = new DataPack();
-						data.WriteCell(EntIndexToEntRef(this.iClient));
-						data.WriteCell(EntIndexToEntRef(iToucher));
-						
-						RequestFrame(Charge_BashDamage, data);
-					}
+					GetAngleVectors(vecAngles, vecForward, NULL_VECTOR, NULL_VECTOR);
+					ScaleVector(vecForward, 1000.0);
+					
+					float vecVictim[3];
+					GetEntPropVector(iEntity, Prop_Data, "m_vecVelocity", vecVictim);
+					AddVectors(vecVictim, vecForward, vecVictim);
+					TeleportEntity(iEntity, NULL_VECTOR, NULL_VECTOR, vecVictim);
+					
+					SDKHooks_TakeDamage(iEntity, iWeapon, this.iClient, 150.0, DMG_CLUB, iWeapon, vecForward, vecStart);
+				}
+				else if (iEntity > MaxClients)
+				{
+					//obj_
+					SDKHooks_TakeDamage(iEntity, iWeapon, this.iClient, 500.0, DMG_CLUB, iWeapon);
 				}
 			}
 		}
+	}
+	
+	public Action OnAttackDamage(int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+	{
+		if (damagecustom == TF_CUSTOM_CHARGE_IMPACT)
+			return Plugin_Stop;	//We want to do the dmg, not TF2. SDKHooks_TakeDamage doesn't allow custom dmg stuff
+		
+		return Plugin_Continue;
 	}
 	
 	public Action OnPlayerKilled(Event event, int iVictim)
@@ -187,30 +212,3 @@ methodmap CWeaponCharge < SaxtonHaleBase
 		}
 	}
 };
-
-public void Charge_BashDamage(DataPack data)
-{
-	data.Reset();
-	int iClient = EntRefToEntIndex(data.ReadCell());
-	int iToucher = EntRefToEntIndex(data.ReadCell());
-	delete data;
-	
-	//Client check
-	if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient) || !IsPlayerAlive(iClient))
-		return;
-	
-	if (0 < iToucher <= MaxClients && IsClientInGame(iToucher) && IsPlayerAlive(iToucher))
-	{
-		//Player damage
-		int iWeapon = TF2_GetItemInSlot(iClient, WeaponSlot_Secondary);
-		if (iWeapon > MaxClients)
-			SDKHooks_TakeDamage(iToucher, iWeapon, iClient, 500.0, DMG_CLUB, iWeapon);
-	}
-	else if (iToucher > MaxClients && IsValidEdict(iToucher))
-	{
-		//Building damage
-		int iWeapon = TF2_GetItemInSlot(iClient, WeaponSlot_Secondary);
-		if (iWeapon > MaxClients)
-			SDKHooks_TakeDamage(iToucher, iWeapon, iClient, 500.0, DMG_CLUB, iWeapon);
-	}
-}

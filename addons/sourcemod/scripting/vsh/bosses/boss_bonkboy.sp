@@ -192,7 +192,7 @@ methodmap CBonkBoy < SaxtonHaleBase
 			GetAngleVectors(vecEye, vecVel, NULL_VECTOR, NULL_VECTOR);
 			ScaleVector(vecVel, 500.0);
 			
-			GetEntPropVector(this.iClient, Prop_Data, "m_vecVelocity", vecVictim);
+			GetEntPropVector(victim, Prop_Data, "m_vecVelocity", vecVictim);
 			AddVectors(vecVictim, vecVel, vecVictim);
 			TeleportEntity(victim, NULL_VECTOR, NULL_VECTOR, vecVictim);
 		}

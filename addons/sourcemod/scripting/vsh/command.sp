@@ -513,7 +513,7 @@ public Action Command_SetRage(int iClient, int iArgs)
 			return Plugin_Handled;
 		}
 
-		for (int i = 1; i <= TF_MAXPLAYERS; i++)
+		for (int i = 1; i <= MaxClients; i++)
 		{
 			SaxtonHaleBase boss = SaxtonHaleBase(i);
 			if (boss.bValid && boss.iMaxRageDamage != -1)
