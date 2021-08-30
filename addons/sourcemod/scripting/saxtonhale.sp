@@ -590,6 +590,8 @@ public void OnPluginStart()
 	SaxtonHaleFunction("OnVoiceCommand", ET_Hook, Param_String, Param_String);
 	SaxtonHaleFunction("OnStartTouch", ET_Hook, Param_Cell);
 	SaxtonHaleFunction("OnWeaponSwitchPost", ET_Ignore, Param_Cell);
+	SaxtonHaleFunction("OnConditionAdded", ET_Ignore, Param_Cell);
+	SaxtonHaleFunction("OnConditionRemoved", ET_Ignore, Param_Cell);
 	
 	func = SaxtonHaleFunction("OnSoundPlayed", ET_Hook, Param_Array, Param_CellByRef, Param_String, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_String, Param_CellByRef);
 	func.SetParam(1, Param_Array, VSHArrayType_Static, MAXPLAYERS);
@@ -1145,6 +1147,9 @@ public void TF2_OnConditionAdded(int iClient, TFCond nCond)
 	if (!g_bEnabled) return;
 	if (g_iTotalRoundPlayed <= 0) return;
 	
+	if (SaxtonHale_IsValidBoss(iClient))
+		SaxtonHaleBase(iClient).CallFunction("OnConditionAdded", nCond);
+	
 	if (!g_ConfigConvar.LookupInt("vsh_rps_enable"))
 	{
 		if (GetEntProp(iClient, Prop_Send, "m_iTauntItemDefIndex") == ITEM_ROCK_PAPER_SCISSORS)
@@ -1153,6 +1158,15 @@ public void TF2_OnConditionAdded(int iClient, TFCond nCond)
 			PrintToChat(iClient, "%s%s Rock, Paper, Scissors taunt is disabled in this gamemode", TEXT_TAG, TEXT_ERROR);
 		}
 	}
+}
+
+public void TF2_OnConditionRemoved(int iClient, TFCond nCond)
+{
+	if (!g_bEnabled) return;
+	if (g_iTotalRoundPlayed <= 0) return;
+	
+	if (SaxtonHale_IsValidBoss(iClient))
+		SaxtonHaleBase(iClient).CallFunction("OnConditionRemoved", nCond);
 }
 
 public Action Timer_RoundStartSound(Handle hTimer, int iClient)
