@@ -379,8 +379,6 @@ ConVar tf_arena_preround_time;
 #include "vsh/bosses/boss_horsemann.sp"
 #include "vsh/bosses/boss_painiscupcakes.sp"
 #include "vsh/bosses/boss_pyrocar.sp"
-#include "vsh/bosses/boss_pyromancer_scorched.sp"
-#include "vsh/bosses/boss_pyromancer_scalded.sp"
 #include "vsh/bosses/boss_redmond.sp"
 #include "vsh/bosses/boss_seeldier.sp"
 #include "vsh/bosses/boss_seeman.sp"
@@ -391,7 +389,6 @@ ConVar tf_arena_preround_time;
 #include "vsh/bosses/boss_merasmus.sp"
 
 #include "vsh/bossesmulti/bossmulti_mannbrothers.sp"
-#include "vsh/bossesmulti/bossmulti_pyromancers.sp"
 #include "vsh/bossesmulti/bossmulti_seemanseeldier.sp"
 
 #include "vsh/modifiers/modifiers_angry.sp"
@@ -683,8 +680,6 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("CPainisCupcake", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CPyroCar", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CRedmond", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CScaldedPyromancer", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CScorchedPyromancer", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CSeeldier", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CSeeMan", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("CUberRanger", VSHClassType_Boss);
@@ -693,7 +688,6 @@ public void OnPluginStart()
 	
 	//Register multi bosses
 	SaxtonHale_RegisterClass("CMannBrothers", VSHClassType_BossMulti);
-	SaxtonHale_RegisterClass("CPyromancers", VSHClassType_BossMulti);
 	SaxtonHale_RegisterClass("CSeeManSeeldier", VSHClassType_BossMulti);
 	
 	//Register minions
