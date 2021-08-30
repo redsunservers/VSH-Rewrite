@@ -1,0 +1,71 @@
+"VertexlitGeneric"
+{
+	"$baseTexture" "models/player/items/medic/blighted_beak_leather"
+	"$bumpmap" "models/effects/flat_normal" 
+
+	"$detail" "effects/tiledfire/fireLayeredSlowTiled512"	
+	"$detailscale" "5"
+	"$detailblendfactor" .01
+	"$detailblendmode" 6
+
+	"$yellow" "0"
+
+	"$blendtintbybasealpha" "1" 
+	"$blendtintcoloroverbase" "0"   // between 0-1 determines how much blended by tinting vs. replacing the color
+
+	"$colortint_base" "{255 255 255}"
+	"$colortint_tmp" "{0 0 0}"
+
+//	"$envmap" "env_cubemap"
+//	"$envmaptint" "[.6 .6 .6]"
+
+	"$phong" "1"
+	"$phongexponent" "25"
+	"$phongboost" "1"
+//	"$lightwarptexture" "models/lightwarps/weapon_lightwarp"	
+	"$lightwarptexture" "models/player/pyro/pyro_lightwarp"
+	"$phongfresnelranges"	"[.25 1 4]"
+	"$basemapalphaphongmask" "1"
+
+	"$rimlight" "1"
+	"$rimlightexponent" "4"
+	"$rimlightboost" ".65"
+	// Cloaking
+	"$cloakPassEnabled" "1"
+	"Proxies"
+	{
+		"invis"
+		{
+		}
+		"AnimatedTexture"
+		{
+			"animatedtexturevar" "$detail"
+			"animatedtextureframenumvar" "$detailframe"
+			"animatedtextureframerate" 30
+		}
+		"BurnLevel"
+		{
+			"resultVar" "$detailblendfactor"
+		}
+		"ItemTintColor"
+		{
+			"resultVar" "$colortint_tmp"
+		}
+		"SelectFirstIfNonZero"
+		{
+			"srcVar1"	"$colortint_tmp"
+			"srcVar2"	"$colortint_base"
+			"resultVar" "$color2"
+		}
+		"YellowLevel"
+		{
+			"resultVar" "$yellow"
+		}
+		"Multiply"
+		{
+			"srcVar1" "$color2"
+			"srcVar2" "$yellow"
+			"resultVar" "$color2"
+		}
+	}
+}

@@ -4,6 +4,7 @@ static bool g_bMinion[TF_MAXPLAYERS];
 static bool g_bSuperRage[TF_MAXPLAYERS];
 static bool g_bModel[TF_MAXPLAYERS];
 static bool g_bCanBeHealed[TF_MAXPLAYERS];
+static bool g_bHealthPerPlayerAlive[TF_MAXPLAYERS];
 static float g_flSpeed[TF_MAXPLAYERS];
 static float g_flSpeedMult[TF_MAXPLAYERS];
 static float g_flEnvDamageCap[TF_MAXPLAYERS];
@@ -34,6 +35,8 @@ void Property_AskLoad()
 	CreateNative("SaxtonHaleBase.bModel.get", Property_GetModel);
 	CreateNative("SaxtonHaleBase.bCanBeHealed.set", Property_SetCanBeHealed);
 	CreateNative("SaxtonHaleBase.bCanBeHealed.get", Property_GetCanBeHealed);
+	CreateNative("SaxtonHaleBase.bHealthPerPlayerAlive.set", Property_SetHealthPerPlayerAlive);
+	CreateNative("SaxtonHaleBase.bHealthPerPlayerAlive.get", Property_GetHealthPerPlayerAlive);
 	CreateNative("SaxtonHaleBase.flSpeed.set", Property_SetSpeed);
 	CreateNative("SaxtonHaleBase.flSpeed.get", Property_GetSpeed);
 	CreateNative("SaxtonHaleBase.flSpeedMult.set", Property_SetSpeedMult);
@@ -124,6 +127,16 @@ public any Property_SetCanBeHealed(Handle hPlugin, int iNumParams)
 public any Property_GetCanBeHealed(Handle hPlugin, int iNumParams)
 {
 	return g_bCanBeHealed[GetNativeCell(1)];
+}
+
+public any Property_SetHealthPerPlayerAlive(Handle hPlugin, int iNumParams)
+{
+	g_bHealthPerPlayerAlive[GetNativeCell(1)] = GetNativeCell(2);
+}
+
+public any Property_GetHealthPerPlayerAlive(Handle hPlugin, int iNumParams)
+{
+	return g_bHealthPerPlayerAlive[GetNativeCell(1)];
 }
 
 public any Property_SetSpeed(Handle hPlugin, int iNumParams)
