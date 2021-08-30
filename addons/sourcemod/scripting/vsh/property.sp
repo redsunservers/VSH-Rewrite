@@ -12,6 +12,7 @@ static float g_flWeighDownForce[TF_MAXPLAYERS];
 static float g_flGlowTime[TF_MAXPLAYERS];
 static float g_flRageLastTime[TF_MAXPLAYERS];
 static float g_flMaxRagePercentage[TF_MAXPLAYERS];
+static float g_flHealthExponential[TF_MAXPLAYERS];
 static float g_flHealthMultiplier[TF_MAXPLAYERS];
 static int g_iMaxHealth[TF_MAXPLAYERS];
 static int g_iBaseHealth[TF_MAXPLAYERS];
@@ -50,6 +51,8 @@ void Property_AskLoad()
 	CreateNative("SaxtonHaleBase.flRageLastTime.get", Property_GetRageLastTime);
 	CreateNative("SaxtonHaleBase.flMaxRagePercentage.set", Property_SetMaxRagePercentage);
 	CreateNative("SaxtonHaleBase.flMaxRagePercentage.get", Property_GetMaxRagePercentage);
+	CreateNative("SaxtonHaleBase.flHealthExponential.set", Property_SetHealthExponential);
+	CreateNative("SaxtonHaleBase.flHealthExponential.get", Property_GetHealthExponential);
 	CreateNative("SaxtonHaleBase.flHealthMultiplier.set", Property_SetHealthMultiplier);
 	CreateNative("SaxtonHaleBase.flHealthMultiplier.get", Property_GetHealthMultiplier);
 	CreateNative("SaxtonHaleBase.iMaxHealth.set", Property_SetMaxHealth);
@@ -204,6 +207,16 @@ public any Property_SetMaxRagePercentage(Handle hPlugin, int iNumParams)
 public any Property_GetMaxRagePercentage(Handle hPlugin, int iNumParams)
 {
 	return g_flMaxRagePercentage[GetNativeCell(1)];
+}
+
+public any Property_SetHealthExponential(Handle hPlugin, int iNumParams)
+{
+	g_flHealthExponential[GetNativeCell(1)] = GetNativeCell(2);
+}
+
+public any Property_GetHealthExponential(Handle hPlugin, int iNumParams)
+{
+	return g_flHealthExponential[GetNativeCell(1)];
 }
 
 public any Property_SetHealthMultiplier(Handle hPlugin, int iNumParams)

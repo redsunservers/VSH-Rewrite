@@ -94,8 +94,8 @@ methodmap CPainisCupcake < SaxtonHaleBase
 		rageCond.AddCond(TFCond_UberchargedCanteen);
 		rageCond.AddCond(TFCond_SpeedBuffAlly);
 		
-		boss.iBaseHealth = 700;
-		boss.iHealthPerPlayer = 650;
+		boss.iHealthPerPlayer = 500;
+		boss.flHealthExponential = 1.05;
 		boss.nClass = TFClass_Soldier;
 		boss.iMaxRageDamage = 2500;
 	}

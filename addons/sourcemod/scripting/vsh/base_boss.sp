@@ -20,19 +20,21 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 		this.iBaseHealth = 0;
 		this.iHealthPerPlayer = 0;
 		this.iMaxHealth = 0;
+		this.flHealthExponential = 1.0;
+		this.flHealthMultiplier = 1.0;
+		this.bHealthPerPlayerAlive = false;
 		
 		this.flSpeed = 370.0;
 		this.flSpeedMult = 0.07;
-		this.flHealthMultiplier = 1.0;
 		this.flMaxRagePercentage = 2.0;
 		this.iRageDamage = 0;
 		this.flEnvDamageCap = 400.0;
 		this.flWeighDownTimer = 2.8;
 		this.flWeighDownForce = 3000.0;
 		this.flGlowTime = 0.0;
+		
 		this.bMinion = false;
 		this.bModel = true;
-		this.bHealthPerPlayerAlive = false;
 		this.nClass = TFClass_Unknown;
 
 		strcopy(g_sClientBossType[this.iClient], sizeof(g_sClientBossType[]), type);
@@ -86,13 +88,15 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 
 	public int CalculateMaxHealth()
 	{
-		int iHealth;
+		float flHealth;
 		if (this.bHealthPerPlayerAlive)
-			iHealth = RoundToNearest((this.iBaseHealth + this.iHealthPerPlayer * SaxtonHale_GetAliveAttackPlayers()) * this.flHealthMultiplier);
+			flHealth = float(this.iHealthPerPlayer * SaxtonHale_GetAliveAttackPlayers());
 		else
-			iHealth = RoundToNearest((this.iBaseHealth + this.iHealthPerPlayer * g_iTotalAttackCount) * this.flHealthMultiplier);
+			flHealth = float(this.iHealthPerPlayer * g_iTotalAttackCount);
 		
-		return iHealth;
+		flHealth += float(this.iBaseHealth);
+		flHealth = Pow(flHealth, this.flHealthExponential);
+		return RoundToNearest(flHealth * this.flHealthMultiplier);
 	}
 	
 	public void GetBossName(char[] sName, int length)

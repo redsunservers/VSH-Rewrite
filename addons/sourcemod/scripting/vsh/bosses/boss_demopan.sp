@@ -70,8 +70,8 @@ methodmap CDemoPan < SaxtonHaleBase
 		//CDropModel dropmodel = boss.CallFunction("CreateAbility", "CDropModel");
 		//dropmodel.SetModel(DEMOPAN_DROP_MODEL);
 		
-		boss.iBaseHealth = 800;
-		boss.iHealthPerPlayer = 800;
+		boss.iHealthPerPlayer = 600;
+		boss.flHealthExponential = 1.05;
 		boss.nClass = TFClass_DemoMan;
 		boss.iMaxRageDamage = 3000;
 		

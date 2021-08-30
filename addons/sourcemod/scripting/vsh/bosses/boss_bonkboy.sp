@@ -71,8 +71,8 @@ methodmap CBonkBoy < SaxtonHaleBase
 		rageCond.AddCond(TFCond_SpeedBuffAlly);			//Speed boost effect
 		
 		boss.flSpeed = 400.0;
-		boss.iBaseHealth = 700;
-		boss.iHealthPerPlayer = 650;
+		boss.iHealthPerPlayer = 500;
+		boss.flHealthExponential = 1.05;
 		boss.nClass = TFClass_Scout;
 		boss.iMaxRageDamage = 1500;
 		

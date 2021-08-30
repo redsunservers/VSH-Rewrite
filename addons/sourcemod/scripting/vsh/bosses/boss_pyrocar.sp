@@ -84,8 +84,8 @@ methodmap CPyroCar < SaxtonHaleBase
 		//boss.CallFunction("CreateAbility", "CFloatJump");
 		boss.CallFunction("CreateAbility", "CRageGas");
 		
-		boss.iBaseHealth = 800;
-		boss.iHealthPerPlayer = 800;
+		boss.iHealthPerPlayer = 600;
+		boss.flHealthExponential = 1.05;
 		boss.nClass = TFClass_Pyro;
 		boss.iMaxRageDamage = 2500;
 		boss.flSpeed = 350.0;

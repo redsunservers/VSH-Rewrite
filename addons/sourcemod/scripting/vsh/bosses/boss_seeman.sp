@@ -16,8 +16,8 @@ methodmap CSeeMan < SaxtonHaleBase
 		bomb.flBombDamage = 75.0;
 		bomb.flNukeRadius = 650.0;
 		
-		boss.iBaseHealth = 500;
-		boss.iHealthPerPlayer = 700;
+		boss.iHealthPerPlayer = 550;
+		boss.flHealthExponential = 1.05;
 		boss.nClass = TFClass_DemoMan;
 		boss.iMaxRageDamage = 2000;
 		

@@ -81,8 +81,8 @@ methodmap CBrutalSniper < SaxtonHaleBase
 		CScareRage scareAbility = boss.CallFunction("CreateAbility", "CScareRage");
 		scareAbility.flRadius = 200.0;
 		
-		boss.iBaseHealth = 800;
-		boss.iHealthPerPlayer = 800;
+		boss.iHealthPerPlayer = 600;
+		boss.flHealthExponential = 1.05;
 		boss.nClass = TFClass_Sniper;
 		boss.iMaxRageDamage = 2500;
 	}
