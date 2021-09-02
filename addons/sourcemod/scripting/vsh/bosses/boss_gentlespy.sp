@@ -279,7 +279,7 @@ methodmap CGentleSpy < SaxtonHaleBase
 		else if (flCloak < 10.5)
 			Format(sMessage, iLength, "%s\n%0.0f%%%% Cloak: Gain cloak by using rage!", sMessage, flCloak);
 		else
-			Format(sMessage, iLength, "%s\n%0.0f%%%% Cloak", sMessage);
+			Format(sMessage, iLength, "%s\n%0.0f%%%% Cloak", sMessage, flCloak);
 	}
 	
 	public void GetHudColor(int iColor[4])
