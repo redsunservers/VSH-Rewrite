@@ -442,6 +442,29 @@ public void Tags_AddAttrib(int iClient, int iTarget, TagsParams tParams)
 	data.WriteCell(iIndex);
 }
 
+public void Tags_RemoveAttrib(int iClient, int iTarget, TagsParams tParams)
+{
+	if (iTarget <= 0 || !IsValidEdict(iTarget))
+		return;
+	
+	int iRef = EntIndexToEntRef(iTarget);
+	int iIndex = tParams.GetInt("index");
+	
+	TF2Attrib_RemoveByDefIndex(iTarget, iIndex);
+	TF2Attrib_ClearCache(iTarget);
+	
+	//Find in array thats using added attrib and remove it
+	int iLength = g_aAttrib.Length;
+	for (int iPos = 0; iPos < iLength; iPos++)
+	{
+		if (g_aAttrib.Get(iPos, TagsAttrib_Ref) == iRef && g_aAttrib.Get(iPos, TagsAttrib_Index) == iIndex)
+		{
+			g_aAttrib.Erase(iPos);
+			return;
+		}
+	}
+}
+
 public void Tags_AreaOfEffect(int iClient, int iTarget, TagsParams tParams)
 {
 	if (iTarget <= 0 || iTarget > MaxClients || !IsClientInGame(iTarget) || !IsPlayerAlive(iTarget))
