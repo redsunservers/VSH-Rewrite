@@ -123,7 +123,7 @@ methodmap CBraveJump < SaxtonHaleBase
 		ability.iJumpChargeBuild = 4;
 		ability.flMaxHeight = 1100.0;
 		ability.flMaxDistance = 0.45;
-		ability.flCooldown = 9.0;
+		ability.flCooldown = 7.0;
 		ability.flMinCooldown = 5.5;
 		ability.flEyeAngleRequirement = -25.0;	//How far up should the boss look for the ability to trigger? Minimum value is -89.0 (all the way up)
 	}
