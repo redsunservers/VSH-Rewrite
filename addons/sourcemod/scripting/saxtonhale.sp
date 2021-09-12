@@ -1405,6 +1405,8 @@ public Action Client_OnTakeDamageAlive(int victim, int &attacker, int &inflictor
 		if (action > finalAction)
 			finalAction = action;
 		
+		Tags_OnTakeDamage(victim, attacker, damage, weapon);
+		
 		char sWeaponClass[64];
 		if (weapon > MaxClients)
 			GetEdictClassname(weapon, sWeaponClass, sizeof(sWeaponClass));

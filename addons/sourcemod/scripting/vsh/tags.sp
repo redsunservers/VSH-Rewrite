@@ -197,14 +197,18 @@ void Tags_OnThink(int iClient)
 	}
 }
 
-void Tags_PlayerHurt(int iVictim, int iAttacker, int iDamage)
+void Tags_OnTakeDamage(int iVictim, int iAttacker, float flDamage, int iWeapon)
 {
-	if (SaxtonHale_IsValidBoss(iVictim) && SaxtonHale_IsValidAttack(iAttacker))
+	if (SaxtonHale_IsValidBoss(iVictim) && SaxtonHale_IsValidAttack(iAttacker) && !TF2_IsUbercharged(iVictim))
 	{
-		if (g_iTagsAirblastRequirement[iAttacker] > 0)
+		int iPrimary = TF2_GetItemInSlot(iAttacker, WeaponSlot_Primary);
+		if (iPrimary == INVALID_ENT_REFERENCE)
+			return;
+		
+		if (g_iTagsAirblastRequirement[iAttacker] > 0 && iPrimary == iWeapon)
 		{
 			bool bFull = (g_iTagsAirblastDamage[iAttacker] >= g_iTagsAirblastRequirement[iAttacker]);
-			g_iTagsAirblastDamage[iAttacker] += iDamage;
+			g_iTagsAirblastDamage[iAttacker] += RoundToNearest(flDamage);
 			
 			if (g_iTagsAirblastDamage[iAttacker] >= g_iTagsAirblastRequirement[iAttacker])
 			{
@@ -213,10 +217,7 @@ void Tags_PlayerHurt(int iVictim, int iAttacker, int iDamage)
 				if (!bFull)
 				{
 					EmitSoundToClient(iAttacker, SOUND_METERFULL);	//Alert player meter is fully
-					
-					int iPrimary = TF2_GetItemInSlot(iAttacker, WeaponSlot_Primary);
-					if (iPrimary > MaxClients)
-						SetEntPropFloat(iPrimary, Prop_Send, "m_flNextSecondaryAttack", 0.0);	//Allow airblast to be used
+					SetEntPropFloat(iPrimary, Prop_Send, "m_flNextSecondaryAttack", 0.0);	//Allow airblast to be used
 				}
 			}
 		}
