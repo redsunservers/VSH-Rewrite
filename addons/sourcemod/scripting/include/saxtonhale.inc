@@ -606,14 +606,6 @@ forward void SaxtonHale_OnUpdatePreferences(int iClient, int iPreferences);
 forward void SaxtonHale_OnUpdateQueue(int iClient, int iQueue);
 
 /**
- * Forward called whenever client have ranks updated
- *
- * @param iClient		    Client that his winstreak got updated
- * @param iRank    	        New ranks
- */
-forward void SaxtonHale_OnUpdateRank(int iClient, int iRank);
-
-/**
  * Gets boss team
  *
  * @return                  TFTeam of boss team
@@ -671,15 +663,6 @@ native void SaxtonHale_SetPreferences(int iClient, int iPreferences);
  * @error                   Invalid client index or client not connected
  */
 native void SaxtonHale_SetQueue(int iClient, int iQueue);
-
-/**
- * Set whoever client rank
- *
- * @param iClient           Client to set new rank
- * @param iRank		    	Rank amount to set
- * @error                   Invalid client index or client not connected
- */
-native void SaxtonHale_SetRank(int iClient, int iRank);
 
 /**
  * Set whoever client to allow admin commands or not
@@ -824,14 +807,20 @@ native void SaxtonHale_RegisterMultiBoss(const char[] ...);
 #pragma deprecated Use SaxtonHaleNextBoss property bSpecialClass and nSpecialClass instead
 native bool SaxtonHale_ForceSpecialRound(int iClient = 0, TFClassType nClass = TFClass_Unknown);
 
-#pragma deprecated Use SaxtonHale_OnUpdateRank instead
+#pragma deprecated Do not use this function
 forward void SaxtonHale_OnUpdateWinstreak(int iClient, int iWinstreak);
 
-#pragma deprecated Use SaxtonHale_SetRank instead
+#pragma deprecated Do not use this function
 native void SaxtonHale_SetWinstreak(int iClient, int iWinstreak);
 
 #pragma deprecated Do not use this function
 native bool SaxtonHale_IsWinstreakEnable();
+
+#pragma deprecated Do not use this function
+forward void SaxtonHale_OnUpdateRank(int iClient, int iRank);
+
+#pragma deprecated Do not use this function
+native void SaxtonHale_SetRank(int iClient, int iRank);
 
 public SharedPlugin __pl_saxtonhale =
 {
@@ -937,7 +926,6 @@ public __pl_saxtonhale_SetNTVOptional()
 	MarkNativeAsOptional("SaxtonHale_GetAssistDamage");
 	MarkNativeAsOptional("SaxtonHale_SetPreferences");
 	MarkNativeAsOptional("SaxtonHale_SetQueue");
-	MarkNativeAsOptional("SaxtonHale_SetRank");
 	MarkNativeAsOptional("SaxtonHale_SetAdmin");
 	MarkNativeAsOptional("SaxtonHale_SetPunishment");
 	MarkNativeAsOptional("SaxtonHale_HasPreferences");
@@ -952,5 +940,6 @@ public __pl_saxtonhale_SetNTVOptional()
 	MarkNativeAsOptional("SaxtonHale_ForceSpecialRound");
 	MarkNativeAsOptional("SaxtonHale_SetWinstreak");
 	MarkNativeAsOptional("SaxtonHale_IsWinstreakEnable");
+	MarkNativeAsOptional("SaxtonHale_SetRank");
 }
 #endif

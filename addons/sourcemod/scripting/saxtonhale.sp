@@ -197,7 +197,7 @@ enum
 
 char g_strPreferencesName[][] = {
 	"Boss Selection",
-	"Rank Mode",
+	"",
 	"Multi Boss",
 	"Music",
 	"Revival"
@@ -439,7 +439,6 @@ ConVar tf_arena_preround_time;
 #include "vsh/preferences.sp"
 #include "vsh/property.sp"
 #include "vsh/queue.sp"
-#include "vsh/rank.sp"
 #include "vsh/sdk.sp"
 #include "vsh/stocks.sp"
 
@@ -518,7 +517,6 @@ public void OnPluginStart()
 	FuncStack_Init();
 	Menu_Init();
 	NextBoss_Init();
-	Rank_Init();
 	SDK_Init();
 	TagsCall_Init();
 	TagsCore_Init();
@@ -1235,7 +1233,6 @@ public void OnClientConnected(int iClient)
 	//-1 as unknown
 	Preferences_SetAll(iClient, -1);
 	Queue_SetPlayerPoints(iClient, -1);
-	Rank_SetCurrent(iClient, -1);
 }
 
 public void OnClientPutInServer(int iClient)
@@ -1261,19 +1258,6 @@ public void OnClientDisconnect(int iClient)
 {
 	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 	
-	if (Rank_GetClient() == iClient && Rank_IsEnabled())
-	{
-		//Ur not going anywhere kiddo
-		int iRank = Rank_GetCurrent(iClient) - 1;
-		if (iRank >= 0)
-		{
-			PrintToChatAll("%s %s%N%s's rank has %sdecreased%s to %s%d%s!", TEXT_TAG, TEXT_DARK, iClient, TEXT_COLOR, TEXT_NEGATIVE, TEXT_COLOR, TEXT_DARK, iRank, TEXT_COLOR);
-			Rank_SetCurrent(iClient, iRank, true);
-		}
-		
-		Rank_ClearClient();
-	}
-	
 	if (boss.bValid)
 	{
 		boss.CallFunction("Destroy");
@@ -1289,7 +1273,6 @@ public void OnClientDisconnect(int iClient)
 	
 	Preferences_SetAll(iClient, -1);
 	Queue_SetPlayerPoints(iClient, -1);
-	Rank_SetCurrent(iClient, -1);
 	
 	NextBoss_DeleteClient(iClient);
 }

@@ -106,8 +106,6 @@ public Action Event_RoundStart(Event event, const char[] sName, bool bDontBroadc
 
 	g_iTotalAttackCount = SaxtonHale_GetAliveAttackPlayers();	//Update amount of attack players
 
-	Rank_RoundStart();
-
 	RequestFrame(Frame_InitVshPreRoundTimer, tf_arena_preround_time.IntValue);
 }
 
@@ -203,12 +201,7 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 		}
 	}
 	
-	//Check if there still enough players while rank is on, otherwise quick snipe disable it
-	int iClientRank = Rank_GetClient();
-	if (iClientRank != 0 && g_iTotalAttackCount < Rank_GetPlayerRequirement(iClientRank))
-		Rank_SetEnable(false);
-	
-	//Refresh boss health from rank disable & player count
+	//Refresh boss health from player count
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
 		SaxtonHaleBase boss = SaxtonHaleBase(iClient);
@@ -257,10 +250,6 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 		//Get Boss name and health
 		boss.CallFunction("GetBossName", sBuffer, sizeof(sBuffer));
 		Format(sMessage, sizeof(sMessage), "%s %s with %d HP!", sMessage, sBuffer, boss.iMaxHealth);
-	
-		//Get rank
-		if (Rank_IsHealthEnabled() && Rank_GetCurrent(iClient) > 0)
-			Format(sMessage, sizeof(sMessage), "%s\nRank %d (-%.0f%%%% health)", sMessage, Rank_GetCurrent(iClient), Rank_GetPrecentageLoss(iClient) * 100.0);
 	}
 	
 	if (!bAllowModifiersColor)
@@ -284,11 +273,7 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 	//Display chat on who is next boss
 	int iNextPlayer = Queue_GetPlayerFromRank(1);
 	if (0 < iNextPlayer <= MaxClients && IsClientInGame(iNextPlayer))
-	{
-		PrintToChat(iNextPlayer, "%s================%s\nYou are about to be the next boss!", TEXT_DARK, TEXT_COLOR);
-		Rank_DisplayClient(iNextPlayer);
-		PrintToChat(iNextPlayer, "%s================", TEXT_DARK);
-	}
+		PrintToChat(iNextPlayer, "%s================%s\nYou are about to be the next boss!\n%s================", TEXT_DARK, TEXT_COLOR, TEXT_DARK);
 }
 
 public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcast)
@@ -309,7 +294,6 @@ public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcas
 	}
 
 	int iMainBoss = GetMainBoss();
-	int iClientRank = Rank_GetClient();
 	
 	if (iWinningTeam == TFTeam_Boss)
 	{
@@ -325,13 +309,6 @@ public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcas
 
 				Forward_BossWin(TFTeam_Boss);
 			}
-		}
-		
-		if (iClientRank != 0 && Rank_IsEnabled())
-		{
-			int iRank = Rank_GetCurrent(iClientRank) + 1;
-			PrintToChatAll("%s %s%N%s's rank has %sincreased%s to %s%d%s!", TEXT_TAG, TEXT_DARK, iClientRank, TEXT_COLOR, TEXT_POSITIVE, TEXT_COLOR, TEXT_DARK, iRank, TEXT_COLOR);
-			Rank_SetCurrent(iClientRank, iRank, true);
 		}
 	}
 	else
@@ -349,20 +326,7 @@ public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcas
 				Forward_BossLose(TFTeam_Boss);
 			}
 		}
-		
-		if (iClientRank != 0 && Rank_IsEnabled())
-		{
-			int iRank = Rank_GetCurrent(iClientRank) - 1;
-			if (iRank >= 0)
-			{
-				PrintToChatAll("%s %s%N%s's rank has %sdecreased%s to %s%d%s!", TEXT_TAG, TEXT_DARK, iClientRank, TEXT_COLOR, TEXT_NEGATIVE, TEXT_COLOR, TEXT_DARK, iRank, TEXT_COLOR);
-				Rank_SetCurrent(iClientRank, iRank, true);
-			}
-		}
 	}
-
-	Rank_SetEnable(false);
-	Rank_ClearClient();
 
 	ArrayList aPlayersList = new ArrayList();
 	
