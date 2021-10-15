@@ -108,11 +108,6 @@ methodmap CMerasmus < SaxtonHaleBase
 		boss.nClass = TFClass_Sniper;
 		boss.iMaxRageDamage = 2500;
 	}
-
-	public bool IsBossHidden()
-	{
-		return true;
-	}
 	
 	public void GetBossName(char[] sName, int length)
 	{
