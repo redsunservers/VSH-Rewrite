@@ -844,18 +844,46 @@ public void Tags_Explode(int iClient, int iTarget, TagsParams tParams)
 
 public void Tags_DestroyEntity(int iClient, int iTarget, TagsParams tParams)
 {
+	if (iTarget <= 0 || !IsValidEntity(iTarget))
+		return;
+	
 	//Check if target is a weapon
 	for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
 	{
-		if (TF2_GetItemInSlot(iClient, iSlot) == iTarget)
+		if (TF2_GetItemInSlot(iClient, iSlot) != iTarget)
+			continue;
+		
+		//Has attribute?
+		int iAttrib;
+		if (tParams.GetIntEx("attrib", iAttrib))
 		{
-			//Kill em
-			TF2_RemoveItemInSlot(iClient, iSlot);
-			
-			//Refresh tags stuff now that weapon is crabbed, without clearing any pending function timers
-			TagsCore_RefreshClient(iClient, false);
-			return;
+			float flValue;
+			TF2_WeaponFindAttribute(iTarget, iAttrib, flValue);
+			if (flValue != tParams.GetFloat("value"))
+				return;	//Dont remove weapon
 		}
+		
+		//Kill em
+		TF2_RemoveItemInSlot(iClient, iSlot);
+		
+		//Refresh tags stuff now that weapon is crabbed, without clearing any pending function timers
+		TagsCore_RefreshClient(iClient, false);
+		
+		//Check if active weapon need to be switched
+		if (GetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon") == INVALID_ENT_REFERENCE)
+		{
+			for (int i = 0; i <= WeaponSlot_BuilderEngie; i++)
+			{
+				int iWeapon = TF2_GetItemInSlot(iClient, i);
+				if (iWeapon == INVALID_ENT_REFERENCE)
+					continue;
+				
+				if (TF2_SwitchToWeapon(iClient, iWeapon))
+					break;	//Switch successful
+			}
+		}
+		
+		return;
 	}
 	
 	//Not a weapon, remove as normal
