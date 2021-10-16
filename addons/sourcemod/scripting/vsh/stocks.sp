@@ -333,6 +333,14 @@ stock void TF2_RemoveItemInSlot(int client, int slot)
 	}
 }
 
+stock bool TF2_SwitchToWeapon(int iClient, int iWeapon)
+{
+	char sClassname[256];
+	GetEntityClassname(iWeapon, sClassname, sizeof(sClassname));
+	FakeClientCommand(iClient, "use %s", sClassname);
+	return GetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon") == iWeapon;
+}
+
 stock void TF2_CheckClientWeapons(int iClient)
 {
 	//Weapons
