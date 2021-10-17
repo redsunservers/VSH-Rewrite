@@ -882,6 +882,14 @@ public void Tags_Stun(int iClient, int iTarget, TagsParams tParams)
 
 	TF2_StunPlayer(iTarget, flDuration, flSlowdown, iStunflags);
 }
+ 
+public void Tags_MakeBleed(int iClient, int iTarget, TagsParams tParams)
+{
+	if (iTarget <= 0 || iTarget > MaxClients || !IsClientInGame(iTarget) || !IsPlayerAlive(iTarget))
+		return;
+	
+	TF2_MakeBleed(iTarget, iClient, tParams.GetFloat("duration"));
+}
 
 //---------------------------
 
