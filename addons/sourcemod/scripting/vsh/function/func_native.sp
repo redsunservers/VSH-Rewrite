@@ -272,12 +272,14 @@ public any FuncNative_GetPlugin(Handle hPlugin, int iNumParams)
 	char sType[MAX_TYPE_CHAR];
 	GetNativeString(1, sType, sizeof(sType));
 	
+	g_aFuncClassList.ClearUnloadedPlugin();
 	return g_aFuncClassList.GetPlugin(sType);
 }
 
 //ArrayList SaxtonHale_GetAllClass();
 public any FuncNative_GetAllClass(Handle hPlugin, int iNumParams)
 {
+	g_aFuncClassList.ClearUnloadedPlugin();
 	ArrayList aClass = g_aFuncClassList.GetAll();
 	
 	ArrayList aClone = view_as<ArrayList>(CloneHandle(aClass, hPlugin));
@@ -289,6 +291,7 @@ public any FuncNative_GetAllClass(Handle hPlugin, int iNumParams)
 //ArrayList SaxtonHale_GetAllClassType(SaxtonHaleClassType nClassType);
 public any FuncNative_GetAllClassType(Handle hPlugin, int iNumParams)
 {
+	g_aFuncClassList.ClearUnloadedPlugin();
 	ArrayList aClass = g_aFuncClassList.GetAllType(GetNativeCell(1));
 	
 	ArrayList aClone = view_as<ArrayList>(CloneHandle(aClass, hPlugin));
@@ -318,6 +321,8 @@ public any FuncNative_RegisterMultiBoss(Handle hPlugin, int iNumParams)
 public any FuncNative_CallFunction(Handle hPlugin, int iNumParams)
 {
 	SaxtonHaleBase boss = GetNativeCell(1);
+	
+	g_aFuncFunctionList.ClearUnloadedPlugin();
 	
 	//Get function to call
 	FuncFunction funcFunction;

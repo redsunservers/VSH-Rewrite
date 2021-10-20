@@ -111,50 +111,22 @@ methodmap FuncClassList < ArrayList
 		return aClass;
 	}
 	
-	public bool IsPluginLoaded(Handle hPlugin)
-	{
-		Handle hIterator = GetPluginIterator();
-		while (MorePlugins(hIterator))
-		{
-			if (ReadPlugin(hIterator) == hPlugin)
-			{
-				delete hIterator;
-				return true;
-			}
-		}
-		
-		delete hIterator;
-		return false;
-	}
-	
-	public void ClearPlugin(Handle hPlugin)
-	{
-		int iPos;
-		while ((iPos = this.FindValue(hPlugin, FuncClass::hPlugin)) != -1)
-			this.Erase(iPos);
-	}
-	
 	public void ClearUnloadedPlugin()
 	{
 		//TODO use OnNotifyPluginUnloaded when SM 1.11 is stable
+		ArrayList aPlugins = new ArrayList();
+		Handle hIterator = GetPluginIterator();
+		while (MorePlugins(hIterator))
+			aPlugins.Push(ReadPlugin(hIterator));
 		
-		bool bCleared;
-		do
-		{
-			bCleared = false;
-			
-			int iLength = this.Length;
-			for (int i = 0; i < iLength; i++)
-			{
-				Handle hPlugin = this.Get(i, FuncClass::hPlugin);
-				if (!this.IsPluginLoaded(hPlugin))
-				{
-					this.ClearPlugin(hPlugin);
-					bCleared = true;
-					break;
-				}
-			}
-		}
-		while (bCleared);
+		delete hIterator;
+		aPlugins.Push(GetMyHandle());	//My handle is not in iterator during OnPluginEnd
+		
+		int iLength = this.Length;
+		for (int iPos = iLength - 1; iPos >= 0; iPos--)
+			if (aPlugins.FindValue(this.Get(iPos, FuncClass::hPlugin)) == -1)
+				this.Erase(iPos);
+		
+		delete aPlugins;
 	}
 }
