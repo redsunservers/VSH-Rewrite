@@ -149,7 +149,6 @@ methodmap FuncClassList < ArrayList
 				Handle hPlugin = this.Get(i, FuncClass::hPlugin);
 				if (!this.IsPluginLoaded(hPlugin))
 				{
-					PrintToServer("FuncClassList Found unloaded plugin %x", hPlugin);
 					this.ClearPlugin(hPlugin);
 					bCleared = true;
 					break;
