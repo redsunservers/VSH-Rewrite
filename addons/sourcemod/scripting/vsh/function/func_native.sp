@@ -1,4 +1,5 @@
-static FuncFunctionId g_mFuncFunctionId;
+static FuncClassList g_aFuncClassList;
+static FuncFunctionList g_aFuncFunctionList;
 
 void FuncNative_AskLoad()
 {
@@ -38,7 +39,8 @@ void FuncNative_AskLoad()
 
 void FuncNative_Init()
 {
-	g_mFuncFunctionId = new FuncFunctionId();
+	g_aFuncClassList = new FuncClassList();
+	g_aFuncFunctionList = new FuncFunctionList();
 }
 
 //SaxtonHaleFunction.SaxtonHaleFunction(const char[] sName, ExecType type, ParamType ...);
@@ -49,10 +51,14 @@ public any FuncNative_InitFunction(Handle hPlugin, int iNumParams)
 	if (iNumParams > SP_MAX_EXEC_PARAMS)
 		ThrowNativeError(SP_ERROR_NATIVE, "Too many ParamType passed (Found %d, max %d)", iNumParams, SP_MAX_EXEC_PARAMS);
 	
-	char sFunction[MAX_TYPE_CHAR];
-	GetNativeString(1, sFunction, sizeof(sFunction));
+	g_aFuncFunctionList.ClearUnloadedPlugin();
 	
 	FuncFunction funcFunction;
+	GetNativeString(1, funcFunction.sName, sizeof(funcFunction.sName));
+	if (g_aFuncFunctionList.GetByName(funcFunction.sName, funcFunction))
+		ThrowNativeError(SP_ERROR_NATIVE, "Function (%s) already exists", funcFunction.sName);
+	
+	funcFunction.hPlugin = hPlugin;
 	funcFunction.nExecType = GetNativeCell(2);
 	funcFunction.iParamLength = iNumParams;
 	
@@ -92,11 +98,7 @@ public any FuncNative_InitFunction(Handle hPlugin, int iNumParams)
 		}
 	}
 	
-	SaxtonHaleFunction nId = g_mFuncFunctionId.AddStruct(sFunction, funcFunction);
-	if (nId == view_as<SaxtonHaleFunction>(-1))
-		ThrowNativeError(SP_ERROR_NATIVE, "Function (%s) already exists", sFunction);
-	
-	return nId;
+	return g_aFuncFunctionList.Add(funcFunction);
 }
 
 //void SaxtonHaleFunction.AddParam(ParamType nParamType, SaxtonHaleArrayType nArrayType = VSHArrayType_None, int iArrayData = 0);
@@ -105,7 +107,7 @@ public any FuncNative_FunctionAddParam(Handle hPlugin, int iNumParams)
 	SaxtonHaleFunction nId = GetNativeCell(1);
 	
 	FuncFunction funcFunction;
-	if (!g_mFuncFunctionId.GetStruct(nId, funcFunction))
+	if (!g_aFuncFunctionList.GetById(nId, funcFunction))
 		ThrowNativeError(SP_ERROR_NATIVE, "Invalid function id passed (%d)", nId);
 	
 	int iParam = funcFunction.iParamLength;
@@ -160,7 +162,7 @@ public any FuncNative_FunctionAddParam(Handle hPlugin, int iNumParams)
 	}
 	
 	funcFunction.iParamLength++;
-	g_mFuncFunctionId.SetStruct(nId, funcFunction);
+	g_aFuncFunctionList.SetById(nId, funcFunction);
 }
 
 //void SaxtonHaleFunction.SetParam(int iParam, ParamType nParamType, SaxtonHaleArrayType nArrayType = VSHArrayType_None, int iArrayData = 0);
@@ -169,7 +171,7 @@ public any FuncNative_FunctionSetParam(Handle hPlugin, int iNumParams)
 	SaxtonHaleFunction nId = GetNativeCell(1);
 	
 	FuncFunction funcFunction;
-	if (!g_mFuncFunctionId.GetStruct(nId, funcFunction))
+	if (!g_aFuncFunctionList.GetById(nId, funcFunction))
 		ThrowNativeError(SP_ERROR_NATIVE, "Invalid function id passed (%d)", nId);
 	
 	int iParam = GetNativeCell(2);
@@ -226,7 +228,7 @@ public any FuncNative_FunctionSetParam(Handle hPlugin, int iNumParams)
 		}
 	}
 	
-	g_mFuncFunctionId.SetStruct(nId, funcFunction);
+	g_aFuncFunctionList.SetById(nId, funcFunction);
 }
 
 //void SaxtonHale_RegisterClass(const char[] sClass, SaxtonHaleClassType nClassType);
@@ -239,8 +241,12 @@ public any FuncNative_RegisterClass(Handle hPlugin, int iNumParams)
 	if (nClassType == VSHClassType_Core && hPlugin != GetMyHandle())
 		ThrowNativeError(SP_ERROR_NATIVE, "VSHClassType_Core passed from non-main plugin");
 	
-	if (!FuncClass_Register(sClass, hPlugin, nClassType))
+	g_aFuncClassList.ClearUnloadedPlugin();
+	
+	if (g_aFuncClassList.Exists(sClass))
 		ThrowNativeError(SP_ERROR_NATIVE, "Methodmap Class (%s) already registered", sClass);
+	
+	g_aFuncClassList.Add(sClass, hPlugin, nClassType);
 }
 
 //void SaxtonHale_UnregisterClass(const char[] sClass);
@@ -249,14 +255,14 @@ public any FuncNative_UnregisterClass(Handle hPlugin, int iNumParams)
 	char sClass[MAX_TYPE_CHAR];
 	GetNativeString(1, sClass, sizeof(sClass));
 	
-	if (!FuncClass_Exists(sClass))
+	if (!g_aFuncClassList.Exists(sClass))
 		return;
 	
-	SaxtonHaleClassType nClassType = FuncClass_GetType(sClass);
+	SaxtonHaleClassType nClassType = g_aFuncClassList.GetType(sClass);
 	if (nClassType == VSHClassType_Core)
 		ThrowNativeError(SP_ERROR_NATIVE, "Unregister core class (%s) is not allowed", sClass);
 	
-	FuncClass_Unregister(sClass);
+	g_aFuncClassList.Remove(sClass);
 	NextBoss_RemoveMulti(sClass);
 }
 
@@ -266,13 +272,13 @@ public any FuncNative_GetPlugin(Handle hPlugin, int iNumParams)
 	char sType[MAX_TYPE_CHAR];
 	GetNativeString(1, sType, sizeof(sType));
 	
-	return FuncClass_GetPlugin(sType);
+	return g_aFuncClassList.GetPlugin(sType);
 }
 
 //ArrayList SaxtonHale_GetAllClass();
 public any FuncNative_GetAllClass(Handle hPlugin, int iNumParams)
 {
-	ArrayList aClass = FuncClass_GetAll();
+	ArrayList aClass = g_aFuncClassList.GetAll();
 	
 	ArrayList aClone = view_as<ArrayList>(CloneHandle(aClass, hPlugin));
 	delete aClass;
@@ -283,7 +289,7 @@ public any FuncNative_GetAllClass(Handle hPlugin, int iNumParams)
 //ArrayList SaxtonHale_GetAllClassType(SaxtonHaleClassType nClassType);
 public any FuncNative_GetAllClassType(Handle hPlugin, int iNumParams)
 {
-	ArrayList aClass = FuncClass_GetAllType(GetNativeCell(1));
+	ArrayList aClass = g_aFuncClassList.GetAllType(GetNativeCell(1));
 	
 	ArrayList aClone = view_as<ArrayList>(CloneHandle(aClass, hPlugin));
 	delete aClass;
@@ -313,19 +319,17 @@ public any FuncNative_CallFunction(Handle hPlugin, int iNumParams)
 {
 	SaxtonHaleBase boss = GetNativeCell(1);
 	
-	char sFunction[MAX_TYPE_CHAR];
-	GetNativeString(2, sFunction, sizeof(sFunction));
-	
 	//Get function to call
 	FuncFunction funcFunction;
-	if (!FuncFunction_Get(sFunction, funcFunction))
-		ThrowNativeError(SP_ERROR_NATIVE, "Invalid function name passed (%s)", sFunction);
+	GetNativeString(2, funcFunction.sName, sizeof(funcFunction.sName));
+	if (!g_aFuncFunctionList.GetByName(funcFunction.sName, funcFunction))
+		ThrowNativeError(SP_ERROR_NATIVE, "Invalid function name passed (%s)", funcFunction.sName);
 	else if (funcFunction.iParamLength >  iNumParams-2)
 		ThrowNativeError(SP_ERROR_NATIVE, "Too few param passed (found %d params, expected %d)", iNumParams-2, funcFunction.iParamLength);
 	
 	//Create stack
 	FuncStack funcStack;
-	Format(funcStack.sFunction, sizeof(funcStack.sFunction), sFunction);
+	Format(funcStack.sFunction, sizeof(funcStack.sFunction), funcFunction.sName);
 	funcStack.nExecType = funcFunction.nExecType;
 	funcStack.nParamType = funcFunction.nParamType;
 	

@@ -381,7 +381,7 @@ stock void NextBoss_GetRandomNormal(char[] sBoss, int iLength)
 	}
 	
 	//Get list of all bosses
-	ArrayList aBosses = FuncClass_GetAllType(VSHClassType_Boss);
+	ArrayList aBosses = SaxtonHale_GetAllClassType(VSHClassType_Boss);
 	
 	//Delet saxton hale
 	int iIndex = aBosses.FindString("CSaxtonHale");
@@ -422,7 +422,7 @@ stock bool NextBoss_GetRandomMulti(char[] sBossMulti, int iLength)
 			iPlayersDuo++;
 	
 	//Get list of all multi bosses
-	ArrayList aBossesMulti = FuncClass_GetAllType(VSHClassType_BossMulti);
+	ArrayList aBossesMulti = SaxtonHale_GetAllClassType(VSHClassType_BossMulti);
 	
 	int iBossLength = aBossesMulti.Length;
 	for (int i = iBossLength-1; i >= 0; i--)
@@ -467,7 +467,7 @@ stock int NextBoss_GetRandomModifiers(char[] sModifiers, int iLength, bool bForc
 	if (bForce || GetRandomFloat(0.0, 1.0) <= g_ConfigConvar.LookupFloat("vsh_boss_chance_modifiers"))
 	{
 		//Get list of every non-hidden modifiers to select random
-		ArrayList aModifiers = FuncClass_GetAllType(VSHClassType_Modifier);
+		ArrayList aModifiers = SaxtonHale_GetAllClassType(VSHClassType_Modifier);
 		int iArrayLength = aModifiers.Length;
 		for (int iModifiers = iArrayLength-1; iModifiers >= 0; iModifiers--)
 		{

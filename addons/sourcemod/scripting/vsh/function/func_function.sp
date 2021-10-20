@@ -1,6 +1,8 @@
 enum struct FuncFunction
 {
 	SaxtonHaleFunction nId;
+	char sName[MAX_TYPE_CHAR];
+	Handle hPlugin;
 	ExecType nExecType;
 	ParamType nParamType[SP_MAX_EXEC_PARAMS];
 	SaxtonHaleArrayType nArrayType[SP_MAX_EXEC_PARAMS];
@@ -8,81 +10,110 @@ enum struct FuncFunction
 	int iParamLength;
 }
 
-static StringMap g_mFuncFunction;	//Stores FuncFunction
 static SaxtonHaleFunction g_nFuncFunctionId;
 
-methodmap FuncFunctionId < StringMap
+methodmap FuncFunctionList < ArrayList
 {
-	public FuncFunctionId()
+	public FuncFunctionList()
 	{
-		return view_as<FuncFunctionId>(new StringMap());
+		return view_as<FuncFunctionList>(new ArrayList(sizeof(FuncFunction)));
 	}
 	
-	public SaxtonHaleFunction AddStruct(const char[] sFunction, FuncFunction funcFunction)
+	public bool GetById(SaxtonHaleFunction nId, FuncFunction funcFunction)
+	{
+		int iPos = this.FindValue(nId, FuncFunction::nId);
+		if (iPos == -1)
+			return false;
+		
+		this.GetArray(iPos, funcFunction);
+		return true;
+	}
+	
+	public bool SetById(SaxtonHaleFunction nId, FuncFunction funcFunction)
+	{
+		int iPos = this.FindValue(nId, FuncFunction::nId);
+		if (iPos == -1)
+			return false;
+		
+		this.SetArray(iPos, funcFunction);
+		return true;
+	}
+	
+	public bool GetByName(const char[] sName, FuncFunction funcFunction)
+	{
+		int iLength = this.Length;
+		for (int i = 0; i < iLength; i++)
+		{
+			FuncFunction buffer;
+			this.GetArray(i, buffer);
+			if (StrEqual(buffer.sName, sName))
+			{
+				funcFunction = buffer;
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	public SaxtonHaleFunction Add(FuncFunction funcFunction)
 	{
 		funcFunction.nId = g_nFuncFunctionId;
-		if (!g_mFuncFunction.SetArray(sFunction, funcFunction, sizeof(funcFunction), false))
-			return view_as<SaxtonHaleFunction>(-1);
-		
-		char sBuffer[1];
-		sBuffer[0] = view_as<char>(g_nFuncFunctionId);
-		this.SetString(sBuffer, sFunction);
-		
+		this.PushArray(funcFunction);
 		g_nFuncFunctionId++;
-		return g_nFuncFunctionId - view_as<SaxtonHaleFunction>(1);
+		return funcFunction.nId;
 	}
 	
-	public bool GetStruct(SaxtonHaleFunction nId, FuncFunction funcFunction)
+	public bool IsPluginLoaded(Handle hPlugin)
 	{
-		char sBuffer[1];
-		sBuffer[0] = view_as<char>(nId);
-		
-		char sFunction[MAX_TYPE_CHAR];
-		if (!this.GetString(sBuffer, sFunction, sizeof(sFunction)))
-			return false;
-		
-		g_mFuncFunction.GetArray(sFunction, funcFunction, sizeof(funcFunction));
-		return true;
-	}
-	
-	public bool SetStruct(SaxtonHaleFunction nId, FuncFunction funcFunction)
-	{
-		char sBuffer[1];
-		sBuffer[0] = view_as<char>(nId);
-		
-		char sFunction[MAX_TYPE_CHAR];
-		if (!this.GetString(sBuffer, sFunction, sizeof(sFunction)))
-			return false;
-		
-		g_mFuncFunction.SetArray(sFunction, funcFunction, sizeof(funcFunction));
-		return true;
-	}
-	
-	public void RemoveStruct(const char[] sFunction)
-	{
-		FuncFunction funcFunction;
-		if (g_mFuncFunction.GetArray(sFunction, funcFunction, sizeof(funcFunction)))
+		Handle hIterator = GetPluginIterator();
+		while (MorePlugins(hIterator))
 		{
-			g_mFuncFunction.Remove(sFunction);
-			
-			char sBuffer[1];
-			sBuffer[0] = view_as<char>(funcFunction.nId);
-			this.Remove(sBuffer);
+			if (ReadPlugin(hIterator) == hPlugin)
+			{
+				delete hIterator;
+				return true;
+			}
 		}
+		
+		delete hIterator;
+		return false;
+	}
+	
+	public void ClearPlugin(Handle hPlugin)
+	{
+		int iPos;
+		while ((iPos = this.FindValue(hPlugin, FuncFunction::hPlugin)) != -1)
+			this.Erase(iPos);
+	}
+	
+	public void ClearUnloadedPlugin()
+	{
+		//TODO use OnNotifyPluginUnloaded when SM 1.11 is stable
+		
+		bool bCleared;
+		do
+		{
+			bCleared = false;
+			
+			int iLength = this.Length;
+			for (int i = 0; i < iLength; i++)
+			{
+				Handle hPlugin = this.Get(i, FuncFunction::hPlugin);
+				if (!this.IsPluginLoaded(hPlugin))
+				{
+					PrintToServer("FuncFunctionList Found unloaded plugin %x", hPlugin);
+					this.ClearPlugin(hPlugin);
+					bCleared = true;
+					break;
+				}
+			}
+		}
+		while (bCleared);
 	}
 }
 
-void FuncFunction_Init()
-{
-	g_mFuncFunction = new StringMap();
-}
-
-stock bool FuncFunction_Get(const char[] sFunction, FuncFunction funcFunction)
-{
-	return g_mFuncFunction.GetArray(sFunction, funcFunction, sizeof(funcFunction));
-}
-
-stock bool FuncFunction_GetParamTypeName(ParamType nParamType, char[] sBuffer, int iLength)
+bool FuncFunction_GetParamTypeName(ParamType nParamType, char[] sBuffer, int iLength)
 {
 	switch (nParamType)
 	{
