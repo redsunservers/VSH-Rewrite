@@ -510,8 +510,6 @@ public void OnPluginStart()
 	Cookies_Init();
 	Dome_Init();
 	Event_Init();
-	FuncClass_Init();
-	FuncFunction_Init();
 	FuncHook_Init();
 	FuncNative_Init();
 	FuncStack_Init();
@@ -915,7 +913,7 @@ public void OnMapStart()
 
 		//Precache every bosses/abilities/modifiers registered
 		SaxtonHaleBase boss = SaxtonHaleBase(0); //client index doesn't matter
-		ArrayList aClass = FuncClass_GetAll();
+		ArrayList aClass = SaxtonHale_GetAllClass();
 		
 		int iLength = aClass.Length;
 		for (int i = 0; i < iLength; i++)

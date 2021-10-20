@@ -1,82 +1,132 @@
-static StringMap g_mFuncClassPlugin;
-static StringMap g_mFuncClassType;
-
-void FuncClass_Init()
+enum struct FuncClass
 {
-	g_mFuncClassPlugin = new StringMap();
-	g_mFuncClassType = new StringMap();
-}
-
-bool FuncClass_Register(const char[] sClass, Handle hPlugin, SaxtonHaleClassType nClassType)
-{
-	if (!g_mFuncClassPlugin.SetValue(sClass, hPlugin, false))
-		return false;
-	
-	if (!g_mFuncClassType.SetValue(sClass, nClassType, false))
-		return false;
-	
-	return true;
-}
-
-void FuncClass_Unregister(const char[] sClass)
-{
-	g_mFuncClassPlugin.Remove(sClass);
-	g_mFuncClassType.Remove(sClass);
-}
-
-bool FuncClass_Exists(const char[] sClass)
-{
-	SaxtonHaleClassType nBuffer;
-	return g_mFuncClassType.GetValue(sClass, nBuffer);
-}
-
-Handle FuncClass_GetPlugin(const char[] sClass)
-{
-	Handle hPlugin = null;
-	g_mFuncClassPlugin.GetValue(sClass, hPlugin);
-	return hPlugin;
-}
-
-SaxtonHaleClassType FuncClass_GetType(const char[] sClass)
-{
+	char sName[MAX_TYPE_CHAR];
+	Handle hPlugin;
 	SaxtonHaleClassType nClassType;
-	g_mFuncClassType.GetValue(sClass, nClassType);
-	return nClassType;
 }
 
-ArrayList FuncClass_GetAll()
+methodmap FuncClassList < ArrayList
 {
-	ArrayList aClass = new ArrayList(MAX_TYPE_CHAR);
-	StringMapSnapshot snapshot = g_mFuncClassType.Snapshot();
-	
-	int iLength = snapshot.Length;
-	for (int i = 0; i < iLength; i++)
+	public FuncClassList()
 	{
-		char sClass[MAX_TYPE_CHAR];
-		snapshot.GetKey(i, sClass, sizeof(sClass));
-		aClass.PushString(sClass);
+		return view_as<FuncClassList>(new ArrayList(sizeof(FuncClass)));
 	}
 	
-	delete snapshot;
-	return aClass;
-}
-
-ArrayList FuncClass_GetAllType(SaxtonHaleClassType nClassType)
-{
-	ArrayList aClass = new ArrayList(MAX_TYPE_CHAR);
-	StringMapSnapshot snapshot = g_mFuncClassType.Snapshot();
-	
-	int iLength = snapshot.Length;
-	for (int i = 0; i < iLength; i++)
+	public void Add(const char[] sName, Handle hPlugin, SaxtonHaleClassType nClassType)
 	{
-		char sClass[MAX_TYPE_CHAR];
-		snapshot.GetKey(i, sClass, sizeof(sClass));
+		FuncClass funcClass;
+		strcopy(funcClass.sName, sizeof(funcClass.sName), sName);
+		funcClass.hPlugin = hPlugin;
+		funcClass.nClassType = nClassType;
+		this.PushArray(funcClass);
+	}
+	
+	public bool Remove(const char[] sName)
+	{
+		int iLength = this.Length;
+		for (int i = 0; i < iLength; i++)
+		{
+			FuncClass funcClass;
+			this.GetArray(i, funcClass);
+			if (StrEqual(funcClass.sName, sName))
+			{
+				this.Erase(i);
+				return true;
+			}
+		}
 		
-		SaxtonHaleClassType nBuffer;
-		if (g_mFuncClassType.GetValue(sClass, nBuffer) && nBuffer == nClassType)
-			aClass.PushString(sClass);
+		return false;
 	}
 	
-	delete snapshot;
-	return aClass;
+	public bool Exists(const char[] sName)
+	{
+		int iLength = this.Length;
+		for (int i = 0; i < iLength; i++)
+		{
+			FuncClass funcClass;
+			this.GetArray(i, funcClass);
+			if (StrEqual(funcClass.sName, sName))
+				return true;
+		}
+		
+		return false;
+	}
+	
+	public Handle GetPlugin(const char[] sName)
+	{
+		int iLength = this.Length;
+		for (int i = 0; i < iLength; i++)
+		{
+			FuncClass funcClass;
+			this.GetArray(i, funcClass);
+			if (StrEqual(funcClass.sName, sName))
+				return funcClass.hPlugin;
+		}
+		
+		return null;
+	}
+	
+	public SaxtonHaleClassType GetType(const char[] sName)
+	{
+		int iLength = this.Length;
+		for (int i = 0; i < iLength; i++)
+		{
+			FuncClass funcClass;
+			this.GetArray(i, funcClass);
+			if (StrEqual(funcClass.sName, sName))
+				return funcClass.nClassType;
+		}
+		
+		return VSHClassType_Core;	//Why do we not have invalid version of this enum...
+	}
+	
+	public ArrayList GetAll()
+	{
+		ArrayList aClass = new ArrayList(MAX_TYPE_CHAR);
+		
+		int iLength = this.Length;
+		for (int i = 0; i < iLength; i++)
+		{
+			FuncClass funcClass;
+			this.GetArray(i, funcClass);
+			aClass.PushString(funcClass.sName);
+		}
+		
+		return aClass;
+	}
+	
+	public ArrayList GetAllType(SaxtonHaleClassType nClassType)
+	{
+		ArrayList aClass = new ArrayList(MAX_TYPE_CHAR);
+		
+		int iLength = this.Length;
+		for (int i = 0; i < iLength; i++)
+		{
+			FuncClass funcClass;
+			this.GetArray(i, funcClass);
+			if (funcClass.nClassType == nClassType)
+				aClass.PushString(funcClass.sName);
+		}
+		
+		return aClass;
+	}
+	
+	public void ClearUnloadedPlugin()
+	{
+		//TODO use OnNotifyPluginUnloaded when SM 1.11 is stable
+		ArrayList aPlugins = new ArrayList();
+		Handle hIterator = GetPluginIterator();
+		while (MorePlugins(hIterator))
+			aPlugins.Push(ReadPlugin(hIterator));
+		
+		delete hIterator;
+		aPlugins.Push(GetMyHandle());	//My handle is not in iterator during OnPluginEnd
+		
+		int iLength = this.Length;
+		for (int iPos = iLength - 1; iPos >= 0; iPos--)
+			if (aPlugins.FindValue(this.Get(iPos, FuncClass::hPlugin)) == -1)
+				this.Erase(iPos);
+		
+		delete aPlugins;
+	}
 }

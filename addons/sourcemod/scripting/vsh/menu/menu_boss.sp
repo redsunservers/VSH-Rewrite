@@ -80,7 +80,7 @@ void MenuBoss_DisplayList(int iClient, SaxtonHaleClassType nClassType, MenuBossL
 		hMenuList.AddItem("__none__", "None");
 	
 	//Loop through every classes by type
-	ArrayList aClasses = FuncClass_GetAllType(nClassType);
+	ArrayList aClasses = SaxtonHale_GetAllClassType(nClassType);
 	aClasses.Sort(Sort_Ascending, Sort_String);
 	int iLength = aClasses.Length;
 	for (int i = 0; i < iLength; i++)
