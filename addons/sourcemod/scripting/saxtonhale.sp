@@ -50,6 +50,7 @@
 #define SOUND_METERFULL		"player/recharged.wav"
 #define SOUND_BACKSTAB		"player/spy_shield_break.wav"
 #define SOUND_DOUBLEDONK	"player/doubledonk.wav"
+#define SOUND_JAR_EXPLODE	"weapons/jar_explode.wav"
 #define SOUND_NULL			"vo/null.mp3"
 
 #define PARTICLE_GHOST 		"ghost_appearation"
@@ -940,6 +941,7 @@ public void OnMapStart()
 		PrecacheSound(SOUND_METERFULL);
 		PrecacheSound(SOUND_BACKSTAB);
 		PrecacheSound(SOUND_DOUBLEDONK);
+		PrecacheSound(SOUND_JAR_EXPLODE);
 		PrecacheSound(SOUND_NULL);
 		
 		g_iSpritesLaserbeam = PrecacheModel("materials/sprites/laserbeam.vmt", true);
@@ -1138,7 +1140,15 @@ public void TF2_OnConditionAdded(int iClient, TFCond nCond)
 	if (g_iTotalRoundPlayed <= 0) return;
 	
 	if (SaxtonHale_IsValidBoss(iClient))
+	{
 		SaxtonHaleBase(iClient).CallFunction("OnConditionAdded", nCond);
+		
+		if (nCond == TFCond_Milked)
+		{
+			EmitSoundToClient(iClient, SOUND_JAR_EXPLODE);
+			PrintCenterText(iClient, "You were milked!");
+		}
+	}
 	
 	if (!g_ConfigConvar.LookupInt("vsh_rps_enable"))
 	{
