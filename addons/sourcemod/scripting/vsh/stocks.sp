@@ -45,14 +45,25 @@ stock int Client_GetEyeTarget(int iClient)
 	return iHit;
 }
 
+stock bool IsPointsClear(const float vecPos1[3], const float vecPos2[3])
+{
+	TR_TraceRayFilter(vecPos1, vecPos2, MASK_PLAYERSOLID, RayType_EndPoint, TraceRay_DontHitPlayersAndObjects);
+	return !TR_DidHit();
+}
+
 stock bool TraceRay_DontHitEntity(int iEntity, int iMask, int iData)
 {
 	return iEntity != iData;
 }
 
-stock bool TraceRay_DontHitPlayers(int iEntity, int iMask, int iData)
+stock bool TraceRay_DontHitPlayersAndObjects(int iEntity, int iMask, int iData)
 {
-	return iEntity <= 0 || iEntity > MaxClients;
+	if (0 < iEntity <= MaxClients)
+		return false;
+	
+	char sClassname[256];
+	GetEntityClassname(iEntity, sClassname, sizeof(sClassname));
+	return StrContains(sClassname, "obj_") != 0;
 }
 
 stock bool TraceRay_HitEnemyPlayersAndObjects(int iEntity, int iMask, int iClient)

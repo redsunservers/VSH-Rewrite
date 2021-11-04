@@ -173,6 +173,7 @@ methodmap CRageGhost < SaxtonHaleBase
 		{
 			float vecOrigin[3];
 			GetClientAbsOrigin(iClient, vecOrigin);
+			vecOrigin[2] += 42.0;
 			
 			int iTeam = GetClientTeam(iClient);
 			static char sParticle[][] = {
@@ -198,7 +199,8 @@ methodmap CRageGhost < SaxtonHaleBase
 				{
 					float vecTargetOrigin[3];
 					GetClientAbsOrigin(iVictim, vecTargetOrigin);
-					if (GetVectorDistance(vecOrigin, vecTargetOrigin) <= flRadius)
+					vecTargetOrigin[2] += 42.0;
+					if (GetVectorDistance(vecOrigin, vecTargetOrigin) <= flRadius && IsPointsClear(vecOrigin, vecTargetOrigin))
 					{
 						//Victim got spooked
 						bSpook = true;
@@ -230,7 +232,6 @@ methodmap CRageGhost < SaxtonHaleBase
 						{
 							g_flGhostHealStartTime[iClient][iVictim] = GetGameTime();
 							
-							vecTargetOrigin[2] += 42.0;
 							float vecTargetAngles[3];
 							GetClientAbsAngles(iClient, vecTargetAngles);
 							g_iGhostParticleBeam[iClient][iVictim] = TF2_SpawnParticle(sParticle[iTeam], vecTargetOrigin, vecTargetAngles, true, iVictim, EntRefToEntIndex(g_iGhostParticleCentre[iClient]));
@@ -288,22 +289,22 @@ methodmap CRageGhost < SaxtonHaleBase
 					{
 						float vecTargetOrigin[3];
 						GetEntPropVector(iBuilding, Prop_Send, "m_vecOrigin", vecTargetOrigin);
-						if (GetVectorDistance(vecOrigin, vecTargetOrigin) <= flRadius)
+						
+						//Teleporters are tiny, so the beam must be down low
+						char sClassname[32];
+						GetEntityClassname(iBuilding, sClassname, sizeof(sClassname));
+						if (StrEqual(sClassname, "obj_teleporter"))
+							vecTargetOrigin[2] += 5.0;
+						else
+							vecTargetOrigin[2] += 42.0;
+						
+						if (GetVectorDistance(vecOrigin, vecTargetOrigin) <= flRadius && IsPointsClear(vecOrigin, vecTargetOrigin))
 						{
 							bLinked = true;
 							if (g_flGhostHealStartTime[iClient][iBuilding] == 0.0)
 							{
 								g_flGhostHealStartTime[iClient][iBuilding] = GetGameTime();
 								
-								char sClassname[32];
-								GetEntityClassname(iBuilding, sClassname, sizeof(sClassname));
-								
-								//Teleporters are tiny, so the beam must be down low
-								if (StrEqual(sClassname, "obj_teleporter"))
-									vecTargetOrigin[2] += 5.0;
-								else
-									vecTargetOrigin[2] += 42.0;
-									
 								float vecTargetAngles[3];
 								GetClientAbsAngles(iClient, vecTargetAngles);
 								g_iGhostParticleBeam[iClient][iBuilding] = TF2_SpawnParticle(sParticle[iTeam], vecTargetOrigin, vecTargetAngles, true, iBuilding, EntRefToEntIndex(g_iGhostParticleCentre[iClient]));
