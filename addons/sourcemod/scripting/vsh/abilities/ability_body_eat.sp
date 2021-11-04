@@ -197,7 +197,7 @@ methodmap CBodyEat < SaxtonHaleBase
 		GetClientEyePosition(this.iClient, vecPos);
 		GetClientEyeAngles(this.iClient, vecAng);
 	
-		Handle hTrace = TR_TraceRayFilterEx(vecPos, vecAng, MASK_VISIBLE, RayType_Infinite, TraceRay_DontHitPlayers);
+		Handle hTrace = TR_TraceRayFilterEx(vecPos, vecAng, MASK_VISIBLE, RayType_Infinite, TraceRay_DontHitPlayersAndObjects);
 		int iEnt = TR_GetEntityIndex(hTrace);
 		TR_GetEndPosition(vecEndPos, hTrace);
 		delete hTrace;
