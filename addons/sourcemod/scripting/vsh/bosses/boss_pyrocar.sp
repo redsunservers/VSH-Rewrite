@@ -6,6 +6,7 @@
 #define TF_DMG_AFTERBURN				DMG_PREVENT_PHYSICS_FORCE | DMG_BURN
 #define TF_DMG_GAS_AFTERBURN			DMG_BURN|DMG_PREVENT_PHYSICS_FORCE|DMG_ACID
 #define PYROCAR_BACKBURNER_ATTRIBUTES	"24 ; 1.0 ; 72 ; 0.5 ; 112 ; 0.25 ; 178 ; 0.2 ; 179 ; 1.0 ; 181 ; 1.0 ; 252 ; 0.5 ; 259 ; 1.0 ; 356 ; 1.0 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 1850.0 ; 862 ; 0.45 ; 863 ; 0.01 ; 865 ; 85 ; 214 ; %d"
+#define PYROCAR_THERMAL_THRUSTER_ATTRIBUTES	"259 ; 1.0 ; 870 ; 1.0 ; 872 ; 1.0 ; 873 ; 1.0"
 #define PYROCAR_HEALINGREDUCTION		0.5
 
 static char g_strPyrocarRoundStart[][] =  {
@@ -117,7 +118,7 @@ methodmap CPyroCar < SaxtonHaleBase
 		char attribs[256];
 		Format(attribs, sizeof(attribs), PYROCAR_BACKBURNER_ATTRIBUTES, GetRandomInt(9999, 99999));
 		g_iPyrocarPrimary[this.iClient] = this.CallFunction("CreateWeapon", ITEM_BACKBURNER, "tf_weapon_flamethrower", 100, TFQual_Strange, attribs);
-		g_iPyrocarJetpack[this.iClient] = this.CallFunction("CreateWeapon", ITEM_THERMAL_THRUSTER, "tf_weapon_rocketpack", 100, TFQual_Unusual, "259 ; 1.0 ; 870 ; 1.0 ; 872 ; 1.0 ; 873 ; 1.0");
+		g_iPyrocarJetpack[this.iClient] = this.CallFunction("CreateWeapon", ITEM_THERMAL_THRUSTER, "tf_weapon_rocketpack", 100, TFQual_Unusual, PYROCAR_THERMAL_THRUSTER_ATTRIBUTES);
 		if (g_iPyrocarPrimary[this.iClient] > MaxClients)
 		{
 			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", g_iPyrocarPrimary[this.iClient]);
@@ -212,7 +213,7 @@ methodmap CPyroCar < SaxtonHaleBase
 			{
 				TF2_RemoveItemInSlot(this.iClient, WeaponSlot_Secondary);
 
-				g_iPyrocarJetpack[this.iClient] = this.CallFunction("CreateWeapon", ITEM_THERMAL_THRUSTER, "tf_weapon_rocketpack", 100, TFQual_Unusual, "259 ; 1.0 ; 872 ; 1.0 ; 873 ; 1.0");
+				g_iPyrocarJetpack[this.iClient] = this.CallFunction("CreateWeapon", ITEM_THERMAL_THRUSTER, "tf_weapon_rocketpack", 100, TFQual_Unusual, PYROCAR_THERMAL_THRUSTER_ATTRIBUTES);
 				SetEntPropFloat(this.iClient, Prop_Send, "m_flItemChargeMeter", g_flPyrocarJetpackCharge[this.iClient], 1);
 
 				//Call client to reset HUD meter
@@ -256,13 +257,13 @@ methodmap CPyroCar < SaxtonHaleBase
 		{
 			g_flPyrocarJetpackCharge[this.iClient] = GetEntPropFloat(this.iClient, Prop_Send, "m_flItemChargeMeter", 1);
 			if (g_flPyrocarJetpackCharge[this.iClient] < 100.0)
-				g_flPyrocarJetpackCharge[this.iClient] += 0.15;
+				g_flPyrocarJetpackCharge[this.iClient] += 0.08;
 			SetEntPropFloat(this.iClient, Prop_Send, "m_flItemChargeMeter", g_flPyrocarJetpackCharge[this.iClient], 1);
 		}
 		else
 		{
 			if (g_flPyrocarJetpackCharge[this.iClient] < 100.0)
-				g_flPyrocarJetpackCharge[this.iClient] += 0.15;
+				g_flPyrocarJetpackCharge[this.iClient] += 0.08;
 		}
 		
 	}
