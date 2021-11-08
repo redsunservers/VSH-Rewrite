@@ -347,6 +347,8 @@ public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcas
 					int iAddQueue = 10 + RoundToFloor(float(SaxtonHale_GetScore(iClient)) / 300.0);
 					if (iAddQueue > 20)
 						iAddQueue = 20;
+					if (iAddQueue < 10)
+						iAddQueue = 10;
 					Queue_AddPlayerPoints(iClient, iAddQueue);
 				}
 			}
