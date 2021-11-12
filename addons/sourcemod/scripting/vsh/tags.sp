@@ -919,6 +919,14 @@ public void Tags_MakeBleed(int iClient, int iTarget, TagsParams tParams)
 	TF2_MakeBleed(iTarget, iClient, tParams.GetFloat("duration"));
 }
 
+public void Tags_IgnitePlayer(int iClient, int iTarget, TagsParams tParams)
+{
+	if (iTarget <= 0 || iTarget > MaxClients || !IsClientInGame(iTarget) || !IsPlayerAlive(iTarget))
+		return;
+	
+	TF2_IgnitePlayer(iTarget, iClient, tParams.GetFloat("duration"));
+}
+
 //---------------------------
 
 public void Frame_AreaOfRange(DataPack data)
