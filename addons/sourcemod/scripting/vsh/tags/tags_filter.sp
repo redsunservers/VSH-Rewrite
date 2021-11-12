@@ -134,19 +134,19 @@ enum struct TagsFilterStruct
 			}
 			case TagsFilterType_DamageMaximum:
 			{
-               			int iDamage;
-         			if (!tParams.GetIntEx("damage", iDamage))
-                    			return false;
-                
-                		return iDamage <= this.nValue;
+				int iDamage;
+				if (!tParams.GetIntEx("damage", iDamage))
+					return false;
+				
+				return iDamage <= this.nValue;
 			}
 			case TagsFilterType_DamageMinimum:
 			{
-              			int iDamage;
-                		if (!tParams.GetIntEx("damage", iDamage))
-                   			return false;
-                
-                		return iDamage >= this.nValue;
+				int iDamage;
+				if (!tParams.GetIntEx("damage", iDamage))
+					return false;
+				
+				return iDamage >= this.nValue;
 			}
 		}
 		
