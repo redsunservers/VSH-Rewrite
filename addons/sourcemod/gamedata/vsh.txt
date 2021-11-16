@@ -92,28 +92,28 @@
 			}
 			"CTFPlayer::GiveNamedItem"
 			{
-				"linux"		"485"
-				"windows"	"478"
+				"linux"		"488"
+				"windows"	"481"
 			}
 			"CTFWeaponBase::SendWeaponAnim"
 			{
-				"linux"		"249"
-				"windows"	"243"
+				"linux"		"252"
+				"windows"	"246"
 			}
 			"CTFWeaponBase::GetMaxClip1"
 			{
-				"linux"		"324"
-				"windows"	"318"
+				"linux"		"327"
+				"windows"	"321"
 			}
 			"CTFStunBall::ApplyBallImpactEffectOnVictim"
 			{
-				"linux"		"261"
-				"windows"	"260"
+				"linux"		"264"
+				"windows"	"263"
 			}
 			"CTFStunBall::ShouldBallTouch"
 			{
-				"linux"		"263"
-				"windows"	"262"
+				"linux"		"266"
+				"windows"	"265"
 			}
 		}
 	}
