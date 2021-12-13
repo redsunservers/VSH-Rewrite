@@ -122,6 +122,7 @@ int TagsDamage_GetType(const char[] sDamageType)
 		mDamageType.SetValue("shock", DMG_SHOCK);
 		mDamageType.SetValue("knockback", -DMG_PREVENT_PHYSICS_FORCE);
 		mDamageType.SetValue("noknockback", DMG_PREVENT_PHYSICS_FORCE);
+		mDamageType.SetValue("ignite", DMG_IGNITE);
 	}
 	
 	int iDamageType = 0;

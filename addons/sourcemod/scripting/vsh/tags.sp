@@ -386,6 +386,10 @@ public void Tags_SetAttrib(int iClient, int iTarget, TagsParams tParams)
 		case TagsMath_Damage: flValue = float(g_iPlayerDamage[iClient]) / flValue;
 	}
 	
+	float flMin, flMax;
+	if (tParams.GetFloatEx("min", flMin) && flValue < flMin) flValue = flMin;
+	if (tParams.GetFloatEx("max", flMax) && flValue > flMax) flValue = flMax;
+	
 	//Set attrib
 	TF2Attrib_SetByDefIndex(iTarget, iIndex, flValue);
 	TF2Attrib_ClearCache(iTarget);
