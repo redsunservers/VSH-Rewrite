@@ -40,9 +40,9 @@ void Hud_Think(int iClient)
 			Format(sMessage, sizeof(sMessage), "%s\nDamage: %i Assist: %i", sMessage, g_iPlayerDamage[iClient], g_iPlayerAssistDamage[iClient]);
 		
 		//Display airblast percentage
-		float flPercentage = Tags_GetAirblastPercentage(iClient);
-		if (flPercentage >= 0.0)
-			Format(sMessage, sizeof(sMessage), "%s\nAirblast: %i%%", sMessage, RoundToFloor(flPercentage * 100.0));
+		float flCooldown = Tags_GetAirblastCooldown(iClient);
+		if (flCooldown > 0.0)
+			Format(sMessage, sizeof(sMessage), "%s\nAirblast Cooldown: %d sec", sMessage, RoundToCeil(flCooldown));
 	}
 	else if (!IsPlayerAlive(iClient))
 	{
