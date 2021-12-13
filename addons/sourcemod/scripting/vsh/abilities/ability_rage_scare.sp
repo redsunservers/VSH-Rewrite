@@ -96,7 +96,7 @@ methodmap CScareRage < SaxtonHaleBase
 	{
 		//Default values, these can be changed if needed
 		ability.flRadius = -1.0;
-		ability.flDuration = 5.0;
+		ability.flDuration = 0.0;
 		ability.iStunFlags = TF_STUNFLAGS_GHOSTSCARE;
 		
 		for (TFClassType nClass = TFClass_Scout; nClass <= TFClass_Engineer; nClass++)
