@@ -57,7 +57,7 @@ void Tags_OnThink(int iClient)
 	if (GetEntityFlags(iClient) & FL_ONGROUND)
 		g_iClimbAmount[iClient] = 0;
 	
-	if (g_flTagsAirblastLastUsed[iClient] + g_flTagsAirblastCooldown[iClient] < GetGameTime())
+	if (g_flTagsAirblastCooldown[iClient] > 0.0 && g_flTagsAirblastLastUsed[iClient] + g_flTagsAirblastCooldown[iClient] < GetGameTime())
 	{
 		//Detect if airblast is used, and reset if so
 		int iPrimary = TF2_GetItemInSlot(iClient, WeaponSlot_Primary);
