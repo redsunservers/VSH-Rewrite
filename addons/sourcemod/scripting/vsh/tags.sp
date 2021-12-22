@@ -650,6 +650,7 @@ public void Tags_RemoveRage(int iClient, int iTarget, TagsParams tParams)
 	int iAmount = tParams.GetInt("amount");
 	SaxtonHaleBase boss = SaxtonHaleBase(iTarget);
 	boss.CallFunction("AddRage", -iAmount);
+	g_iPlayerAssistDamage[iClient] += iAmount;
 }
 
 public void Tags_ViewRage(int iClient, int iTarget, TagsParams tParams)
