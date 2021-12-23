@@ -782,10 +782,12 @@ public Action Event_PlayerHurt(Event event, const char[] sName, bool bDontBroadc
 		{
 			boss.CallFunction("AddRage", iDamageAmount);
 			
-			if (boss.bMinion)
-				return;
+			//Damage if main boss, assist damage if minion
+			if (!boss.bMinion)
+				g_iPlayerDamage[iAttacker] += iDamageAmount;
+			else
+				g_iPlayerAssistDamage[iAttacker] += iDamageAmount;
 			
-			g_iPlayerDamage[iAttacker] += iDamageAmount;
 			int iAttackTeam = GetClientTeam(iAttacker);
 
 			//Award assist damage if Client has a owner
