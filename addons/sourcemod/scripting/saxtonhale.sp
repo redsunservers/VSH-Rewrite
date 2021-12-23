@@ -316,6 +316,7 @@ int g_iPlayerLastButtons[TF_MAXPLAYERS];
 int g_iPlayerDamage[TF_MAXPLAYERS];
 int g_iPlayerAssistDamage[TF_MAXPLAYERS];
 int g_iClientOwner[TF_MAXPLAYERS];
+bool g_bClientAreaOfEffect[TF_MAXPLAYERS][TF_MAXPLAYERS];
 
 int g_iClientFlags[TF_MAXPLAYERS];
 
@@ -1234,7 +1235,13 @@ public void OnClientConnected(int iClient)
 	g_iPlayerAssistDamage[iClient] = 0;
 	g_iClientFlags[iClient] = 0;
 	g_iClientOwner[iClient] = 0;
-
+	
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		g_bClientAreaOfEffect[iClient][i] = false;
+		g_bClientAreaOfEffect[i][iClient] = false;
+	}
+	
 	ClassLimit_SetMainClass(iClient, TFClass_Unknown);
 	ClassLimit_SetDesiredClass(iClient, TFClass_Unknown);
 	
