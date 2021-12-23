@@ -916,13 +916,15 @@ public void Frame_AreaOfRange(DataPack data)
 
 		for (int i = 1; i <= MaxClients; i++)
 		{
+			g_bClientAreaOfEffect[iClient][i] = false;
+			
 			if (SaxtonHale_IsValidAttack(i) && IsPlayerAlive(i))
 			{
 				GetClientAbsOrigin(i, vecTargetPos);
 				if (GetVectorDistance(vecPos, vecTargetPos) <= flRadius)
 				{
-					if (view_as<int>(cond) >= 0)
-						TF2_AddCondition(i, cond, 0.05);
+					TF2_AddCondition(i, cond, 0.05);
+					g_bClientAreaOfEffect[iClient][i] = true;
 				}
 			}
 		}
@@ -943,6 +945,10 @@ public void Frame_AreaOfRange(DataPack data)
 	{
 		//Duration ended
 		delete data;
+		
+		if (0 < iClient <= MaxClients)
+			for (int i = 1; i <= MaxClients; i++)
+				g_bClientAreaOfEffect[iClient][i] = false;
 	}
 }
 

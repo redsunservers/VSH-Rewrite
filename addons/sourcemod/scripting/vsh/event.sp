@@ -797,27 +797,35 @@ public Action Event_PlayerHurt(Event event, const char[] sName, bool bDontBroadc
 			{
 				if (IsClientInGame(i) && GetClientTeam(i) == iAttackTeam && i != iAttacker)
 				{
+					if (g_bClientAreaOfEffect[i][iAttacker])
+					{
+						//Under area of effect
+						g_iPlayerAssistDamage[i] += iDamageAmount;
+						continue;
+					}
+					
 					int iSecondaryWep = GetPlayerWeaponSlot(i, WeaponSlot_Secondary);
 					char weaponSecondaryClass[32];
-					if (iSecondaryWep >= 0) GetEdictClassname(iSecondaryWep, weaponSecondaryClass, sizeof(weaponSecondaryClass));
+					if (iSecondaryWep >= 0)
+						GetEdictClassname(iSecondaryWep, weaponSecondaryClass, sizeof(weaponSecondaryClass));
 
 					//Award damage assit to healers
-					if (strcmp(weaponSecondaryClass, "tf_weapon_medigun") == 0)
+					if (strcmp(weaponSecondaryClass, "tf_weapon_medigun") != 0)
+						continue;
+					
+					int iHealTarget = GetEntPropEnt(iSecondaryWep, Prop_Send, "m_hHealingTarget");
+					if (iHealTarget == iAttacker)
 					{
-						int iHealTarget = GetEntPropEnt(iSecondaryWep, Prop_Send, "m_hHealingTarget");
-						if (iHealTarget == iAttacker)
+						g_iPlayerAssistDamage[i] += iDamageAmount;
+					}
+					else if (iHealTarget > MaxClients)	//Buildings
+					{
+						char sClassname[64];
+						GetEdictClassname(iHealTarget, sClassname, sizeof(sClassname));
+						//Check if healer is healing sentry gun, with attacker as builder
+						if (strcmp(sClassname, "obj_sentrygun") == 0 && GetEntPropEnt(iHealTarget, Prop_Send, "m_hBuilder") == iAttacker)
 						{
 							g_iPlayerAssistDamage[i] += iDamageAmount;
-						}
-						else if (iHealTarget > MaxClients)	//Buildings
-						{
-							char sClassname[64];
-							GetEdictClassname(iHealTarget, sClassname, sizeof(sClassname));
-							//Check if healer is healing sentry gun, with attacker as builder
-							if (strcmp(sClassname, "obj_sentrygun") == 0 && GetEntPropEnt(iHealTarget, Prop_Send, "m_hBuilder") == iAttacker)
-							{
-								g_iPlayerAssistDamage[i] += iDamageAmount;
-							}
 						}
 					}
 				}
