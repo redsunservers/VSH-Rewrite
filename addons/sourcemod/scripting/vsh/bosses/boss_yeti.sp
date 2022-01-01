@@ -76,6 +76,7 @@ methodmap CYeti < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- Ground Pound (Passive)");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
+		StrCat(sInfo, length, "\n- Damage requirement: 2500");
 		StrCat(sInfo, length, "\n- Slows players at medium range for 3 seconds");
 		StrCat(sInfo, length, "\n- Affected players get frozen for 4 seconds");
 		StrCat(sInfo, length, "\n- 200%% Rage: Extended range and freeze duration increased to 6 seconds");

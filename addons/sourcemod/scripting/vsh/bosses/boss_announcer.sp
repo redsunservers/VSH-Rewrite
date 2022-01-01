@@ -84,6 +84,7 @@ methodmap CAnnouncer < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- Brings players and buildings shot by your Diamondback to your team");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
+		StrCat(sInfo, length, "\n- Damage requirement: 2500");
 		StrCat(sInfo, length, "\n- Ammo is added to your Diamondback");
 		StrCat(sInfo, length, "\n- 200%% Rage: Ammo added is doubled");
 	}

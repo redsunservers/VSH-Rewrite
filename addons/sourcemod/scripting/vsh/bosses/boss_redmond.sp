@@ -77,6 +77,7 @@ methodmap CRedmond < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- Alt-attack to use Teleport spell (5 second cooldown)");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
+		StrCat(sInfo, length, "\n- Damage requirement: 2500");
 		StrCat(sInfo, length, "\n- Grants a MONOCULUS! spell");
 		StrCat(sInfo, length, "\n- 200%% Rage: Grants 3 MONOCULUS! spells");
 	}

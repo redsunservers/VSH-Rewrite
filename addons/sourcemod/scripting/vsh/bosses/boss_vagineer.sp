@@ -75,6 +75,7 @@ methodmap CVagineer < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- Brave Jump");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
+		StrCat(sInfo, length, "\n- Damage requirement: 2500");
 		StrCat(sInfo, length, "\n- Builds Level 1 Sentry with faster rotate and firing speed, health scales based on players alive");
 		StrCat(sInfo, length, "\n- Scares players at small range for 5 seconds");
 		StrCat(sInfo, length, "\n- 200%% Rage: Level 2 Sentry, larger scare range and extends duration to 7.5 seconds");

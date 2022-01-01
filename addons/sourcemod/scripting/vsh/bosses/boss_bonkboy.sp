@@ -96,6 +96,7 @@ methodmap CBonkBoy < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- Medium range balls stun players and buildings, moonshot instakills");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
+		StrCat(sInfo, length, "\n- Damage requirement: 1500");
 		StrCat(sInfo, length, "\n- Unlimited and greater mobility jumps");
 		StrCat(sInfo, length, "\n- Faster movement speed");
 		StrCat(sInfo, length, "\n- Unlimited balls");

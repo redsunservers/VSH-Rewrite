@@ -85,6 +85,7 @@ methodmap CUberRanger < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- Equipped with a Medi Gun");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
+		StrCat(sInfo, length, "\n- Damage requirement: 2500");
 		StrCat(sInfo, length, "\n- Übercharge for 5 seconds");
 		StrCat(sInfo, length, "\n- Summons a fellow Über Ranger");
 		StrCat(sInfo, length, "\n- Über Rangers can heal and über each other");

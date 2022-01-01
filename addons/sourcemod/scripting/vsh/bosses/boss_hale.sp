@@ -124,6 +124,7 @@ methodmap CSaxtonHale < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- Brave Jump");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
+		StrCat(sInfo, length, "\n- Damage requirement: 2500");
 		StrCat(sInfo, length, "\n- Scares players at medium range for 5 seconds");
 		StrCat(sInfo, length, "\n- 200%% Rage: Longer range and extends duration to 7.5 seconds");
 	}
