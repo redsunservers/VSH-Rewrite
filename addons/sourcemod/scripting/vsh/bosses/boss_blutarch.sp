@@ -77,6 +77,7 @@ methodmap CBlutarch < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- Alt-attack to use Bats spell for 15 seconds cooldown");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
+		StrCat(sInfo, length, "\n- Damage requirement: 2500");
 		StrCat(sInfo, length, "\n- Summons a Meteor spell");
 		StrCat(sInfo, length, "\n- 200%% Rage: Summons 3 Meteor spells");
 	}

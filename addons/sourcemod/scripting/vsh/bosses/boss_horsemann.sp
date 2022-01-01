@@ -101,6 +101,7 @@ methodmap CHorsemann < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- Teleport Swap");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
+		StrCat(sInfo, length, "\n- Damage requirement: 3000");
 		StrCat(sInfo, length, "\n- Become a flying ghost that is immune to damage, cannot attack for 8 seconds");
 		StrCat(sInfo, length, "\n- Pulls in and drains health from nearby players with random spooky effects");
 		StrCat(sInfo, length, "\n- 200%% Rage: Larger range and health drain is doubled");

@@ -92,6 +92,7 @@ methodmap CDemoPan < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- Chargin' Targe with large knockback on impact, reload to charge");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
+		StrCat(sInfo, length, "\n- Damage requirement: 2500");
 		StrCat(sInfo, length, "\n- 5 seconds of force full-control charging");
 		StrCat(sInfo, length, "\n- 200%% Rage: extends duration to 10 seconds");
 	}

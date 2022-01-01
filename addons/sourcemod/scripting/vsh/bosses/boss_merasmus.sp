@@ -124,6 +124,7 @@ methodmap CMerasmus < SaxtonHaleBase
 		StrCat(sInfo, length, "\n- Teleport-View");
 		StrCat(sInfo, length, "\n ");
 		StrCat(sInfo, length, "\nRage");
+		StrCat(sInfo, length, "\n- Damage requirement: 2500");
 		StrCat(sInfo, length, "\n- Bomb projectiles at random directions from boss");
 		StrCat(sInfo, length, "\n- Self-Über and Crits for 8 seconds");
 		StrCat(sInfo, length, "\n- 200%% Rage: Doubled bomb projectile spawn rate");
