@@ -44,7 +44,6 @@ void Tags_ResetClient(int iClient)
 	for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
 		g_iBackstabCount[iClient][iVictim] = 0;
 	
-	TF2Attrib_SetByDefIndex(iClient, ATTRIB_SENTRYATTACKSPEED, 1.0);
 	TF2Attrib_SetByDefIndex(iClient, ATTRIB_BIDERECTIONAL, 0.0);
 	
 	Hud_SetRageView(iClient, false);
@@ -153,9 +152,7 @@ void Tags_OnThink(int iClient)
 	
 	//Sentry
 	if (iBuilding[TFObject_Sentry][TFObjectMode_None] > MaxClients)
-		TF2Attrib_SetByDefIndex(iClient, ATTRIB_SENTRYATTACKSPEED, 0.5);
-	else
-		TF2Attrib_SetByDefIndex(iClient, ATTRIB_SENTRYATTACKSPEED, 1.0);
+		TF2_AddCondition(iClient, TFCond_Buffed, 0.05);
 	
 	//Dispenser
 	if (iBuilding[TFObject_Dispenser][TFObjectMode_None] > MaxClients && g_flDispenserBoost[iClient] <= GetGameTime())
