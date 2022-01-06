@@ -164,11 +164,11 @@ methodmap CFloatJump < SaxtonHaleBase
 		}
 	}
 	
-	public void GetHudText(char[] sMessage, int iLength)
+	public void GetHudInfo(char[] sMessage, int iLength, int iColor[4])
 	{
 		if (g_flFloatJumpCooldownWait[this.iClient] != 0.0 && g_flFloatJumpCooldownWait[this.iClient] > GetGameTime())
 		{
-			int iSec = RoundToNearest(g_flFloatJumpCooldownWait[this.iClient]-GetGameTime());
+			int iSec = RoundToCeil(g_flFloatJumpCooldownWait[this.iClient]-GetGameTime());
 			Format(sMessage, iLength, "%s\nFloat cooldown %i second%s remaining!", sMessage, iSec, (iSec > 1) ? "s" : "");
 		}
 		else if (this.iJumpCharge > 0)

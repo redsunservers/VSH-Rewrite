@@ -1,8 +1,46 @@
 static bool g_bHudRage[TF_MAXPLAYERS] = true;
+static char g_sBossHudText[TF_MAXPLAYERS][256];
+static int g_iBossHudColor[TF_MAXPLAYERS][4];
 
 void Hud_SetRageView(int iClient, bool bEnable)
 {
 	g_bHudRage[iClient] = bEnable;
+}
+
+void Hud_UpdateBossInfo(int iClient, float flinterval, float flDuration)
+{
+	//Update now
+	g_sBossHudText[iClient] = "";
+	g_iBossHudColor[iClient] = {255, 255, 255, 255};
+	SaxtonHaleBase(iClient).CallFunction("GetHudInfo", g_sBossHudText[iClient], sizeof(g_sBossHudText[]), g_iBossHudColor[iClient]);
+	
+	if (flDuration > 0.0)
+	{
+		//Create timer to update hud on every interval
+		DataPack hPack;
+		CreateDataTimer(flinterval, Hud_TimerUpdateBossInfo, hPack, TIMER_REPEAT);
+		hPack.WriteCell(GetClientSerial(iClient));
+		hPack.WriteFloat(GetGameTime() + flDuration);
+	}
+}
+
+Action Hud_TimerUpdateBossInfo(Handle hTimer, DataPack hPack)
+{
+	hPack.Reset();
+	int iClient = GetClientFromSerial(hPack.ReadCell());
+	float flEnd = hPack.ReadFloat();
+	
+	if (!SaxtonHale_IsValidBoss(iClient))
+		return Plugin_Stop;
+	
+	g_sBossHudText[iClient] = "";
+	g_iBossHudColor[iClient] = {255, 255, 255, 255};
+	SaxtonHaleBase(iClient).CallFunction("GetHudInfo", g_sBossHudText[iClient], sizeof(g_sBossHudText[]), g_iBossHudColor[iClient]);
+	
+	if (flEnd <= GetGameTime())	//We've reached duration, stop updating
+		return Plugin_Stop;
+	
+	return Plugin_Continue;
 }
 
 void Hud_Think(int iClient)
@@ -64,8 +102,8 @@ void Hud_Think(int iClient)
 	}
 	else if (SaxtonHale_IsValidBoss(iClient))
 	{
-		SaxtonHaleBase(iClient).CallFunction("GetHudText", sMessage, sizeof(sMessage));
-		SaxtonHaleBase(iClient).CallFunction("GetHudColor", iColor);
+		sMessage = g_sBossHudText[iClient];
+		iColor = g_iBossHudColor[iClient];
 	}
 	
 	if (StrContains(sMessage, "\n") == 0)	//Delete newline from start

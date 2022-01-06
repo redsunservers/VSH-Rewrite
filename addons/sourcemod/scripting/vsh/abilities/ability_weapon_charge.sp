@@ -85,7 +85,7 @@ methodmap CWeaponCharge < SaxtonHaleBase
 		}
 	}
 	
-	public void GetHudText(char[] sMessage, int iLength)
+	public void GetHudInfo(char[] sMessage, int iLength, int iColor[4])
 	{
 		StrCat(sMessage, iLength, "\nUse your reload key to charge!");
 	}

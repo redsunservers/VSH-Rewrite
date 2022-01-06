@@ -134,19 +134,27 @@ methodmap CBraveJump < SaxtonHaleBase
 			return;
 		
 		if (g_flJumpCooldownWait[this.iClient] == 0.0)	//Round started, start cooldown
+		{
 			g_flJumpCooldownWait[this.iClient] = GetGameTime()+this.flCooldown;
+			this.CallFunction("UpdateHudInfo", 1.0, this.flCooldown);	//Update every second for cooldown duration
+		}
+		
+		int iOldJumpCharge = this.iJumpCharge;
 		
 		if (g_flJumpCooldownWait[this.iClient] <= GetGameTime() && g_bBraveJumpHoldingChargeButton[this.iClient])
 			this.iJumpCharge += this.iJumpChargeBuild;
 		else
 			this.iJumpCharge -= this.iJumpChargeBuild*2;
+		
+		if (iOldJumpCharge != this.iJumpCharge)
+			this.CallFunction("UpdateHudInfo", 0.0, 0.0);	//Update once
 	}
 	
-	public void GetHudText(char[] sMessage, int iLength)
+	public void GetHudInfo(char[] sMessage, int iLength, int iColor[4])
 	{
 		if (g_flJumpCooldownWait[this.iClient] != 0.0 && g_flJumpCooldownWait[this.iClient] > GetGameTime())
 		{
-			int iSec = RoundToNearest(g_flJumpCooldownWait[this.iClient]-GetGameTime());
+			int iSec = RoundToCeil(g_flJumpCooldownWait[this.iClient]-GetGameTime());
 			Format(sMessage, iLength, "%s\nSuper-jump cooldown %i second%s remaining!", sMessage, iSec, (iSec > 1) ? "s" : "");
 		}
 		else if (this.iJumpCharge > 0)
@@ -159,9 +167,9 @@ methodmap CBraveJump < SaxtonHaleBase
 		}
 	}
 	
-	public void OnButtonHold(int button)
+	public void OnButton(int &buttons)
 	{
-		if (button == IN_ATTACK2)
+		if (buttons & IN_ATTACK2)
 			g_bBraveJumpHoldingChargeButton[this.iClient] = true;
 	}
 	
@@ -195,6 +203,7 @@ methodmap CBraveJump < SaxtonHaleBase
 					flCooldownTime = this.flMinCooldown;
 				
 				g_flJumpCooldownWait[this.iClient] = GetGameTime()+flCooldownTime;
+				this.CallFunction("UpdateHudInfo", 1.0, this.flCooldown);	//Update every second for cooldown duration
 				
 				this.iJumpCharge = 0;
 				
