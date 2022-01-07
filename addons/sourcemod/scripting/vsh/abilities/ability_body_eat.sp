@@ -133,7 +133,7 @@ methodmap CBodyEat < SaxtonHaleBase
 		SetEntProp(iRagdoll, Prop_Data, "m_iHealth", (bFake) ? 0 : iHeal);
 		
 		//Set model to body
-		char sModel[255];
+		char sModel[PLATFORM_MAX_PATH];
 		GetEntPropString(iVictim, Prop_Data, "m_ModelName", sModel, sizeof(sModel));
 		DispatchKeyValue(iRagdoll, "model", sModel);
 		
