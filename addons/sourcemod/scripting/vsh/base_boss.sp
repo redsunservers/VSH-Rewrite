@@ -175,10 +175,10 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 		}
 	}
 
-	public void OnButtonHold(int iButton)
+	public void OnButton(int &buttons)
 	{
 		//Is boss crouching, allowed to use weighdown and passed timer
-		if (iButton == IN_DUCK
+		if (buttons & IN_DUCK
 			&& this.flWeighDownTimer >= 0.0
 			&& g_flClientBossWeighDownTimer[this.iClient] != 0.0
 			&& g_flClientBossWeighDownTimer[this.iClient] < GetGameTime() - this.flWeighDownTimer)
@@ -213,6 +213,8 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 			this.iMaxHealth = iHealth;
 			this.iHealth = iHealth;
 		}
+		
+		this.CallFunction("UpdateHudInfo", 0.0, 0.01);	//Update after frame when boss have all weapons equipped
 	}
 	
 	public Action OnGiveNamedItem(const char[] sClassname, int iIndex)
@@ -410,7 +412,12 @@ methodmap SaxtonHaleBoss < SaxtonHaleBase
 
 		return action;
 	}
-
+	
+	public void UpdateHudInfo(float flinterval, float flDuration)
+	{
+		Hud_UpdateBossInfo(this.iClient, flinterval, flDuration);
+	}
+	
 	public void Destroy()
 	{
 		//Call destroy function now, since boss type get reset before called

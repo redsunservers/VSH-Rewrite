@@ -38,6 +38,7 @@ methodmap CModifiersJumper < SaxtonHaleBase
 		if (iButton == IN_JUMP && g_flJumpCooldown[this.iClient] == 0.0)
 		{
 			g_flJumpCooldown[this.iClient] = GetGameTime() + 3.0;
+			this.CallFunction("UpdateHudInfo", 1.0, 3.0);	//Update every second for 3 seconds
 			
 			float vecAng[3], vecVel[3];
 			GetEntPropVector(this.iClient, Prop_Data, "m_vecVelocity", vecVel);
@@ -60,11 +61,19 @@ methodmap CModifiersJumper < SaxtonHaleBase
 	
 	public void OnThink()
 	{
-		if (g_flJumpCooldown[this.iClient] != 0.0 && GetGameTime() > g_flJumpCooldown[this.iClient])
+		if (g_flJumpCooldown[this.iClient] == 0.0)
+			return;
+		
+		int iCurrentCooldown = RoundToCeil(g_flJumpCooldown[this.iClient] - GetGameTime());
+		int iOldCooldown = RoundToCeil(g_flJumpCooldown[this.iClient] - GetGameTime() - GetGameFrameTime());
+		if (iCurrentCooldown != iOldCooldown)
+			this.CallFunction("UpdateHudInfo");	//A second as changed, update HUD
+		
+		if (iCurrentCooldown == 0)
 			g_flJumpCooldown[this.iClient] = 0.0;
 	}
 	
-	public void GetHudText(char[] sMessage, int iLength)
+	public void GetHudInfo(char[] sMessage, int iLength, int iColor[4])
 	{
 		if (g_flJumpCooldown[this.iClient] == 0.0)
 		{
@@ -72,7 +81,7 @@ methodmap CModifiersJumper < SaxtonHaleBase
 		}
 		else
 		{
-			int iSec = RoundToNearest(g_flJumpCooldown[this.iClient]-GetGameTime());
+			int iSec = RoundToCeil(g_flJumpCooldown[this.iClient]-GetGameTime());
 			Format(sMessage, iLength, "%s\nLeap cooldown %i second%s remaining!", sMessage, iSec, (iSec > 1) ? "s" : "");
 		}
 	}

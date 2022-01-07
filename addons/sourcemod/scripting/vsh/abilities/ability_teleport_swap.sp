@@ -98,6 +98,7 @@ methodmap CTeleportSwap < SaxtonHaleBase
 		
 		g_iTeleportSwapCharge[ability.iClient] = 0;
 		g_flTeleportSwapCooldownWait[ability.iClient] = GetGameTime() + ability.flCooldown;
+		ability.CallFunction("UpdateHudInfo", 1.0, ability.flCooldown);	//Update every second for cooldown duration
 	}
 	
 	public void OnThink()
@@ -106,18 +107,23 @@ methodmap CTeleportSwap < SaxtonHaleBase
 		{
 			g_flTeleportSwapCooldownWait[this.iClient] = 0.0;
 			
+			int iOldCharge = this.iCharge;
+			
 			if (g_bTeleportSwapHoldingChargeButton[this.iClient])
 				this.iCharge += this.iChargeBuild;
 			else
 				this.iCharge -= this.iChargeBuild*2;
+			
+			if (iOldCharge != this.iCharge)
+				this.CallFunction("UpdateHudInfo", 0.0, 0.0);	//Update once
 		}
 	}
 	
-	public void GetHudText(char[] sMessage, int iLength)
+	public void GetHudInfo(char[] sMessage, int iLength, int iColor[4])
 	{
 		if (g_flTeleportSwapCooldownWait[this.iClient] != 0.0 && g_flTeleportSwapCooldownWait[this.iClient] > GetGameTime())
 		{
-			int iSec = RoundToNearest(g_flTeleportSwapCooldownWait[this.iClient]-GetGameTime());
+			int iSec = RoundToCeil(g_flTeleportSwapCooldownWait[this.iClient]-GetGameTime());
 			Format(sMessage, iLength, "%s\nTeleport-swap cooldown %i second%s remaining!", sMessage, iSec, (iSec > 1) ? "s" : "");
 		}
 		else if (this.iCharge > 0)
@@ -130,9 +136,9 @@ methodmap CTeleportSwap < SaxtonHaleBase
 		}
 	}
 	
-	public void OnButtonHold(int button)
+	public void OnButton(int &buttons)
 	{
-		if (button == IN_ATTACK2)
+		if (buttons & IN_ATTACK2)
 			g_bTeleportSwapHoldingChargeButton[this.iClient] = true;
 	}
 	
@@ -147,7 +153,7 @@ methodmap CTeleportSwap < SaxtonHaleBase
 				return;
 			
 			g_bTeleportSwapHoldingChargeButton[this.iClient] = false;
-			if (g_flTeleportSwapCooldownWait[this.iClient] != 0.0 && g_flTeleportSwapCooldownWait[this.iClient] > GetGameTime()) return;
+			if (g_flTeleportSwapCooldownWait[this.iClient] > GetGameTime()) return;
 			
 			float vecAng[3];
 			GetClientEyeAngles(this.iClient, vecAng);
@@ -181,6 +187,7 @@ methodmap CTeleportSwap < SaxtonHaleBase
 				TF2_AddCondition(iClient[0], TFCond_DefenseBuffMmmph, this.flStunDuration);
 				
 				g_flTeleportSwapCooldownWait[this.iClient] = GetGameTime()+this.flCooldown;
+				this.CallFunction("UpdateHudInfo", 1.0, this.flCooldown);	//Update every second for cooldown duration
 				this.iCharge = 0;
 				
 				char sSound[PLATFORM_MAX_PATH];

@@ -22,7 +22,7 @@
 
 #include "include/saxtonhale.inc"
 
-#define PLUGIN_VERSION 					"1.5.0"
+#define PLUGIN_VERSION 					"1.5.1"
 #define PLUGIN_VERSION_REVISION 		"manual"
 
 #if !defined SP_MAX_EXEC_PARAMS
@@ -612,7 +612,6 @@ public void OnPluginStart()
 	//Button functions
 	SaxtonHaleFunction("OnButton", ET_Ignore, Param_CellByRef);
 	SaxtonHaleFunction("OnButtonPress", ET_Ignore, Param_Cell);
-	SaxtonHaleFunction("OnButtonHold", ET_Ignore, Param_Cell);
 	SaxtonHaleFunction("OnButtonRelease", ET_Ignore, Param_Cell);
 	
 	//Building functions
@@ -643,11 +642,11 @@ public void OnPluginStart()
 	func = SaxtonHaleFunction("GetRageMusicInfo", ET_Ignore, Param_String, Param_Cell, Param_FloatByRef);
 	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
 	
-	func = SaxtonHaleFunction("GetHudText", ET_Ignore, Param_String, Param_Cell);
-	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
+	SaxtonHaleFunction("UpdateHudInfo", ET_Ignore, Param_Cell, Param_Float);
 	
-	func = SaxtonHaleFunction("GetHudColor", ET_Ignore, Param_Array);
-	func.SetParam(1, Param_Array, VSHArrayType_Static, 4);
+	func = SaxtonHaleFunction("GetHudInfo", ET_Ignore, Param_String, Param_Cell, Param_Array);
+	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
+	func.SetParam(3, Param_Array, VSHArrayType_Static, 4);
 	
 	//Misc functions
 	SaxtonHaleFunction("Precache", ET_Ignore);
@@ -1537,17 +1536,10 @@ public Action OnPlayerRunCmd(int iClient,int &buttons,int &impulse, float vel[3]
 	for (int i = 0; i < MAX_BUTTONS; i++)
 	{
 		int button = (1 << i);
-		if ((buttons & button))
-		{
-			if (!(g_iPlayerLastButtons[iClient] & button))
-				Client_OnButtonPress(iClient, button);
-			else
-				Client_OnButtonHold(iClient, button);
-		}
-		else if ((g_iPlayerLastButtons[iClient] & button))
-		{
+		if ((buttons & button) && !(g_iPlayerLastButtons[iClient] & button))
+			Client_OnButtonPress(iClient, button);
+		else if (!(buttons & button) && (g_iPlayerLastButtons[iClient] & button))
 			Client_OnButtonRelease(iClient, button);
-		}
 	}
 
 	g_iPlayerLastButtons[iClient] = buttons;
@@ -1573,13 +1565,6 @@ void Client_OnButtonPress(int iClient, int button)
 	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 	if (boss.bValid)
 		boss.CallFunction("OnButtonPress", button);
-}
-
-void Client_OnButtonHold(int iClient, int button)
-{
-	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
-	if (boss.bValid)
-		boss.CallFunction("OnButtonHold", button);
 }
 
 void Client_OnButtonRelease(int iClient, int button)

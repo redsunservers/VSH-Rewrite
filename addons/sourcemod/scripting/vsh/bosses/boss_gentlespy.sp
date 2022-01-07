@@ -201,6 +201,7 @@ methodmap CGentleSpy < SaxtonHaleBase
 		}
 		
 		SetEntPropFloat(iClient, Prop_Send, "m_flCloakMeter", flCloak);
+		this.CallFunction("UpdateHudInfo", 0.0, 0.0);	//Update once
 		
 		int iPlayerCount = SaxtonHale_GetAliveAttackPlayers();
 		
@@ -255,6 +256,9 @@ methodmap CGentleSpy < SaxtonHaleBase
 			for (int i = 0; i < sizeof(g_nGentleSpyCloak); i++)
 				if (TF2_IsPlayerInCondition(this.iClient, g_nGentleSpyCloak[i]))
 					TF2_RemoveCondition(this.iClient, g_nGentleSpyCloak[i]);
+			
+			//Cloak meter is draining, update hud
+			this.CallFunction("UpdateHudInfo", 0.0, 0.0);
 		}
 		else
 		{					
@@ -272,20 +276,15 @@ methodmap CGentleSpy < SaxtonHaleBase
 		}
 	}
 	
-	public void GetHudText(char[] sMessage, int iLength)
+	public void GetHudInfo(char[] sMessage, int iLength, int iColor[4])
 	{
 		float flCloak = GetEntPropFloat(this.iClient, Prop_Send, "m_flCloakMeter");
 		if (flCloak > 99.5)
-			Format(sMessage, iLength, "%s\n%0.0f%%%% Cloak: You can use cloak!", sMessage, flCloak);
+			Format(sMessage, iLength, "%s\n%0.0f%%%%%%%% Cloak: You can use cloak!", sMessage, flCloak);
 		else if (flCloak < 10.5)
-			Format(sMessage, iLength, "%s\n%0.0f%%%% Cloak: Gain cloak by using rage!", sMessage, flCloak);
+			Format(sMessage, iLength, "%s\n%0.0f%%%%%%%% Cloak: Gain cloak by using rage!", sMessage, flCloak);
 		else
-			Format(sMessage, iLength, "%s\n%0.0f%%%% Cloak", sMessage, flCloak);
-	}
-	
-	public void GetHudColor(int iColor[4])
-	{
-		float flCloak = GetEntPropFloat(this.iClient, Prop_Send, "m_flCloakMeter");
+			Format(sMessage, iLength, "%s\n%0.0f%%%%%%%% Cloak", sMessage, flCloak);
 		
 		iColor[0] = RoundToNearest(2.55 * (100.0 - flCloak));
 		iColor[1] = 255;

@@ -51,7 +51,7 @@ methodmap CDashJump < SaxtonHaleBase
 		ability.flMaxForce = 700.0;
 	}
 	
-	public void GetHudText(char[] sMessage, int iLength)
+	public void GetHudInfo(char[] sMessage, int iLength, int iColor[4])
 	{
 		int iCharge;
 		
@@ -66,7 +66,7 @@ methodmap CDashJump < SaxtonHaleBase
 		}
 		
 		if (iCharge >= 100)
-			Format(sMessage, iLength, "%s\nDash charge: %d%%%% - Press reload to use your dash!", sMessage, iCharge);
+			Format(sMessage, iLength, "%s\nDash charge: %d%%%%%%%% - Press reload to use your dash!", sMessage, iCharge);
 		else
 			Format(sMessage, iLength, "%s\nDash charge: %d%%%%", sMessage, iCharge);
 	}
@@ -96,6 +96,7 @@ methodmap CDashJump < SaxtonHaleBase
 			TeleportEntity(this.iClient, NULL_VECTOR, NULL_VECTOR, vecVel);
 			
 			g_flDashJumpCooldownWait[this.iClient] += this.flCooldown;
+			this.CallFunction("UpdateHudInfo", 0.0, this.flCooldown * 2);	//Update every frame for cooldown * 2
 			
 			char sSound[PLATFORM_MAX_PATH];
 			this.CallFunction("GetSoundAbility", sSound, sizeof(sSound), "CDashJump");

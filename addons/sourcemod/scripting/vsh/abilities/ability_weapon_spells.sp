@@ -103,7 +103,7 @@ methodmap CWeaponSpells < SaxtonHaleBase
 		}
 	}
 	
-	public void GetHudText(char[] sMessage, int iLength)
+	public void GetHudInfo(char[] sMessage, int iLength, int iColor[4])
 	{
 		int iSpellbook = GetSpellbook(this.iClient);
 		if (iSpellbook <= MaxClients)
@@ -113,7 +113,7 @@ methodmap CWeaponSpells < SaxtonHaleBase
 		
 		if (g_flSpellsLastUsed[this.iClient] > GetGameTime()-this.flCooldown)
 		{
-			int iSec = RoundToNearest(this.flCooldown - (GetGameTime() - g_flSpellsLastUsed[this.iClient]));
+			int iSec = RoundToCeil(this.flCooldown - (GetGameTime() - g_flSpellsLastUsed[this.iClient]));
 			Format(sMessage, iLength, "%s\nSpell cooldown %i second%s remaining!", sMessage, iSec, (iSec > 1) ? "s" : "");
 		}
 		else if (flRagePercentage < this.flRageRequirement)
@@ -191,6 +191,7 @@ methodmap CWeaponSpells < SaxtonHaleBase
 				
 				//spell cooldowns, set timer after used
 				g_flSpellsLastUsed[this.iClient] = GetGameTime();
+				this.CallFunction("UpdateHudInfo", 1.0, this.flCooldown);	//Update every second for cooldown duration
 				
 				
 				//Play ability sound if boss have one

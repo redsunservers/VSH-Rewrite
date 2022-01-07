@@ -48,6 +48,7 @@ methodmap CTeleportView < SaxtonHaleBase
 		
 		g_flTeleportViewStartCharge[ability.iClient] = 0.0;
 		g_flTeleportViewCooldownWait[ability.iClient] = GetGameTime() + ability.flCooldown;
+		ability.CallFunction("UpdateHudInfo", 1.0, ability.flCooldown);	//Update every second for cooldown duration
 	}
 	
 	public void OnThink()
@@ -67,6 +68,7 @@ methodmap CTeleportView < SaxtonHaleBase
 				//Do the actual teleport
 				
 				g_nTeleportViewMode[this.iClient] = TeleportViewMode_Teleported;
+				this.CallFunction("UpdateHudInfo", 0.0, 0.0);	//Update once
 				
 				//Create particle
 				CreateTimer(3.0, Timer_EntityCleanup, TF2_SpawnParticle(PARTICLE_TELEPORT, vecOrigin));
@@ -91,6 +93,8 @@ methodmap CTeleportView < SaxtonHaleBase
 				
 				g_nTeleportViewMode[this.iClient] = TeleportViewMode_None;
 				g_flTeleportViewCooldownWait[this.iClient] = GetGameTime() + this.flCooldown;
+				this.CallFunction("UpdateHudInfo", 1.0, this.flCooldown);	//Update every second for cooldown duration
+				
 				g_flTeleportViewStartCharge[this.iClient] = 0.0;
 				
 				SetEntityMoveType(this.iClient, MOVETYPE_WALK);
@@ -148,6 +152,7 @@ methodmap CTeleportView < SaxtonHaleBase
 			//Start teleport anim
 			
 			g_nTeleportViewMode[this.iClient] = TeleportViewMode_Teleporting;
+			
 			g_vecTeleportViewPos[this.iClient] = vecEndPos;
 			
 			SetEntityMoveType(this.iClient, MOVETYPE_NONE);
@@ -159,9 +164,10 @@ methodmap CTeleportView < SaxtonHaleBase
 		
 		//Show where to teleport
 		TeleportView_ShowPos(this.iClient, vecEndPos);
+		this.CallFunction("UpdateHudInfo", 0.0, 0.0);	//Update once
 	}
 	
-	public void GetHudText(char[] sMessage, int iLength)
+	public void GetHudInfo(char[] sMessage, int iLength, int iColor[4])
 	{
 		if (g_nTeleportViewMode[this.iClient] == TeleportViewMode_Teleporting)
 		{
@@ -176,7 +182,7 @@ methodmap CTeleportView < SaxtonHaleBase
 		else if (g_flTeleportViewCooldownWait[this.iClient] != 0.0 && g_flTeleportViewCooldownWait[this.iClient] > GetGameTime())
 		{
 			//Teleport in cooldown
-			int iSec = RoundToNearest(g_flTeleportViewCooldownWait[this.iClient] - GetGameTime());
+			int iSec = RoundToCeil(g_flTeleportViewCooldownWait[this.iClient] - GetGameTime());
 			Format(sMessage, iLength, "%s\nTeleport-view cooldown %i second%s remaining!", sMessage, iSec, (iSec > 1) ? "s" : "");
 		}
 		else if (g_flTeleportViewStartCharge[this.iClient] == 0.0)
@@ -192,19 +198,22 @@ methodmap CTeleportView < SaxtonHaleBase
 		}
 	}
 	
-	public void OnButtonHold(int button)
+	public void OnButton(int &buttons)
 	{
 		if (GameRules_GetRoundState() == RoundState_Preround)
 			return;
 		
-		if (button == IN_RELOAD && g_flTeleportViewStartCharge[this.iClient] == 0.0 && g_flTeleportViewCooldownWait[this.iClient] != 0.0 && g_flTeleportViewCooldownWait[this.iClient] < GetGameTime())
+		if (buttons & IN_RELOAD && g_flTeleportViewStartCharge[this.iClient] == 0.0 && g_flTeleportViewCooldownWait[this.iClient] != 0.0 && g_flTeleportViewCooldownWait[this.iClient] < GetGameTime())
 			g_flTeleportViewStartCharge[this.iClient] = GetGameTime();
 	}
 	
 	public void OnButtonRelease(int button)
 	{
 		if (button == IN_RELOAD && g_nTeleportViewMode[this.iClient] == TeleportViewMode_None)
+		{
 			g_flTeleportViewStartCharge[this.iClient] = 0.0;
+			this.CallFunction("UpdateHudInfo", 0.0, 0.0);	//Update once
+		}
 	}
 	
 	public void Precache()

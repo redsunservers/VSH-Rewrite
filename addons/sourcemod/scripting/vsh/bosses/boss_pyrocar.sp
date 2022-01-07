@@ -269,18 +269,14 @@ methodmap CPyroCar < SaxtonHaleBase
 		
 	}
 	
-	public void GetHudText(char[] sMessage, int iLength)
+	public void GetHudInfo(char[] sMessage, int iLength, int iColor[4])
 	{
 		float flGasCharge = g_flPyrocarGasCharge[this.iClient]/g_flGasMinCharge * 100.0;
 		if (flGasCharge < 100.0)
 			Format(sMessage, iLength, "%s\nDeal damage to charge your gas: %0.2f%%.", sMessage, flGasCharge);
 		else
 			Format(sMessage, iLength, "%s\nHold right click to throw your gas! %0.2f%%.", sMessage, flGasCharge);
-	}
-	
-	public void GetHudColor(int iColor[4])
-	{
-		float flGasCharge = g_flPyrocarGasCharge[this.iClient]/g_flGasMinCharge * 100.0;
+		
 		if (flGasCharge < 100.0)
 		{
 			iColor = {255, 255, 255, 255};
@@ -335,6 +331,9 @@ methodmap CPyroCar < SaxtonHaleBase
 			
 		if (g_flPyrocarGasCharge[this.iClient] > g_iMaxGasPassers * g_flGasMinCharge)
 			g_flPyrocarGasCharge[this.iClient] = g_iMaxGasPassers * g_flGasMinCharge;
+		
+		this.CallFunction("UpdateHudInfo", 0.0, 0.0);	//Update once
+		
 		//Any kind of crit deals 2.5x damage, bonus damage does not give extra gas charge
 		if (damagetype & DMG_CRIT)
 		{
@@ -419,6 +418,7 @@ methodmap CPyroCar < SaxtonHaleBase
 		if (button == IN_ATTACK2 && g_flPyrocarGasCharge[this.iClient] > g_flGasMinCharge && g_iPyrocarJetpack[this.iClient] == GetPlayerWeaponSlot(this.iClient, WeaponSlot_Secondary))
 		{
 			g_flPyrocarGasCharge[this.iClient] -= g_flGasMinCharge;
+			this.CallFunction("UpdateHudInfo", 0.0, 0.0);	//Update once
 			
 			int iSecondaryWep = GetPlayerWeaponSlot(this.iClient, WeaponSlot_Secondary);
 			if (IsValidEntity(iSecondaryWep))

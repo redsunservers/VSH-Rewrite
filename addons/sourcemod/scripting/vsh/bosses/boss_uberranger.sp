@@ -187,7 +187,7 @@ methodmap CUberRanger < SaxtonHaleBase
 		time = 235.0;
 	}
 	
-	public void GetHudText(char[] sMessage, int iLength)
+	public void GetHudInfo(char[] sMessage, int iLength, int iColor[4])
 	{		
 		StrCat(sMessage, iLength, "\nUse your Medigun to heal your companions!");
 	}
@@ -328,7 +328,7 @@ methodmap CMinionRanger < SaxtonHaleBase
 			strcopy(sSound, length, g_strUberRangerJump[GetRandomInt(0,sizeof(g_strUberRangerJump)-1)]);
 	}
 	
-	public void GetHudText(char[] sMessage, int iLength)
+	public void GetHudInfo(char[] sMessage, int iLength, int iColor[4])
 	{
 		if (!g_bUberRangerMinionHasMoved[this.iClient])
 			Format(sMessage, iLength, "%s\nYou have %d second%s to move before getting replaced!", sMessage, g_iUberRangerMinionAFKTimeLeft[this.iClient], g_iUberRangerMinionAFKTimeLeft[this.iClient] != 1 ? "s" : "");
@@ -436,6 +436,7 @@ public Action Timer_UberRanger_ReplaceMinion(Handle hTimer, int iClient)
 	if (g_iUberRangerMinionAFKTimeLeft[iClient] > 0)
 	{
 		g_iUberRangerMinionAFKTimeLeft[iClient]--;
+		SaxtonHaleBase(iClient).CallFunction("UpdateHudInfo", 0.0, 0.0);	//Update once
 		g_hUberRangerMinionAFKTimer[iClient] = CreateTimer(1.0, Timer_UberRanger_ReplaceMinion, iClient);
 		return;
 	}

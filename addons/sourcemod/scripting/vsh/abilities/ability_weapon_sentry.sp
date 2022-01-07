@@ -139,7 +139,7 @@ methodmap CWeaponSentry < SaxtonHaleBase
 		}
 	}
 	
-	public void GetHudText(char[] sMessage, int iLength)
+	public void GetHudInfo(char[] sMessage, int iLength, int iColor[4])
 	{
 		StrCat(sMessage, iLength, "\nUse your rage to build sentry!");
 	}

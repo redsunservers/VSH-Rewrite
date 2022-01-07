@@ -189,9 +189,10 @@ methodmap CBodyEat < SaxtonHaleBase
 		}
 	}
 	
-	public void OnButtonHold(int button)
+	public void OnButton(int &buttons)
 	{
-		if (button != IN_RELOAD) return;
+		if (!(buttons & IN_RELOAD))
+			return;
 		
 		float vecPos[3], vecAng[3], vecEndPos[3];
 		GetClientEyePosition(this.iClient, vecPos);
@@ -232,7 +233,7 @@ methodmap CBodyEat < SaxtonHaleBase
 		}
 	}
 	
-	public void GetHudText(char[] sMessage, int iLength)
+	public void GetHudInfo(char[] sMessage, int iLength, int iColor[4])
 	{
 		StrCat(sMessage, iLength, "\nAim at dead bodies and press reload to heal up!");
 	}

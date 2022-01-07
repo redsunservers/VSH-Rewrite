@@ -231,6 +231,8 @@ methodmap CBrutalSniper < SaxtonHaleBase
 					if (!(IsValidEntity(iActiveWep)))
 						SetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon", iNewMelee);
 				}
+				
+				this.CallFunction("UpdateHudInfo", 0.0, 0.0);	//Update once
 			}
 		}
 	}
@@ -244,7 +246,7 @@ methodmap CBrutalSniper < SaxtonHaleBase
 			TF2_AddCondition(this.iClient, TFCond_CritOnDamage, 0.05);
 	}
 	
-	public void GetHudText(char[] sMessage, int iLength)
+	public void GetHudInfo(char[] sMessage, int iLength, int iColor[4])
 	{
 		int iWeapon = TF2_GetItemInSlot(this.iClient, WeaponSlot_Melee);
 		if (iWeapon <= MaxClients)
@@ -252,25 +254,26 @@ methodmap CBrutalSniper < SaxtonHaleBase
 		
 		switch (GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex"))
 		{
-			case ITEM_KUKRI: StrCat(sMessage, iLength, "\nKukri: Default");
-			case ITEM_TRIBALMAN_SHIV: StrCat(sMessage, iLength, "\nTribalman Shiv: 10 seconds bleed, 15%% dmg penalty");
-			case ITEM_BUSHWACKA: StrCat(sMessage, iLength, "\nBushwacka: Always crit, 20%% dmg vulnerability");
-			case ITEM_SHAHANSHAH: StrCat(sMessage, iLength, "\nShahanshah: +15%% dmg when <50%% health, -15%% dmg when >50%% health");
-		}
-	}
-	
-	public void GetHudColor(int iColor[4])
-	{
-		int iWeapon = TF2_GetItemInSlot(this.iClient, WeaponSlot_Melee);
-		if (iWeapon <= MaxClients)
-			return;
-		
-		switch (GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex"))
-		{
-			case ITEM_KUKRI: iColor = {192, 192, 192, 255};
-			case ITEM_TRIBALMAN_SHIV: iColor = {192, 32, 0, 255};
-			case ITEM_BUSHWACKA: iColor = {224, 160, 0, 255};
-			case ITEM_SHAHANSHAH: iColor = {144, 92, 0, 255};
+			case ITEM_KUKRI:
+			{
+				StrCat(sMessage, iLength, "\nKukri: Default");
+				iColor = {192, 192, 192, 255};
+			}
+			case ITEM_TRIBALMAN_SHIV:
+			{
+				StrCat(sMessage, iLength, "\nTribalman Shiv: 10 seconds bleed, 15%% dmg penalty");
+				iColor = {192, 32, 0, 255};
+			}
+			case ITEM_BUSHWACKA:
+			{
+				StrCat(sMessage, iLength, "\nBushwacka: Always crit, 20%% dmg vulnerability");
+				iColor = {224, 160, 0, 255};
+			}
+			case ITEM_SHAHANSHAH:
+			{
+				StrCat(sMessage, iLength, "\nShahanshah: +15%% dmg when <50%% health, -15%% dmg when >50%% health");
+				iColor = {144, 92, 0, 255};
+			}
 		}
 	}
 	
