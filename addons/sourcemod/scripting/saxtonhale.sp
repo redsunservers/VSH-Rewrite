@@ -787,6 +787,8 @@ public void OnPluginEnd()
 			SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 			boss.CallFunction("Destroy");
 		}
+		
+		RemoveClientGlowEnt(iClient);
 	}
 	
 	Plugin_Cvars(false);
@@ -1168,6 +1170,9 @@ public void TF2_OnConditionRemoved(int iClient, TFCond nCond)
 	
 	if (SaxtonHale_IsValidBoss(iClient))
 		SaxtonHaleBase(iClient).CallFunction("OnConditionRemoved", nCond);
+	
+	if (nCond == TFCond_Disguising || nCond == TFCond_Disguised)
+		UpdateClientGlowEnt(iClient);
 }
 
 public Action Timer_RoundStartSound(Handle hTimer, int iClient)
@@ -1290,6 +1295,8 @@ public void OnClientDisconnect(int iClient)
 	Queue_SetPlayerPoints(iClient, -1);
 	
 	NextBoss_DeleteClient(iClient);
+	
+	RemoveClientGlowEnt(iClient);
 }
 
 public void OnClientDisconnect_Post(int iClient)
@@ -1652,6 +1659,80 @@ Action GiveNamedItem(int iClient, const char[] sClassname, int iIndex)
 		return Plugin_Handled;
 	
 	return Plugin_Continue;
+}
+
+void UpdateClientGlowEnt(int iClient)
+{
+	static char sClassModels[][PLATFORM_MAX_PATH] = {	//Do we need to precache this? or does TF2 already precache it
+		"",
+		"models/player/scout.mdl",
+		"models/player/sniper.mdl",
+		"models/player/soldier.mdl",
+		"models/player/demo.mdl",
+		"models/player/medic.mdl",
+		"models/player/heavy.mdl",
+		"models/player/pyro.mdl",
+		"models/player/spy.mdl",
+		"models/player/engineer.mdl",
+	};
+	
+	static int iClientGlowEnt[TF_MAXPLAYERS];
+	if (!iClientGlowEnt[iClient])
+		iClientGlowEnt[iClient] = INVALID_ENT_REFERENCE;
+	
+	char sModel[PLATFORM_MAX_PATH];
+	if (TF2_IsPlayerInCondition(iClient, TFCond_Disguised))
+		sModel = sClassModels[GetEntProp(iClient, Prop_Send, "m_nDisguiseClass")];
+	else
+		GetEntPropString(iClient, Prop_Data, "m_ModelName", sModel, sizeof(sModel));
+	
+	if (!IsValidEntity(iClientGlowEnt[iClient]))
+		iClientGlowEnt[iClient] = TF2_CreateTransmitGlow(iClient, sModel, Transmit_PlayerGlow);
+	else
+		SetEntityModel(iClientGlowEnt[iClient], sModel);
+}
+
+public Action Transmit_PlayerGlow(int iEntity, int iTarget)
+{
+	int iClient = GetEntPropEnt(iEntity, Prop_Data, "m_hParent");
+	if (iClient == INVALID_ENT_REFERENCE)
+	{
+		RemoveEntity(iEntity);
+		return Plugin_Stop;
+	}
+	
+	if (!SaxtonHale_IsValidBoss(iTarget))
+		return Plugin_Stop;
+	
+	int iScore = SaxtonHale_GetScore(iClient);
+	bool bLastMan = true;
+	
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (iClient != i && SaxtonHale_IsValidAttack(i) && IsPlayerAlive(i))
+		{
+			bLastMan = false;
+			if (SaxtonHale_GetScore(i) > iScore)
+				return Plugin_Stop;	//Theres someone with bigger score than us
+		}
+	}
+	
+	if (!bLastMan && iScore == 0)
+		return Plugin_Stop;
+	
+	//Were MVP baby!
+	return Plugin_Continue;
+}
+
+void RemoveClientGlowEnt(int iClient)
+{
+	//Find any existing glow parented to client to delete
+	int iGlow = INVALID_ENT_REFERENCE;
+	while ((iGlow = FindEntityByClassname(iGlow, "tf_taunt_prop")) != INVALID_ENT_REFERENCE)
+	{
+		if (GetEntPropEnt(iGlow, Prop_Data, "m_hParent") == iClient)
+			RemoveEntity(iGlow);
+	}
 }
 
 public Action Timer_DestroyLight(Handle hTimer, int iRef)

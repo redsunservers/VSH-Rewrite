@@ -190,6 +190,30 @@ stock int TF2_CreateGlow(int iEnt, int iColor[4])
 	return ent;
 }
 
+stock int TF2_CreateTransmitGlow(int iClient, const char[] sModel, SDKHookCB callback)
+{
+	int iGlow = CreateEntityByName("tf_taunt_prop");
+	
+	int iTeam = GetClientTeam(iClient);
+	SetEntProp(iGlow, Prop_Data, "m_iInitialTeamNum", iTeam);
+	SetEntProp(iGlow, Prop_Send, "m_iTeamNum", iTeam);
+	
+	DispatchSpawn(iGlow);
+	
+	SetEntityModel(iGlow, sModel);
+	SetEntPropEnt(iGlow, Prop_Data, "m_hEffectEntity", iClient);
+	SetEntProp(iGlow, Prop_Send, "m_bGlowEnabled", true);
+	SetEntProp(iGlow, Prop_Send, "m_fEffects", GetEntProp(iGlow, Prop_Send, "m_fEffects")|EF_BONEMERGE|EF_NOSHADOW|EF_NOINTERP);
+	
+	SetVariantString("!activator");
+	AcceptEntityInput(iGlow, "SetParent", iClient);
+	
+	SetEntityRenderMode(iGlow, RENDER_TRANSCOLOR);
+	SetEntityRenderColor(iGlow, 255, 255, 255, 255);
+	SDKHook(iGlow, SDKHook_SetTransmit, callback);
+	return EntIndexToEntRef(iGlow);
+}
+
 stock bool TF2_FindAttribute(int iEntity, int iAttrib, float &flVal)
 {
 	Address addAttrib = TF2Attrib_GetByDefIndex(iEntity, iAttrib);

@@ -518,6 +518,8 @@ public Action Event_PlayerSpawn(Event event, const char[] sName, bool bDontBroad
 	// Player spawned, if they are a boss, call their spawn function
 	if (boss.bValid)
 		boss.CallFunction("OnSpawn");
+	
+	UpdateClientGlowEnt(iClient);
 }
 
 public Action Event_BuiltObject(Event event, const char[] sName, bool bDontBroadcast)
