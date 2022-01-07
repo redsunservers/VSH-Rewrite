@@ -14,7 +14,8 @@ void Event_Init()
 	HookEvent("player_chargedeployed", Event_UberDeployed);
 	HookEvent("teamplay_broadcast_audio", Event_BroadcastAudio, EventHookMode_Pre);
 	HookEvent("player_builtobject", Event_BuiltObject, EventHookMode_Pre);
-	HookEvent("object_destroyed", Event_DestroyObject, EventHookMode_Pre);
+	HookEvent("npc_hurt", Event_ObjectHurt);
+	HookEvent("object_destroyed", Event_ObjectDestroyed, EventHookMode_Pre);
 	HookEvent("player_sapped_object", Event_SappedObject, EventHookMode_Pre);
 
 	HookUserMessage(GetUserMessageId("PlayerJarated"), Event_Jarated);
@@ -536,7 +537,25 @@ public Action Event_BuiltObject(Event event, const char[] sName, bool bDontBroad
 	return Plugin_Continue;
 }
 
-public Action Event_DestroyObject(Event event, const char[] sName, bool bDontBroadcast)
+public Action Event_ObjectHurt(Event event, const char[] sName, bool bDontBroadcast)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
+	
+	int iBuilding = event.GetInt("entindex");
+	char sClassname[256];
+	GetEntityClassname(iBuilding, sClassname, sizeof(sClassname));
+	if (StrContains(sClassname, "obj_") != 0)
+		return Plugin_Continue;
+	
+	int iAttacker = GetClientOfUserId(event.GetInt("attacker_player"));
+	if (0 < iAttacker <= MaxClients)
+		g_iPlayerAssistDamage[iAttacker] += event.GetInt("damageamount");
+	
+	return Plugin_Continue;
+}
+
+public Action Event_ObjectDestroyed(Event event, const char[] sName, bool bDontBroadcast)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
