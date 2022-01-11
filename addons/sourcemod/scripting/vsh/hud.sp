@@ -102,7 +102,7 @@ void Hud_Think(int iClient)
 	}
 	else if (SaxtonHale_IsValidBoss(iClient))
 	{
-		sMessage = g_sBossHudText[iClient];
+		StrCat(sMessage, sizeof(sMessage), g_sBossHudText[iClient]);
 		iColor = g_iBossHudColor[iClient];
 	}
 	
