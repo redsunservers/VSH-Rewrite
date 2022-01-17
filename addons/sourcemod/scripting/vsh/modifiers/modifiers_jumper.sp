@@ -64,12 +64,7 @@ methodmap CModifiersJumper < SaxtonHaleBase
 		if (g_flJumpCooldown[this.iClient] == 0.0)
 			return;
 		
-		int iCurrentCooldown = RoundToCeil(g_flJumpCooldown[this.iClient] - GetGameTime());
-		int iOldCooldown = RoundToCeil(g_flJumpCooldown[this.iClient] - GetGameTime() - GetGameFrameTime());
-		if (iCurrentCooldown != iOldCooldown)
-			this.CallFunction("UpdateHudInfo");	//A second as changed, update HUD
-		
-		if (iCurrentCooldown == 0)
+		if (g_flJumpCooldown[this.iClient] < GetGameTime())
 			g_flJumpCooldown[this.iClient] = 0.0;
 	}
 	
