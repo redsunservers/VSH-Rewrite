@@ -65,8 +65,9 @@ methodmap CDemoPan < SaxtonHaleBase
 {
 	public CDemoPan(CDemoPan boss)
 	{
-		boss.CallFunction("CreateAbility", "CWeaponCharge");
+		//Brave jump first before charge ability, due to conflicts in OnButton function
 		boss.CallFunction("CreateAbility", "CBraveJump");
+		boss.CallFunction("CreateAbility", "CWeaponCharge");
 		//CDropModel dropmodel = boss.CallFunction("CreateAbility", "CDropModel");
 		//dropmodel.SetModel(DEMOPAN_DROP_MODEL);
 		
