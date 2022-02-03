@@ -1,7 +1,7 @@
 static ArrayList g_aSpells[TF_MAXPLAYERS];
+static int g_iCurrentSpellArray[TF_MAXPLAYERS];
 static haleSpells g_rageSpells[TF_MAXPLAYERS];
 static float g_flRageRequirement[TF_MAXPLAYERS];
-static bool g_bSpellsRage[TF_MAXPLAYERS];
 static float g_flSpellsCooldown[TF_MAXPLAYERS];
 static float g_flSpellsLastUsed[TF_MAXPLAYERS];
 
@@ -69,8 +69,7 @@ methodmap CWeaponSpells < SaxtonHaleBase
 		ability.flRageRequirement = 0.25;
 		ability.flCooldown = 0.0;
 		g_rageSpells[ability.iClient] = haleSpells_Invalid;
-		
-		g_bSpellsRage[ability.iClient] = false;
+		g_iCurrentSpellArray[ability.iClient] = 0;
 		
 		if (g_aSpells[ability.iClient] == null)
 			g_aSpells[ability.iClient] = new ArrayList();
@@ -97,9 +96,12 @@ methodmap CWeaponSpells < SaxtonHaleBase
 		int iSpellbook = this.CallFunction("CreateWeapon", 1069, "tf_weapon_spellbook", 100, TFQual_Haunted, attribs);
 		if (iSpellbook > MaxClients)
 		{
-			SetEntProp(iSpellbook, Prop_Send, "m_iSpellCharges", 9999);
+			SetEntProp(iSpellbook, Prop_Send, "m_iSpellCharges", 1);
 			if (g_aSpells[iClient].Length > 0)
+			{
 				SetEntProp(iSpellbook, Prop_Send, "m_iSelectedSpellIndex", view_as<int>(g_aSpells[iClient].Get(0)));
+				g_iCurrentSpellArray[this.iClient] = 0;
+			}
 		}
 	}
 	
@@ -136,6 +138,25 @@ methodmap CWeaponSpells < SaxtonHaleBase
 			Format(sMessage, iLength, "%s!", sMessage);
 	}
 	
+	public void OnThink()
+	{
+		int iSpellbook = GetSpellbook(this.iClient);
+		if (iSpellbook == -1)
+			return;
+		
+		haleSpells spellIndex = view_as<haleSpells>(GetEntProp(iSpellbook, Prop_Send, "m_iSelectedSpellIndex"));
+		if (g_rageSpells[this.iClient] == view_as<int>(spellIndex) && GetEntProp(iSpellbook, Prop_Send, "m_iSpellCharges") > 0)
+		{
+			//Force client use rare spell and don't override
+			Client_ForceUseAction(this.iClient);
+			return;
+		}
+		
+		//Otherwise make sure client always have normal spell
+		SetEntProp(iSpellbook, Prop_Send, "m_iSpellCharges", 1);
+		SetEntProp(iSpellbook, Prop_Send, "m_iSelectedSpellIndex", view_as<int>(g_aSpells[this.iClient].Get(g_iCurrentSpellArray[this.iClient])));
+	}
+	
 	public void OnRage()
 	{
 		if (g_rageSpells[this.iClient] == view_as<int>(haleSpells_Invalid))
@@ -145,28 +166,14 @@ methodmap CWeaponSpells < SaxtonHaleBase
 		
 		//Set spellbook to specified rare
 		int iSpellbook = GetSpellbook(iClient);
-		if (iSpellbook == -1) return;
-		haleSpells spellIndex = view_as<haleSpells>(GetEntProp(iSpellbook, Prop_Send, "m_iSelectedSpellIndex"));
+		if (iSpellbook == -1)
+			return;
+		
 		SetEntProp(iSpellbook, Prop_Send, "m_iSelectedSpellIndex", view_as<int>(g_rageSpells[iClient]));
+		SetEntProp(iSpellbook, Prop_Send, "m_iSpellCharges", this.bSuperRage ? 3 : 1);
 		
 		//Force player use spell
-		g_bSpellsRage[iClient] = true;
 		Client_ForceUseAction(iClient);
-		float flDuration = 0.85;
-		
-		if (this.bSuperRage)
-		{
-			int iRef = EntIndexToEntRef(iClient);
-			CreateTimer(0.85, Timer_ForceUseAction, iRef);
-			CreateTimer(1.70, Timer_ForceUseAction, iRef);
-			flDuration = 2.55;
-		}
-		
-		//Create timer to set spell back to what it used to be
-		DataPack data;
-		CreateDataTimer(flDuration, Timer_SetSpellIndex, data);
-		data.WriteCell(EntIndexToEntRef(iClient));
-		data.WriteCell(spellIndex);
 	}
 	
 	public Action OnCommandKeyValues(const char[] sCommand)
@@ -174,12 +181,17 @@ methodmap CWeaponSpells < SaxtonHaleBase
 		if (StrEqual(sCommand, "+use_action_slot_item_server"))
 		{
 			//Check whenever if we should allow him to use spell
-			int iClient = this.iClient;
+			int iSpellbook = GetSpellbook(this.iClient);
+			if (iSpellbook == -1)
+				return Plugin_Continue;
 			
-			if (g_bSpellsRage[iClient])
+			haleSpells spellIndex = view_as<haleSpells>(GetEntProp(iSpellbook, Prop_Send, "m_iSelectedSpellIndex"));
+			if (spellIndex == haleSpells_Invalid)
+				return Plugin_Handled;
+			
+			if (g_rageSpells[this.iClient] == view_as<int>(spellIndex))
 			{
-				//Rage
-				g_bSpellsRage[iClient] = false;
+				//Allow use rage spell as normal
 				return Plugin_Continue;
 			}
 			
@@ -214,29 +226,28 @@ methodmap CWeaponSpells < SaxtonHaleBase
 	
 	public void OnButtonPress(int button)
 	{
-		int iClient = this.iClient;
-		
-		if (button == IN_RELOAD && g_aSpells[iClient].Length > 1)
+		if (button == IN_RELOAD && g_aSpells[this.iClient].Length > 1)
 		{
 			float flRagePercentage = float(this.iRageDamage) / float(this.iMaxRageDamage);
 			if (flRagePercentage >= this.flRageRequirement)
 			{
-				int iSpellbook = GetSpellbook(iClient);
+				int iSpellbook = GetSpellbook(this.iClient);
 				if (iSpellbook == -1) return;
 				
 				//Get current spell
 				haleSpells spellIndex = view_as<haleSpells>(GetEntProp(iSpellbook, Prop_Send, "m_iSelectedSpellIndex"));
 				
 				int i = 0;
-				while (i < g_aSpells[iClient].Length)
+				while (i < g_aSpells[this.iClient].Length)
 				{
 					//Search in array until we found same spell
-					if (g_aSpells[iClient].Get(i) == spellIndex)
+					if (g_aSpells[this.iClient].Get(i) == spellIndex)
 					{
 						//We found it, get the next spell in array
 						i++;
-						if (i >= g_aSpells[iClient].Length) i = 0;	//if we already at end, loop back to start
-						spellIndex = g_aSpells[iClient].Get(i);
+						if (i >= g_aSpells[this.iClient].Length) i = 0;	//if we already at end, loop back to start
+						spellIndex = g_aSpells[this.iClient].Get(i);
+						g_iCurrentSpellArray[this.iClient] = i;
 						break;
 					}
 					
@@ -249,7 +260,7 @@ methodmap CWeaponSpells < SaxtonHaleBase
 		else if (button == IN_ATTACK2)
 		{
 			//Just another way to use spells rather than using default H key
-			Client_ForceUseAction(iClient);
+			Client_ForceUseAction(this.iClient);
 		}
 	}
 };
@@ -263,29 +274,6 @@ stock int GetSpellbook(int iClient)
 			return iSpellbook;
 	
 	return -1;
-}
-
-public Action Timer_SetSpellIndex(Handle hTimer, DataPack data)
-{
-	data.Reset();
-	int iClient = EntRefToEntIndex(data.ReadCell());
-	haleSpells spellIndex = data.ReadCell();
-	
-	if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient)) return;
-	
-	int iSpellbook = GetSpellbook(iClient);
-	if (iSpellbook == -1) return;
-	
-	SetEntProp(iSpellbook, Prop_Send, "m_iSelectedSpellIndex", view_as<int>(spellIndex));
-}
-
-public Action Timer_ForceUseAction(Handle hTimer, int iRef)
-{
-	int iClient = EntRefToEntIndex(iRef);
-	if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient)) return;
-	
-	g_bSpellsRage[iClient] = true;
-	Client_ForceUseAction(iClient);
 }
 
 void Client_ForceUseAction(int iClient)
