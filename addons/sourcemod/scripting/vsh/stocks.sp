@@ -504,6 +504,14 @@ stock TFObjectMode TF2_GetBuildingMode(int iBuilding)
 	return TFObjectMode_Invalid;
 }
 
+stock int TF2_GetSapper(int iBuilding)
+{
+	if (!GetEntProp(iBuilding, Prop_Send, "m_bHasSapper"))
+		return INVALID_ENT_REFERENCE;
+	
+	return GetEntPropEnt(iBuilding, Prop_Data, "m_hMoveChild");
+}
+
 stock void TF2_StunBuilding(int iBuilding, float flDuration)
 {
 	SetEntProp(iBuilding, Prop_Send, "m_bDisabled", true);

@@ -550,7 +550,20 @@ public Action Event_ObjectHurt(Event event, const char[] sName, bool bDontBroadc
 	
 	int iAttacker = GetClientOfUserId(event.GetInt("attacker_player"));
 	if (0 < iAttacker <= MaxClients)
+	{
 		g_iPlayerAssistDamage[iAttacker] += event.GetInt("damageamount");
+	}
+	else if (iAttacker == 0 && event.GetInt("weaponid") == 0)
+	{
+		//Assuming this is sapper damage, not sure if any other method can trigger this
+		int iSapper = TF2_GetSapper(iBuilding);
+		if (iSapper != INVALID_ENT_REFERENCE)
+		{
+			iAttacker = GetEntPropEnt(iSapper, Prop_Send, "m_hBuilder");
+			if (0 < iAttacker <= MaxClients)
+				g_iPlayerAssistDamage[iAttacker] += event.GetInt("damageamount");
+		}
+	}
 	
 	return Plugin_Continue;
 }
