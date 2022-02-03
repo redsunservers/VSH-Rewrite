@@ -549,7 +549,7 @@ public Action Event_ObjectHurt(Event event, const char[] sName, bool bDontBroadc
 		return Plugin_Continue;
 	
 	int iAttacker = GetClientOfUserId(event.GetInt("attacker_player"));
-	if (0 < iAttacker <= MaxClients)
+	if (0 < iAttacker <= MaxClients && TF2_GetClientTeam(iAttacker) == TFTeam_Attack)
 	{
 		g_iPlayerAssistDamage[iAttacker] += event.GetInt("damageamount");
 	}
@@ -560,7 +560,7 @@ public Action Event_ObjectHurt(Event event, const char[] sName, bool bDontBroadc
 		if (iSapper != INVALID_ENT_REFERENCE)
 		{
 			iAttacker = GetEntPropEnt(iSapper, Prop_Send, "m_hBuilder");
-			if (0 < iAttacker <= MaxClients)
+			if (0 < iAttacker <= MaxClients && IsClientInGame(iAttacker) && TF2_GetClientTeam(iAttacker) == TFTeam_Attack)
 				g_iPlayerAssistDamage[iAttacker] += event.GetInt("damageamount");
 		}
 	}
@@ -812,7 +812,7 @@ public Action Event_PlayerHurt(Event event, const char[] sName, bool bDontBroadc
 		int iAttacker = GetClientOfUserId(event.GetInt("attacker"));
 		int iDamageAmount = event.GetInt("damageamount");
 		
-		if (0 < iAttacker <= MaxClients && IsClientInGame(iAttacker) && iClient != iAttacker)
+		if (0 < iAttacker <= MaxClients && IsClientInGame(iAttacker) && iClient != iAttacker && TF2_GetClientTeam(iAttacker) == TFTeam_Attack)
 		{
 			boss.CallFunction("AddRage", iDamageAmount);
 			
