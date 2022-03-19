@@ -102,7 +102,6 @@ methodmap CMerasmus < SaxtonHaleBase
 		rageCond.flRageCondDuration = 8.0;
 		rageCond.flRageCondSuperRageMultiplier = 1.0;
 		rageCond.AddCond(TFCond_UberchargedCanteen);	//Ubered while raged
-		rageCond.AddCond(TFCond_CritCanteen);	// Crits while raged
 		
 		boss.iHealthPerPlayer = 600;
 		boss.flHealthExponential = 1.05;
