@@ -101,7 +101,7 @@ methodmap CBombProjectile < SaxtonHaleBase
 		g_flBombProjectileNext[ability.iClient] = 0.0;
 		g_flBombProjectileEnd[ability.iClient] = 0.0;
 		
-		ability.flRate = 0.2;
+		ability.flRate = 0.16;
 		ability.flDuration = 6.0;
 		ability.flRadius = 100.0;
 		ability.flDamage = 100.0;
