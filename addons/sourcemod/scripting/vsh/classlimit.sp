@@ -87,28 +87,7 @@ public TFClassType ClassLimit_GetNewClass(int iClient)
 		if (ClassLimit_GetMaxNum(nClass) != -1 && ClassLimit_GetCurrentNum(nClass) > ClassLimit_GetMaxNum(nClass))
 		{
 			PrintToChat(iClient, "%s%s %s slot is already full! (max %d)", TEXT_TAG, TEXT_ERROR, g_strClassName[nClass], ClassLimit_GetMaxNum(nClass));
-			
-			//Create a list of all classes to randomize and select one
-			TFClassType nClassList[sizeof(g_strClassName)-1];	//Don't want to count unknown class at 0
-			for (int i = 0; i < sizeof(nClassList); i++)
-				nClassList[i] = view_as<TFClassType>(i+1);
-			
-			//Randomize
-			SortIntegers(view_as<int>(nClassList), sizeof(nClassList), Sort_Random);
-			
-			//Go through each class in the list, and find the class not already in limit
-			for (int i = 0; i < sizeof(nClassList); i++)
-			{
-				if (ClassLimit_GetMaxNum(nClassList[i]) == -1 || ClassLimit_GetCurrentNum(nClassList[i]) < ClassLimit_GetMaxNum(nClassList[i]))
-				{
-					//We found the new class, return as that class
-					return nClassList[i];
-				}
-			}
-			
-			//We somehow reach here with no other class to find... that should never happen
-			PluginStop(true, "[VSH] FAILED TO FIND NEW CLASS IN CLASSLIMIT!!!!");
-			return nClass;
+			return ClassLimit_GetRandomValidClass();
 		}
 		else
 		{
@@ -144,6 +123,10 @@ public Action ClassLimit_JoinClass(int iClient, TFClassType nClass)
 	else if (ClassLimit_GetCurrentNum(nClass) >= ClassLimit_GetMaxNum(nClass))
 	{
 		PrintToChat(iClient, "%s%s %s slot is already full! (max %d)", TEXT_TAG, TEXT_ERROR, g_strClassName[nClass], ClassLimit_GetMaxNum(nClass));
+		
+		if (!IsPlayerAlive(iClient))	//Set valid class, otherwise may get bug to be "alive" while actually dead
+			TF2_SetPlayerClass(iClient, ClassLimit_GetRandomValidClass());
+		
 		return Plugin_Handled;
 	}
 	else
@@ -219,4 +202,29 @@ stock bool ClassLimit_IsSpecialRoundOn()
 		return true;
 	
 	return false;
+}
+
+stock TFClassType ClassLimit_GetRandomValidClass()
+{
+	//Create a list of all classes to randomize and select one
+	TFClassType nClassList[sizeof(g_strClassName)-1];	//Don't want to count unknown class at 0
+	for (int i = 0; i < sizeof(nClassList); i++)
+		nClassList[i] = view_as<TFClassType>(i+1);
+	
+	//Randomize
+	SortIntegers(view_as<int>(nClassList), sizeof(nClassList), Sort_Random);
+	
+	//Go through each class in the list, and find the class not already in limit
+	for (int i = 0; i < sizeof(nClassList); i++)
+	{
+		if (ClassLimit_GetMaxNum(nClassList[i]) == -1 || ClassLimit_GetCurrentNum(nClassList[i]) < ClassLimit_GetMaxNum(nClassList[i]))
+		{
+			//We found the new class, return as that class
+			return nClassList[i];
+		}
+	}
+	
+	//We somehow reach here with no other class to find... that should never happen
+	PluginStop(true, "[VSH] FAILED TO FIND NEW CLASS IN CLASSLIMIT!!!!");
+	return TFClass_Unknown;
 }
