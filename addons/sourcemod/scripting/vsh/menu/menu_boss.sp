@@ -385,8 +385,8 @@ public void MenuBoss_CallbackNextModifiers(int iClient, MenuBossOption nOption, 
 	}
 	
 	int iColor[4];
-	char sColor[16]
-	if (g_menuBossSelect[iClient].sModifierType[0]);
+	char sColor[16];
+	if (g_menuBossSelect[iClient].sModifierType[0])
 		SaxtonHale_CallFunction(g_menuBossSelect[iClient].sModifierType, "GetRenderColor", iColor);
 	
 	if (iColor[3])
