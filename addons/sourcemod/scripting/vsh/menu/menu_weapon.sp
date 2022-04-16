@@ -127,7 +127,7 @@ void MenuWeapon_DisplayMain(int iClient)
 
 public int MenuWeapon_SelectMain(Menu hMenu, MenuAction action, int iClient, int iSelect)
 {
-	if (action != MenuAction_Select) return;
+	if (action != MenuAction_Select) return 0;
 	
 	char sSelect[32];
 	hMenu.GetItem(iSelect, sSelect, sizeof(sSelect));
@@ -135,11 +135,12 @@ public int MenuWeapon_SelectMain(Menu hMenu, MenuAction action, int iClient, int
 	if (StrEqual(sSelect, "back"))
 	{
 		Menu_DisplayMain(iClient);
-		return;
+		return 0;
 	}
 	
 	TFClassType nClass = view_as<TFClassType>(StringToInt(sSelect));
 	MenuWeapon_DisplayClass(iClient, nClass);
+	return 0;
 }
 
 void MenuWeapon_DisplayClass(int iClient, TFClassType nClass)
@@ -156,14 +157,14 @@ void MenuWeapon_DisplayClass(int iClient, TFClassType nClass)
 
 public int MenuWeapon_SelectClass(Menu hMenu, MenuAction action, int iClient, int iSelect)
 {
-	if (action != MenuAction_Select) return;
+	if (action != MenuAction_Select) return 0;
 	
 	char sSelect[32];
 	hMenu.GetItem(iSelect, sSelect, sizeof(sSelect));
 	if (StrEqual(sSelect, "back"))
 	{
 		MenuWeapon_DisplayMain(iClient);
-		return;
+		return 0;
 	}
 	
 	//Find class by matching menu
@@ -173,11 +174,12 @@ public int MenuWeapon_SelectClass(Menu hMenu, MenuAction action, int iClient, in
 		{
 			int iSlot = StringToInt(sSelect);
 			MenuWeapon_DisplaySlot(iClient, view_as<TFClassType>(iClass), iSlot);
-			return;
+			return 0;
 		}
 	}
 	
 	Menu_DisplayError(iClient);
+	return 0;
 }
 
 void MenuWeapon_DisplaySlot(int iClient, TFClassType nClass, int iSlot)
@@ -194,7 +196,7 @@ void MenuWeapon_DisplaySlot(int iClient, TFClassType nClass, int iSlot)
 
 public int MenuWeapon_SelectSlot(Menu hMenu, MenuAction action, int iClient, int iSelect)
 {
-	if (action != MenuAction_Select) return;
+	if (action != MenuAction_Select) return 0;
 	
 	//Since slot display only have back button, we only need to find which class to go back
 	for (int iClass = 1; iClass < sizeof(g_strClassName); iClass++)
@@ -204,10 +206,11 @@ public int MenuWeapon_SelectSlot(Menu hMenu, MenuAction action, int iClient, int
 			if (hMenu == g_hMenuWeaponSlot[iClass][iSlot])
 			{
 				g_hMenuWeaponClass[iClass].Display(iClient, MENU_TIME_FOREVER);
-				return;
+				return 0;
 			}
 		}
 	}
 	
 	Menu_DisplayError(iClient);
+	return 0;
 }

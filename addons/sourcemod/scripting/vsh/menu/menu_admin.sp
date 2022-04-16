@@ -65,7 +65,7 @@ void MenuAdmin_DisplayMain(int iClient)
 
 public int MenuAdmin_SelectMain(Menu hMenu, MenuAction action, int iClient, int iSelect)
 {
-	if (action != MenuAction_Select) return;
+	if (action != MenuAction_Select) return 0;
 	
 	char sSelect[32];
 	hMenu.GetItem(iSelect, sSelect, sizeof(sSelect));
@@ -84,6 +84,8 @@ public int MenuAdmin_SelectMain(Menu hMenu, MenuAction action, int iClient, int 
 		MenuAdmin_DisplayRage(iClient);
 	else
 		Menu_DisplayError(iClient);
+	
+	return 0;
 }
 
 void MenuAdmin_DisplayQueue(int iClient)
@@ -93,7 +95,7 @@ void MenuAdmin_DisplayQueue(int iClient)
 
 public int MenuAdmin_SelectQueue(Menu hMenu, MenuAction action, int iClient, int iSelect)
 {
-	if (action != MenuAction_Select) return;
+	if (action != MenuAction_Select) return 0;
 	
 	char sSelect[32];
 	hMenu.GetItem(iSelect, sSelect, sizeof(sSelect));
@@ -105,6 +107,8 @@ public int MenuAdmin_SelectQueue(Menu hMenu, MenuAction action, int iClient, int
 		MenuAdmin_DisplayMain(iClient);
 	else
 		Menu_DisplayError(iClient);
+	
+	return 0;
 }
 
 void MenuAdmin_DisplaySpecial(int iClient)
@@ -114,7 +118,7 @@ void MenuAdmin_DisplaySpecial(int iClient)
 
 public int MenuAdmin_SelectSpecial(Menu hMenu, MenuAction action, int iClient, int iSelect)
 {
-	if (action != MenuAction_Select) return;
+	if (action != MenuAction_Select) return 0;
 	
 	char sSelect[32];
 	hMenu.GetItem(iSelect, sSelect, sizeof(sSelect));
@@ -127,6 +131,8 @@ public int MenuAdmin_SelectSpecial(Menu hMenu, MenuAction action, int iClient, i
 		MenuAdmin_DisplayMain(iClient);
 	else
 		Menu_DisplayError(iClient);
+	
+	return 0;
 }
 
 void MenuAdmin_DisplaySpecialClass(int iClient)
@@ -136,7 +142,7 @@ void MenuAdmin_DisplaySpecialClass(int iClient)
 
 public int MenuAdmin_SelectSpecialClass(Menu hMenu, MenuAction action, int iClient, int iSelect)
 {
-	if (action != MenuAction_Select) return;
+	if (action != MenuAction_Select) return 0;
 	
 	char sSelect[32];
 	hMenu.GetItem(iSelect, sSelect, sizeof(sSelect));
@@ -144,17 +150,18 @@ public int MenuAdmin_SelectSpecialClass(Menu hMenu, MenuAction action, int iClie
 	if (StrEqual(sSelect, "back"))
 	{
 		MenuAdmin_DisplaySpecial(iClient);
-		return;
+		return 0;
 	}
 	
 	TFClassType nClass = view_as<TFClassType>(StringToInt(sSelect));
 	if (nClass == TFClass_Unknown)
 	{
 		Menu_DisplayError(iClient);
-		return;
+		return 0;
 	}
 	
 	ClientCommand(iClient, "vsh_special %s", g_strClassName[nClass]);
+	return 0;
 }
 
 void MenuAdmin_DisplayRage(int iClient)
@@ -164,7 +171,7 @@ void MenuAdmin_DisplayRage(int iClient)
 
 public int MenuAdmin_SelectRage(Menu hMenu, MenuAction action, int iClient, int iSelect)
 {
-	if (action != MenuAction_Select) return;
+	if (action != MenuAction_Select) return 0;
 	
 	char sSelect[32];
 	hMenu.GetItem(iSelect, sSelect, sizeof(sSelect));
@@ -176,4 +183,6 @@ public int MenuAdmin_SelectRage(Menu hMenu, MenuAction action, int iClient, int 
 		MenuAdmin_DisplayMain(iClient);
 	else
 		Menu_DisplayError(iClient);
+	
+	return 0;
 }

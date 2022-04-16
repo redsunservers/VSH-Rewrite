@@ -2,101 +2,70 @@
 
 static int g_iWeaponBallStunType;
 
-static int g_iWeaponBallMax[TF_MAXPLAYERS];
-static float g_flWeaponBallDuration[TF_MAXPLAYERS];
 static float g_flWeaponBallRageEnd[TF_MAXPLAYERS];
 static float g_flWeaponBallStunTime[TF_MAXPLAYERS];
 static int g_iWeaponBallThrower[TF_MAXPLAYERS];
 
-methodmap CWeaponBall < SaxtonHaleBase
+public void WeaponBall_Create(SaxtonHaleBase boss)
 {
-	property int iMaxBall
+	//Default values
+	boss.SetPropInt("WeaponBall", "MaxBall", 3);
+	boss.SetPropFloat("WeaponBall", "Duration", 5.0);
+	
+	g_flWeaponBallRageEnd[boss.iClient] = 0.0;
+}
+
+public void WeaponBall_OnSpawn(SaxtonHaleBase boss)
+{
+	int iMelee = TF2_GetItemInSlot(boss.iClient, WeaponSlot_Melee);
+	if (iMelee > MaxClients)
 	{
-		public get()
-		{
-			return g_iWeaponBallMax[this.iClient];
-		}
+		TF2Attrib_SetByDefIndex(iMelee, ATTRIB_MAX_MISC_AMMO, float(boss.GetPropInt("WeaponBall", "MaxBall")));
+		TF2Attrib_ClearCache(iMelee);
 		
-		public set(int iVal)
-		{
-			g_iWeaponBallMax[this.iClient] = iVal;
-		}
+		//Correctly set ammo
+		TF2_SetAmmo(boss.iClient, WeaponSlot_Melee, boss.GetPropInt("WeaponBall", "MaxBall"));
 	}
-	
-	property float flDuration
+}
+
+public void WeaponBall_OnRage(SaxtonHaleBase boss)
+{
+	g_flWeaponBallRageEnd[boss.iClient] = GetGameTime() + (boss.bSuperRage ? boss.GetPropFloat("WeaponBall", "Duration") * 2 : boss.GetPropFloat("WeaponBall", "Duration"));
+}
+
+public void WeaponBall_OnThink(SaxtonHaleBase boss)
+{
+	//Unlimited ball during rage
+	if (g_flWeaponBallRageEnd[boss.iClient] > GetGameTime())
+		TF2_SetAmmo(boss.iClient, WeaponSlot_Melee, boss.GetPropInt("WeaponBall", "MaxBall"));
+}
+
+public void WeaponBall_OnEntityCreated(SaxtonHaleBase boss, int iEntity, const char[] sClassname)
+{
+	if (strcmp(sClassname, "tf_projectile_stun_ball") == 0)
 	{
-		public get()
-		{
-			return g_flWeaponBallDuration[this.iClient];
-		}
-		
-		public set(float flVal)
-		{
-			g_flWeaponBallDuration[this.iClient] = flVal;
-		}
+		SDK_HookBallImpact(iEntity, WeaponBall_BallImpact);	//To hook when ball impacts player
+		SDK_HookBallTouch(iEntity, WeaponBall_BallTouch);	//To hook when ball impacts building
 	}
-	
-	public CWeaponBall(CWeaponBall ability)
-	{
-		//Default values
-		ability.iMaxBall = 3;
-		ability.flDuration = 5.0;
-		
-		g_flWeaponBallRageEnd[ability.iClient] = 0.0;
-	}
-	
-	public void OnSpawn()
-	{
-		int iMelee = TF2_GetItemInSlot(this.iClient, WeaponSlot_Melee);
-		if (iMelee > MaxClients)
-		{
-			TF2Attrib_SetByDefIndex(iMelee, ATTRIB_MAX_MISC_AMMO, float(this.iMaxBall));
-			TF2Attrib_ClearCache(iMelee);
-			
-			//Correctly set ammo
-			TF2_SetAmmo(this.iClient, WeaponSlot_Melee, this.iMaxBall);
-		}
-	}
-	
-	public void OnRage()
-	{
-		g_flWeaponBallRageEnd[this.iClient] = GetGameTime() + (this.bSuperRage ? this.flDuration * 2 : this.flDuration);
-	}
-	
-	public void OnThink()
-	{
-		//Unlimited ball during rage
-		if (g_flWeaponBallRageEnd[this.iClient] > GetGameTime())
-			TF2_SetAmmo(this.iClient, WeaponSlot_Melee, this.iMaxBall);
-	}
-	
-	public void OnEntityCreated(int iEntity, const char[] sClassname)
-	{
-		if (strcmp(sClassname, "tf_projectile_stun_ball") == 0)
-		{
-			SDK_HookBallImpact(iEntity, WeaponBall_BallImpact);	//To hook when ball impacts player
-			SDK_HookBallTouch(iEntity, WeaponBall_BallTouch);	//To hook when ball impacts building
-		}
-	}
-	
-	public void Precache()
-	{
-		g_iWeaponBallStunType = FindSendPropInfo("CTFStunBall", "m_iType");
-	}
-};
+}
+
+public void WeaponBall_Precache(SaxtonHaleBase boss)
+{
+	g_iWeaponBallStunType = FindSendPropInfo("CTFStunBall", "m_iType");
+}
 
 public MRESReturn WeaponBall_BallImpact(int iEntity, Handle hParams)
 {
 	//Get victim whos stunned from ball
 	int iVictim = DHookGetParam(hParams, 1);
 	if (iVictim <= 0 || iVictim > MaxClients || !IsClientInGame(iVictim))
-		return;
+		return MRES_Ignored;
 	
 	//Check if valid ball from Bonk Boy
 	int iThrower;
 	float flTime;
 	if (!WeaponBall_IsValidBall(iEntity, iThrower, flTime))
-		return;
+		return MRES_Ignored;
 	
 	g_flWeaponBallStunTime[iVictim] = flTime;
 	g_iWeaponBallThrower[iVictim] = iThrower;
@@ -104,32 +73,33 @@ public MRESReturn WeaponBall_BallImpact(int iEntity, Handle hParams)
 	SDKHook(iVictim, SDKHook_OnTakeDamageAlive, WeaponBall_OnTakeDamage);
 	HookEvent("player_death", WeaponBall_PlayerDeath, EventHookMode_Pre);
 	RequestFrame(WeaponBall_UnhookBallDamage, GetClientUserId(iVictim));
+	return MRES_Ignored;
 }
 
 public MRESReturn WeaponBall_BallTouch(int iEntity, Handle hReturn, Handle hParams)
 {
 	if (GetEntProp(iEntity, Prop_Send, "m_bTouched"))
-		return;
+		return MRES_Ignored;
 	
 	//Check if toucher is building
 	int iBuilding = DHookGetParam(hParams, 1);
 	if (iBuilding <= MaxClients)
-		return;
+		return MRES_Ignored;
 	
 	char sClassname[256];
 	GetEntityClassname(iBuilding, sClassname, sizeof(sClassname));
 	if (StrContains(sClassname, "obj_") != 0)
-		return;
+		return MRES_Ignored;
 	
 	//Check if valid ball from Bonk Boy
 	int iThrower;
 	float flTime;
 	if (!WeaponBall_IsValidBall(iEntity, iThrower, flTime))
-		return;
+		return MRES_Ignored;
 	
 	//Team check
 	if (GetEntProp(iBuilding, Prop_Send, "m_iTeamNum") == GetClientTeam(iThrower))
-		return;
+		return MRES_Ignored;
 	
 	//Deal damage
 	SDKHooks_TakeDamage(iBuilding, iThrower, iThrower, flTime * 120.0, DMG_CRIT);
@@ -139,6 +109,7 @@ public MRESReturn WeaponBall_BallTouch(int iEntity, Handle hReturn, Handle hPara
 	
 	//Mark ball as touched
 	SetEntProp(iEntity, Prop_Send, "m_bTouched", true);
+	return MRES_Ignored;
 }
 
 bool WeaponBall_IsValidBall(int iEntity, int &iThrower = 0, float &flTime = 0.0)
@@ -149,7 +120,7 @@ bool WeaponBall_IsValidBall(int iEntity, int &iThrower = 0, float &flTime = 0.0)
 		return false;
 	
 	SaxtonHaleBase boss = SaxtonHaleBase(iOwner);
-	if (boss.CallFunction("FindAbility", "CWeaponBall") == INVALID_ABILITY)
+	if (boss.HasClass("CWeaponBall"))
 		return false;
 	
 	//Get whoever threw the ball, either from bonk boy, or from deflected pyro
@@ -191,7 +162,7 @@ public Action WeaponBall_OnTakeDamage(int victim, int &attacker, int &inflictor,
 	return action;
 }
 
-public Action WeaponBall_PlayerDeath(Event event, const char[] sName, bool bDontBroadcast)
+public void WeaponBall_PlayerDeath(Event event, const char[] sName, bool bDontBroadcast)
 {
 	if (event.GetInt("customkill") == TF_CUSTOM_BASEBALL && event.GetInt("stun_flags") == TF_STUNFLAGS_BIGBONK)
 	{

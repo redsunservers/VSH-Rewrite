@@ -1,8 +1,6 @@
 name: Package
 
-on:
-  push:
-    branches: master
+on: push
 
 jobs:
   build:
@@ -30,7 +28,7 @@ jobs:
       - name: Compile
         run: |
           cd build/addons/sourcemod/scripting
-          ./spcomp-custom-$SM_VERSION saxtonhale.sp -o ../plugins/saxtonhale.smx
+          ./spcomp saxtonhale.sp -o ../plugins/saxtonhale.smx
       
       - name: Package
         run: |

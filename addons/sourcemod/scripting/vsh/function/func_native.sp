@@ -1,4 +1,3 @@
-static FuncClassList g_aFuncClassList;
 static FuncFunctionList g_aFuncFunctionList;
 
 void FuncNative_AskLoad()
@@ -12,9 +11,16 @@ void FuncNative_AskLoad()
 	CreateNative("SaxtonHale_GetPlugin", FuncNative_GetPlugin);
 	CreateNative("SaxtonHale_GetAllClass", FuncNative_GetAllClass);
 	CreateNative("SaxtonHale_GetAllClassType", FuncNative_GetAllClassType);
-	CreateNative("SaxtonHale_RegisterMultiBoss", FuncNative_RegisterMultiBoss);
+	CreateNative("SaxtonHale_CallFunction", FuncNative_CallFunctionClass);
 	
-	CreateNative("SaxtonHaleBase.CallFunction", FuncNative_CallFunction);
+	CreateNative("SaxtonHaleBase.CallFunction", FuncNative_CallFunctionClient);
+	CreateNative("SaxtonHaleBase.CreateClass", FuncNative_CreateClass);
+	CreateNative("SaxtonHaleBase.HasClass", FuncNative_HasClass);
+	CreateNative("SaxtonHaleBase.DestroyAllClass", FuncNative_DestroyAllClass);
+	CreateNative("SaxtonHaleBase.GetPropInt", FuncNative_GetPropInt);
+	CreateNative("SaxtonHaleBase.GetPropFloat", FuncNative_GetPropFloat);
+	CreateNative("SaxtonHaleBase.SetPropInt", FuncNative_SetProp);	//Exact same as SetPropFloat
+	CreateNative("SaxtonHaleBase.SetPropFloat", FuncNative_SetProp);	//Exact same as SetPropInt
 	
 	CreateNative("SaxtonHale_HookFunction", FuncNative_HookFunction);
 	CreateNative("SaxtonHale_UnhookFunction", FuncNative_UnhookFunction);
@@ -26,20 +32,10 @@ void FuncNative_AskLoad()
 	CreateNative("SaxtonHale_SetParamString", FuncNative_SetParamString);
 	CreateNative("SaxtonHale_GetParamArray", FuncNative_GetParamArray);
 	CreateNative("SaxtonHale_SetParamArray", FuncNative_SetParamArray);
-	
-	// Deprecated functions
-	CreateNative("SaxtonHale_InitFunction", FuncNative_InitFunction);
-	CreateNative("SaxtonHale_RegisterBoss", FuncNative_RegisterBoss);
-	CreateNative("SaxtonHale_UnregisterBoss", FuncNative_UnregisterBoss);
-	CreateNative("SaxtonHale_RegisterModifiers", FuncNative_RegisterModifiers);
-	CreateNative("SaxtonHale_UnregisterModifiers", FuncNative_UnregisterModifiers);
-	CreateNative("SaxtonHale_RegisterAbility", FuncNative_RegisterAbility);
-	CreateNative("SaxtonHale_UnregisterAbility", FuncNative_UnregisterAbility);
 }
 
 void FuncNative_Init()
 {
-	g_aFuncClassList = new FuncClassList();
 	g_aFuncFunctionList = new FuncFunctionList();
 }
 
@@ -163,6 +159,7 @@ public any FuncNative_FunctionAddParam(Handle hPlugin, int iNumParams)
 	
 	funcFunction.iParamLength++;
 	g_aFuncFunctionList.SetById(nId, funcFunction);
+	return 0;
 }
 
 //void SaxtonHaleFunction.SetParam(int iParam, ParamType nParamType, SaxtonHaleArrayType nArrayType = VSHArrayType_None, int iArrayData = 0);
@@ -229,6 +226,7 @@ public any FuncNative_FunctionSetParam(Handle hPlugin, int iNumParams)
 	}
 	
 	g_aFuncFunctionList.SetById(nId, funcFunction);
+	return 0;
 }
 
 //void SaxtonHale_RegisterClass(const char[] sClass, SaxtonHaleClassType nClassType);
@@ -241,12 +239,13 @@ public any FuncNative_RegisterClass(Handle hPlugin, int iNumParams)
 	if (nClassType == VSHClassType_Core && hPlugin != GetMyHandle())
 		ThrowNativeError(SP_ERROR_NATIVE, "VSHClassType_Core passed from non-main plugin");
 	
-	g_aFuncClassList.ClearUnloadedPlugin();
+	FuncClass_ClearUnloadedPlugin();
 	
-	if (g_aFuncClassList.Exists(sClass))
+	if (FuncClass_Exists(sClass))
 		ThrowNativeError(SP_ERROR_NATIVE, "Methodmap Class (%s) already registered", sClass);
 	
-	g_aFuncClassList.Add(sClass, hPlugin, nClassType);
+	FuncClass_Add(sClass, hPlugin, nClassType);
+	return 0;
 }
 
 //void SaxtonHale_UnregisterClass(const char[] sClass);
@@ -255,15 +254,16 @@ public any FuncNative_UnregisterClass(Handle hPlugin, int iNumParams)
 	char sClass[MAX_TYPE_CHAR];
 	GetNativeString(1, sClass, sizeof(sClass));
 	
-	if (!g_aFuncClassList.Exists(sClass))
-		return;
+	if (!FuncClass_Exists(sClass))
+		return 0;
 	
-	SaxtonHaleClassType nClassType = g_aFuncClassList.GetType(sClass);
+	SaxtonHaleClassType nClassType = FuncClass_GetType(sClass);
 	if (nClassType == VSHClassType_Core)
 		ThrowNativeError(SP_ERROR_NATIVE, "Unregister core class (%s) is not allowed", sClass);
 	
-	g_aFuncClassList.Remove(sClass);
+	FuncClass_Remove(sClass);
 	NextBoss_RemoveMulti(sClass);
+	return 0;
 }
 
 //Handle SaxtonHale_GetPlugin(const char[] sClass);
@@ -272,15 +272,15 @@ public any FuncNative_GetPlugin(Handle hPlugin, int iNumParams)
 	char sType[MAX_TYPE_CHAR];
 	GetNativeString(1, sType, sizeof(sType));
 	
-	g_aFuncClassList.ClearUnloadedPlugin();
-	return g_aFuncClassList.GetPlugin(sType);
+	FuncClass_ClearUnloadedPlugin();
+	return FuncClass_GetPlugin(sType);
 }
 
 //ArrayList SaxtonHale_GetAllClass();
 public any FuncNative_GetAllClass(Handle hPlugin, int iNumParams)
 {
-	g_aFuncClassList.ClearUnloadedPlugin();
-	ArrayList aClass = g_aFuncClassList.GetAll();
+	FuncClass_ClearUnloadedPlugin();
+	ArrayList aClass = FuncClass_GetAll();
 	
 	ArrayList aClone = view_as<ArrayList>(CloneHandle(aClass, hPlugin));
 	delete aClass;
@@ -291,8 +291,8 @@ public any FuncNative_GetAllClass(Handle hPlugin, int iNumParams)
 //ArrayList SaxtonHale_GetAllClassType(SaxtonHaleClassType nClassType);
 public any FuncNative_GetAllClassType(Handle hPlugin, int iNumParams)
 {
-	g_aFuncClassList.ClearUnloadedPlugin();
-	ArrayList aClass = g_aFuncClassList.GetAllType(GetNativeCell(1));
+	FuncClass_ClearUnloadedPlugin();
+	ArrayList aClass = FuncClass_GetAllType(GetNativeCell(1));
 	
 	ArrayList aClone = view_as<ArrayList>(CloneHandle(aClass, hPlugin));
 	delete aClass;
@@ -300,28 +300,34 @@ public any FuncNative_GetAllClassType(Handle hPlugin, int iNumParams)
 	return aClone;
 }
 
-//void SaxtonHale_RegisterMultiBoss(const char[] ...);
-public any FuncNative_RegisterMultiBoss(Handle hPlugin, int iNumParams)
+//any SaxtonHale_CallFunction(const char[] sClass, const char[] sFunction, any...);
+public any FuncNative_CallFunctionClass(Handle hPlugin, int iNumParams)
 {
-	if (iNumParams < 2)
-		ThrowNativeError(SP_ERROR_NATIVE, "There must be atleast 2 bosses for multiboss");
+	g_aFuncFunctionList.ClearUnloadedPlugin();
 	
-	ArrayList aBosses = new ArrayList(MAX_TYPE_CHAR);
-	for (int i = 1; i <= iNumParams; i++)
-	{
-		char sClass[MAX_TYPE_CHAR];
-		GetNativeString(i, sClass, sizeof(sClass));
-		aBosses.PushString(sClass);
-	}
+	char sClass[MAX_TYPE_CHAR];
+	GetNativeString(1, sClass, sizeof(sClass));
+	if (!FuncClass_Exists(sClass))
+		ThrowNativeError(SP_ERROR_NATIVE, "Invalid class name passed (%s)", sClass);
 	
-	NextBoss_AddMulti(aBosses);
+	//Get function to call
+	FuncFunction funcFunction;
+	GetNativeString(2, funcFunction.sName, sizeof(funcFunction.sName));
+	if (!g_aFuncFunctionList.GetByName(funcFunction.sName, funcFunction))
+		ThrowNativeError(SP_ERROR_NATIVE, "Invalid function name passed (%s)", funcFunction.sName);
+	else if (funcFunction.iParamLength >  iNumParams-2)
+		ThrowNativeError(SP_ERROR_NATIVE, "Too few param passed (found %d params, expected %d)", iNumParams-2, funcFunction.iParamLength);
+	
+	SaxtonHaleBase boss = SaxtonHaleBase(0);
+	FuncClass_ClientCreate(boss, sClass, false);
+	any returnVal = FuncCall_Setup(boss, funcFunction);
+	FuncClass_ClientDestroyAllClass(boss, false);
+	return returnVal;
 }
 
 //any SaxtonHaleBase.CallFunction(const char[] sName, any...);
-public any FuncNative_CallFunction(Handle hPlugin, int iNumParams)
+public any FuncNative_CallFunctionClient(Handle hPlugin, int iNumParams)
 {
-	SaxtonHaleBase boss = GetNativeCell(1);
-	
 	g_aFuncFunctionList.ClearUnloadedPlugin();
 	
 	//Get function to call
@@ -332,109 +338,101 @@ public any FuncNative_CallFunction(Handle hPlugin, int iNumParams)
 	else if (funcFunction.iParamLength >  iNumParams-2)
 		ThrowNativeError(SP_ERROR_NATIVE, "Too few param passed (found %d params, expected %d)", iNumParams-2, funcFunction.iParamLength);
 	
-	//Create stack
-	FuncStack funcStack;
-	Format(funcStack.sFunction, sizeof(funcStack.sFunction), funcFunction.sName);
-	funcStack.nExecType = funcFunction.nExecType;
-	funcStack.nParamType = funcFunction.nParamType;
+	return FuncCall_Setup(GetNativeCell(1), funcFunction);
+}
+
+//void SaxtonHaleBase.CreateClass(const char[] sClass);
+public any FuncNative_CreateClass(Handle hPlugin, int iNumParams)
+{
+	SaxtonHaleBase boss = GetNativeCell(1);
 	
-	//Fill params
-	for (int iParam = 1; iParam <= funcFunction.iParamLength; iParam++)
-	{
-		switch (funcStack.nParamType[iParam-1])
-		{
-			case Param_Cell, Param_CellByRef, Param_Float, Param_FloatByRef:	// ... (Param_VarArgs) is always ByRef
-			{
-				funcStack.PushCell(GetNativeCellRef(iParam+2), funcStack.nParamType[iParam-1]);
-			}
-			case Param_String, Param_Array:
-			{
-				int iLength;
-				
-				switch (funcFunction.nArrayType[iParam-1])
-				{
-					case VSHArrayType_Const:
-					{
-						GetNativeStringLength(iParam+2, iLength);
-						iLength++;
-					}
-					case VSHArrayType_Static:
-					{
-						iLength = funcFunction.iArrayData[iParam-1];
-					}
-					case VSHArrayType_Dynamic:
-					{
-						iLength = GetNativeCellRef(funcFunction.iArrayData[iParam-1]+2);
-						if (iLength <= 0)
-							ThrowNativeError(SP_ERROR_NATIVE, "Array size must be greater than 0 (param %d, found %d)", iParam, iLength);
-					}
-				}
-				
-				if (funcStack.nParamType[iParam-1] == Param_String)
-				{
-					char[] sBuffer = new char[iLength];
-					int iError = GetNativeString(iParam+2, sBuffer, iLength);
-					if (iError != SP_ERROR_NONE)
-						ThrowNativeError(SP_ERROR_NATIVE, "Unable to get string value (param %d, error %d)", iParam, iError);
-					
-					funcStack.PushArray(view_as<any>(sBuffer), iLength, Param_String);
-				}
-				else if (funcStack.nParamType[iParam-1] == Param_Array)
-				{
-					any[] buffer = new any[iLength];
-					int iError = GetNativeArray(iParam+2, buffer, iLength);
-					if (iError != SP_ERROR_NONE)
-						ThrowNativeError(SP_ERROR_NATIVE, "Unable to get array value (param %d, error %d)", iParam, iError);
-					
-					funcStack.PushArray(buffer, iLength, Param_Array);
-				}
-			}
-		}
-	}
+	char sClass[MAX_TYPE_CHAR];
+	GetNativeString(2, sClass, sizeof(sClass));
+	if (!FuncClass_Exists(sClass))
+		ThrowNativeError(SP_ERROR_NATIVE, "Invalid class name passed (%s)", sClass);
 	
-	//Start stack, call functions, then erase stack
-	FuncStack_Push(funcStack);
-	FuncCall_Start(boss, funcStack);
-	FuncStack_Erase();
+	FuncClass_ClientCreate(boss, sClass);
+	return 0;
+}
+
+//void SaxtonHaleBase.HasClass(const char[] sClass);
+public any FuncNative_HasClass(Handle hPlugin, int iNumParams)
+{
+	SaxtonHaleBase boss = GetNativeCell(1);
 	
-	//Set ref native values
-	for (int iParam = 1; iParam <= funcFunction.iParamLength; iParam++)
-	{
-		switch (funcStack.nParamType[iParam-1])
-		{
-			case Param_CellByRef, Param_FloatByRef:
-			{
-				SetNativeCellRef(iParam+2, funcStack.GetCell(iParam));
-			}
-			case Param_String:
-			{
-				if (funcFunction.nArrayType[iParam-1] == VSHArrayType_Const)
-					continue;
-				
-				int iLength = funcStack.iArrayLength[iParam-1];
-				char[] sBuffer = new char[iLength];
-				funcStack.GetArray(iParam, view_as<any>(sBuffer));
-				
-				int iError = SetNativeString(iParam+2, sBuffer, iLength);
-				if (iError != SP_ERROR_NONE)
-					ThrowNativeError(SP_ERROR_NATIVE, "Unable to return string value (param %d, error code %d)", iParam, iError);
-			}
-			case Param_Array:
-			{
-				int iLength = funcStack.iArrayLength[iParam-1];
-				any[] buffer = new any[iLength];
-				funcStack.GetArray(iParam, buffer);
-				
-				int iError = SetNativeArray(iParam+2, buffer, iLength);
-				if (iError != SP_ERROR_NONE)
-					ThrowNativeError(SP_ERROR_NATIVE, "Unable to return array value (param %d, error code %d)", iParam, iError);
-			}
-		}
-	}
+	char sClass[MAX_TYPE_CHAR];
+	GetNativeString(2, sClass, sizeof(sClass));
+	return FuncClass_ClientHasClass(boss.iClient, sClass);
+}
+
+//void SaxtonHaleBase.DestroyAllClass();
+public any FuncNative_DestroyAllClass(Handle hPlugin, int iNumParams)
+{
+	FuncClass_ClientDestroyAllClass(GetNativeCell(1));
+	return 0;
+}
+
+//void SaxtonHaleBase.GetPropInt(const char[] sClass, const char[] sProp);
+public any FuncNative_GetPropInt(Handle hPlugin, int iNumParams)
+{
+	int iClient = GetNativeCell(1);
+	if (iClient <= 0 || iClient > MaxClients)
+		ThrowNativeError(SP_ERROR_NATIVE, "Invalid client index %d", iClient);
+	else if (!IsClientInGame(iClient))
+		ThrowNativeError(SP_ERROR_NATIVE, "Client index %d is not in game", iClient);
 	
-	//Free the handle memory and return value
-	funcStack.Delete();
-	return funcStack.returnValue;
+	char sClass[MAX_TYPE_CHAR];
+	GetNativeString(2, sClass, sizeof(sClass));
+	if (!FuncClass_ClientHasClass(iClient, sClass))
+		ThrowNativeError(SP_ERROR_NATIVE, "Client index %d does not have class name '%s'", iClient, sClass);
+	
+	char sProp[MAX_TYPE_CHAR];
+	GetNativeString(3, sProp, sizeof(sProp));
+	int iValue = 0;
+	FuncClass_GetProp(iClient, sClass, sProp, iValue);
+	return iValue;
+}
+
+//void SaxtonHaleBase.GetPropFloat(const char[] sClass, const char[] sProp);
+public any FuncNative_GetPropFloat(Handle hPlugin, int iNumParams)
+{
+	int iClient = GetNativeCell(1);
+	if (iClient <= 0 || iClient > MaxClients)
+		ThrowNativeError(SP_ERROR_NATIVE, "Invalid client index %d", iClient);
+	else if (!IsClientInGame(iClient))
+		ThrowNativeError(SP_ERROR_NATIVE, "Client index %d is not in game", iClient);
+	
+	char sClass[MAX_TYPE_CHAR];
+	GetNativeString(2, sClass, sizeof(sClass));
+	if (!FuncClass_ClientHasClass(iClient, sClass))
+		ThrowNativeError(SP_ERROR_NATIVE, "Client index %d does not have class name '%s'", iClient, sClass);
+	
+	char sProp[MAX_TYPE_CHAR];
+	GetNativeString(3, sProp, sizeof(sProp));
+	float flValue = 0.0;
+	FuncClass_GetProp(iClient, sClass, sProp, flValue);
+	return flValue;
+}
+
+//void SaxtonHaleBase.SetPropInt(const char[] sClass, const char[] sProp, int iVal);
+//void SaxtonHaleBase.SetPropFloat(const char[] sClass, const char[] sProp, float flVal);
+public any FuncNative_SetProp(Handle hPlugin, int iNumParams)
+{
+	int iClient = GetNativeCell(1);
+	if (iClient <= 0 || iClient > MaxClients)
+		ThrowNativeError(SP_ERROR_NATIVE, "Invalid client index %d", iClient);
+	else if (!IsClientInGame(iClient))
+		ThrowNativeError(SP_ERROR_NATIVE, "Client index %d is not in game", iClient);
+	
+	char sClass[MAX_TYPE_CHAR];
+	GetNativeString(2, sClass, sizeof(sClass));
+	if (!FuncClass_ClientHasClass(iClient, sClass))
+		ThrowNativeError(SP_ERROR_NATIVE, "Client index %d does not have class name '%s'", iClient, sClass);
+	
+	char sProp[MAX_TYPE_CHAR];
+	GetNativeString(3, sProp, sizeof(sProp));
+	FuncClass_SetProp(iClient, sClass, sProp, GetNativeCell(4));
+	return 0;
 }
 
 //void SaxtonHale_HookFunction(const char[] sName, SaxtonHaleHookCallback callback, SaxtonHaleHookType = VSHHookType_Post);
@@ -442,10 +440,8 @@ public any FuncNative_HookFunction(Handle hPlugin, int iNumParams)
 {
 	char sFunction[MAX_TYPE_CHAR];
 	GetNativeString(1, sFunction, sizeof(sFunction));
-	SaxtonHaleHookCallback callback = view_as<SaxtonHaleHookCallback>(GetNativeFunction(2));
-	SaxtonHaleHookMode nHookMode = GetNativeCell(3);
-	
-	FuncHook_Add(sFunction, hPlugin, callback, nHookMode);
+	FuncHook_Add(sFunction, hPlugin, GetNativeFunction(2), GetNativeCell(3));
+	return 0;
 }
 
 //void SaxtonHale_UnhookFunction(const char[] sName, SaxtonHaleHookCallback callback, SaxtonHaleHookType = VSHHookType_Post);
@@ -453,10 +449,8 @@ public any FuncNative_UnhookFunction(Handle hPlugin, int iNumParams)
 {
 	char sFunction[MAX_TYPE_CHAR];
 	GetNativeString(1, sFunction, sizeof(sFunction));
-	SaxtonHaleHookCallback callback = view_as<SaxtonHaleHookCallback>(GetNativeFunction(2));
-	SaxtonHaleHookMode nHookMode = GetNativeCell(3);
-	
-	FuncHook_Remove(sFunction, hPlugin, callback, nHookMode);
+	FuncHook_Remove(sFunction, hPlugin, GetNativeFunction(2), GetNativeCell(3));
+	return 0;
 }
 
 //any SaxtonHale_GetParam(int iParam);
@@ -501,6 +495,7 @@ public any FuncNative_SetParam(Handle hPlugin, int iNumParams)
 	//Get and set value
 	funcStack.cell[iParam-1] = GetNativeCell(2);
 	FuncStack_Set(funcStack);
+	return 0;
 }
 
 //int SaxtonHale_GetParamStringLength(int iParam);
@@ -544,6 +539,7 @@ public any FuncNative_GetParamString(Handle hPlugin, int iNumParams)
 	char[] sBuffer = new char[iLength];
 	funcStack.GetArray(iParam, view_as<any>(sBuffer));
 	SetNativeString(2, sBuffer, iLength);
+	return 0;
 }
 
 //void SaxtonHale_SetParamString(int iParam, char[] value);
@@ -570,6 +566,7 @@ public any FuncNative_SetParamString(Handle hPlugin, int iNumParams)
 	char[] sBuffer = new char[iLength];
 	GetNativeString(2, sBuffer, iLength);
 	funcStack.SetArray(iParam, view_as<any>(sBuffer));
+	return 0;
 }
 
 //void SaxtonHale_GetParamArray(int iParam, any[] value);
@@ -593,6 +590,7 @@ public any FuncNative_GetParamArray(Handle hPlugin, int iNumParams)
 	any[] buffer = new any[iLength];
 	funcStack.GetArray(iParam, buffer);
 	SetNativeArray(2, buffer, iLength);
+	return 0;
 }
 
 //void SaxtonHale_SetParamArray(int iParam, any[] value);
@@ -616,60 +614,7 @@ public any FuncNative_SetParamArray(Handle hPlugin, int iNumParams)
 	any[] buffer = new any[iLength];
 	GetNativeArray(2, buffer, iLength);
 	funcStack.SetArray(iParam, buffer);
-}
-
-/**
- * Deprecated functions
- */
-
-//void SaxtonHale_RegisterBoss(const char[] ...);
-public any FuncNative_RegisterBoss(Handle hPlugin, int iNumParams)
-{
-	//TODO multiboss support
-	char sClass[MAX_TYPE_CHAR];
-	GetNativeString(1, sClass, sizeof(sClass));
-	SaxtonHale_RegisterClass(sClass, VSHClassType_Boss);
-}
-
-//void SaxtonHale_UnregisterBoss(const char[] sBossType);
-public any FuncNative_UnregisterBoss(Handle hPlugin, int iNumParams)
-{
-	//TODO multiboss support
-	char sClass[MAX_TYPE_CHAR];
-	GetNativeString(1, sClass, sizeof(sClass));
-	SaxtonHale_UnregisterClass(sClass);
-}
- 
-//void SaxtonHale_RegisterModifiers(const char[] sModifiersType);
-public any FuncNative_RegisterModifiers(Handle hPlugin, int iNumParams)
-{
-	char sClass[MAX_TYPE_CHAR];
-	GetNativeString(1, sClass, sizeof(sClass));
-	SaxtonHale_RegisterClass(sClass, VSHClassType_Modifier);
-}
-
-//void SaxtonHale_UnregisterModifiers(const char[] sModifiersType);
-public any FuncNative_UnregisterModifiers(Handle hPlugin, int iNumParams)
-{
-	char sClass[MAX_TYPE_CHAR];
-	GetNativeString(1, sClass, sizeof(sClass));
-	SaxtonHale_UnregisterClass(sClass);
-}
-
-//void SaxtonHale_RegisterAbility(const char[] sAbilityType);
-public any FuncNative_RegisterAbility(Handle hPlugin, int iNumParams)
-{
-	char sClass[MAX_TYPE_CHAR];
-	GetNativeString(1, sClass, sizeof(sClass));
-	SaxtonHale_RegisterClass(sClass, VSHClassType_Ability);
-}
-
-//void SaxtonHale_UnregisterAbility(const char[] sAbilityType);
-public any FuncNative_UnregisterAbility(Handle hPlugin, int iNumParams)
-{
-	char sClass[MAX_TYPE_CHAR];
-	GetNativeString(1, sClass, sizeof(sClass));
-	SaxtonHale_UnregisterClass(sClass);
+	return 0;
 }
 
 //----------

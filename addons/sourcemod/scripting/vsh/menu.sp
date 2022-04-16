@@ -53,9 +53,10 @@ void Menu_DisplayError(int iClient)
 
 public int Menu_SelectError(Menu hMenu, MenuAction action, int iClient, int iSelect)
 {
-	if (action != MenuAction_Select) return;
+	if (action != MenuAction_Select) return 0;
 	
 	Menu_DisplayMain(iClient);
+	return 0;
 }
 
 void Menu_DisplayMain(int iClient)
@@ -65,7 +66,7 @@ void Menu_DisplayMain(int iClient)
 
 public int Menu_SelectMain(Menu hMenu, MenuAction action, int iClient, int iSelect)
 {
-	if (action != MenuAction_Select) return;
+	if (action != MenuAction_Select) return 0;
 	
 	char sSelect[32];
 	hMenu.GetItem(iSelect, sSelect, sizeof(sSelect));
@@ -86,6 +87,8 @@ public int Menu_SelectMain(Menu hMenu, MenuAction action, int iClient, int iSele
 		Menu_DisplayCredits(iClient);
 	else
 		Menu_DisplayError(iClient);
+	
+	return 0;
 }
 
 void Menu_DisplayQueue(int iClient)
@@ -121,12 +124,13 @@ public int Menu_SelectQueue(Menu hMenu, MenuAction action, int iClient, int iSel
 	if (action == MenuAction_End)
 	{
 		delete hMenu;
-		return;
+		return 0;
 	}
 	
-	if (action != MenuAction_Select) return;
+	if (action != MenuAction_Select) return 0;
 
 	Menu_DisplayMain(iClient);
+	return 0;
 }
 
 void Menu_DisplayPreferences(int iClient)
@@ -158,10 +162,10 @@ public int Menu_SelectPreferences(Menu hMenu, MenuAction action, int iClient, in
 	if (action == MenuAction_End)
 	{
 		delete hMenu;
-		return;
+		return 0;
 	}
 	
-	if (action != MenuAction_Select) return;
+	if (action != MenuAction_Select) return 0;
 	
 	char sSelect[32];
 	hMenu.GetItem(iSelect, sSelect, sizeof(sSelect));
@@ -172,7 +176,7 @@ public int Menu_SelectPreferences(Menu hMenu, MenuAction action, int iClient, in
 		if (StrEqual(sSelect, g_strPreferencesName[nPreferences]))
 		{
 			ClientCommand(iClient, "vsh_preferences %s", g_strPreferencesName[nPreferences]);
-			return;
+			return 0;
 		}
 	}
 	
@@ -180,6 +184,8 @@ public int Menu_SelectPreferences(Menu hMenu, MenuAction action, int iClient, in
 		Menu_DisplayMain(iClient);
 	else
 		Menu_DisplayError(iClient);
+	
+	return 0;
 }
 
 void Menu_DisplayCredits(int iClient)
@@ -189,7 +195,8 @@ void Menu_DisplayCredits(int iClient)
 
 public int Menu_SelectCredits(Menu hMenu, MenuAction action, int iClient, int iSelect)
 {
-	if (action != MenuAction_Select) return;
+	if (action != MenuAction_Select) return 0;
 
 	Menu_DisplayMain(iClient);
+	return 0;
 }

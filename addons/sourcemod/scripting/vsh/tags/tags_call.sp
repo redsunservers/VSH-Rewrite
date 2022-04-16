@@ -13,6 +13,8 @@ enum TagsCall	//List of possible ways to call tags
 	TagsCall_TakeDamage,
 	TagsCall_Attack,
 	TagsCall_Heal,
+	
+	TagsCall_MAX,
 };
 
 TagsCall TagsCall_GetType(const char[] sCall)
@@ -79,7 +81,7 @@ public Action TagsCall_TimerDelay(Handle hTimer, DataPack data)
 	if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient))
 	{
 		delete tParams;
-		return;
+		return Plugin_Continue;
 	}
 	
 	//Check if timer still valid to be called
@@ -87,7 +89,7 @@ public Action TagsCall_TimerDelay(Handle hTimer, DataPack data)
 	if (iIndex == -1)
 	{
 		delete tParams;
-		return;
+		return Plugin_Continue;
 	}
 	
 	//Remove pending timer from array as it done.
@@ -97,11 +99,12 @@ public Action TagsCall_TimerDelay(Handle hTimer, DataPack data)
 	if (!IsPlayerAlive(iClient))
 	{
 		delete tParams;
-		return;
+		return Plugin_Continue;
 	}
 	
 	//Call function
 	TagsCall_Call(func, iClient, tParams, iCall);
+	return Plugin_Continue;
 }
 
 void TagsCall_Call(Function func, int iClient, TagsParams tParams, int iCall)

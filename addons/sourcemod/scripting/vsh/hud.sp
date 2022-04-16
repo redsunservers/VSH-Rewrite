@@ -1,4 +1,4 @@
-static bool g_bHudRage[TF_MAXPLAYERS] = true;
+static bool g_bHudRage[TF_MAXPLAYERS] = {true, ...};
 static char g_sBossHudText[TF_MAXPLAYERS][256];
 static int g_iBossHudColor[TF_MAXPLAYERS][4];
 
@@ -113,7 +113,7 @@ void Hud_Think(int iClient)
 	Hud_Display(iClient, CHANNEL_HELP, sMessage, view_as<float>({-1.0, 0.88}), 0.2, iColor);
 }
 
-void Hud_Display(int iClient, int iChannel, char[] sText, float flHUD[2], float flDuration = 0.0, int iColor[4] = {255, 255, 255, 255}, int iEffect = 0, float flTime = 0.0, float flFade[2] = 0.0)
+void Hud_Display(int iClient, int iChannel, char[] sText, float flHUD[2], float flDuration = 0.0, int iColor[4] = {255, 255, 255, 255}, int iEffect = 0, float flTime = 0.0, float flFade[2] = {0.0, 0.0})
 {
 	SetHudTextParams(flHUD[0], flHUD[1], flDuration, iColor[0], iColor[1], iColor[2], iColor[3], iEffect, flTime, flFade[0], flFade[1]);
 	ShowHudText(iClient, iChannel, sText);

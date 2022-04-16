@@ -1,135 +1,68 @@
 static float g_flRageGasEnd[TF_MAXPLAYERS];
-static float g_flRageGasRate[TF_MAXPLAYERS];
-static float g_flRageGasDuration[TF_MAXPLAYERS];
-static float g_flRageSpeedMult[TF_MAXPLAYERS];
 static float g_flPreviousSpeed[TF_MAXPLAYERS];
-static float g_flNewSpeed[TF_MAXPLAYERS];
-static float g_flGasRadius[TF_MAXPLAYERS];
 
-methodmap CRageGas < SaxtonHaleBase
+	
+public void RageGas_Create(SaxtonHaleBase boss)
 {
-	property float flRate
-	{
-		public set(float flVal)
-		{
-			g_flRageGasRate[this.iClient] = flVal;
-		}
-		public get()
-		{
-			return g_flRageGasRate[this.iClient];
-		}
-	}
+	g_flRageGasEnd[boss.iClient] = 0.0;
 	
-	property float flDuration
-	{
-		public set (float flVal)
-		{
-			g_flRageGasDuration[this.iClient] = flVal;
-		}
-		public get()
-		{
-			return g_flRageGasDuration[this.iClient];
-		}
-	}
-	
-	property float flNewSpeed
-	{
-		public set (float flVal)
-		{
-			g_flNewSpeed[this.iClient] = flVal;
-		}
-		public get()
-		{
-			return g_flNewSpeed[this.iClient];
-		}
-	}
-	
-	property float flRadius
-	{
-		public get()
-		{
-			return g_flGasRadius[this.iClient];
-		}
-		public set(float val)
-		{
-			g_flGasRadius[this.iClient] = val;
-		}
-	}
-	
-	property float flRageSpeedMult
-	{
-		public set (float flVal)
-		{
-			g_flRageSpeedMult[this.iClient] = flVal;
-		}
-		public get()
-		{
-			return g_flRageSpeedMult[this.iClient];
-		}
-	}
-		
-	public CRageGas(CRageGas ability)
-	{
-		g_flRageGasEnd[ability.iClient] = 0.0;
-		
-		ability.flDuration = 8.0;
-		ability.flRageSpeedMult = 1.15;
-		ability.flRadius = 800.0;
-	}
+	boss.SetPropFloat("RageGas", "Duration", 8.0);
+	boss.SetPropFloat("RageGas", "RageSpeedMult", 1.15);
+	boss.SetPropFloat("RageGas", "Radius", 800.0);
+}
 
-	public void OnRage()
+public void RageGas_OnRage(SaxtonHaleBase boss)
+{
+	int bossTeam = GetClientTeam(boss.iClient);
+	float vecPos[3], vecTargetPos[3];
+	float flRageDuration = boss.GetPropFloat("RageGas", "Duration");
+	GetClientAbsOrigin(boss.iClient, vecPos);
+	
+	float flRadius = boss.GetPropFloat("RageGas", "Radius");
+	if (boss.bSuperRage) flRadius *= 1.5;
+	if (boss.bSuperRage) flRageDuration *= 1.5;
+	
+	for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
 	{
-		int bossTeam = GetClientTeam(this.iClient);
-		float vecPos[3], vecTargetPos[3];
-		float flRageDuration = this.flDuration;
-		GetClientAbsOrigin(this.iClient, vecPos);
-		
-		float flRadius = this.flRadius;
-		if (this.bSuperRage) flRadius *= 1.5;
-		if (this.bSuperRage) flRageDuration *= 1.5;
-		
-		for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
+		if (IsClientInGame(iVictim) && IsPlayerAlive(iVictim) && GetClientTeam(iVictim) != bossTeam && !TF2_IsUbercharged(iVictim))
 		{
-			if (IsClientInGame(iVictim) && IsPlayerAlive(iVictim) && GetClientTeam(iVictim) != bossTeam && !TF2_IsUbercharged(iVictim))
-			{
-				GetClientAbsOrigin(iVictim, vecTargetPos);
-				
-				float flDistance = GetVectorDistance(vecTargetPos, vecPos);
-				
-				if (flDistance <= flRadius)
-				{
-					TF2_AddCondition(iVictim, TFCond_Gas, flRageDuration, this.iClient);
-				}
-			}
-		}
-		
-		if (g_flRageGasEnd[this.iClient] == 0.0)
-		{
-			g_flPreviousSpeed[this.iClient] = this.flSpeed;
-			this.flSpeed *= this.flRageSpeedMult;
+			GetClientAbsOrigin(iVictim, vecTargetPos);
 			
-			if (this.bSuperRage)
+			float flDistance = GetVectorDistance(vecTargetPos, vecPos);
+			
+			if (flDistance <= flRadius)
 			{
-			TF2_AddCondition(this.iClient, TFCond_TeleportedGlow, flRageDuration, this.iClient);
-			this.flSpeed *= this.flRageSpeedMult;
+				TF2_AddCondition(iVictim, TFCond_Gas, flRageDuration, boss.iClient);
 			}
 		}
-		
-		g_flRageGasEnd[this.iClient] = GetGameTime() + flRageDuration;
-		
-		TF2_AddCondition(this.iClient, TFCond_SpeedBuffAlly, flRageDuration, this.iClient);
 	}
 	
-	public void OnThink()
+	if (g_flRageGasEnd[boss.iClient] == 0.0)
 	{
-		if (g_flRageGasEnd[this.iClient] == 0.0)
-			return;
+		g_flPreviousSpeed[boss.iClient] = boss.flSpeed;
+		boss.flSpeed *= boss.GetPropFloat("RageGas", "RageSpeedMult");
 		
-		float flGameTime = GetGameTime();
-		if (flGameTime > g_flRageGasEnd[this.iClient])
+		if (boss.bSuperRage)
 		{
-			g_flRageGasEnd[this.iClient] = 0.0;
-			this.flSpeed = g_flPreviousSpeed[this.iClient];
+		TF2_AddCondition(boss.iClient, TFCond_TeleportedGlow, flRageDuration, boss.iClient);
+		boss.flSpeed *= boss.GetPropFloat("RageGas", "RageSpeedMult");
 		}
 	}
-};
+	
+	g_flRageGasEnd[boss.iClient] = GetGameTime() + flRageDuration;
+	
+	TF2_AddCondition(boss.iClient, TFCond_SpeedBuffAlly, flRageDuration, boss.iClient);
+}
+
+public void RageGas_OnThink(SaxtonHaleBase boss)
+{
+	if (g_flRageGasEnd[boss.iClient] == 0.0)
+		return;
+	
+	float flGameTime = GetGameTime();
+	if (flGameTime > g_flRageGasEnd[boss.iClient])
+	{
+		g_flRageGasEnd[boss.iClient] = 0.0;
+		boss.flSpeed = g_flPreviousSpeed[boss.iClient];
+	}
+}

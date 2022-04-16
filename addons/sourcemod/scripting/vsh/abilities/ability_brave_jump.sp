@@ -1,217 +1,116 @@
-static int g_iBraveJumpCharge[TF_MAXPLAYERS];
-static int g_iBraveJumpMaxCharge[TF_MAXPLAYERS];
-static int g_iBraveJumpChargeBuild[TF_MAXPLAYERS];
-static float g_flBraveJumpMaxHeight[TF_MAXPLAYERS];
-static float g_flBraveJumpMaxDistance[TF_MAXPLAYERS];
-static float g_flJumpCooldown[TF_MAXPLAYERS];
-static float g_flJumpMinCooldown[TF_MAXPLAYERS];
 static float g_flJumpCooldownWait[TF_MAXPLAYERS];
-static float g_flBraveJumpEyeAngleRequirement[TF_MAXPLAYERS];
 static bool g_bBraveJumpHoldingChargeButton[TF_MAXPLAYERS];
 
-methodmap CBraveJump < SaxtonHaleBase
+public void BraveJump_Create(SaxtonHaleBase boss)
 {
-	property int iMaxJumpCharge
+	g_flJumpCooldownWait[boss.iClient] = 0.0;
+	
+	//Default values, these can be changed if needed
+	boss.SetPropInt("BraveJump", "JumpCharge", 0);
+	boss.SetPropInt("BraveJump", "MaxJumpCharge", 200);
+	boss.SetPropInt("BraveJump", "JumpChargeBuild", 4);
+	boss.SetPropFloat("BraveJump", "MaxHeight", 1100.0);
+	boss.SetPropFloat("BraveJump", "MaxDistance", 0.45);
+	boss.SetPropFloat("BraveJump", "Cooldown", 7.0);
+	boss.SetPropFloat("BraveJump", "MinCooldown", 5.5);
+	boss.SetPropFloat("BraveJump", "EyeAngleRequirement", -25.0);	//How far up should the boss look for the ability to trigger? Minimum value is -89.0 (all the way up)
+}
+
+public void BraveJump_OnThink(SaxtonHaleBase boss)
+{
+	if (GameRules_GetRoundState() == RoundState_Preround)
+		return;
+	
+	if (g_flJumpCooldownWait[boss.iClient] == 0.0)	//Round started, start cooldown
 	{
-		public get()
-		{
-			return g_iBraveJumpMaxCharge[this.iClient];
-		}
-		public set(int val)
-		{
-			g_iBraveJumpMaxCharge[this.iClient] = val;
-		}
+		g_flJumpCooldownWait[boss.iClient] = GetGameTime()+boss.GetPropFloat("BraveJump", "Cooldown");
+		boss.CallFunction("UpdateHudInfo", 1.0, boss.GetPropFloat("BraveJump", "Cooldown"));	//Update every second for cooldown duration
 	}
 	
-	property int iJumpCharge
-	{
-		public get()
-		{
-			return g_iBraveJumpCharge[this.iClient];
-		}
-		public set(int val)
-		{
-			g_iBraveJumpCharge[this.iClient] = val;
-			if (g_iBraveJumpCharge[this.iClient] > this.iMaxJumpCharge) g_iBraveJumpCharge[this.iClient] = this.iMaxJumpCharge;
-			if (g_iBraveJumpCharge[this.iClient] < 0) g_iBraveJumpCharge[this.iClient] = 0;
-		}
-	}
+	int iJumpCharge = boss.GetPropInt("BraveJump", "JumpCharge");
+	int iJumpChargeBuild = boss.GetPropInt("BraveJump", "JumpChargeBuild");
+	int iMaxJumpCharge = boss.GetPropInt("BraveJump", "MaxJumpCharge");
+	int iNewJumpCharge;
 	
-	property int iJumpChargeBuild
-	{
-		public get()
-		{
-			return g_iBraveJumpChargeBuild[this.iClient];
-		}
-		public set(int val)
-		{
-			g_iBraveJumpChargeBuild[this.iClient] = val;
-		}
-	}
+	if (g_flJumpCooldownWait[boss.iClient] <= GetGameTime() && g_bBraveJumpHoldingChargeButton[boss.iClient])
+		iNewJumpCharge = iJumpCharge + iJumpChargeBuild;
+	else
+		iNewJumpCharge = iJumpCharge - iJumpChargeBuild * 2;
 	
-	property float flCooldown
-	{
-		public get()
-		{
-			return g_flJumpCooldown[this.iClient];
-		}
-		public set(float val)
-		{
-			g_flJumpCooldown[this.iClient] = val;
-		}
-	}
+	if (iNewJumpCharge > iMaxJumpCharge)
+		iNewJumpCharge = iMaxJumpCharge;
+	else if (iNewJumpCharge < 0)
+		iNewJumpCharge = 0;
 	
-	property float flMinCooldown
+	if (iJumpCharge != iNewJumpCharge)
 	{
-		public get()
-		{
-			return g_flJumpMinCooldown[this.iClient];
-		}
-		public set(float val)
-		{
-			g_flJumpMinCooldown[this.iClient] = val;
-		}
+		boss.SetPropInt("BraveJump", "JumpCharge", iNewJumpCharge);
+		boss.CallFunction("UpdateHudInfo", 0.0, 0.0);	//Update once
 	}
-	
-	property float flMaxHeight
+}
+
+public void BraveJump_GetHudInfo(SaxtonHaleBase boss, char[] sMessage, int iLength, int iColor[4])
+{
+	if (g_flJumpCooldownWait[boss.iClient] != 0.0 && g_flJumpCooldownWait[boss.iClient] > GetGameTime())
 	{
-		public get()
-		{
-			return g_flBraveJumpMaxHeight[this.iClient];
-		}
-		public set(float val)
-		{
-			g_flBraveJumpMaxHeight[this.iClient] = val;
-		}
+		int iSec = RoundToCeil(g_flJumpCooldownWait[boss.iClient]-GetGameTime());
+		Format(sMessage, iLength, "%s\nSuper-jump cooldown %i second%s remaining!", sMessage, iSec, (iSec > 1) ? "s" : "");
 	}
-	
-	property float flMaxDistance
+	else if (boss.GetPropInt("BraveJump", "JumpCharge") > 0)
 	{
-		public get()
-		{
-			return g_flBraveJumpMaxDistance[this.iClient];
-		}
-		public set(float val)
-		{
-			g_flBraveJumpMaxDistance[this.iClient] = val;
-		}
+		Format(sMessage, iLength, "%s\nJump charge: %0.2f%%. Look up and stand up to use super-jump.", sMessage, (float(boss.GetPropInt("BraveJump", "JumpCharge"))/float(boss.GetPropInt("BraveJump", "MaxJumpCharge")))*100.0);
 	}
-	
-	property float flEyeAngleRequirement
+	else
 	{
-		public get()
-		{
-			return g_flBraveJumpEyeAngleRequirement[this.iClient];
-		}
-		public set(float val)
-		{
-			//Cap value to prevent impossible angle
-			if (val < -89.0)
-				val = -89.0;
-			
-			g_flBraveJumpEyeAngleRequirement[this.iClient] = val;
-		}
+		Format(sMessage, iLength, "%s\nHold right click to use your super-jump!", sMessage);
 	}
-	
-	public CBraveJump(CBraveJump ability)
+}
+
+public void BraveJump_OnButton(SaxtonHaleBase boss, int &buttons)
+{
+	if (buttons & IN_ATTACK2)
+		g_bBraveJumpHoldingChargeButton[boss.iClient] = true;
+}
+
+public void BraveJump_OnButtonRelease(SaxtonHaleBase boss, int button)
+{
+	if (button == IN_ATTACK2)
 	{
-		g_iBraveJumpCharge[ability.iClient] = 0;
-		g_flJumpCooldownWait[ability.iClient] = 0.0;
-		
-		//Default values, these can be changed if needed
-		ability.iMaxJumpCharge = 200;
-		ability.iJumpChargeBuild = 4;
-		ability.flMaxHeight = 1100.0;
-		ability.flMaxDistance = 0.45;
-		ability.flCooldown = 7.0;
-		ability.flMinCooldown = 5.5;
-		ability.flEyeAngleRequirement = -25.0;	//How far up should the boss look for the ability to trigger? Minimum value is -89.0 (all the way up)
-	}
-	
-	public void OnThink()
-	{
-		if (GameRules_GetRoundState() == RoundState_Preround)
+		if (TF2_IsPlayerInCondition(boss.iClient, TFCond_Dazed))//Can't jump if stunned
 			return;
 		
-		if (g_flJumpCooldownWait[this.iClient] == 0.0)	//Round started, start cooldown
-		{
-			g_flJumpCooldownWait[this.iClient] = GetGameTime()+this.flCooldown;
-			this.CallFunction("UpdateHudInfo", 1.0, this.flCooldown);	//Update every second for cooldown duration
-		}
+		g_bBraveJumpHoldingChargeButton[boss.iClient] = false;
+		if (g_flJumpCooldownWait[boss.iClient] != 0.0 && g_flJumpCooldownWait[boss.iClient] > GetGameTime()) return;
 		
-		int iOldJumpCharge = this.iJumpCharge;
+		float vecAng[3];
+		GetClientEyeAngles(boss.iClient, vecAng);
 		
-		if (g_flJumpCooldownWait[this.iClient] <= GetGameTime() && g_bBraveJumpHoldingChargeButton[this.iClient])
-			this.iJumpCharge += this.iJumpChargeBuild;
-		else
-			this.iJumpCharge -= this.iJumpChargeBuild*2;
-		
-		if (iOldJumpCharge != this.iJumpCharge)
-			this.CallFunction("UpdateHudInfo", 0.0, 0.0);	//Update once
-	}
-	
-	public void GetHudInfo(char[] sMessage, int iLength, int iColor[4])
-	{
-		if (g_flJumpCooldownWait[this.iClient] != 0.0 && g_flJumpCooldownWait[this.iClient] > GetGameTime())
+		if ((vecAng[0] <= boss.GetPropFloat("BraveJump", "EyeAngleRequirement")) && (boss.GetPropInt("BraveJump", "JumpCharge") > 1))
 		{
-			int iSec = RoundToCeil(g_flJumpCooldownWait[this.iClient]-GetGameTime());
-			Format(sMessage, iLength, "%s\nSuper-jump cooldown %i second%s remaining!", sMessage, iSec, (iSec > 1) ? "s" : "");
-		}
-		else if (this.iJumpCharge > 0)
-		{
-			Format(sMessage, iLength, "%s\nJump charge: %0.2f%%. Look up and stand up to use super-jump.", sMessage, (float(this.iJumpCharge)/float(this.iMaxJumpCharge))*100.0);
-		}
-		else
-		{
-			Format(sMessage, iLength, "%s\nHold right click to use your super-jump!", sMessage);
-		}
-	}
-	
-	public void OnButton(int &buttons)
-	{
-		if (buttons & IN_ATTACK2)
-			g_bBraveJumpHoldingChargeButton[this.iClient] = true;
-	}
-	
-	public void OnButtonRelease(int button)
-	{
-		if (button == IN_ATTACK2)
-		{
-			if (TF2_IsPlayerInCondition(this.iClient, TFCond_Dazed))//Can't jump if stunned
-				return;
+			float vecVel[3];
+			GetEntPropVector(boss.iClient, Prop_Data, "m_vecVelocity", vecVel);
 			
-			g_bBraveJumpHoldingChargeButton[this.iClient] = false;
-			if (g_flJumpCooldownWait[this.iClient] != 0.0 && g_flJumpCooldownWait[this.iClient] > GetGameTime()) return;
+			vecVel[2] = boss.GetPropFloat("BraveJump", "MaxHeight")*((float(boss.GetPropInt("BraveJump", "JumpCharge"))/float(boss.GetPropInt("BraveJump", "MaxJumpCharge"))));
+			vecVel[0] *= (1.0+Sine((float(boss.GetPropInt("BraveJump", "JumpCharge"))/float(boss.GetPropInt("BraveJump", "MaxJumpCharge"))) * FLOAT_PI * boss.GetPropFloat("BraveJump", "MaxDistance")));
+			vecVel[1] *= (1.0+Sine((float(boss.GetPropInt("BraveJump", "JumpCharge"))/float(boss.GetPropInt("BraveJump", "MaxJumpCharge"))) * FLOAT_PI * boss.GetPropFloat("BraveJump", "MaxDistance")));
+			SetEntProp(boss.iClient, Prop_Send, "m_bJumping", true);
 			
-			float vecAng[3];
-			GetClientEyeAngles(this.iClient, vecAng);
+			TeleportEntity(boss.iClient, NULL_VECTOR, NULL_VECTOR, vecVel);
 			
-			if ((vecAng[0] <= this.flEyeAngleRequirement) && (this.iJumpCharge > 1))
-			{
-				float vecVel[3];
-				GetEntPropVector(this.iClient, Prop_Data, "m_vecVelocity", vecVel);
-				
-				vecVel[2] = this.flMaxHeight*((float(this.iJumpCharge)/float(this.iMaxJumpCharge)));
-				vecVel[0] *= (1.0+Sine((float(this.iJumpCharge)/float(this.iMaxJumpCharge)) * FLOAT_PI * this.flMaxDistance));
-				vecVel[1] *= (1.0+Sine((float(this.iJumpCharge)/float(this.iMaxJumpCharge)) * FLOAT_PI * this.flMaxDistance));
-				SetEntProp(this.iClient, Prop_Send, "m_bJumping", true);
-				
-				TeleportEntity(this.iClient, NULL_VECTOR, NULL_VECTOR, vecVel);
-				
-				float flCooldownTime = (this.flCooldown*(float(this.iJumpCharge)/float(this.iMaxJumpCharge)));
-				if (flCooldownTime < this.flMinCooldown)
-					flCooldownTime = this.flMinCooldown;
-				
-				g_flJumpCooldownWait[this.iClient] = GetGameTime()+flCooldownTime;
-				this.CallFunction("UpdateHudInfo", 1.0, this.flCooldown);	//Update every second for cooldown duration
-				
-				this.iJumpCharge = 0;
-				
-				char sSound[PLATFORM_MAX_PATH];
-				this.CallFunction("GetSoundAbility", sSound, sizeof(sSound), "CBraveJump");
-				if (!StrEmpty(sSound))
-					EmitSoundToAll(sSound, this.iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
-			}
+			float flCooldownTime = (boss.GetPropFloat("BraveJump", "Cooldown")*(float(boss.GetPropInt("BraveJump", "JumpCharge"))/float(boss.GetPropInt("BraveJump", "MaxJumpCharge"))));
+			if (flCooldownTime < boss.GetPropFloat("BraveJump", "MinCooldown"))
+				flCooldownTime = boss.GetPropFloat("BraveJump", "MinCooldown");
+			
+			g_flJumpCooldownWait[boss.iClient] = GetGameTime()+flCooldownTime;
+			boss.CallFunction("UpdateHudInfo", 1.0, boss.GetPropFloat("BraveJump", "Cooldown"));	//Update every second for cooldown duration
+			
+			boss.SetPropInt("BraveJump", "JumpCharge", 0);
+			
+			char sSound[PLATFORM_MAX_PATH];
+			boss.CallFunction("GetSoundAbility", sSound, sizeof(sSound), "BraveJump");
+			if (!StrEmpty(sSound))
+				EmitSoundToAll(sSound, boss.iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
 		}
 	}
-};
+}
+

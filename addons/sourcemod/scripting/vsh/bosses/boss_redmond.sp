@@ -36,104 +36,101 @@ static char g_strRedmondBackstabbed[][] = {
 	"vo/halloween_mann_brothers/sf13_redmond_losing19.mp3",
 };
 
-methodmap CRedmond < SaxtonHaleBase
+public void Redmond_Create(SaxtonHaleBase boss)
 {
-	public CRedmond(CRedmond boss)
-	{
-		CWeaponSpells weaponSpells = boss.CallFunction("CreateAbility", "CWeaponSpells");
-		weaponSpells.AddSpells(haleSpells_Teleport);
-		weaponSpells.RageSpells(haleSpells_Monoculus);
-		weaponSpells.flRageRequirement = 0.0;
-		weaponSpells.flCooldown = 5.0;
-		
-		boss.iHealthPerPlayer = 550;
-		boss.flHealthExponential = 1.05;
-		boss.nClass = TFClass_Spy;
-		boss.iMaxRageDamage = 2500;
-	}
+	boss.CreateClass("WeaponSpells");
+	WeaponSpells_AddSpells(boss, haleSpells_Teleport);
+	WeaponSpells_RageSpells(boss, haleSpells_Monoculus);
+	boss.SetPropFloat("WeaponSpells", "RageRequirement", 0.0);
+	boss.SetPropFloat("WeaponSpells", "Cooldown", 5.0);
 	
-	public void GetBossMultiType(char[] sType, int length)
+	boss.iHealthPerPlayer = 550;
+	boss.flHealthExponential = 1.05;
+	boss.nClass = TFClass_Spy;
+	boss.iMaxRageDamage = 2500;
+}
+
+public void Redmond_GetBossMultiType(SaxtonHaleBase boss, char[] sType, int length)
+{
+	strcopy(sType, length, "MannBrothers");
+}
+
+public bool Redmond_IsBossHidden(SaxtonHaleBase boss)
+{
+	return true;
+}
+
+public void Redmond_GetBossName(SaxtonHaleBase boss, char[] sName, int length)
+{
+	strcopy(sName, length, "Redmond");
+}
+
+public void Redmond_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length)
+{
+	StrCat(sInfo, length, "\nDuo Boss with Blutarch");
+	StrCat(sInfo, length, "\nMelee deals 124 damage");
+	StrCat(sInfo, length, "\nHealth: Low");
+	StrCat(sInfo, length, "\n ");
+	StrCat(sInfo, length, "\nAbilities");
+	StrCat(sInfo, length, "\n- Alt-attack to use Teleport spell (5 second cooldown)");
+	StrCat(sInfo, length, "\n ");
+	StrCat(sInfo, length, "\nRage");
+	StrCat(sInfo, length, "\n- Damage requirement: 2500");
+	StrCat(sInfo, length, "\n- Grants a MONOCULUS! spell");
+	StrCat(sInfo, length, "\n- 200%% Rage: Grants 3 MONOCULUS! spells");
+}
+
+public Action Redmond_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+{
+	//Monos spell damage sucks, buff it
+	if (weapon > MaxClients)
 	{
-		strcopy(sType, length, "CMannBrothers");
-	}
-	
-	public bool IsBossHidden()
-	{
-		return true;
-	}
-	
-	public void GetBossName(char[] sName, int length)
-	{
-		strcopy(sName, length, "Redmond");
-	}
-	
-	public void GetBossInfo(char[] sInfo, int length)
-	{
-		StrCat(sInfo, length, "\nDuo Boss with Blutarch");
-		StrCat(sInfo, length, "\nMelee deals 124 damage");
-		StrCat(sInfo, length, "\nHealth: Low");
-		StrCat(sInfo, length, "\n ");
-		StrCat(sInfo, length, "\nAbilities");
-		StrCat(sInfo, length, "\n- Alt-attack to use Teleport spell (5 second cooldown)");
-		StrCat(sInfo, length, "\n ");
-		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- Damage requirement: 2500");
-		StrCat(sInfo, length, "\n- Grants a MONOCULUS! spell");
-		StrCat(sInfo, length, "\n- 200%% Rage: Grants 3 MONOCULUS! spells");
-	}
-	
-	public Action OnAttackDamage(int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
-	{
-		//Monos spell damage sucks, buff it
-		if (weapon > MaxClients)
+		char sClassname[256];
+		GetEntityClassname(weapon, sClassname, sizeof(sClassname));
+		if (StrEqual(sClassname, "eyeball_boss"))
 		{
-			char sClassname[256];
-			GetEntityClassname(weapon, sClassname, sizeof(sClassname));
-			if (StrEqual(sClassname, "eyeball_boss"))
-			{
-				damage *= 2.0;
-				return Plugin_Changed;
-			}
-		}
-		
-		return Plugin_Continue;
-		
-	}
-	
-	public void GetModel(char[] sModel, int length)
-	{
-		strcopy(sModel, length, REDMOND_MODEL);
-	}
-	
-	public void GetSound(char[] sSound, int length, SaxtonHaleSound iSoundType)
-	{
-		switch (iSoundType)
-		{
-			case VSHSound_Win: strcopy(sSound, length, g_strRedmondWin[GetRandomInt(0,sizeof(g_strRedmondWin)-1)]);
-			case VSHSound_Lose: strcopy(sSound, length, g_strRedmondLose[GetRandomInt(0,sizeof(g_strRedmondLose)-1)]);
-			case VSHSound_Rage: strcopy(sSound, length, g_strRedmondRage[GetRandomInt(0,sizeof(g_strRedmondRage)-1)]);
-			case VSHSound_Lastman: strcopy(sSound, length, g_strRedmondLastMan[GetRandomInt(0,sizeof(g_strRedmondLastMan)-1)]);
-			case VSHSound_Backstab: strcopy(sSound, length, g_strRedmondBackstabbed[GetRandomInt(0,sizeof(g_strRedmondBackstabbed)-1)]);
-			case VSHSound_Death: strcopy(sSound, length, g_strRedmondDeath[GetRandomInt(0,sizeof(g_strRedmondDeath)-1)]);
+			damage *= 2.0;
+			return Plugin_Changed;
 		}
 	}
-		
-	public void Precache()
+	
+	return Plugin_Continue;
+	
+}
+
+public void Redmond_GetModel(SaxtonHaleBase boss, char[] sModel, int length)
+{
+	strcopy(sModel, length, REDMOND_MODEL);
+}
+
+public void Redmond_GetSound(SaxtonHaleBase boss, char[] sSound, int length, SaxtonHaleSound iSoundType)
+{
+	switch (iSoundType)
 	{
-		PrecacheModel(REDMOND_MODEL);
-		
-		for (int i = 0; i < sizeof(g_strRedmondWin); i++) PrecacheSound(g_strRedmondWin[i]);
-		for (int i = 0; i < sizeof(g_strRedmondDeath); i++) PrecacheSound(g_strRedmondDeath[i]);
-		for (int i = 0; i < sizeof(g_strRedmondLose); i++) PrecacheSound(g_strRedmondLose[i]);
-		for (int i = 0; i < sizeof(g_strRedmondRage); i++) PrecacheSound(g_strRedmondRage[i]);
-		for (int i = 0; i < sizeof(g_strRedmondLastMan); i++) PrecacheSound(g_strRedmondLastMan[i]);
-		for (int i = 0; i < sizeof(g_strRedmondBackstabbed); i++) PrecacheSound(g_strRedmondBackstabbed[i]);
-		
-		AddFileToDownloadsTable("models/player/kirillian/boss/boss_redmond_v2.mdl");
-		AddFileToDownloadsTable("models/player/kirillian/boss/boss_redmond_v2.sw.vtx");
-		AddFileToDownloadsTable("models/player/kirillian/boss/boss_redmond_v2.vvd");
-		AddFileToDownloadsTable("models/player/kirillian/boss/boss_redmond_v2.dx80.vtx");
-		AddFileToDownloadsTable("models/player/kirillian/boss/boss_redmond_v2.dx90.vtx");
-		AddFileToDownloadsTable("models/player/kirillian/boss/boss_redmond_v2.phy");
+		case VSHSound_Win: strcopy(sSound, length, g_strRedmondWin[GetRandomInt(0,sizeof(g_strRedmondWin)-1)]);
+		case VSHSound_Lose: strcopy(sSound, length, g_strRedmondLose[GetRandomInt(0,sizeof(g_strRedmondLose)-1)]);
+		case VSHSound_Rage: strcopy(sSound, length, g_strRedmondRage[GetRandomInt(0,sizeof(g_strRedmondRage)-1)]);
+		case VSHSound_Lastman: strcopy(sSound, length, g_strRedmondLastMan[GetRandomInt(0,sizeof(g_strRedmondLastMan)-1)]);
+		case VSHSound_Backstab: strcopy(sSound, length, g_strRedmondBackstabbed[GetRandomInt(0,sizeof(g_strRedmondBackstabbed)-1)]);
+		case VSHSound_Death: strcopy(sSound, length, g_strRedmondDeath[GetRandomInt(0,sizeof(g_strRedmondDeath)-1)]);
 	}
-};
+}
+	
+public void Redmond_Precache(SaxtonHaleBase boss)
+{
+	PrecacheModel(REDMOND_MODEL);
+	
+	for (int i = 0; i < sizeof(g_strRedmondWin); i++) PrecacheSound(g_strRedmondWin[i]);
+	for (int i = 0; i < sizeof(g_strRedmondDeath); i++) PrecacheSound(g_strRedmondDeath[i]);
+	for (int i = 0; i < sizeof(g_strRedmondLose); i++) PrecacheSound(g_strRedmondLose[i]);
+	for (int i = 0; i < sizeof(g_strRedmondRage); i++) PrecacheSound(g_strRedmondRage[i]);
+	for (int i = 0; i < sizeof(g_strRedmondLastMan); i++) PrecacheSound(g_strRedmondLastMan[i]);
+	for (int i = 0; i < sizeof(g_strRedmondBackstabbed); i++) PrecacheSound(g_strRedmondBackstabbed[i]);
+	
+	AddFileToDownloadsTable("models/player/kirillian/boss/boss_redmond_v2.mdl");
+	AddFileToDownloadsTable("models/player/kirillian/boss/boss_redmond_v2.sw.vtx");
+	AddFileToDownloadsTable("models/player/kirillian/boss/boss_redmond_v2.vvd");
+	AddFileToDownloadsTable("models/player/kirillian/boss/boss_redmond_v2.dx80.vtx");
+	AddFileToDownloadsTable("models/player/kirillian/boss/boss_redmond_v2.dx90.vtx");
+	AddFileToDownloadsTable("models/player/kirillian/boss/boss_redmond_v2.phy");
+}

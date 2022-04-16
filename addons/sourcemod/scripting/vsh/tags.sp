@@ -115,8 +115,8 @@ void Tags_OnThink(int iClient)
 	static int TELEPORTER_BODYGROUP_ARROW 	= (1 << 1);
 	
 	//Compiler no like this
-	const int iObjectType = view_as<int>(TFObjectType);
-	const int iObjectMode = view_as<int>(TFObjectMode);
+	const int iObjectType = view_as<int>(TFObject_Sentry) + 1;
+	const int iObjectMode = view_as<int>(TFObjectMode_Exit) + 1;
 	int iBuilding[iObjectType][iObjectMode];	//Building index built from client
 	
 	TFTeam nTeam = TF2_GetClientTeam(iClient);
@@ -699,12 +699,12 @@ public void Tags_SummonZombie(int iClient, int iTarget, TagsParams tParams)
 		int iZombie = aDeadPlayers.Get(i);
 		SaxtonHaleBase boss = SaxtonHaleBase(iZombie);
 		if (boss.bValid)
-			boss.CallFunction("Destroy");
+			boss.DestroyAllClass();
 		
 		ChangeClientTeam(iZombie, GetClientTeam(iTarget));
 		g_iClientOwner[iZombie] = iTarget;
 		
-		boss.CallFunction("CreateBoss", "CZombie");
+		boss.CreateClass("Zombie");
 		TF2_RespawnPlayer(iZombie);
 		
 		TF2_TeleportToClient(iZombie, iTarget);
@@ -962,6 +962,8 @@ public Action Timer_ResetClip(Handle hTimer, int iRef)
 		
 		SetEntProp(iEntity, Prop_Send, "m_iClip1", iCurrentClip);
 	}
+	
+	return Plugin_Continue;
 }
 
 public Action Timer_ResetAttrib(Handle hTimer, DataPack data)
@@ -972,7 +974,7 @@ public Action Timer_ResetAttrib(Handle hTimer, DataPack data)
 	
 	int iEntity = EntRefToEntIndex(iRef);
 	if (iEntity <= 0 || !IsValidEdict(iEntity))
-		return;
+		return Plugin_Continue;
 	
 	//Check if still exists and outside of time
 	int iLength = g_aAttrib.Length;
@@ -986,9 +988,11 @@ public Action Timer_ResetAttrib(Handle hTimer, DataPack data)
 			TF2Attrib_RemoveByDefIndex(iEntity, iIndex);
 			TF2Attrib_ClearCache(iEntity);
 			g_aAttrib.Erase(iPos);
-			return;
+			return Plugin_Continue;
 		}
 	}
+	
+	return Plugin_Continue;
 }
 
 stock TagsMath Tags_GetMath(const char[] sMath)
