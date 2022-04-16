@@ -88,7 +88,7 @@ public any Native_NextBoss_GetModifier(Handle hPlugin, int iNumParams)
 		ThrowNativeError(SP_ERROR_NATIVE, "Invalid id passed, id may be already used");
 	
 	SetNativeString(2, nextBoss.sModifierType, GetNativeCell(3));
-	return 0;
+	return nextBoss.bModifierSet;
 }
 
 //void SaxtonHaleNextBoss.SetModifier(const char[] sModifierType);
@@ -98,6 +98,7 @@ public any Native_NextBoss_SetModifier(Handle hPlugin, int iNumParams)
 	if (!NextBoss_GetStruct(GetNativeCell(1), nextBoss))
 		ThrowNativeError(SP_ERROR_NATIVE, "Invalid id passed, id may be already used");
 	
+	nextBoss.bModifierSet = !IsNativeParamNullString(2);
 	GetNativeString(2, nextBoss.sModifierType, sizeof(nextBoss.sModifierType));
 	NextBoss_SetStruct(nextBoss);
 	return 0;
@@ -131,7 +132,7 @@ public any Native_NextBoss_GetName(Handle hPlugin, int iNumParams)
 			strcopy(sBossName, iLength, nextBoss.sBossType);
 	}
 	
-	if (!StrEmpty(nextBoss.sModifierType) && !StrEqual(nextBoss.sModifierType, "CModifiersNone"))
+	if (!StrEmpty(nextBoss.sModifierType))
 	{
 		SaxtonHale_CallFunction(nextBoss.sModifierType, "GetModifiersName", sModifiersName, iLength);
 		if (!sModifiersName[0])

@@ -20,6 +20,7 @@ enum struct MenuBossSelect
 	char sBossType[MAX_TYPE_CHAR];
 	char sModifierType[MAX_TYPE_CHAR];
 	char sBossMultiType[MAX_TYPE_CHAR];
+	bool bModifierSet;
 }
 
 enum struct MenuBossListInfo
@@ -371,15 +372,22 @@ public void MenuBoss_CallbackNextModifiers(int iClient, MenuBossOption nOption, 
 	else if (nOption == MenuBossOption_Select)
 	{
 		Format(g_menuBossSelect[iClient].sModifierType, sizeof(g_menuBossSelect[].sModifierType), sType);
+		g_menuBossSelect[iClient].bModifierSet = true;
 	}
-	else if (nOption == MenuBossOption_None)
+	else	// Random and None
 	{
-		Format(g_menuBossSelect[iClient].sModifierType, sizeof(g_menuBossSelect[].sModifierType), "CModifiersNone");
+		Format(g_menuBossSelect[iClient].sModifierType, sizeof(g_menuBossSelect[].sModifierType), "");
+		
+		if (nOption == MenuBossOption_Random)
+			g_menuBossSelect[iClient].bModifierSet = false;
+		else
+			g_menuBossSelect[iClient].bModifierSet = true;
 	}
 	
 	int iColor[4];
-	char sColor[16];
-	SaxtonHale_CallFunction(g_menuBossSelect[iClient].sModifierType, "GetRenderColor", iColor);
+	char sColor[16]
+	if (g_menuBossSelect[iClient].sModifierType[0])
+		SaxtonHale_CallFunction(g_menuBossSelect[iClient].sModifierType, "GetRenderColor", iColor);
 	
 	if (iColor[3])
 		ColorToTextStr(iColor, sColor, sizeof(sColor));
@@ -391,8 +399,12 @@ public void MenuBoss_CallbackNextModifiers(int iClient, MenuBossOption nOption, 
 		//Add to list
 		SaxtonHaleNextBoss nextBoss = SaxtonHaleNextBoss(g_menuBossSelect[iClient].iClient);
 		nextBoss.SetBoss(g_menuBossSelect[iClient].sBossType);
-		nextBoss.SetModifier(g_menuBossSelect[iClient].sModifierType);
 		nextBoss.bForceNext = true;
+		
+		if (g_menuBossSelect[iClient].bModifierSet)
+			nextBoss.SetModifier(g_menuBossSelect[iClient].sModifierType);
+		else
+			nextBoss.SetModifier(NULL_STRING);
 		
 		//Print chat boss been set
 		char sBuffer[256];
@@ -414,8 +426,12 @@ public void MenuBoss_CallbackNextModifiers(int iClient, MenuBossOption nOption, 
 			SaxtonHaleNextBoss nextBoss = SaxtonHaleNextBoss();
 			nextBoss.SetBoss(sBossType);
 			nextBoss.SetBossMulti(g_menuBossSelect[iClient].sBossMultiType);
-			nextBoss.SetModifier(g_menuBossSelect[iClient].sModifierType);
 			nextBoss.bForceNext = true;
+			
+			if (g_menuBossSelect[iClient].bModifierSet)
+				nextBoss.SetModifier(g_menuBossSelect[iClient].sModifierType);
+			else
+				nextBoss.SetModifier(NULL_STRING);
 		}
 		
 		delete aList;

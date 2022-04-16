@@ -285,6 +285,7 @@ enum struct NextBoss
 	char sBossType[MAX_TYPE_CHAR];		//Boss to play on next turn
 	char sBossMultiType[MAX_TYPE_CHAR];	//Boss multi to play on next turn
 	char sModifierType[MAX_TYPE_CHAR];	//Modifier to play on next turn
+	bool bModifierSet;					//Whenever if modifier has been set, forced no modifier also counts
 	bool bForceNext;					//This client will be boss next round
 	bool bSpecialClassRound;			//All-Class on next turn
 	TFClassType nSpecialClassType;		//If bSpecialClassRound, class to force, or TFClass_Unknown for random all-class

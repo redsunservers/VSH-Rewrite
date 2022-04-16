@@ -582,13 +582,14 @@ methodmap SaxtonHaleNextBoss
 	
 	//Gets current modifier type
 	//
-	// @param sModifierType String value to get, NULL_STRING if not specified yet
+	// @param sModifierType String value to get, empty string if none
 	// @param iLength       Size of string
-	public native void GetModifier(char[] sModifierType, int iLength);
+	// @return              True if modifier set, or as none. False otherwise
+	public native bool GetModifier(char[] sModifierType, int iLength);
 	
 	//Sets new modifier type
 	//
-	// @param sModifierType String value to set, NULL_STRING for random modifier
+	// @param sModifierType String value to set, empty string for none, NULL_STRING for random modifier
 	public native void SetModifier(const char[] sModifierType);
 	
 	//Gets name to display in chat with client, boss and modifier

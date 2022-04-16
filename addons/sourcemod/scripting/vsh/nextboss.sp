@@ -277,12 +277,12 @@ void NextBoss_SetBoss(SaxtonHaleNextBoss nextBoss, ArrayList aNonBosses)
 	char sBossType[MAX_TYPE_CHAR], sBossMultiType[MAX_TYPE_CHAR], sModifierType[MAX_TYPE_CHAR];
 	nextBoss.GetBoss(sBossType, sizeof(sBossType));
 	nextBoss.GetBossMulti(sBossMultiType, sizeof(sBossMultiType));
-	nextBoss.GetModifier(sModifierType, sizeof(sModifierType));
+	bool bModifierSet = nextBoss.GetModifier(sModifierType, sizeof(sModifierType));
 	
 	if (StrEmpty(sBossType))
 		NextBoss_GetRandomNormal(sBossType, sizeof(sBossType));
 	
-	if (StrEmpty(sModifierType))
+	if (!bModifierSet)
 		NextBoss_GetRandomModifiers(sModifierType, sizeof(sModifierType));
 	
 	SaxtonHaleBase boss = SaxtonHaleBase(nextBoss.iClient);
@@ -298,7 +298,7 @@ void NextBoss_SetBoss(SaxtonHaleNextBoss nextBoss, ArrayList aNonBosses)
 		boss.CreateClass(sBossMultiType);
 	
 	//Select Modifiers
-	if (!StrEqual(sModifierType, "CModifiersNone") && !StrEmpty(sModifierType))
+	if (!StrEmpty(sModifierType))
 		boss.CreateClass(sModifierType);
 	
 	TF2_ForceTeamJoin(nextBoss.iClient, TFTeam_Boss);
@@ -474,6 +474,6 @@ void NextBoss_GetRandomModifiers(char[] sModifiers, int iLength, bool bForce = f
 	}
 	else
 	{
-		Format(sModifiers, iLength, "CModifiersNone");
+		Format(sModifiers, iLength, "");
 	}
 }
