@@ -16,6 +16,7 @@ void FuncNative_AskLoad()
 	CreateNative("SaxtonHaleBase.CallFunction", FuncNative_CallFunctionClient);
 	CreateNative("SaxtonHaleBase.CreateClass", FuncNative_CreateClass);
 	CreateNative("SaxtonHaleBase.HasClass", FuncNative_HasClass);
+	CreateNative("SaxtonHaleBase.DestroyClass", FuncNative_DestroyClass);
 	CreateNative("SaxtonHaleBase.DestroyAllClass", FuncNative_DestroyAllClass);
 	CreateNative("SaxtonHaleBase.GetPropInt", FuncNative_GetPropInt);
 	CreateNative("SaxtonHaleBase.GetPropFloat", FuncNative_GetPropFloat);
@@ -363,6 +364,20 @@ public any FuncNative_HasClass(Handle hPlugin, int iNumParams)
 	char sClass[MAX_TYPE_CHAR];
 	GetNativeString(2, sClass, sizeof(sClass));
 	return FuncClass_ClientHasClass(boss.iClient, sClass);
+}
+
+//void SaxtonHaleBase.DestroyClass(const char[] sClass);
+public any FuncNative_DestroyClass(Handle hPlugin, int iNumParams)
+{
+	SaxtonHaleBase boss = GetNativeCell(1);
+	
+	char sClass[MAX_TYPE_CHAR];
+	GetNativeString(2, sClass, sizeof(sClass));
+	if (!FuncClass_Exists(sClass))
+		ThrowNativeError(SP_ERROR_NATIVE, "Invalid class name passed (%s)", sClass);
+	
+	FuncClass_ClientDestroyClass(boss, sClass);
+	return 0;
 }
 
 //void SaxtonHaleBase.DestroyAllClass();

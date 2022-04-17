@@ -188,6 +188,22 @@ bool FuncClass_ClientHasClass(int iClient, const char[] sClass)
 	return g_aClientClasses[iClient].FindString(sClass) >= 0;
 }
 
+void FuncClass_ClientDestroyClass(SaxtonHaleBase boss, const char[] sClass)
+{
+	int iIndex = g_aClientClasses[boss.iClient].FindString(sClass);
+	if (iIndex == -1)
+		return;
+	
+	if (boss.StartFunction(sClass, "Destroy"))
+		Call_Finish();
+	
+	StringMap mProps;
+	if (g_mClientProps[boss.iClient].GetValue(sClass, mProps))
+		delete mProps;
+	
+	g_aClientClasses[boss.iClient].Erase(iIndex);
+}
+
 void FuncClass_ClientDestroyAllClass(SaxtonHaleBase boss, bool bDestroy = true)
 {
 	boss.bValid = false;

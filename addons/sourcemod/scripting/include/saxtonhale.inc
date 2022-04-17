@@ -186,6 +186,12 @@ methodmap SaxtonHaleBase
 	// @return			    True if client have class, false otherwise
 	public native bool HasClass(const char[] sClass);
 	
+	// Destroys a class to client
+	//
+	// @param sClass        Class name to destroy
+	// @error               Invalid class name passed
+	public native void DestroyClass(const char[] sClass);
+	
 	// Destroy all classes client has
 	public native bool DestroyAllClass();
 	
@@ -861,6 +867,7 @@ public __pl_saxtonhale_SetNTVOptional()
 	
 	MarkNativeAsOptional("SaxtonHaleBase.CreateClass");
 	MarkNativeAsOptional("SaxtonHaleBase.HasClass");
+	MarkNativeAsOptional("SaxtonHaleBase.DestroyClass");
 	MarkNativeAsOptional("SaxtonHaleBase.DestroyAllClass");
 	MarkNativeAsOptional("SaxtonHaleBase.CallFunction");
 	MarkNativeAsOptional("SaxtonHaleBase.GetPropInt");
