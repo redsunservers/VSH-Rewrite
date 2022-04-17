@@ -22,8 +22,8 @@ public void TeleportSwap_OnThink(SaxtonHaleBase boss)
 		g_flTeleportSwapCooldownWait[boss.iClient] = 0.0;
 		
 		int iCharge = boss.GetPropInt("TeleportSwap", "Charge");
-		int iChargeBuild = boss.GetPropInt("BraveJump", "ChargeBuild");
-		int iMaxCharge = boss.GetPropInt("BraveJump", "MaxCharge");
+		int iChargeBuild = boss.GetPropInt("TeleportSwap", "ChargeBuild");
+		int iMaxCharge = boss.GetPropInt("TeleportSwap", "MaxCharge");
 		int iNewCharge;
 		
 		if (g_bTeleportSwapHoldingChargeButton[boss.iClient])

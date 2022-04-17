@@ -127,15 +127,11 @@ void FuncCall_Start(SaxtonHaleBase boss, FuncStack funcStack)
 			funcStack.GetArray(iParam+1, array[iParam]);
 	
 	//Call each classes
-	ArrayList aClasses = FuncClass_ClientGetClasses(boss.iClient);
-	int iLength = aClasses.Length;
-	for (int i = 0; i < iLength; i++)
-	{
-		char sClass[MAX_TYPE_CHAR];
-		aClasses.GetString(i, sClass, sizeof(sClass));
+	int iPos;
+	char sClass[MAX_TYPE_CHAR];
+	while (FuncClass_ClientGetClass(boss.iClient, iPos, sClass, sizeof(sClass)))
 		if (!FuncCall_Call(boss, sClass, funcStack, array, iArraySize))
 			return;
-	}
 	
 	//Set arrays back
 	for (int iParam = 0; iParam < funcStack.iParamLength; iParam++)

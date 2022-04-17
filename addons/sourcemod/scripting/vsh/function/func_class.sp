@@ -175,9 +175,14 @@ public int FuncClass_Sort(int index1, int index2, Handle hArray, Handle hHandle)
 		return -1;
 }
 
-ArrayList FuncClass_ClientGetClasses(int iClient)
+bool FuncClass_ClientGetClass(int iClient, int &iPos, char[] sClass, int iLength)
 {
-	return g_aClientClasses[iClient];
+	if (!g_aClientClasses[iClient] || iPos < 0 || iPos >= g_aClientClasses[iClient].Length)
+		return false;
+	
+	g_aClientClasses[iClient].GetString(iPos, sClass, iLength);
+	iPos++;
+	return true;
 }
 
 bool FuncClass_ClientHasClass(int iClient, const char[] sClass)
