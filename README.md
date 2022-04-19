@@ -20,9 +20,6 @@ To download latest build version, select latest package then "Artifacts" button 
 - [tf_econ_data](https://forums.alliedmods.net/showthread.php?t=315011)
 - [dhooks with detour support](https://forums.alliedmods.net/showpost.php?p=2588686&postcount=589)
 
-## Compiling
-This plugin and all sub-plugins require custom compiler to be compiled correctly, more info can be found [here](https://github.com/redsunservers/VSH-Rewrite/blob/master/compiler/README.md)
-
 ## Special Thanks
 - [Red Sun Over Paradise](https://redsun.tf/) - Support and playtesting private version with many balance suggestions for nearly 2 years.
 - [Ozzy Furocity](https://steamcommunity.com/groups/OzFur) - Many inspiration with balances.

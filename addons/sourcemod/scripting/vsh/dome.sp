@@ -21,8 +21,8 @@ static int g_iDomeColor[4];
 static float g_flDomeStart = 0.0;
 static float g_flDomeRadius = 0.0;
 static float g_flDomePreviousGameTime = 0.0;
-static float g_flDomePlayerTime[TF_MAXPLAYERS] = 0.0;
-static bool g_bDomePlayerOutside[TF_MAXPLAYERS] = false;
+static float g_flDomePlayerTime[TF_MAXPLAYERS];
+static bool g_bDomePlayerOutside[TF_MAXPLAYERS];
 static Handle g_hDomeTimerBleed = null;
 
 void Dome_Init()
@@ -111,7 +111,7 @@ public Action Dome_TriggerTouch(int iTrigger, int iToucher)
 	return Plugin_Continue;
 }
 
-public Action Dome_OnCapEnabled(const char[] output, int caller, int activator, float delay)
+public void Dome_OnCapEnabled(const char[] output, int caller, int activator, float delay)
 {
 	if (!g_bEnabled) return;
 	

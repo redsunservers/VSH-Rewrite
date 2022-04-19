@@ -1,4 +1,4 @@
-static StringMap g_mFuncHook[view_as<int>(SaxtonHaleHookMode)];	//PrivateForward of hooks
+static StringMap g_mFuncHook[2];	//PrivateForward of hooks ([2] from amount of SaxtonHaleHookMode)
 
 void FuncHook_Init()
 {
@@ -6,7 +6,7 @@ void FuncHook_Init()
 		g_mFuncHook[i] = new StringMap();
 }
 
-void FuncHook_Add(const char[] sName, Handle hPlugin, SaxtonHaleHookCallback callback, SaxtonHaleHookMode hookType)
+void FuncHook_Add(const char[] sName, Handle hPlugin, Function callback, SaxtonHaleHookMode hookType)	// Function as SaxtonHaleHookCallback
 {
 	PrivateForward hPrivateForward;
 	if (!g_mFuncHook[hookType].GetValue(sName, hPrivateForward))	//Get existing private forward
@@ -19,7 +19,7 @@ void FuncHook_Add(const char[] sName, Handle hPlugin, SaxtonHaleHookCallback cal
 	hPrivateForward.AddFunction(hPlugin, callback);
 }
 
-void FuncHook_Remove(const char[] sName, Handle hPlugin, SaxtonHaleHookCallback callback, SaxtonHaleHookMode hookType)
+void FuncHook_Remove(const char[] sName, Handle hPlugin, Function callback, SaxtonHaleHookMode hookType)	// Function as SaxtonHaleHookCallback
 {
 	PrivateForward hPrivateForward;
 	if (!g_mFuncHook[hookType].GetValue(sName, hPrivateForward))	//Get private forward to remove

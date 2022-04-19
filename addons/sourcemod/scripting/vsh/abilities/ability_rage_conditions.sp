@@ -1,57 +1,28 @@
-static float g_flRageCondDuration[TF_MAXPLAYERS];
-static float g_flRageCondSuperRageMultiplier[TF_MAXPLAYERS];
 static ArrayList g_aConditions[TF_MAXPLAYERS];
 
-methodmap CRageAddCond < SaxtonHaleBase
+public void RageAddCond_AddCond(SaxtonHaleBase boss, TFCond cond)
 {
-	property float flRageCondDuration
-	{
-		public set(float flVal)
-		{
-			g_flRageCondDuration[this.iClient] = flVal;
-		}
-		public get()
-		{
-			return g_flRageCondDuration[this.iClient];
-		}
-	}
+	g_aConditions[boss.iClient].Push(cond);
+}
+
+public void RageAddCond_Create(SaxtonHaleBase boss)
+{
+	if (g_aConditions[boss.iClient] == null)
+		g_aConditions[boss.iClient] = new ArrayList();
+	g_aConditions[boss.iClient].Clear();
 	
-	property float flRageCondSuperRageMultiplier
-	{
-		public set(float flVal)
-		{
-			g_flRageCondSuperRageMultiplier[this.iClient] = flVal;
-		}
-		public get()
-		{
-			return g_flRageCondSuperRageMultiplier[this.iClient];
-		}
-	}
+	boss.SetPropFloat("RageAddCond", "RageCondDuration", 5.0);
+	boss.SetPropFloat("RageAddCond", "RageCondSuperRageMultiplier", 2.0);
+}
+
+public void RageAddCond_OnRage(SaxtonHaleBase boss)
+{
+	int iLength = g_aConditions[boss.iClient].Length;
 	
-	public void AddCond(TFCond cond)
-	{
-		g_aConditions[this.iClient].Push(cond);
-	}
+	float flDuration = boss.GetPropFloat("RageAddCond", "RageCondDuration");
+	if (boss.bSuperRage)
+		flDuration *= boss.GetPropFloat("RageAddCond", "RageCondSuperRageMultiplier");
 	
-	public CRageAddCond(CRageAddCond ability)
-	{
-		if (g_aConditions[ability.iClient] == null)
-			g_aConditions[ability.iClient] = new ArrayList();
-		g_aConditions[ability.iClient].Clear();
-		
-		g_flRageCondDuration[ability.iClient] = 5.0;
-		g_flRageCondSuperRageMultiplier[ability.iClient] = 2.0;
-	}
-	
-	public void OnRage()
-	{
-		int iLength = g_aConditions[this.iClient].Length;
-		
-		float flDuration = this.flRageCondDuration;
-		if (this.bSuperRage)
-			flDuration *= this.flRageCondSuperRageMultiplier;
-		
-		for (int i = 0; i < iLength; i++)
-			TF2_AddCondition(this.iClient, g_aConditions[this.iClient].Get(i), flDuration);
-	}
-};
+	for (int i = 0; i < iLength; i++)
+		TF2_AddCondition(boss.iClient, g_aConditions[boss.iClient].Get(i), flDuration);
+}

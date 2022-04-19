@@ -4,7 +4,7 @@ static TFClassType g_nSpecialRoundClass = TFClass_Unknown;	//Class for current s
 static TFClassType g_classMain[TF_MAXPLAYERS];
 static TFClassType g_classDesired[TF_MAXPLAYERS];
 
-static ConVar g_cvClassLimit[view_as<int>(TFClassType)];
+static ConVar g_cvClassLimit[view_as<int>(TFClass_Engineer) + 1];
 
 public void ClassLimit_Init()
 {

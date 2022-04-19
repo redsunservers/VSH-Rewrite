@@ -1,8 +1,3 @@
-/* !!! YOU MUST USE SOURCEPAWN PUBLIC METHODMAP COMPILER TO COMPILE THIS PLUGIN CORRECTLY !!! */
-#if !defined __sourcepawn_methodmap__
-	#warning This plugin should be compiled with SourcePawn Public Methodmap to be compiled correctly!
-#endif
-
 #include <sourcemod>
 #include <sdktools>
 #include <sdkhooks>
@@ -22,7 +17,7 @@
 
 #include "include/saxtonhale.inc"
 
-#define PLUGIN_VERSION 					"1.5.1"
+#define PLUGIN_VERSION 					"2.0.0"
 #define PLUGIN_VERSION_REVISION 		"manual"
 
 #if !defined SP_MAX_EXEC_PARAMS
@@ -79,10 +74,10 @@ const TFTeam TFTeam_Attack = TFTeam_Red;
 const TFObjectType TFObject_Invalid = view_as<TFObjectType>(-1);
 const TFObjectMode TFObjectMode_Invalid = view_as<TFObjectMode>(-1);
 
-enum ClientFlags ( <<=1 )
+enum ClientFlags
 {
-	ClientFlags_Admin = 1,
-	ClientFlags_Punishment,
+	ClientFlags_Admin = (1 << 0),
+	ClientFlags_Punishment = (1 << 1),
 };
 
 enum
@@ -290,6 +285,7 @@ enum struct NextBoss
 	char sBossType[MAX_TYPE_CHAR];		//Boss to play on next turn
 	char sBossMultiType[MAX_TYPE_CHAR];	//Boss multi to play on next turn
 	char sModifierType[MAX_TYPE_CHAR];	//Modifier to play on next turn
+	bool bModifierSet;					//Whenever if modifier has been set, forced no modifier also counts
 	bool bForceNext;					//This client will be boss next round
 	bool bSpecialClassRound;			//All-Class on next turn
 	TFClassType nSpecialClassType;		//If bSpecialClassRound, class to force, or TFClass_Unknown for random all-class
@@ -338,26 +334,18 @@ ConVar tf_feign_death_duration;
 ConVar tf_feign_death_speed_duration;
 ConVar tf_arena_preround_time;
 
-#include "vsh/base_ability.sp"
 #include "vsh/base_boss.sp"
-#include "vsh/base_bossmulti.sp"
-#include "vsh/base_modifiers.sp"
 
 #include "vsh/abilities/ability_body_eat.sp"
 #include "vsh/abilities/ability_brave_jump.sp"
 #include "vsh/abilities/ability_dash_jump.sp"
-#include "vsh/abilities/ability_drop_model.sp"
-#include "vsh/abilities/ability_float_jump.sp"
-#include "vsh/abilities/ability_force_forward.sp"
 #include "vsh/abilities/ability_groundpound.sp"
-#include "vsh/abilities/ability_model_override.sp"
 #include "vsh/abilities/ability_rage_bomb.sp"
 #include "vsh/abilities/ability_rage_bomb_projectile.sp"
 #include "vsh/abilities/ability_rage_conditions.sp"
 #include "vsh/abilities/ability_rage_freeze.sp"
 #include "vsh/abilities/ability_rage_gas.sp"
 #include "vsh/abilities/ability_rage_ghost.sp"
-#include "vsh/abilities/ability_rage_hop.sp"
 #include "vsh/abilities/ability_rage_light.sp"
 #include "vsh/abilities/ability_rage_scare.sp"
 #include "vsh/abilities/ability_teleport_swap.sp"
@@ -420,10 +408,10 @@ ConVar tf_arena_preround_time;
 #include "vsh/menu/menu_weapon.sp"
 #include "vsh/menu.sp"
 
+#include "vsh/function/func_function.sp"
 #include "vsh/function/func_stack.sp"
 #include "vsh/function/func_call.sp"
 #include "vsh/function/func_class.sp"
-#include "vsh/function/func_function.sp"
 #include "vsh/function/func_hook.sp"
 #include "vsh/function/func_native.sp"
 
@@ -458,14 +446,9 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	FuncNative_AskLoad();
 	Native_AskLoad();
 	Property_AskLoad();
-
-#if !defined __sourcepawn_methodmap__
-	Format(error, err_max, "This plugin should be compiled with SourcePawn Public Methodmap to be compiled correctly!");
-	return APLRes_Failure;
-#else
+	
 	RegPluginLibrary("saxtonhale");
 	return APLRes_Success;
-#endif
 }
 
 public void OnPluginStart()
@@ -511,6 +494,7 @@ public void OnPluginStart()
 	Cookies_Init();
 	Dome_Init();
 	Event_Init();
+	FuncClass_Init();
 	FuncHook_Init();
 	FuncNative_Init();
 	FuncStack_Init();
@@ -524,13 +508,7 @@ public void OnPluginStart()
 	SaxtonHaleFunction func;
 	
 	//Boss functions
-	SaxtonHaleFunction("CreateBoss", ET_Single, Param_String);
 	SaxtonHaleFunction("IsBossHidden", ET_Single);
-	SaxtonHaleFunction("IsBossType", ET_Single, Param_String);
-	SaxtonHaleFunction("SetBossType", ET_Ignore, Param_String);
-	
-	func = SaxtonHaleFunction("GetBossType", ET_Ignore, Param_String, Param_Cell);
-	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
 	
 	func = SaxtonHaleFunction("GetBossName", ET_Ignore, Param_String, Param_Cell);
 	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
@@ -539,10 +517,7 @@ public void OnPluginStart()
 	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
 	
 	//Multi Boss Functions
-	SaxtonHaleFunction("CreateBossMulti", ET_Single, Param_String);
 	SaxtonHaleFunction("IsBossMultiHidden", ET_Single);
-	SaxtonHaleFunction("IsBossMultiType", ET_Single, Param_String);
-	SaxtonHaleFunction("SetBossMultiType", ET_Ignore, Param_String);
 	SaxtonHaleFunction("GetBossMultiList", ET_Ignore, Param_Cell);
 	
 	func = SaxtonHaleFunction("GetBossMultiType", ET_Ignore, Param_String, Param_Cell);
@@ -555,23 +530,13 @@ public void OnPluginStart()
 	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
 	
 	//Modifiers functions
-	SaxtonHaleFunction("CreateModifiers", ET_Single, Param_String);
 	SaxtonHaleFunction("IsModifiersHidden", ET_Single);
-	SaxtonHaleFunction("SetModifiersType", ET_Ignore, Param_String);
-	
-	func = SaxtonHaleFunction("GetModifiersType", ET_Ignore, Param_String, Param_Cell);
-	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
 	
 	func = SaxtonHaleFunction("GetModifiersName", ET_Ignore, Param_String, Param_Cell);
 	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
 	
 	func = SaxtonHaleFunction("GetModifiersInfo", ET_Ignore, Param_String, Param_Cell);
 	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
-	
-	//Ability functions
-	SaxtonHaleFunction("CreateAbility", ET_Single, Param_String);
-	SaxtonHaleFunction("FindAbility", ET_Single, Param_String);
-	SaxtonHaleFunction("DestroyAbility", ET_Ignore, Param_String);
 	
 	//General functions
 	SaxtonHaleFunction("OnThink", ET_Ignore);
@@ -653,82 +618,73 @@ public void OnPluginStart()
 	SaxtonHaleFunction("CanHealTarget", ET_Hook, Param_Cell, Param_CellByRef);
 	SaxtonHaleFunction("AddRage", ET_Ignore, Param_Cell);
 	SaxtonHaleFunction("CreateWeapon", ET_Single, Param_Cell, Param_String, Param_Cell, Param_Cell, Param_String);
-	SaxtonHaleFunction("Destroy", ET_Ignore);
 	
 	//Register base constructor
 	SaxtonHale_RegisterClass("SaxtonHaleBoss", VSHClassType_Core);
-	SaxtonHale_RegisterClass("SaxtonHaleBossMulti", VSHClassType_Core);
-	SaxtonHale_RegisterClass("SaxtonHaleModifiers", VSHClassType_Core);
-	SaxtonHale_RegisterClass("SaxtonHaleAbility", VSHClassType_Core);
 	
 	//Register normal bosses
-	SaxtonHale_RegisterClass("CSaxtonHale", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("SaxtonHale", VSHClassType_Boss);
 	
-	SaxtonHale_RegisterClass("CAnnouncer", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CBlutarch", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CBonkBoy", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CBrutalSniper", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CDemoPan", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CDemoRobot", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CGentleSpy", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CHorsemann", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CMerasmus", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CPainisCupcake", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CPyroCar", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CRedmond", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CSeeldier", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CSeeMan", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CUberRanger", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CVagineer", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CYeti", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("Announcer", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("Blutarch", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("BonkBoy", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("BrutalSniper", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("DemoPan", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("DemoRobot", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("GentleSpy", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("Horsemann", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("Merasmus", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("PainisCupcake", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("PyroCar", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("Redmond", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("Seeldier", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("SeeMan", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("UberRanger", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("Vagineer", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("Yeti", VSHClassType_Boss);
 	
 	//Register multi bosses
-	SaxtonHale_RegisterClass("CMannBrothers", VSHClassType_BossMulti);
-	SaxtonHale_RegisterClass("CSeeManSeeldier", VSHClassType_BossMulti);
+	SaxtonHale_RegisterClass("MannBrothers", VSHClassType_BossMulti);
+	SaxtonHale_RegisterClass("SeeManSeeldier", VSHClassType_BossMulti);
 	
 	//Register minions
-	SaxtonHale_RegisterClass("CSeeldierMinion", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CAnnouncerMinion", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CMinionRanger", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("CZombie", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("SeeldierMinion", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("AnnouncerMinion", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("MinionRanger", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("Zombie", VSHClassType_Boss);
 	
 	//Register ability
-	SaxtonHale_RegisterClass("CBodyEat", VSHClassType_Ability);
-	SaxtonHale_RegisterClass("CBomb", VSHClassType_Ability);
-	SaxtonHale_RegisterClass("CBombProjectile", VSHClassType_Ability);
-	SaxtonHale_RegisterClass("CBraveJump", VSHClassType_Ability);
-	SaxtonHale_RegisterClass("CDashJump", VSHClassType_Ability);
-	SaxtonHale_RegisterClass("CDropModel", VSHClassType_Ability);
-	SaxtonHale_RegisterClass("CFloatJump", VSHClassType_Ability);
-	SaxtonHale_RegisterClass("CForceForward", VSHClassType_Ability);
-	SaxtonHale_RegisterClass("CGroundPound", VSHClassType_Ability);
-	SaxtonHale_RegisterClass("CModelOverride", VSHClassType_Ability);
-	SaxtonHale_RegisterClass("CRageAddCond", VSHClassType_Ability);
-	SaxtonHale_RegisterClass("CRageFreeze", VSHClassType_Ability);
-	SaxtonHale_RegisterClass("CRageGas", VSHClassType_Ability);
-	SaxtonHale_RegisterClass("CRageGhost", VSHClassType_Ability);
-	SaxtonHale_RegisterClass("CRageHop", VSHClassType_Ability);
-	SaxtonHale_RegisterClass("CLightRage", VSHClassType_Ability);
-	SaxtonHale_RegisterClass("CScareRage", VSHClassType_Ability);
-	SaxtonHale_RegisterClass("CTeleportSwap", VSHClassType_Ability);
-	SaxtonHale_RegisterClass("CTeleportView", VSHClassType_Ability);
-	SaxtonHale_RegisterClass("CWallClimb", VSHClassType_Ability);
-	SaxtonHale_RegisterClass("CWeaponBall", VSHClassType_Ability);
-	SaxtonHale_RegisterClass("CWeaponCharge", VSHClassType_Ability);
-	SaxtonHale_RegisterClass("CWeaponFists", VSHClassType_Ability);
-	SaxtonHale_RegisterClass("CWeaponSentry", VSHClassType_Ability);
-	SaxtonHale_RegisterClass("CWeaponSpells", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("BodyEat", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("Bomb", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("BombProjectile", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("BraveJump", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("DashJump", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("GroundPound", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("RageAddCond", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("RageFreeze", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("RageGas", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("RageGhost", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("LightRage", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("ScareRage", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("TeleportSwap", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("TeleportView", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("WallClimb", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("WeaponBall", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("WeaponCharge", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("WeaponFists", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("WeaponSentry", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("WeaponSpells", VSHClassType_Ability);
 	
 	//Register modifiers
-	SaxtonHale_RegisterClass("CModifiersAngry", VSHClassType_Modifier);
-	SaxtonHale_RegisterClass("CModifiersElectric", VSHClassType_Modifier);
-	SaxtonHale_RegisterClass("CModifiersHot", VSHClassType_Modifier);
-	SaxtonHale_RegisterClass("CModifiersIce", VSHClassType_Modifier);
-	SaxtonHale_RegisterClass("CModifiersJumper", VSHClassType_Modifier);
-	SaxtonHale_RegisterClass("CModifiersMagnet", VSHClassType_Modifier);
-	SaxtonHale_RegisterClass("CModifiersOverload", VSHClassType_Modifier);
-	SaxtonHale_RegisterClass("CModifiersSpeed", VSHClassType_Modifier);
-	SaxtonHale_RegisterClass("CModifiersVampire", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("ModifiersAngry", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("ModifiersElectric", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("ModifiersHot", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("ModifiersIce", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("ModifiersJumper", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("ModifiersMagnet", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("ModifiersOverload", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("ModifiersSpeed", VSHClassType_Modifier);
+	SaxtonHale_RegisterClass("ModifiersVampire", VSHClassType_Modifier);
 	
 	//Init our convars
 	g_ConfigConvar.Create("vsh_force_load", "-1", "Force enable VSH on map start? (-1 for default, 0 for force disable, 1 for force enable)", _, true, -1.0, true, 1.0);
@@ -783,7 +739,7 @@ public void OnPluginEnd()
 		if (SaxtonHale_IsValidBoss(iClient))
 		{
 			SaxtonHaleBase boss = SaxtonHaleBase(iClient);
-			boss.CallFunction("Destroy");
+			boss.DestroyAllClass();
 		}
 		
 		RemoveClientGlowEnt(iClient);
@@ -878,7 +834,7 @@ void PluginStop(bool bError = false, const char[] sError = "")
 	{
 		SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 		if (boss.bValid)
-			boss.CallFunction("Destroy");
+			boss.DestroyAllClass();
 	}
 	if (bError)
 	{
@@ -1184,6 +1140,8 @@ public Action Timer_RoundStartSound(Handle hTimer, int iClient)
 		if (!StrEmpty(sSound))
 			BroadcastSoundToTeam(TFTeam_Spectator, sSound);
 	}
+	
+	return Plugin_Continue;
 }
 
 public Action Timer_Music(Handle hTimer, SaxtonHaleBase boss)
@@ -1278,7 +1236,7 @@ public void OnClientDisconnect(int iClient)
 	
 	if (boss.bValid)
 	{
-		boss.CallFunction("Destroy");
+		boss.DestroyAllClass();
 		CheckForceAttackWin(iClient);
 	}
 
@@ -1727,6 +1685,8 @@ public Action Timer_DestroyLight(Handle hTimer, int iRef)
 		AcceptEntityInput(iLight, "TurnOff");
 		RequestFrame(Frame_KillLight, iRef);
 	}
+	
+	return Plugin_Continue;
 }
 
 void Frame_KillLight(int iRef)

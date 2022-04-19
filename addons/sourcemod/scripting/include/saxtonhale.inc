@@ -87,9 +87,9 @@ enum SaxtonHaleClassType
 {
 	VSHClassType_Core,      /**< Core Class from main plugin, called for every client bosses */
 	VSHClassType_Boss,      /**< Boss */
+	VSHClassType_BossMulti,	/**< Multi Boss */
 	VSHClassType_Ability,   /**< Ability */
 	VSHClassType_Modifier,  /**< Modifier */
-	VSHClassType_BossMulti,	/**< Multi Boss */
 };
 
 /**
@@ -97,7 +97,7 @@ enum SaxtonHaleClassType
  *
  * @note Make sure plugin unregisters class once unloaded
  *
- * @param sClass            Methodmap class name to register.
+ * @param sClass            Class name to register.
  * @param nClassType        Type of class, boss, ability or modifier.
  * @error                   Class name already registered, or VSHClassType_Core passed not from main plugin
  */
@@ -106,7 +106,7 @@ native void SaxtonHale_RegisterClass(const char[] sClass, SaxtonHaleClassType nC
 /**
  * Unregisters a class
  *
- * @param sClass            Methodmap class name to unregister.
+ * @param sClass            Class name to unregister.
  * @error                   Class Type is VSHClassType_Core
  */
 native void SaxtonHale_UnregisterClass(const char[] sClass);
@@ -114,7 +114,7 @@ native void SaxtonHale_UnregisterClass(const char[] sClass);
 /**
  * Gets class's plugin owner
  *
- * @param sClass            Methodmap class name to get plugin owner.
+ * @param sClass            Class name to get plugin owner.
  * @return                  Class's plugin owner handle, null if class does not exist
  */
 native Handle SaxtonHale_GetPlugin(const char[] sClass);
@@ -136,6 +136,17 @@ native ArrayList SaxtonHale_GetAllClass();
  * @return                  Newly created ArrayList of registered class name, filtered by class type
  */
 native ArrayList SaxtonHale_GetAllClassType(SaxtonHaleClassType nClassType);
+
+/* Calls a class function
+ *
+ * @note SaxtonHaleBase parameter will always be 0
+ *
+ * @param sName             Name of function to call
+ * @param ...               Params of function
+ * @return			        Return value of function
+ * @error                   Invalid function name, too few params expected, incorrect ParamType or reached max allowed call stack.
+ */
+native any SaxtonHale_CallFunction(const char[] sClass, const char[] sFunction, any...);
 
 /**
  * List of sounds to get from bosses
@@ -163,6 +174,27 @@ methodmap SaxtonHaleBase
 		return view_as<SaxtonHaleBase>(iClient);
 	}
 	
+	// Creates a class to client
+	//
+	// @param sClass        Class name to create
+	// @error               Invalid class name passed
+	public native void CreateClass(const char[] sClass);
+	
+	// Return whenever if client has specified class
+	//
+	// @param sClass        Class name to check
+	// @return			    True if client have class, false otherwise
+	public native bool HasClass(const char[] sClass);
+	
+	// Destroys a class to client
+	//
+	// @param sClass        Class name to destroy
+	// @error               Invalid class name passed
+	public native void DestroyClass(const char[] sClass);
+	
+	// Destroy all classes client has
+	public native bool DestroyAllClass();
+	
 	// Calls a function to client boss
 	//
 	// @note String and arrays passed have max size 512, exceeding further can cause crashes
@@ -175,17 +207,17 @@ methodmap SaxtonHaleBase
 	
 	// Starts a function to specified constructor and function name, ignoring hooks
 	//
-	// @param sType         Name of constructor to call
+	// @param sClass        Class name to call
 	// @param sFunction     Function name to call
 	// @return              True if found and function call started, false if function does not exist
-	public bool StartFunction(const char[] sType, const char[] sFunction)
+	public bool StartFunction(const char[] sClass, const char[] sFunction)
 	{
-		Handle hPlugin = SaxtonHale_GetPlugin(sType);
+		Handle hPlugin = SaxtonHale_GetPlugin(sClass);
 		if (hPlugin == null)
 			return false;
 		
 		char sBuffer[64];
-		Format(sBuffer, sizeof(sBuffer), "%s.%s", sType, sFunction);
+		Format(sBuffer, sizeof(sBuffer), "%s_%s", sClass, sFunction);
 		
 		Function func = GetFunctionByName(hPlugin, sBuffer);
 		if (func == INVALID_FUNCTION)
@@ -195,6 +227,38 @@ methodmap SaxtonHaleBase
 		Call_PushCell(this);
 		return true;
 	}
+	
+	// Get an int property from type
+	//
+	// @param sClass        Name of type to get
+	// @param sProp         Property name to get
+	// @return              Value of property
+	// @error               Invalid client index, client not in game, or client do not have specified class
+	public native int GetPropInt(const char[] sClass, const char[] sProp);
+	
+	// Get a float property from type
+	//
+	// @param sClass        Name of type to get
+	// @param sProp         Property name to get
+	// @return              Value of property
+	// @error               Invalid client index, client not in game, or client do not have specified class
+	public native float GetPropFloat(const char[] sClass, const char[] sProp);
+	
+	// Set an int property to type
+	//
+	// @param sClass        Name of type to set
+	// @param sProp         Property name to set
+	// @param iVal          Value to set
+	// @error               Invalid client index, client not in game, or client do not have specified class
+	public native void SetPropInt(const char[] sClass, const char[] sProp, int iVal);
+	
+	// Set a float property to type
+	//
+	// @param sClass        Name of type to set
+	// @param sProp         Property name to set
+	// @param iVal          Value to set
+	// @error               Invalid client index, client not in game, or client do not have specified class
+	public native void SetPropFloat(const char[] sClass, const char[] sProp, float flVal);
 	
 	// Retrieve client index.
 	property int iClient
@@ -373,11 +437,6 @@ methodmap SaxtonHaleBase
 	}
 }
 
-/*
- * Used to register/get ability from boss, determine whenever if valid or not
- */
-const SaxtonHaleBase INVALID_ABILITY = view_as<SaxtonHaleBase>(-1);
-
 /**
  * Type of hooks
  */
@@ -529,13 +588,14 @@ methodmap SaxtonHaleNextBoss
 	
 	//Gets current modifier type
 	//
-	// @param sModifierType String value to get, NULL_STRING if not specified yet
+	// @param sModifierType String value to get, empty string if none
 	// @param iLength       Size of string
-	public native void GetModifier(char[] sModifierType, int iLength);
+	// @return              True if modifier set, or as none. False otherwise
+	public native bool GetModifier(char[] sModifierType, int iLength);
 	
 	//Sets new modifier type
 	//
-	// @param sModifierType String value to set, NULL_STRING for random modifier
+	// @param sModifierType String value to set, empty string for none, NULL_STRING for random modifier
 	public native void SetModifier(const char[] sModifierType);
 	
 	//Gets name to display in chat with client, boss and modifier
@@ -780,48 +840,6 @@ stock void SaxtonHale_PrepareSound(const char[] sSound)
  * Deprecated functions, do not use
  */
 
-#pragma deprecated Use SaxtonHaleFunction.SaxtonHaleFunction instead
-native SaxtonHaleFunction SaxtonHale_InitFunction(const char[] sFunction, ExecType nExecType, ParamType ...);
-
-#pragma deprecated Use SaxtonHale_RegisterClass instead
-native void SaxtonHale_RegisterBoss(const char[] ...);
-
-#pragma deprecated Use SaxtonHale_UnregisterClass instead
-native void SaxtonHale_UnregisterBoss(const char[] sBossType);
-
-#pragma deprecated Use SaxtonHale_RegisterClass instead
-native void SaxtonHale_RegisterModifiers(const char[] sModifiersType);
-
-#pragma deprecated Use SaxtonHale_UnregisterClass instead
-native void SaxtonHale_UnregisterModifiers(const char[] sModifiersType);
-
-#pragma deprecated Use SaxtonHale_RegisterClass instead
-native void SaxtonHale_RegisterAbility(const char[] sAbilityType);
-
-#pragma deprecated Use SaxtonHale_UnregisterClass instead
-native void SaxtonHale_UnregisterAbility(const char[] sAbilityType);
-
-#pragma deprecated No longer supported, use SaxtonHale_RegisterClass instead
-native void SaxtonHale_RegisterMultiBoss(const char[] ...);
-
-#pragma deprecated Use SaxtonHaleNextBoss property bSpecialClass and nSpecialClass instead
-native bool SaxtonHale_ForceSpecialRound(int iClient = 0, TFClassType nClass = TFClass_Unknown);
-
-#pragma deprecated Do not use this function
-forward void SaxtonHale_OnUpdateWinstreak(int iClient, int iWinstreak);
-
-#pragma deprecated Do not use this function
-native void SaxtonHale_SetWinstreak(int iClient, int iWinstreak);
-
-#pragma deprecated Do not use this function
-native bool SaxtonHale_IsWinstreakEnable();
-
-#pragma deprecated Do not use this function
-forward void SaxtonHale_OnUpdateRank(int iClient, int iRank);
-
-#pragma deprecated Do not use this function
-native void SaxtonHale_SetRank(int iClient, int iRank);
-
 public SharedPlugin __pl_saxtonhale =
 {
 	name = "saxtonhale",
@@ -845,9 +863,17 @@ public __pl_saxtonhale_SetNTVOptional()
 	MarkNativeAsOptional("SaxtonHale_GetPlugin");
 	MarkNativeAsOptional("SaxtonHale_GetAllClass");
 	MarkNativeAsOptional("SaxtonHale_GetAllClassType");
-	MarkNativeAsOptional("SaxtonHale_RegisterMultiBoss");
+	MarkNativeAsOptional("SaxtonHale_CallFunction");
 	
+	MarkNativeAsOptional("SaxtonHaleBase.CreateClass");
+	MarkNativeAsOptional("SaxtonHaleBase.HasClass");
+	MarkNativeAsOptional("SaxtonHaleBase.DestroyClass");
+	MarkNativeAsOptional("SaxtonHaleBase.DestroyAllClass");
 	MarkNativeAsOptional("SaxtonHaleBase.CallFunction");
+	MarkNativeAsOptional("SaxtonHaleBase.GetPropInt");
+	MarkNativeAsOptional("SaxtonHaleBase.GetPropFloat");
+	MarkNativeAsOptional("SaxtonHaleBase.SetPropInt");
+	MarkNativeAsOptional("SaxtonHaleBase.SetPropFloat");
 	
 	MarkNativeAsOptional("SaxtonHaleBase.bValid.get");
 	MarkNativeAsOptional("SaxtonHaleBase.bValid.set");
@@ -929,17 +955,5 @@ public __pl_saxtonhale_SetNTVOptional()
 	MarkNativeAsOptional("SaxtonHale_SetAdmin");
 	MarkNativeAsOptional("SaxtonHale_SetPunishment");
 	MarkNativeAsOptional("SaxtonHale_HasPreferences");
-	
-	MarkNativeAsOptional("SaxtonHale_InitFunction");
-	MarkNativeAsOptional("SaxtonHale_RegisterBoss");
-	MarkNativeAsOptional("SaxtonHale_UnregisterBoss");
-	MarkNativeAsOptional("SaxtonHale_RegisterModifiers");
-	MarkNativeAsOptional("SaxtonHale_UnregisterModifiers");
-	MarkNativeAsOptional("SaxtonHale_RegisterAbility");
-	MarkNativeAsOptional("SaxtonHale_UnregisterAbility");
-	MarkNativeAsOptional("SaxtonHale_ForceSpecialRound");
-	MarkNativeAsOptional("SaxtonHale_SetWinstreak");
-	MarkNativeAsOptional("SaxtonHale_IsWinstreakEnable");
-	MarkNativeAsOptional("SaxtonHale_SetRank");
 }
 #endif

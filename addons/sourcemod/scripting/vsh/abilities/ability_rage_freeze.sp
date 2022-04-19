@@ -5,135 +5,67 @@
 #define FREEZE_PARTICLE_02 "xms_icicle_impact_dryice"
 #define FREEZE_PARTICLE_03 "xmas_ornament_glitter_alt"
 
-static float g_flAbilityRadius[TF_MAXPLAYERS];
-static float g_flSlowDuration[TF_MAXPLAYERS];
-static float g_flSlowPercentage[TF_MAXPLAYERS];
-static float g_flFreezeDuration[TF_MAXPLAYERS];
-static float g_flRageFreezeSuperRageMultiplier[TF_MAXPLAYERS];
 static bool g_bFreezeAffected[TF_MAXPLAYERS];
 
-methodmap CRageFreeze < SaxtonHaleBase
+public void RageFreeze_Create(SaxtonHaleBase boss)
 {
-	property float flRadius
-	{
-		public get()
-		{
-			return g_flAbilityRadius[this.iClient];
-		}
-		public set(float flVal)
-		{
-			g_flAbilityRadius[this.iClient] = flVal;
-		}
-	}
+	boss.SetPropFloat("RageFreeze", "Radius", 800.0);
+	boss.SetPropFloat("RageFreeze", "SlowDuration", 2.0);
+	boss.SetPropFloat("RageFreeze", "SlowPercentage", 0.5);
+	boss.SetPropFloat("RageFreeze", "FreezeDuration", 4.0);
+	boss.SetPropFloat("RageFreeze", "RageFreezeSuperRageMultiplier", 1.5);
+}
+
+public void RageFreeze_OnRage(SaxtonHaleBase boss)
+{
+	float vecBossOrigin[3];
+	GetClientAbsOrigin(boss.iClient, vecBossOrigin);
 	
-	property float flSlowDuration
-	{
-		public get()
-		{
-			return g_flSlowDuration[this.iClient];
-		}
-		public set(float flVal)
-		{
-			g_flSlowDuration[this.iClient] = flVal;
-		}
-	}
+	float flRadius = boss.GetPropFloat("RageFreeze", "Radius");
+	if (boss.bSuperRage)flRadius *= boss.GetPropFloat("RageFreeze", "RageFreezeSuperRageMultiplier");
+	float flFreezeDuration = boss.GetPropFloat("RageFreeze", "FreezeDuration");
+	if (boss.bSuperRage)flFreezeDuration *= boss.GetPropFloat("RageFreeze", "RageFreezeSuperRageMultiplier");
 	
-	property float flSlowPercentage
+	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
-		public get()
+		if (IsClientInGame(iClient) && IsPlayerAlive(iClient) && GetClientTeam(iClient) != GetClientTeam(boss.iClient) && IsClientInRange(iClient, vecBossOrigin, flRadius) && !TF2_IsUbercharged(iClient))
 		{
-			return g_flSlowPercentage[this.iClient];
-		}
-		public set(float flVal)
-		{
-			g_flSlowPercentage[this.iClient] = flVal;
+			g_bFreezeAffected[iClient] = true;
+			
+			float vecClientOrigin[3];
+			GetClientAbsOrigin(iClient, vecClientOrigin);
+			
+			TF2_SpawnParticle(FREEZE_PARTICLE_01, vecClientOrigin);
+			TF2_SpawnParticle(FREEZE_PARTICLE_02, vecClientOrigin);
+			TF2_SpawnParticle(FREEZE_PARTICLE_03, vecClientOrigin);
+			EmitAmbientSound(FREEZE_BEGIN_SOUND, vecClientOrigin);
+			TF2_Shake(vecBossOrigin, 10.0, boss.GetPropFloat("RageFreeze", "Radius"), 1.0, 0.5);
+			TF2_StunPlayer(iClient, boss.GetPropFloat("RageFreeze", "SlowDuration"), boss.GetPropFloat("RageFreeze", "SlowPercentage"), TF_STUNFLAG_SLOWDOWN, boss.iClient);
+			
+			CreateTimer(boss.GetPropFloat("RageFreeze", "SlowDuration"), FreezeClient, GetClientUserId(iClient));
+			CreateTimer(boss.GetPropFloat("RageFreeze", "SlowDuration") + flFreezeDuration, UnfreezeClient, GetClientUserId(iClient));
 		}
 	}
-	
-	property float flFreezeDuration
+}
+
+public void RageFreeze_OnThink(SaxtonHaleBase boss)
+{
+	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
-		public get()
-		{
-			return g_flFreezeDuration[this.iClient];
-		}
-		public set(float flVal)
-		{
-			g_flFreezeDuration[this.iClient] = flVal;
-		}
+		if (IsClientInGame(iClient) && !IsPlayerAlive(iClient))
+			g_bFreezeAffected[iClient] = false;
 	}
-	
-	property float flRageFreezeSuperRageMultiplier
-	{
-		public set(float flVal)
-		{
-			g_flRageFreezeSuperRageMultiplier[this.iClient] = flVal;
-		}
-		public get()
-		{
-			return g_flRageFreezeSuperRageMultiplier[this.iClient];
-		}
-	}
-	
-	public CRageFreeze(CRageFreeze ability)
-	{
-		ability.flRadius = 800.0;
-		ability.flSlowDuration = 2.0;
-		ability.flSlowPercentage = 0.5;
-		ability.flFreezeDuration = 4.0;
-		ability.flRageFreezeSuperRageMultiplier = 1.5;
-	}
-	
-	public void OnRage()
-	{
-		float vecBossOrigin[3];
-		GetClientAbsOrigin(this.iClient, vecBossOrigin);
-		
-		float flRadius = this.flRadius;
-		if (this.bSuperRage)flRadius *= this.flRageFreezeSuperRageMultiplier;
-		float flFreezeDuration = this.flFreezeDuration;
-		if (this.bSuperRage)flFreezeDuration *= this.flRageFreezeSuperRageMultiplier;
-		
-		for (int iClient = 1; iClient <= MaxClients; iClient++)
-		{
-			if (IsClientInGame(iClient) && IsPlayerAlive(iClient) && GetClientTeam(iClient) != GetClientTeam(this.iClient) && IsClientInRange(iClient, vecBossOrigin, flRadius) && !TF2_IsUbercharged(iClient))
-			{
-				g_bFreezeAffected[iClient] = true;
-				
-				float vecClientOrigin[3];
-				GetClientAbsOrigin(iClient, vecClientOrigin);
-				
-				TF2_SpawnParticle(FREEZE_PARTICLE_01, vecClientOrigin);
-				TF2_SpawnParticle(FREEZE_PARTICLE_02, vecClientOrigin);
-				TF2_SpawnParticle(FREEZE_PARTICLE_03, vecClientOrigin);
-				EmitAmbientSound(FREEZE_BEGIN_SOUND, vecClientOrigin);
-				TF2_Shake(vecBossOrigin, 10.0, this.flRadius, 1.0, 0.5);
-				TF2_StunPlayer(iClient, this.flSlowDuration, this.flSlowPercentage, TF_STUNFLAG_SLOWDOWN, this.iClient);
-				
-				CreateTimer(this.flSlowDuration, FreezeClient, GetClientUserId(iClient));
-				CreateTimer(this.flSlowDuration + flFreezeDuration, UnfreezeClient, GetClientUserId(iClient));
-			}
-		}
-	}
-	
-	public void OnThink()
-	{
-		for (int iClient = 1; iClient <= MaxClients; iClient++)
-		{
-			if (IsClientInGame(iClient) && !IsPlayerAlive(iClient))
-				g_bFreezeAffected[iClient] = false;
-		}
-	}
-	
-	public void Precache()
-	{
-		PrecacheSound(FREEZE_BEGIN_SOUND);
-		PrecacheSound(FREEZE_SOUND);
-		PrecacheSound(UNFREEZE_SOUND);
-		PrecacheParticleSystem(FREEZE_PARTICLE_01);
-		PrecacheParticleSystem(FREEZE_PARTICLE_02);
-		PrecacheParticleSystem(FREEZE_PARTICLE_03);
-	}
-};
+}
+
+public void RageFreeze_Precache(SaxtonHaleBase boss)
+{
+	PrecacheSound(FREEZE_BEGIN_SOUND);
+	PrecacheSound(FREEZE_SOUND);
+	PrecacheSound(UNFREEZE_SOUND);
+	PrecacheParticleSystem(FREEZE_PARTICLE_01);
+	PrecacheParticleSystem(FREEZE_PARTICLE_02);
+	PrecacheParticleSystem(FREEZE_PARTICLE_03);
+}
 
 public Action FreezeClient(Handle hTimer, int iUserId)
 {
@@ -146,6 +78,8 @@ public Action FreezeClient(Handle hTimer, int iUserId)
 		GetClientAbsOrigin(iClient, vecOrigin);
 		EmitAmbientSound(FREEZE_SOUND, vecOrigin);
 	}
+	
+	return Plugin_Continue;
 }
 
 public Action UnfreezeClient(Handle hTimer, int iUserId)
@@ -162,4 +96,7 @@ public Action UnfreezeClient(Handle hTimer, int iUserId)
 			EmitAmbientSound(UNFREEZE_SOUND, vecOrigin);
 		}
 	}
+	
+	return Plugin_Continue;
 }
+

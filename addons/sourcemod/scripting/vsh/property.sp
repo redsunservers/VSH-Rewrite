@@ -72,6 +72,7 @@ void Property_AskLoad()
 public any Property_SetValid(Handle hPlugin, int iNumParams)
 {
 	g_bValid[GetNativeCell(1)] = GetNativeCell(2);
+	return 0;
 }
 
 public any Property_GetValid(Handle hPlugin, int iNumParams)
@@ -82,6 +83,7 @@ public any Property_GetValid(Handle hPlugin, int iNumParams)
 public any Property_SetModifiers(Handle hPlugin, int iNumParams)
 {
 	g_bModifiers[GetNativeCell(1)] = GetNativeCell(2);
+	return 0;
 }
 
 public any Property_GetModifiers(Handle hPlugin, int iNumParams)
@@ -92,6 +94,7 @@ public any Property_GetModifiers(Handle hPlugin, int iNumParams)
 public any Property_SetMinion(Handle hPlugin, int iNumParams)
 {
 	g_bMinion[GetNativeCell(1)] = GetNativeCell(2);
+	return 0;
 }
 
 public any Property_GetMinion(Handle hPlugin, int iNumParams)
@@ -102,6 +105,7 @@ public any Property_GetMinion(Handle hPlugin, int iNumParams)
 public any Property_SetSuperRage(Handle hPlugin, int iNumParams)
 {
 	g_bSuperRage[GetNativeCell(1)] = GetNativeCell(2);
+	return 0;
 }
 
 public any Property_GetSuperRage(Handle hPlugin, int iNumParams)
@@ -112,6 +116,7 @@ public any Property_GetSuperRage(Handle hPlugin, int iNumParams)
 public any Property_SetModel(Handle hPlugin, int iNumParams)
 {
 	g_bModel[GetNativeCell(1)] = GetNativeCell(2);
+	return 0;
 }
 
 public any Property_GetModel(Handle hPlugin, int iNumParams)
@@ -122,6 +127,7 @@ public any Property_GetModel(Handle hPlugin, int iNumParams)
 public any Property_SetHealthPerPlayerAlive(Handle hPlugin, int iNumParams)
 {
 	g_bHealthPerPlayerAlive[GetNativeCell(1)] = GetNativeCell(2);
+	return 0;
 }
 
 public any Property_GetHealthPerPlayerAlive(Handle hPlugin, int iNumParams)
@@ -132,6 +138,7 @@ public any Property_GetHealthPerPlayerAlive(Handle hPlugin, int iNumParams)
 public any Property_SetSpeed(Handle hPlugin, int iNumParams)
 {
 	g_flSpeed[GetNativeCell(1)] = GetNativeCell(2);
+	return 0;
 }
 
 public any Property_GetSpeed(Handle hPlugin, int iNumParams)
@@ -142,6 +149,7 @@ public any Property_GetSpeed(Handle hPlugin, int iNumParams)
 public any Property_SetSpeedMult(Handle hPlugin, int iNumParams)
 {
 	g_flSpeedMult[GetNativeCell(1)] = GetNativeCell(2);
+	return 0;
 }
 
 public any Property_GetSpeedMult(Handle hPlugin, int iNumParams)
@@ -152,6 +160,7 @@ public any Property_GetSpeedMult(Handle hPlugin, int iNumParams)
 public any Property_SetEnvDamageCap(Handle hPlugin, int iNumParams)
 {
 	g_flEnvDamageCap[GetNativeCell(1)] = GetNativeCell(2);
+	return 0;
 }
 
 public any Property_GetEnvDamageCap(Handle hPlugin, int iNumParams)
@@ -162,6 +171,7 @@ public any Property_GetEnvDamageCap(Handle hPlugin, int iNumParams)
 public any Property_SetWeighDownTimer(Handle hPlugin, int iNumParams)
 {
 	g_flWeighDownTimer[GetNativeCell(1)] = GetNativeCell(2);
+	return 0;
 }
 
 public any Property_GetWeighDownTimer(Handle hPlugin, int iNumParams)
@@ -172,6 +182,7 @@ public any Property_GetWeighDownTimer(Handle hPlugin, int iNumParams)
 public any Property_SetWeighDownForce(Handle hPlugin, int iNumParams)
 {
 	g_flWeighDownForce[GetNativeCell(1)] = GetNativeCell(2);
+	return 0;
 }
 
 public any Property_GetWeighDownForce(Handle hPlugin, int iNumParams)
@@ -182,6 +193,7 @@ public any Property_GetWeighDownForce(Handle hPlugin, int iNumParams)
 public any Property_SetGlowTime(Handle hPlugin, int iNumParams)
 {
 	g_flGlowTime[GetNativeCell(1)] = GetNativeCell(2);
+	return 0;
 }
 
 public any Property_GetGlowTime(Handle hPlugin, int iNumParams)
@@ -192,6 +204,7 @@ public any Property_GetGlowTime(Handle hPlugin, int iNumParams)
 public any Property_SetRageLastTime(Handle hPlugin, int iNumParams)
 {
 	g_flRageLastTime[GetNativeCell(1)] = GetNativeCell(2);
+	return 0;
 }
 
 public any Property_GetRageLastTime(Handle hPlugin, int iNumParams)
@@ -202,6 +215,7 @@ public any Property_GetRageLastTime(Handle hPlugin, int iNumParams)
 public any Property_SetMaxRagePercentage(Handle hPlugin, int iNumParams)
 {
 	g_flMaxRagePercentage[GetNativeCell(1)] = GetNativeCell(2);
+	return 0;
 }
 
 public any Property_GetMaxRagePercentage(Handle hPlugin, int iNumParams)
@@ -212,6 +226,7 @@ public any Property_GetMaxRagePercentage(Handle hPlugin, int iNumParams)
 public any Property_SetHealthExponential(Handle hPlugin, int iNumParams)
 {
 	g_flHealthExponential[GetNativeCell(1)] = GetNativeCell(2);
+	return 0;
 }
 
 public any Property_GetHealthExponential(Handle hPlugin, int iNumParams)
@@ -222,6 +237,7 @@ public any Property_GetHealthExponential(Handle hPlugin, int iNumParams)
 public any Property_SetHealthMultiplier(Handle hPlugin, int iNumParams)
 {
 	g_flHealthMultiplier[GetNativeCell(1)] = GetNativeCell(2);
+	return 0;
 }
 
 public any Property_GetHealthMultiplier(Handle hPlugin, int iNumParams)
@@ -232,6 +248,7 @@ public any Property_GetHealthMultiplier(Handle hPlugin, int iNumParams)
 public any Property_SetMaxHealth(Handle hPlugin, int iNumParams)
 {
 	g_iMaxHealth[GetNativeCell(1)] = GetNativeCell(2);
+	return 0;
 }
 
 public any Property_GetMaxHealth(Handle hPlugin, int iNumParams)
@@ -242,6 +259,7 @@ public any Property_GetMaxHealth(Handle hPlugin, int iNumParams)
 public any Property_SetBaseHealth(Handle hPlugin, int iNumParams)
 {
 	g_iBaseHealth[GetNativeCell(1)] = GetNativeCell(2);
+	return 0;
 }
 
 public any Property_GetBaseHealth(Handle hPlugin, int iNumParams)
@@ -252,6 +270,7 @@ public any Property_GetBaseHealth(Handle hPlugin, int iNumParams)
 public any Property_SetHealthPerPlayer(Handle hPlugin, int iNumParams)
 {
 	g_iHealthPerPlayer[GetNativeCell(1)] = GetNativeCell(2);
+	return 0;
 }
 
 public any Property_GetHealthPerPlayer(Handle hPlugin, int iNumParams)
@@ -262,6 +281,7 @@ public any Property_GetHealthPerPlayer(Handle hPlugin, int iNumParams)
 public any Property_SetRageDamage(Handle hPlugin, int iNumParams)
 {
 	g_iRageDamage[GetNativeCell(1)] = GetNativeCell(2);
+	return 0;
 }
 
 public any Property_GetRageDamage(Handle hPlugin, int iNumParams)
@@ -272,6 +292,7 @@ public any Property_GetRageDamage(Handle hPlugin, int iNumParams)
 public any Property_SetMaxRageDamage(Handle hPlugin, int iNumParams)
 {
 	g_iMaxRageDamage[GetNativeCell(1)] = GetNativeCell(2);
+	return 0;
 }
 
 public any Property_GetMaxRageDamage(Handle hPlugin, int iNumParams)
@@ -282,6 +303,7 @@ public any Property_GetMaxRageDamage(Handle hPlugin, int iNumParams)
 public any Property_SetClass(Handle hPlugin, int iNumParams)
 {
 	g_nClass[GetNativeCell(1)] = GetNativeCell(2);
+	return 0;
 }
 
 public any Property_GetClass(Handle hPlugin, int iNumParams)

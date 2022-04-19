@@ -21,7 +21,7 @@ void Event_Init()
 	HookUserMessage(GetUserMessageId("PlayerJarated"), Event_Jarated);
 }
 
-public Action Event_RoundStart(Event event, const char[] sName, bool bDontBroadcast)
+public void Event_RoundStart(Event event, const char[] sName, bool bDontBroadcast)
 {
 	g_bSpawnTeamSwitch = false;
 	
@@ -88,7 +88,7 @@ public Action Event_RoundStart(Event event, const char[] sName, bool bDontBroadc
 		//Clean up any boss(es) that is/are still active
 		SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 		if (boss.bValid)
-			boss.CallFunction("Destroy");
+			boss.DestroyAllClass();
 		
 		g_iPlayerDamage[iClient] = 0;
 		g_iPlayerAssistDamage[iClient] = 0;
@@ -110,7 +110,7 @@ public Action Event_RoundStart(Event event, const char[] sName, bool bDontBroadc
 	RequestFrame(Frame_InitVshPreRoundTimer, tf_arena_preround_time.IntValue);
 }
 
-public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontBroadcast)
+public void Event_RoundArenaStart(Event event, const char[] sName, bool bDontBroadcast)
 {
 	if (!g_bEnabled || GameRules_GetProp("m_bInWaitingForPlayers")) return;
 
@@ -277,7 +277,7 @@ public Action Event_RoundArenaStart(Event event, const char[] sName, bool bDontB
 		PrintToChat(iNextPlayer, "%s================%s\nYou are about to be the next boss!\n%s================", TEXT_DARK, TEXT_COLOR, TEXT_DARK);
 }
 
-public Action Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcast)
+public void Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcast)
 {
 	if (!g_bEnabled) return;
 
@@ -465,7 +465,7 @@ public void Event_BroadcastAudio(Event event, const char[] sName, bool bDontBroa
 		SetEventBroadcast(event, true);
 }
 
-public Action Event_PlayerSpawn(Event event, const char[] sName, bool bDontBroadcast)
+public void Event_PlayerSpawn(Event event, const char[] sName, bool bDontBroadcast)
 {
 	if (!g_bEnabled) return;
 	if (g_iTotalRoundPlayed <= 0) return;
@@ -720,7 +720,7 @@ public Action Event_PlayerDeath(Event event, const char[] sName, bool bDontBroad
 	return Plugin_Changed;
 }
 
-public Action Event_PlayerInventoryUpdate(Event event, const char[] sName, bool bDontBroadcast)
+public void Event_PlayerInventoryUpdate(Event event, const char[] sName, bool bDontBroadcast)
 {
 	if (!g_bEnabled) return;
 
@@ -798,7 +798,7 @@ public Action Event_PlayerInventoryUpdate(Event event, const char[] sName, bool 
 		TagsCore_CallAll(iClient, TagsCall_Spawn);
 }
 
-public Action Event_PlayerHurt(Event event, const char[] sName, bool bDontBroadcast)
+public void Event_PlayerHurt(Event event, const char[] sName, bool bDontBroadcast)
 {
 	if (!g_bEnabled) return;
 	if (g_iTotalRoundPlayed <= 0) return;
@@ -870,7 +870,7 @@ public Action Event_PlayerHurt(Event event, const char[] sName, bool bDontBroadc
 	}
 }
 
-public Action Event_BuffBannerDeployed(Event event, const char[] sName, bool bDontBroadcast)
+public void Event_BuffBannerDeployed(Event event, const char[] sName, bool bDontBroadcast)
 {
 	if (!g_bEnabled) return;
 	if (g_iTotalRoundPlayed <= 0) return;
@@ -881,7 +881,7 @@ public Action Event_BuffBannerDeployed(Event event, const char[] sName, bool bDo
 	TagsCore_CallAll(iClient, TagsCall_Banner);
 }
 
-public Action Event_UberDeployed(Event event, const char[] sName, bool bDontBroadcast)
+public void Event_UberDeployed(Event event, const char[] sName, bool bDontBroadcast)
 {
 	if (!g_bEnabled) return;
 	if (g_iTotalRoundPlayed <= 0) return;
@@ -894,16 +894,16 @@ public Action Event_UberDeployed(Event event, const char[] sName, bool bDontBroa
 
 public Action Event_Jarated(UserMsg msg_id, Handle msg, const int[] players, int playersNum, bool reliable, bool init)
 {
-	if (!g_bEnabled) return;
-	if (g_iTotalRoundPlayed <= 0) return;
+	if (!g_bEnabled) return Plugin_Continue;
+	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
 
 	int iThrower = BfReadByte(msg);
 	int iVictim = BfReadByte(msg);
 	
-	if (GetClientTeam(iThrower) <= 1 || SaxtonHale_IsValidBoss(iThrower)) return;
+	if (GetClientTeam(iThrower) <= 1 || SaxtonHale_IsValidBoss(iThrower)) return Plugin_Continue;
 	
 	SaxtonHaleBase bossVictim = SaxtonHaleBase(iVictim);
-	if (GetClientTeam(iVictim) <= 1 || !bossVictim.bValid) return;
+	if (GetClientTeam(iVictim) <= 1 || !bossVictim.bValid) return Plugin_Continue;
 	
 	TagsParams tParams = new TagsParams();
 	tParams.SetInt("victim", iVictim);
@@ -913,4 +913,5 @@ public Action Event_Jarated(UserMsg msg_id, Handle msg, const int[] players, int
 	data.WriteCell(GetClientUserId(iThrower));
 	data.WriteCell(tParams);
 	RequestFrame(Frame_CallJarate, data);
+	return Plugin_Continue;
 }

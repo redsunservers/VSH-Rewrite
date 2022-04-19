@@ -523,6 +523,8 @@ public Action Timer_EnableBuilding(Handle timer, int iRef)
 	int iBuilding = EntRefToEntIndex(iRef);
 	if (iBuilding > MaxClients)
 		SetEntProp(iBuilding, Prop_Send, "m_bDisabled", false);
+	
+	return Plugin_Continue;
 }
 
 stock void TF2_SetBuildingTeam(int iBuilding, TFTeam nTeam, int iNewBuilder = -1)

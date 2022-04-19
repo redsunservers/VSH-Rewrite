@@ -146,11 +146,8 @@ void NextBoss_SetNextBoss()
 			&& GetRandomFloat(0.0, 1.0) <= g_ConfigConvar.LookupFloat("vsh_boss_chance_multi")
 			&& NextBoss_GetRandomMulti(sMultiBoss, sizeof(sMultiBoss)))
 		{
-			SaxtonHaleBase boss = SaxtonHaleBase(0);
-			boss.CallFunction("SetBossMultiType", sMultiBoss);
-			
 			ArrayList aList = new ArrayList(ByteCountToCells(MAX_TYPE_CHAR));
-			boss.CallFunction("GetBossMultiList", aList);
+			SaxtonHale_CallFunction(sMultiBoss, "GetBossMultiList", aList);
 			
 			int iLength = aList.Length;
 			for (int i = 0; i < iLength; i++)
@@ -280,12 +277,12 @@ void NextBoss_SetBoss(SaxtonHaleNextBoss nextBoss, ArrayList aNonBosses)
 	char sBossType[MAX_TYPE_CHAR], sBossMultiType[MAX_TYPE_CHAR], sModifierType[MAX_TYPE_CHAR];
 	nextBoss.GetBoss(sBossType, sizeof(sBossType));
 	nextBoss.GetBossMulti(sBossMultiType, sizeof(sBossMultiType));
-	nextBoss.GetModifier(sModifierType, sizeof(sModifierType));
+	bool bModifierSet = nextBoss.GetModifier(sModifierType, sizeof(sModifierType));
 	
 	if (StrEmpty(sBossType))
 		NextBoss_GetRandomNormal(sBossType, sizeof(sBossType));
 	
-	if (StrEmpty(sModifierType))
+	if (!bModifierSet)
 		NextBoss_GetRandomModifiers(sModifierType, sizeof(sModifierType));
 	
 	SaxtonHaleBase boss = SaxtonHaleBase(nextBoss.iClient);
@@ -296,21 +293,13 @@ void NextBoss_SetBoss(SaxtonHaleNextBoss nextBoss, ArrayList aNonBosses)
 		return;
 	}
 	
-	boss.CallFunction("CreateBoss", sBossType);
-	boss.CallFunction("CreateBossMulti", sBossMultiType);
-	
-	//Give every bosses able to scare scout by default
-	CScareRage scareAbility = boss.CallFunction("FindAbility", "CScareRage");
-	if (scareAbility == INVALID_ABILITY) //If boss don't have scare rage ability, give him one
-		scareAbility = boss.CallFunction("CreateAbility", "CScareRage");
-	
-	scareAbility.nSetClass = TFClass_Scout;
-	scareAbility.flRadiusClass = 800.0;
-	scareAbility.iStunFlagsClass = TF_STUNFLAGS_SMALLBONK;
+	boss.CreateClass(sBossType);
+	if (sBossMultiType[0])
+		boss.CreateClass(sBossMultiType);
 	
 	//Select Modifiers
-	if (!StrEqual(sModifierType, "CModifiersNone") && !StrEmpty(sModifierType))
-		boss.CallFunction("CreateModifiers", sModifierType);
+	if (!StrEmpty(sModifierType))
+		boss.CreateClass(sModifierType);
 	
 	TF2_ForceTeamJoin(nextBoss.iClient, TFTeam_Boss);
 	
@@ -376,7 +365,7 @@ stock void NextBoss_GetRandomNormal(char[] sBoss, int iLength)
 	//Saxton Hale get higher chance to appear
 	if (GetRandomFloat(0.0, 1.0) <= g_ConfigConvar.LookupFloat("vsh_boss_chance_saxton"))
 	{
-		Format(sBoss, iLength, "CSaxtonHale");
+		Format(sBoss, iLength, "SaxtonHale");
 		return;
 	}
 	
@@ -384,7 +373,7 @@ stock void NextBoss_GetRandomNormal(char[] sBoss, int iLength)
 	ArrayList aBosses = SaxtonHale_GetAllClassType(VSHClassType_Boss);
 	
 	//Delet saxton hale
-	int iIndex = aBosses.FindString("CSaxtonHale");
+	int iIndex = aBosses.FindString("SaxtonHale");
 	if (iIndex >= 0)
 		aBosses.Erase(iIndex);
 	
@@ -394,10 +383,7 @@ stock void NextBoss_GetRandomNormal(char[] sBoss, int iLength)
 	{
 		char sBuffer[MAX_TYPE_CHAR];
 		aBosses.GetString(i, sBuffer, sizeof(sBuffer));
-		
-		SaxtonHaleBase boss = SaxtonHaleBase(0);
-		boss.CallFunction("SetBossType", sBuffer);
-		if (boss.CallFunction("IsBossHidden"))
+		if (SaxtonHale_CallFunction(sBuffer, "IsBossHidden"))
 			aBosses.Erase(i);
 	}
 	
@@ -429,11 +415,7 @@ stock bool NextBoss_GetRandomMulti(char[] sBossMulti, int iLength)
 	{
 		char sBuffer[MAX_TYPE_CHAR];
 		aBossesMulti.GetString(i, sBuffer, sizeof(sBuffer));
-		
-		SaxtonHaleBase boss = SaxtonHaleBase(0);
-		boss.CallFunction("SetBossMultiType", sBuffer);
-		
-		if (boss.CallFunction("IsBossMultiHidden"))
+		if (SaxtonHale_CallFunction(sBuffer, "IsBossMultiHidden"))
 		{
 			//Delet hidden multi bosses
 			aBossesMulti.Erase(i);
@@ -442,7 +424,7 @@ stock bool NextBoss_GetRandomMulti(char[] sBossMulti, int iLength)
 		
 		//Delet multi boss if too few players for it
 		ArrayList aList = new ArrayList(ByteCountToCells(MAX_TYPE_CHAR));
-		boss.CallFunction("GetBossMultiList", aList);
+		SaxtonHale_CallFunction(sBuffer, "GetBossMultiList", aList);
 		if (aList.Length > iPlayersDuo)
 			aBossesMulti.Erase(i);
 		
@@ -462,7 +444,7 @@ stock bool NextBoss_GetRandomMulti(char[] sBossMulti, int iLength)
 	return true;
 }
 
-stock int NextBoss_GetRandomModifiers(char[] sModifiers, int iLength, bool bForce = false)
+void NextBoss_GetRandomModifiers(char[] sModifiers, int iLength, bool bForce = false)
 {
 	if (bForce || GetRandomFloat(0.0, 1.0) <= g_ConfigConvar.LookupFloat("vsh_boss_chance_modifiers"))
 	{
@@ -474,9 +456,7 @@ stock int NextBoss_GetRandomModifiers(char[] sModifiers, int iLength, bool bForc
 			char sModifiersType[MAX_TYPE_CHAR];
 			aModifiers.GetString(iModifiers, sModifiersType, sizeof(sModifiersType));
 			
-			SaxtonHaleBase boss = SaxtonHaleBase(0);
-			boss.CallFunction("SetModifiersType", sModifiersType);
-			if (boss.CallFunction("IsModifiersHidden"))
+			if (SaxtonHale_CallFunction(sModifiersType, "IsModifiersHidden"))
 				aModifiers.Erase(iModifiers);
 		}
 		
@@ -494,6 +474,6 @@ stock int NextBoss_GetRandomModifiers(char[] sModifiers, int iLength, bool bForc
 	}
 	else
 	{
-		Format(sModifiers, iLength, "CModifiersNone");
+		Format(sModifiers, iLength, "");
 	}
 }

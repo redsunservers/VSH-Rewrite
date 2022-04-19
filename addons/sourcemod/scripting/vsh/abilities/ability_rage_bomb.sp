@@ -2,162 +2,83 @@
 #define BOMB_PARTICLE		"ExplosionCore_MidAir"
 #define BOMB_NUKE_SOUND 	"misc/doomsday_missile_explosion.wav"
 
-static float g_flBombSpawnInterval[TF_MAXPLAYERS];
-static float g_flBombSpawnDuration[TF_MAXPLAYERS];
-static float g_flBombSpawnRadius[TF_MAXPLAYERS];
-static float g_flBombRadius[TF_MAXPLAYERS];
-static float g_flBombDamage[TF_MAXPLAYERS];
-static float g_flNukeRadius[TF_MAXPLAYERS];
 static float g_flBombEndTime[TF_MAXPLAYERS];
 static float g_flLastExplosionTime[TF_MAXPLAYERS];
 
-methodmap CBomb < SaxtonHaleBase
+public void Bomb_Create(SaxtonHaleBase boss)
 {
-	property float flBombSpawnInterval
-	{
-		public set(float flVal)
-		{
-			g_flBombSpawnInterval[this.iClient] = flVal;
-		}
-		public get()
-		{
-			return g_flBombSpawnInterval[this.iClient];
-		}
-	}
+	g_flBombEndTime[boss.iClient] = 0.0;
+	g_flLastExplosionTime[boss.iClient] = 0.0;
 	
-	property float flBombSpawnDuration
-	{
-		public set (float flVal)
-		{
-			g_flBombSpawnDuration[this.iClient] = flVal;
-		}
-		public get()
-		{
-			return g_flBombSpawnDuration[this.iClient];
-		}
-	}
-	
-	property float flBombSpawnRadius
-	{
-		public set (float flVal)
-		{
-			g_flBombSpawnRadius[this.iClient] = flVal;
-		}
-		public get()
-		{
-			return g_flBombSpawnRadius[this.iClient];
-		}
-	}
-	
-	property float flBombRadius
-	{
-		public set (float flVal)
-		{
-			g_flBombRadius[this.iClient] = flVal;
-		}
-		public get()
-		{
-			return g_flBombRadius[this.iClient];
-		}
-	}
-	
-	property float flBombDamage
-	{
-		public set (float flVal)
-		{
-			g_flBombDamage[this.iClient] = flVal;
-		}
-		public get()
-		{
-			return g_flBombDamage[this.iClient];
-		}
-	}
-	
-	property float flNukeRadius
-	{
-		public set (float flVal)
-		{
-			g_flNukeRadius[this.iClient] = flVal;
-		}
-		public get()
-		{
-			return g_flNukeRadius[this.iClient];
-		}
-	}
-	
-	public CBomb(CBomb ability)
-	{
-		g_flBombSpawnInterval[ability.iClient] = 0.1;
-		g_flBombSpawnDuration[ability.iClient] = 5.0;
-		g_flBombSpawnRadius[ability.iClient] = 500.0;
-		g_flBombRadius[ability.iClient] = 200.0;
-		g_flBombDamage[ability.iClient] = 150.0;
-		g_flNukeRadius[ability.iClient] = 200.0;
-		g_flBombEndTime[ability.iClient] = 0.0;
-		g_flLastExplosionTime[ability.iClient] = 0.0;
-	}
+	boss.SetPropFloat("Bomb", "BombSpawnInterval", 0.1);
+	boss.SetPropFloat("Bomb", "BombSpawnDuration", 5.0);
+	boss.SetPropFloat("Bomb", "BombSpawnRadius", 500.0);
+	boss.SetPropFloat("Bomb", "BombRadius", 200.0);
+	boss.SetPropFloat("Bomb", "BombDamage", 150.0);
+	boss.SetPropFloat("Bomb", "NukeRadius", 200.0);
+}
 
-	public void OnRage()
-	{
-		g_flBombEndTime[this.iClient] = GetGameTime() + this.flBombSpawnDuration;
-		FakeClientCommand(this.iClient, "taunt");
-		SetEntityMoveType(this.iClient, MOVETYPE_NONE);
-		
-		//Force thirdperson view
-		SetVariantInt(1);
-		AcceptEntityInput(this.iClient, "SetForcedTauntCam");
-	}
+public void Bomb_OnRage(SaxtonHaleBase boss)
+{
+	g_flBombEndTime[boss.iClient] = GetGameTime() + boss.GetPropFloat("Bomb", "BombSpawnDuration");
+	FakeClientCommand(boss.iClient, "taunt");
+	SetEntityMoveType(boss.iClient, MOVETYPE_NONE);
 	
-	public void OnThink()
+	//Force thirdperson view
+	SetVariantInt(1);
+	AcceptEntityInput(boss.iClient, "SetForcedTauntCam");
+}
+
+public void Bomb_OnThink(SaxtonHaleBase boss)
+{
+	if (g_flBombEndTime[boss.iClient] == 0.0) return;
+	
+	float flGameTime = GetGameTime();
+	if (flGameTime <= g_flBombEndTime[boss.iClient])
 	{
-		if (g_flBombEndTime[this.iClient] == 0.0) return;
+		if (g_flLastExplosionTime[boss.iClient] != 0.0 && g_flLastExplosionTime[boss.iClient]+boss.GetPropFloat("Bomb", "BombSpawnInterval") > flGameTime) return;
 		
-		float flGameTime = GetGameTime();
-		if (flGameTime <= g_flBombEndTime[this.iClient])
+		g_flLastExplosionTime[boss.iClient] = flGameTime;
+		
+		float vecExplosionPos[3], vecExplosionOrigin[3];
+		GetClientAbsOrigin(boss.iClient, vecExplosionOrigin);
+		
+		for (int i = 0; i < 2; i++)
 		{
-			if (g_flLastExplosionTime[this.iClient] != 0.0 && g_flLastExplosionTime[this.iClient]+this.flBombSpawnInterval > flGameTime) return;
+			vecExplosionPos = vecExplosionOrigin;
+			vecExplosionPos[0] += GetRandomFloat(-boss.GetPropFloat("Bomb", "BombSpawnRadius"), boss.GetPropFloat("Bomb", "BombSpawnRadius"));
+			vecExplosionPos[1] += GetRandomFloat(-boss.GetPropFloat("Bomb", "BombSpawnRadius"), boss.GetPropFloat("Bomb", "BombSpawnRadius"));
+			vecExplosionPos[2] += GetRandomFloat(-boss.GetPropFloat("Bomb", "BombSpawnRadius"), boss.GetPropFloat("Bomb", "BombSpawnRadius"));
 			
-			g_flLastExplosionTime[this.iClient] = flGameTime;
-			
-			float vecExplosionPos[3], vecExplosionOrigin[3];
-			GetClientAbsOrigin(this.iClient, vecExplosionOrigin);
-			
-			for (int i = 0; i < 2; i++)
-			{
-				vecExplosionPos = vecExplosionOrigin;
-				vecExplosionPos[0] += GetRandomFloat(-this.flBombSpawnRadius, this.flBombSpawnRadius);
-				vecExplosionPos[1] += GetRandomFloat(-this.flBombSpawnRadius, this.flBombSpawnRadius);
-				vecExplosionPos[2] += GetRandomFloat(-this.flBombSpawnRadius, this.flBombSpawnRadius);
-				
-				char sSound[255];
-				Format(sSound, sizeof(sSound), "weapons/airstrike_small_explosion_0%i.wav", GetRandomInt(1,3));
-				TF2_Explode(this.iClient, vecExplosionPos, this.flBombDamage, this.flBombRadius, BOMB_PARTICLE, sSound);
-			}
-		}
-		else
-		{
-			if (this.bSuperRage)
-			{
-				float vecExplosionOrigin[3];
-				GetClientAbsOrigin(this.iClient, vecExplosionOrigin);
-				TF2_Explode(this.iClient, vecExplosionOrigin, 9999999.0, this.flNukeRadius, BOMB_NUKE_PARTICLE, BOMB_NUKE_SOUND);
-				EmitSoundToAll(BOMB_NUKE_SOUND);
-			}
-			g_flBombEndTime[this.iClient] = 0.0;
-			g_flLastExplosionTime[this.iClient] = 0.0;
-			TF2_RemoveCondition(this.iClient, TFCond_Taunting);
-			SetEntityMoveType(this.iClient, MOVETYPE_WALK);
-			
-			//Set view back to first person
-			SetVariantInt(0);
-			AcceptEntityInput(this.iClient, "SetForcedTauntCam");
+			char sSound[255];
+			Format(sSound, sizeof(sSound), "weapons/airstrike_small_explosion_0%i.wav", GetRandomInt(1,3));
+			TF2_Explode(boss.iClient, vecExplosionPos, boss.GetPropFloat("Bomb", "BombDamage"), boss.GetPropFloat("Bomb", "BombRadius"), BOMB_PARTICLE, sSound);
 		}
 	}
-	
-	public void Precache()
+	else
 	{
-		PrecacheSound(BOMB_NUKE_SOUND);
-		PrecacheParticleSystem(BOMB_NUKE_PARTICLE);
-		PrecacheParticleSystem(BOMB_PARTICLE);
+		if (boss.bSuperRage)
+		{
+			float vecExplosionOrigin[3];
+			GetClientAbsOrigin(boss.iClient, vecExplosionOrigin);
+			TF2_Explode(boss.iClient, vecExplosionOrigin, 9999999.0, boss.GetPropFloat("Bomb", "NukeRadius"), BOMB_NUKE_PARTICLE, BOMB_NUKE_SOUND);
+			EmitSoundToAll(BOMB_NUKE_SOUND);
+		}
+		g_flBombEndTime[boss.iClient] = 0.0;
+		g_flLastExplosionTime[boss.iClient] = 0.0;
+		TF2_RemoveCondition(boss.iClient, TFCond_Taunting);
+		SetEntityMoveType(boss.iClient, MOVETYPE_WALK);
+		
+		//Set view back to first person
+		SetVariantInt(0);
+		AcceptEntityInput(boss.iClient, "SetForcedTauntCam");
 	}
-};
+}
+
+public void Bomb_Precache(SaxtonHaleBase boss)
+{
+	PrecacheSound(BOMB_NUKE_SOUND);
+	PrecacheParticleSystem(BOMB_NUKE_PARTICLE);
+	PrecacheParticleSystem(BOMB_PARTICLE);
+}
+

@@ -1,5 +1,6 @@
 *.smx
 *.bat
 *.bin
+*.exe
 build/*
 .vscode
