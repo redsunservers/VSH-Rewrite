@@ -1643,7 +1643,7 @@ public Action Transmit_PlayerGlow(int iEntity, int iTarget)
 		return Plugin_Stop;
 	}
 	
-	if (!SaxtonHale_IsValidBoss(iTarget) || TF2_GetClientTeam(iClient) == TF2_GetClientTeam(iTarget))
+	if (!SaxtonHale_IsValidBoss(iTarget) || !SaxtonHale_IsValidAttack(iClient) || TF2_GetClientTeam(iClient) == TF2_GetClientTeam(iTarget))
 		return Plugin_Stop;
 	
 	int iScore = SaxtonHale_GetScore(iClient);
