@@ -644,10 +644,10 @@ public void Tags_RemoveRage(int iClient, int iTarget, TagsParams tParams)
 	if (!SaxtonHale_IsValidBoss(iTarget))
 		return;
 	
-	int iAmount = tParams.GetInt("amount");
 	SaxtonHaleBase boss = SaxtonHaleBase(iTarget);
-	boss.CallFunction("AddRage", -iAmount);
-	g_iPlayerAssistDamage[iClient] += iAmount;
+	int iOldRageDamage = boss.iRageDamage;
+	boss.CallFunction("AddRage", -tParams.GetInt("amount"));
+	g_iPlayerAssistDamage[iClient] += (iOldRageDamage - boss.iRageDamage);
 }
 
 public void Tags_ViewRage(int iClient, int iTarget, TagsParams tParams)
