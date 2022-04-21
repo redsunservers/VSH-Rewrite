@@ -104,7 +104,7 @@ public void BrutalSniper_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int leng
 	StrCat(sInfo, length, "\n ");
 	StrCat(sInfo, length, "\nRage");
 	StrCat(sInfo, length, "\n- Damage requirement: 2500");
-	StrCat(sInfo, length, "\n- Huntsman with high damage and faster charge time");
+	StrCat(sInfo, length, "\n- Huntsman with high damage and instant charge time");
 	StrCat(sInfo, length, "\n- Scares players at close range for 5 seconds");
 	StrCat(sInfo, length, "\n- 200%% Rage: longer range scare and extends duration to 7.5 seconds");
 }
@@ -115,7 +115,7 @@ public void BrutalSniper_OnSpawn(SaxtonHaleBase boss)
 	int iWeapon;
 	char attribs[128];
 	
-	Format(attribs, sizeof(attribs), "2 ; 2.1 ; 6 ; 0.3 ; 280 ; 19 ; 551 ; 1.0");
+	Format(attribs, sizeof(attribs), "2 ; 2.1 ; 6 ; 0.01 ; 280 ; 19 ; 551 ; 1.0");
 	iWeapon = boss.CallFunction("CreateWeapon", 56, "tf_weapon_compound_bow", 100, TFQual_Collectors, attribs);
 	if (IsValidEntity(iWeapon)) 
 	{
