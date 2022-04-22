@@ -172,8 +172,11 @@ public void SaxtonHaleBoss_OnSpawn(SaxtonHaleBase boss)
 		
 		if (boss.StartFunction("ScareRage", "SetClass"))
 		{
+			//Use default radius (-1) if radius is already bigger than 500
+			float flRadius = boss.GetPropFloat("ScareRage", "Radius") > 500.0 ? -1.0 : 500.0;
+			
 			Call_PushCell(TFClass_Scout);	//Class to set
-			Call_PushFloat(800.0);	//Radius
+			Call_PushFloat(flRadius);	//Radius
 			Call_PushFloat(-1.0);	//Duration (using default)
 			Call_PushCell(TF_STUNFLAGS_SMALLBONK);	//Stunflags
 			Call_Finish();
