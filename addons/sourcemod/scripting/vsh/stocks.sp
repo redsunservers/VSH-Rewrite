@@ -123,11 +123,16 @@ stock void TF2_ForceTeamJoin(int iClient, TFTeam nTeam)
 		// Player hasn't chosen a class. Choose one for him.
 		TF2_SetPlayerClass(iClient, view_as<TFClassType>(GetRandomInt(1, 9)), true, true);
 	}
-
-	SetEntProp(iClient, Prop_Send, "m_lifeState", LifeState_Dead);
+	
+	bool bAlive = IsPlayerAlive(iClient);
+	if (bAlive)
+		SetEntProp(iClient, Prop_Send, "m_lifeState", LifeState_Dead);
+	
 	TF2_ChangeClientTeam(iClient, nTeam);
-	SetEntProp(iClient, Prop_Send, "m_lifeState", LifeState_Alive);
-
+	
+	if (bAlive)
+		SetEntProp(iClient, Prop_Send, "m_lifeState", LifeState_Alive);
+	
 	TF2_RespawnPlayer(iClient);
 }
 
