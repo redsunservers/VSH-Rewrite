@@ -181,11 +181,7 @@ public void PyroCar_OnThink(SaxtonHaleBase boss)
 				//Check if his active weapon got removed, if so set as that weapon
 				int iActiveWep = GetEntPropEnt(boss.iClient, Prop_Send, "m_hActiveWeapon");
 				if (!(IsValidEntity(iActiveWep)))
-				{
-					char sClassname[32];
-					GetEntityClassname(g_iPyrocarMelee[boss.iClient], sClassname, sizeof(sClassname));
-					FakeClientCommand(boss.iClient, "use %s", sClassname);
-				}
+					TF2_SwitchToWeapon(boss.iClient, g_iPyrocarMelee[boss.iClient]);
 			}
 		}
 	}
@@ -202,11 +198,7 @@ public void PyroCar_OnThink(SaxtonHaleBase boss)
 				//Check if his active weapon got removed, if so set as that weapon
 				int iActiveWep = GetEntPropEnt(boss.iClient, Prop_Send, "m_hActiveWeapon");
 				if (!(IsValidEntity(iActiveWep)))
-				{
-					char sClassname[32];
-					GetEntityClassname(g_iPyrocarPrimary[boss.iClient], sClassname, sizeof(sClassname));
-					FakeClientCommand(boss.iClient, "use %s", sClassname);
-				}
+					TF2_SwitchToWeapon(boss.iClient, g_iPyrocarPrimary[boss.iClient]);
 			}
 		}
 	}
@@ -228,14 +220,10 @@ public void PyroCar_OnThink(SaxtonHaleBase boss)
 			event.Cancel();
 
 			//Change active weapon
-			char sClassname[32];
-			
 			if (IsValidEntity(GetPlayerWeaponSlot(boss.iClient, WeaponSlot_Primary)))
-				GetEntityClassname(g_iPyrocarPrimary[boss.iClient], sClassname, sizeof(sClassname));
+				TF2_SwitchToWeapon(boss.iClient, g_iPyrocarPrimary[boss.iClient]);
 			else
-				GetEntityClassname(g_iPyrocarMelee[boss.iClient], sClassname, sizeof(sClassname));
-				
-			FakeClientCommand(boss.iClient, "use %s", sClassname);
+				TF2_SwitchToWeapon(boss.iClient, g_iPyrocarMelee[boss.iClient]);
 		}
 	}
 	
