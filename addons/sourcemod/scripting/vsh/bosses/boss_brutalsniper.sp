@@ -99,8 +99,8 @@ public void BrutalSniper_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int leng
 	StrCat(sInfo, length, "\n- Changes your melee to a random knife on melee kill");
 	StrCat(sInfo, length, "\n  - Kukri: Default");
 	StrCat(sInfo, length, "\n  - Tribalman Shiv: 10 seconds bleed, 15%% dmg penalty");
-	StrCat(sInfo, length, "\n  - Bushwacka: Always crit, 20%% dmg vulnerability");
-	StrCat(sInfo, length, "\n  - Shahanshah: +15%% dmg when <50%% health, -15%% dmg when >50%% health");
+	StrCat(sInfo, length, "\n  - Bushwacka: Always crits, +20%% dmg vulnerability");
+	StrCat(sInfo, length, "\n  - Shahanshah: +15%% dmg when at <50%% health, -15%% dmg when at >50%% health");
 	StrCat(sInfo, length, "\n ");
 	StrCat(sInfo, length, "\nRage");
 	StrCat(sInfo, length, "\n- Damage requirement: 2500");
@@ -259,17 +259,17 @@ public void BrutalSniper_GetHudInfo(SaxtonHaleBase boss, char[] sMessage, int iL
 		}
 		case ITEM_TRIBALMAN_SHIV:
 		{
-			StrCat(sMessage, iLength, "\nTribalman Shiv: 10 seconds bleed, 15%% dmg penalty");
+			StrCat(sMessage, iLength, "\nTribalman's Shiv: 10 seconds bleed, 15%%%% dmg penalty");
 			iColor = {192, 32, 0, 255};
 		}
 		case ITEM_BUSHWACKA:
 		{
-			StrCat(sMessage, iLength, "\nBushwacka: Always crit, 20%% dmg vulnerability");
+			StrCat(sMessage, iLength, "\nBushwacka: Always crits, +20%%%% dmg vulnerability");
 			iColor = {224, 160, 0, 255};
 		}
 		case ITEM_SHAHANSHAH:
 		{
-			StrCat(sMessage, iLength, "\nShahanshah: +15%% dmg when <50%% health, -15%% dmg when >50%% health");
+			StrCat(sMessage, iLength, "\nShahanshah: +15%%%% dmg when at <50%%%% health, -15%%%% dmg when at >50%%%% health");
 			iColor = {144, 92, 0, 255};
 		}
 	}
