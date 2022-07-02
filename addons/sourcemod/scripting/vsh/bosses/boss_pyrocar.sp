@@ -344,7 +344,10 @@ public Action PyroCar_OnAttackBuilding(SaxtonHaleBase boss, int victim, int &inf
 {
 	//Buildings take constant damage
 	if (weapon == TF2_GetItemInSlot(boss.iClient, WeaponSlot_Primary))
+	{
 		damage = 20.0;
+		return Plugin_Changed;
+	}
 	
 	return Plugin_Continue;
 }
