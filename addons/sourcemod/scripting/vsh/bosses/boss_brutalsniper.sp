@@ -98,7 +98,7 @@ public void BrutalSniper_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int leng
 	StrCat(sInfo, length, "\n- Brave Jump");
 	StrCat(sInfo, length, "\n- Changes your melee to a random knife on melee kill");
 	StrCat(sInfo, length, "\n  - Kukri: Default");
-	StrCat(sInfo, length, "\n  - Tribalman Shiv: 10 seconds bleed, 15%% dmg penalty");
+	StrCat(sInfo, length, "\n  - Tribalman's Shiv: 10 seconds bleed, 15%% dmg penalty");
 	StrCat(sInfo, length, "\n  - Bushwacka: Always crits, +20%% dmg vulnerability");
 	StrCat(sInfo, length, "\n  - Shahanshah: +15%% dmg when at <50%% health, -15%% dmg when at >50%% health");
 	StrCat(sInfo, length, "\n ");
