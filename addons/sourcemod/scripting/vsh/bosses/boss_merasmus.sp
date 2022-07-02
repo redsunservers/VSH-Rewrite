@@ -123,7 +123,7 @@ public void Merasmus_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length)
 	StrCat(sInfo, length, "\nRage");
 	StrCat(sInfo, length, "\n- Damage requirement: 2500");
 	StrCat(sInfo, length, "\n- Bomb projectiles at random directions from boss");
-	StrCat(sInfo, length, "\n- Self-Über and Crits for 8 seconds");
+	StrCat(sInfo, length, "\n- Übercharge for 8 seconds");
 	StrCat(sInfo, length, "\n- 200%% Rage: Doubled bomb projectile spawn rate");
 }
 

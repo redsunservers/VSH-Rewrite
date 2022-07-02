@@ -9,7 +9,6 @@ public void Zombie_Create(SaxtonHaleBase boss)
 	boss.bMinion = true;
 	boss.bModel = false;
 	
-	SetEntityRenderColor(boss.iClient, 206, 100, 100, _);
 	EmitSoundToClient(boss.iClient, SOUND_ALERT);	//Alert player as he spawned
 }
 
@@ -28,6 +27,8 @@ public void Zombie_OnSpawn(SaxtonHaleBase boss)
 	
 	SetVariantString("TLK_RESURRECTED");
 	AcceptEntityInput(boss.iClient, "SpeakResponseConcept");
+	
+	SetEntityRenderColor(boss.iClient, 206, 100, 100, _);
 }
 
 public void Zombie_OnThink(SaxtonHaleBase boss)

@@ -203,7 +203,7 @@ public void DemoRobot_OnRage(SaxtonHaleBase boss)
 	int iWeapon = boss.CallFunction("CreateWeapon", 206, "tf_weapon_grenadelauncher", 100, TFQual_Unusual, attribs);
 	if (iWeapon > MaxClients)
 	{
-		SetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
+		TF2_SwitchToWeapon(boss.iClient, iWeapon);
 		SetEntProp(iWeapon, Prop_Send, "m_iClip1", 1000);
 	}
 	/*
@@ -246,7 +246,7 @@ public void DemoRobot_OnThink(SaxtonHaleBase boss)
 			flVal /= DEMO_ROBOT_GIANT_SCALE;
 			TF2Attrib_SetByDefIndex(iMeleeWep, ATTRIB_MELEE_RANGE_MULTIPLIER, flVal);
 			
-			SetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon", iMeleeWep);
+			TF2_SwitchToWeapon(boss.iClient, iMeleeWep);
 		}
 	}
 }

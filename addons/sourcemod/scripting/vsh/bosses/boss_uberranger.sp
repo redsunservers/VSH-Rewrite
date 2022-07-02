@@ -46,7 +46,7 @@ static char g_strUberRangerLastMan[][] = {
 static char g_strUberRangerBackStabbed[][] = {
 	"vo/medic_autodejectedtie01.mp3",
 	"vo/medic_sf12_badmagic10.mp3", 
-	"vo/medic_taunts11.mp3"
+	"vo/taunts/medic_taunts11.mp3"
 };
 
 public void UberRanger_Create(SaxtonHaleBase boss)
@@ -106,7 +106,7 @@ public void UberRanger_OnSpawn(SaxtonHaleBase boss)
 	int iWeapon = boss.CallFunction("CreateWeapon", 37, "tf_weapon_bonesaw", 100, TFQual_Collectors, sAttribs);
 	if (iWeapon > MaxClients)
 		SetEntPropEnt(boss.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
-		
+	
 	/*
 	Ubersaw attributes:
 	
@@ -117,10 +117,13 @@ public void UberRanger_OnSpawn(SaxtonHaleBase boss)
 	259: Deals 3x falling damage to the player you land on
 	*/
 	
-	//For reference: 230 230 230 is the color code for TF2's white paint
-	int iColor[4] = { 230, 230, 230, 255 };
+	//We have to check if the color of the boss hasn't already been altered (usually by a modifier) before applying his default color
+	int iColor[4] = {255, 255, 255, 255};
+	boss.CallFunction("GetRenderColor", iColor);
 	
-	SetEntityRenderColor(boss.iClient, iColor[0], iColor[1], iColor[2], iColor[3]);
+	//If all values are 255 (and therefore default), change the boss' color here
+	if (iColor[0] == 255 && iColor[1] == 255 && iColor[2] == 255 && iColor[3] == 255)
+		SetEntityRenderColor(boss.iClient, 230, 230, 230, _);
 }
 
 public void UberRanger_GetModel(SaxtonHaleBase boss, char[] sModel, int length)
@@ -254,7 +257,6 @@ public bool MinionRanger_IsBossHidden(SaxtonHaleBase boss)
 
 public void MinionRanger_OnSpawn(SaxtonHaleBase boss)
 {
-	
 	char sAttribs[64];
 	strcopy(sAttribs, sizeof(sAttribs), "9 ; 0.4");
 	boss.CallFunction("CreateWeapon", 211, "tf_weapon_medigun", 100, TFQual_Collectors, sAttribs);
@@ -280,18 +282,25 @@ public void MinionRanger_OnSpawn(SaxtonHaleBase boss)
 	259: Deals 3x falling damage to the player you land on
 	*/
 	
-	//We're selecting their color from a preset list, so check if it is there at all or has been emptied
-	if (g_aUberRangerColorList == null || g_aUberRangerColorList.Length <= 0)
-		UberRanger_ResetColorList();
-		
-	//Assign color
-	int iColor[4];
-	g_aUberRangerColorList.GetArray(0, iColor);
-	g_aUberRangerColorList.Erase(0);
-	iColor[3] = 255;
-	SetEntityRenderColor(boss.iClient, iColor[0], iColor[1], iColor[2], iColor[3]);
+	//We have to check if the color of the boss hasn't already been altered (usually by a modifier) before applying his default color
+	int iColor[4] = {255, 255, 255, 255};
+	boss.CallFunction("GetRenderColor", iColor);
 	
-	//Add glow for him to be easily recognizable as not the boss during spawn uber
+	//If all values are 255 (and therefore default), change the boss' color here
+	if (iColor[0] == 255 && iColor[1] == 255 && iColor[2] == 255 && iColor[3] == 255)
+	{
+		//We're selecting their color from a preset list, so check if it is there at all or has been emptied
+		if (g_aUberRangerColorList == null || g_aUberRangerColorList.Length <= 0)
+			UberRanger_ResetColorList();
+			
+		//Assign color
+		g_aUberRangerColorList.GetArray(0, iColor);
+		g_aUberRangerColorList.Erase(0);
+		
+		SetEntityRenderColor(boss.iClient, iColor[0], iColor[1], iColor[2], _);
+	}
+	
+	//Add a colored outline so he's more easily recognizable as not the boss during spawn uber
 	//Round started check is there so it doesn't show up when spawning on the next round as well
 	if (GameRules_GetRoundState() != RoundState_Preround)
 		CreateTimer(3.0, Timer_EntityCleanup, TF2_CreateGlow(boss.iClient, iColor));

@@ -378,6 +378,17 @@ public void RageGhost_OnPlayerKilled(SaxtonHaleBase boss, Event event)
 	}
 }
 
+public void RageGhost_OnDestroyObject(SaxtonHaleBase boss, Event event)
+{
+	// "attacker" does not give the value we're looking for, so check for "weaponid" instead
+	int iWeaponId = event.GetInt("weaponid");
+
+	if (g_bGhostEnable[boss.iClient] && iWeaponId == TF_WEAPON_SWORD)
+	{
+		event.SetString("weapon", "purgatory"); 
+	}
+}
+
 public void RageGhost_Destroy(SaxtonHaleBase boss)
 {
 	SetEntProp(boss.iClient, Prop_Data, "m_takedamage", DAMAGE_YES);
