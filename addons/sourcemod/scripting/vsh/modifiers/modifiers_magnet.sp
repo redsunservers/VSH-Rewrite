@@ -35,7 +35,7 @@ public void ModifiersMagnet_OnThink(SaxtonHaleBase boss)
 	float vecOrigin[3], vecPullVelocity[3];
 	GetClientAbsOrigin(boss.iClient, vecOrigin);
 	TFTeam nTeam = TF2_GetClientTeam(boss.iClient);
-	int iCount;
+	int iCount = 0;
 	
 	//Player interaction
 	for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
@@ -70,6 +70,10 @@ public void ModifiersMagnet_OnThink(SaxtonHaleBase boss)
 			}
 		}
 	}
+	
+	//Don't do anything to the boss if nobody is in range
+	if (iCount <= 0)
+		return;
 	
 	ScaleVector(vecPullVelocity, 1.0 / float(iCount));	//So vel won't go crazy with huge amount of players
 	ScaleVector(vecPullVelocity, MAGNET_STRENGTH);
