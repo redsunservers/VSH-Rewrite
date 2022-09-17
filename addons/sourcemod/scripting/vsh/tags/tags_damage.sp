@@ -31,7 +31,7 @@ public Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor,
 	}
 	
 	//Call attackdamage function
-	if (SaxtonHale_IsValidAttack(attacker))
+	if (victim != attacker && SaxtonHale_IsValidAttack(attacker))
 	{
 		for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
 		{
