@@ -15,10 +15,9 @@ All builds can be found [here](https://github.com/redsunservers/VSH-Rewrite/acti
 To download latest build version, select latest package then "Artifacts" button at top right.
 
 ## Requirements
-- SourceMod 1.10
+- SourceMod 1.11
 - [tf2attributes](https://forums.alliedmods.net/showthread.php?t=210221)
 - [tf_econ_data](https://forums.alliedmods.net/showthread.php?t=315011)
-- [dhooks with detour support](https://forums.alliedmods.net/showpost.php?p=2588686&postcount=589)
 
 ## Special Thanks
 - [Red Sun Over Paradise](https://redsun.tf/) - Support and playtesting private version with many balance suggestions for nearly 2 years.
