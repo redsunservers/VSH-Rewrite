@@ -1,9 +1,7 @@
 #define BODY_CLASSNAME	"prop_ragdoll"
 #define BODY_EAT		"vo/sandwicheat09.mp3"
-#define BODY_ENTITY_MAX	6
 
 static bool g_bBodyBlockRagdoll;
-static ArrayList g_aBodyEntity;
 
 public void BodyEat_Create(SaxtonHaleBase boss)
 {
@@ -11,10 +9,6 @@ public void BodyEat_Create(SaxtonHaleBase boss)
 	boss.SetPropFloat("BodyEat", "MaxEatDistance", 100.0);
 	boss.SetPropFloat("BodyEat", "EatRageRadius", 450.0);
 	boss.SetPropFloat("BodyEat", "EatRageDuration", 10.0);
-	
-	//Create body arraylist if not already done yet
-	if (g_aBodyEntity == null)
-		g_aBodyEntity = new ArrayList();
 }
 
 public void BodyEat_OnPlayerKilled(SaxtonHaleBase boss, Event event, int iVictim)
@@ -24,28 +18,6 @@ public void BodyEat_OnPlayerKilled(SaxtonHaleBase boss, Event event, int iVictim
 	
 	g_bBodyBlockRagdoll = true;
 	bool bFake = view_as<bool>(event.GetInt("death_flags") & TF_DEATHFLAG_DEADRINGER);
-	
-	//Check how many bodies in map
-	if (g_aBodyEntity.Length > 0)
-	{
-		//We want to go from max to 0, due to erase shifting above down by one
-		for (int i = g_aBodyEntity.Length-1; i >= 0; i--)
-		{
-			int iEntity = EntRefToEntIndex(g_aBodyEntity.Get(i));
-			
-			//If invalid entity, remove in arraylist
-			if (!IsValidEdict(iEntity))
-				g_aBodyEntity.Erase(i);
-		}
-		
-		//if arraylist is above max of allowed bodies in map, kill the oldest in list
-		if (g_aBodyEntity.Length >= BODY_ENTITY_MAX)
-		{
-			int iEntity = EntRefToEntIndex(g_aBodyEntity.Get(0));
-			AcceptEntityInput(iEntity, "Kill");
-			g_aBodyEntity.Erase(0);
-		}
-	}
 	
 	//Any players killed by a boss with this ability will see their client side ragdoll removed and replaced with this server side ragdoll
 	//Collect their damage and convert
@@ -83,17 +55,21 @@ public void BodyEat_OnPlayerKilled(SaxtonHaleBase boss, Event event, int iVictim
 	DispatchKeyValue(iRagdoll, "model", sModel);
 	
 	//Teleport body to player
-	float vecPos[3];
-	GetClientEyePosition(iVictim, vecPos);
-	DispatchSpawn(iRagdoll);
-	TeleportEntity(iRagdoll, vecPos, NULL_VECTOR, NULL_VECTOR);
+	float vecPos[3], vecAng[3], vecVel[3];
+	GetClientAbsOrigin(iVictim, vecPos);
+	GetClientEyeAngles(iVictim, vecAng);
+	GetEntPropVector(iVictim, Prop_Data, "m_vecVelocity", vecVel);
 	
-	//Add body to arraylist
-	g_aBodyEntity.Push(EntIndexToEntRef(iRagdoll));
+	//Adjust angles and position
+	vecAng[0] = 0.0;
+	vecPos[2] += 45.0;
+	
+	DispatchSpawn(iRagdoll);
+	TeleportEntity(iRagdoll, vecPos, vecAng, vecVel);
 	
 	//Create glow to body
 	TF2_CreateEntityGlow(iRagdoll, sModel, iColor);
-	SetEntProp(iRagdoll, Prop_Data, "m_CollisionGroup", COLLISION_GROUP_DEBRIS_TRIGGER);
+	SetEntityCollisionGroup(iRagdoll, COLLISION_GROUP_DEBRIS_TRIGGER);
 	SDK_AlwaysTransmitEntity(iRagdoll);
 	
 	//Kill body from timer
