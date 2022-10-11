@@ -7,6 +7,7 @@ static Handle g_hHookShouldBallTouch;
 static Handle g_hSDKGetMaxHealth;
 static Handle g_hSDKGetMaxAmmo;
 static Handle g_hSDKSendWeaponAnim;
+static Handle g_hSDKPlaySpecificSequence;
 static Handle g_hSDKGetMaxClip;
 static Handle g_hSDKRemoveWearable;
 static Handle g_hSDKGetEquippedWearable;
@@ -16,7 +17,7 @@ static Handle g_hSDKRemoveObject;
 
 int g_iOffsetFuseTime = -1;
 
-static int g_iHookIdGiveNamedItem[TF_MAXPLAYERS+1];
+static int g_iHookIdGiveNamedItem[TF_MAXPLAYERS];
 
 void SDK_Init()
 {
@@ -101,7 +102,15 @@ void SDK_Init()
 	g_hSDKSendWeaponAnim = EndPrepSDKCall();
 	if (g_hSDKSendWeaponAnim == null)
 		LogMessage("Failed to create call: CTFWeaponBase::SendWeaponAnim!");
-
+	
+	StartPrepSDKCall(SDKCall_Player);
+	PrepSDKCall_SetFromConf(hGameData, SDKConf_Signature, "CTFPlayer::PlaySpecificSequence");
+	PrepSDKCall_AddParameter(SDKType_String, SDKPass_Pointer);
+	PrepSDKCall_SetReturnInfo(SDKType_Bool, SDKPass_Plain);
+	g_hSDKPlaySpecificSequence = EndPrepSDKCall();
+	if (g_hSDKPlaySpecificSequence == null)
+		LogMessage("Failed to create call: CTFPlayer::PlaySpecificSequence!");
+	
 	// This call gets the maximum clip 1 for a given weapon
 	StartPrepSDKCall(SDKCall_Entity);
 	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "CTFWeaponBase::GetMaxClip1");
@@ -169,7 +178,7 @@ void SDK_Init()
 	if (hHook == null)
 		LogMessage("Failed to create hook: CWeaponMedigun::AllowedToHealTarget!");
 	else
-		DHookEnableDetour(hHook, false, Hook_AllowedToHealTarget);
+		DHookEnableDetour(hHook, true, Hook_AllowedToHealTarget);
 	
 	delete hHook;
 	
@@ -178,7 +187,7 @@ void SDK_Init()
 	if (hHook == null)
 		LogMessage("Failed to create hook: CObjectDispenser::CouldHealTarget!");
 	else
-		DHookEnableDetour(hHook, false, Hook_CouldHealTarget);
+		DHookEnableDetour(hHook, true, Hook_CouldHealTarget);
 	
 	delete hHook;
 	delete hGameData;
@@ -310,10 +319,23 @@ public MRESReturn Hook_AllowedToHealTarget(int iMedigun, Handle hReturn, Handle 
 	
 	if (0 < iClient <= MaxClients && IsClientInGame(iClient))
 	{
-		SaxtonHaleBase boss = SaxtonHaleBase(iHealTarget);
-		if (0 < iHealTarget <= MaxClients && boss.bValid && !boss.bCanBeHealed)
+		SaxtonHaleBase boss = SaxtonHaleBase(iClient);
+		if (boss.bValid)
 		{
-			//Dont allow medics heal boss
+			bool bReturn = DHookGetReturn(hReturn);
+			Action action = boss.CallFunction("CanHealTarget", iHealTarget, bReturn);
+			if (action >= Plugin_Changed)
+			{
+				DHookSetReturn(hReturn, bReturn);
+				return MRES_Supercede;
+			}
+			
+			return MRES_Ignored;
+		}
+		
+		if (SaxtonHale_IsValidBoss(iHealTarget))
+		{
+			//Never allow heal boss from any other sources
 			DHookSetReturn(hReturn, false);
 			return MRES_Supercede;
 		}
@@ -328,7 +350,10 @@ public MRESReturn Hook_AllowedToHealTarget(int iMedigun, Handle hReturn, Handle 
 			
 			//Override heal result
 			int iResult;
-			if (StrContains(sClassname, "obj_") == 0 && GetEntProp(iHealTarget, Prop_Send, "m_iTeamNum") == GetClientTeam(iClient) && tParams.GetIntEx("healbuilding", iResult))
+			if (StrContains(sClassname, "obj_") == 0
+				&& GetEntProp(iHealTarget, Prop_Send, "m_iTeamNum") == GetClientTeam(iClient)
+				&& !GetEntProp(iHealTarget, Prop_Send, "m_bCarried")
+				&& tParams.GetIntEx("healbuilding", iResult))
 			{
 				bool bResult = !!iResult;
 				DHookSetReturn(hReturn, bResult);
@@ -345,14 +370,28 @@ public MRESReturn Hook_AllowedToHealTarget(int iMedigun, Handle hReturn, Handle 
 
 public MRESReturn Hook_CouldHealTarget(int iDispenser, Handle hReturn, Handle hParams)
 {
+	int iClient = GetEntPropEnt(iDispenser, Prop_Send, "m_hBuilder");
 	int iHealTarget = DHookGetParam(hParams, 1);
 	
-	if (0 < iHealTarget <= MaxClients)
+	if (0 < iClient <= MaxClients)
 	{
-		SaxtonHaleBase boss = SaxtonHaleBase(iHealTarget);
-		if (boss.bValid && !boss.bCanBeHealed)
+		SaxtonHaleBase boss = SaxtonHaleBase(iClient);
+		if (boss.bValid)
 		{
-			//Dont allow dispensers heal boss
+			bool bReturn = DHookGetReturn(hReturn);
+			Action action = boss.CallFunction("CanHealTarget", iHealTarget, bReturn);
+			if (action >= Plugin_Changed)
+			{
+				DHookSetReturn(hReturn, bReturn);
+				return MRES_Supercede;
+			}
+			
+			return MRES_Ignored;
+		}
+		
+		if (SaxtonHale_IsValidBoss(iHealTarget))
+		{
+			//Never allow heal boss from any other sources
 			DHookSetReturn(hReturn, false);
 			return MRES_Supercede;
 		}
@@ -372,6 +411,11 @@ void SDK_SendWeaponAnim(int weapon, int anim)
 {
 	if (g_hSDKSendWeaponAnim != null)
 		SDKCall(g_hSDKSendWeaponAnim, weapon, anim);
+}
+
+bool SDKCall_PlaySpecificSequence(int iClient, const char[] sAnimationName)
+{
+	return SDKCall(g_hSDKPlaySpecificSequence, iClient, sAnimationName);
 }
 
 int SDK_GetMaxClip(int iWeapon)

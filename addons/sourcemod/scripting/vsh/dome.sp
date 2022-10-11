@@ -11,7 +11,7 @@
 static bool g_bDomeCustomPos;	//Whenever if capture point is in custom pos
 static float g_vecDomeCP[3];	//Pos of CP
 static int g_iDomeTriggerRef;	//Trigger to control touch
-static bool g_bDomeCapturing[TF_MAXPLAYERS+1];
+static bool g_bDomeCapturing[TF_MAXPLAYERS];
 
 //Dome prop
 static int g_iDomeEntRef;
@@ -21,8 +21,8 @@ static int g_iDomeColor[4];
 static float g_flDomeStart = 0.0;
 static float g_flDomeRadius = 0.0;
 static float g_flDomePreviousGameTime = 0.0;
-static float g_flDomePlayerTime[TF_MAXPLAYERS+1] = 0.0;
-static bool g_bDomePlayerOutside[TF_MAXPLAYERS+1] = false;
+static float g_flDomePlayerTime[TF_MAXPLAYERS];
+static bool g_bDomePlayerOutside[TF_MAXPLAYERS];
 static Handle g_hDomeTimerBleed = null;
 
 void Dome_Init()
@@ -111,13 +111,17 @@ public Action Dome_TriggerTouch(int iTrigger, int iToucher)
 	return Plugin_Continue;
 }
 
-public Action Dome_OnCapEnabled(const char[] output, int caller, int activator, float delay)
+public void Dome_OnCapEnabled(const char[] output, int caller, int activator, float delay)
 {
+	if (!g_bEnabled) return;
+	
 	Dome_Start();
 }
 
 public Action Dome_BlockOutput(const char[] output, int caller, int activator, float delay)
 {
+	if (!g_bEnabled) return Plugin_Continue; //Don't block outside of VSH
+	
 	//Always block this function, maps may assume round ended
 	return Plugin_Handled;
 }
@@ -187,14 +191,36 @@ void Dome_OnThink(int iClient)
 	if (iTrigger <= MaxClients)
 		return;
 	
+	static int iOffset = -1;
+	if (iOffset == -1)
+		iOffset = FindDataMapInfo(iTrigger, "m_flCapTime");
+	
+	TFTeam nCapturingTeam = view_as<TFTeam>(GetEntData(iTrigger, iOffset - 12));	// m_nCapturingTeam
+	if (TF2_GetClientTeam(iClient) != nCapturingTeam && nCapturingTeam > TFTeam_Spectator)
+	{
+		//Reversing capture
+		if (GetEntDataFloat(iTrigger, iOffset) * 2.0 < GetEntDataFloat(iTrigger, iOffset + 4))	// m_flCapTime & m_fTimeRemaining
+		{
+			//Reverse capture ended, force end touch
+			if (g_bDomeCapturing[iClient])
+			{
+				AcceptEntityInput(iTrigger, "EndTouch", iClient, iClient);
+				g_bDomeCapturing[iClient] = false;
+			}
+			
+			//Don't attempt call start touch
+			return;
+		}
+	}
+	
 	bool bTouch;
-	if (IsPlayerAlive(iClient) && TF2_GetClientTeam(iClient) > TFTeam_Spectator && IsClientInRange(iClient, g_vecDomeCP, g_ConfigConvar.LookupFloat("vsh_dome_cp_radius")))
+	if (IsPlayerAlive(iClient) && IsClientInRange(iClient, g_vecDomeCP, g_ConfigConvar.LookupFloat("vsh_dome_cp_radius")))
 	{
 		//Can client pos see dome center
 		float vecStart[3], vecEnd[3];
 		GetClientAbsOrigin(iClient, vecStart);
 		vecEnd = g_vecDomeCP;
-		vecEnd[2] += 8.0;
+		vecEnd[2] += 32.0;
 		TR_TraceRayFilter(vecStart, vecEnd, MASK_PLAYERSOLID, RayType_EndPoint, TraceFilter_Dome);
 		if (!TR_DidHit())
 		{
@@ -257,7 +283,7 @@ bool Dome_Start(int iCP = 0)
 	GameRules_SetPropFloat("m_flCapturePointEnableTime", 0.0);
 	g_flDomeStart = GetGameTime();
 	EmitSoundToAll(DOME_START_SOUND);
-	PrintHintTextToAll("The dome is active. Prepare to move!");
+	PrintHintTextToAll("The dome is now active!");
 	
 	g_iDomeEntRef = EntIndexToEntRef(iDome);
 	RequestFrame(Dome_Frame_Prepare);

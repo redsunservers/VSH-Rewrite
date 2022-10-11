@@ -31,7 +31,7 @@ public Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor,
 	}
 	
 	//Call attackdamage function
-	if (SaxtonHale_IsValidAttack(attacker))
+	if (victim != attacker && SaxtonHale_IsValidAttack(attacker))
 	{
 		for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
 		{
@@ -122,6 +122,7 @@ int TagsDamage_GetType(const char[] sDamageType)
 		mDamageType.SetValue("shock", DMG_SHOCK);
 		mDamageType.SetValue("knockback", -DMG_PREVENT_PHYSICS_FORCE);
 		mDamageType.SetValue("noknockback", DMG_PREVENT_PHYSICS_FORCE);
+		mDamageType.SetValue("ignite", DMG_IGNITE);
 	}
 	
 	int iDamageType = 0;

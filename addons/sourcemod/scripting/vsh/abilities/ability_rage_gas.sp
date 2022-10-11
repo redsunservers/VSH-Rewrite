@@ -1,145 +1,68 @@
-static float g_flRageGasNext[TF_MAXPLAYERS+1];
-static float g_flRageGasEnd[TF_MAXPLAYERS+1];
-static float g_flRageGasRate[TF_MAXPLAYERS+1];
-static float g_flRageGasDuration[TF_MAXPLAYERS+1];
-static float g_flRageGasDistance[TF_MAXPLAYERS+1];
-static float g_flRageGasHeight[TF_MAXPLAYERS+1];
-static float g_flPreviousSpeed[TF_MAXPLAYERS+1];
-static float g_flNewSpeed[TF_MAXPLAYERS+1];
+static float g_flRageGasEnd[TF_MAXPLAYERS];
+static float g_flPreviousSpeed[TF_MAXPLAYERS];
 
-methodmap CRageGas < SaxtonHaleBase
+	
+public void RageGas_Create(SaxtonHaleBase boss)
 {
-	property float flRate
-	{
-		public set(float flVal)
-		{
-			g_flRageGasRate[this.iClient] = flVal;
-		}
-		public get()
-		{
-			return g_flRageGasRate[this.iClient];
-		}
-	}
+	g_flRageGasEnd[boss.iClient] = 0.0;
 	
-	property float flDuration
-	{
-		public set (float flVal)
-		{
-			g_flRageGasDuration[this.iClient] = flVal;
-		}
-		public get()
-		{
-			return g_flRageGasDuration[this.iClient];
-		}
-	}
-	
-	property float flNewSpeed
-	{
-		public set (float flVal)
-		{
-			g_flNewSpeed[this.iClient] = flVal;
-		}
-		public get()
-		{
-			return g_flNewSpeed[this.iClient];
-		}
-	}
-	
-	property float flDistance
-	{
-		public set (float flVal)
-		{
-			g_flRageGasDistance[this.iClient] = flVal;
-		}
-		public get()
-		{
-			return g_flRageGasDistance[this.iClient];
-		}
-	}
-	
-	property float flHeight
-	{
-		public set (float flVal)
-		{
-			g_flRageGasHeight[this.iClient] = flVal;
-		}
-		public get()
-		{
-			return g_flRageGasHeight[this.iClient];
-		}
-	}
-		
-	public CRageGas(CRageGas ability)
-	{
-		g_flRageGasNext[ability.iClient] = 0.0;
-		g_flRageGasEnd[ability.iClient] = 0.0;
-		
-		ability.flRate = 1.5;
-		ability.flDuration = 8.0;
-		ability.flDistance = 600.0;
-		ability.flHeight = 700.0;
-	}
+	boss.SetPropFloat("RageGas", "Duration", 8.0);
+	boss.SetPropFloat("RageGas", "RageSpeedMult", 1.15);
+	boss.SetPropFloat("RageGas", "Radius", 800.0);
+}
 
-	public void OnRage()
-	{
-		float flRageDuration = this.flDuration;
-		if (this.bSuperRage)
-		{
-			flRageDuration * 1.5;
-			TF2_AddCondition(this.iClient, TFCond_TeleportedGlow, flRageDuration, this.iClient);
-			this.flSpeed *= 1.2;
-		}
-		
-		g_flRageGasNext[this.iClient] = GetGameTime();
-		g_flRageGasEnd[this.iClient] = GetGameTime() + flRageDuration;
-		g_flPreviousSpeed[this.iClient] = this.flSpeed;
-		TF2_AddCondition(this.iClient, TFCond_SpeedBuffAlly, flRageDuration, this.iClient);
-		this.flSpeed *= 1.2;
-	}
+public void RageGas_OnRage(SaxtonHaleBase boss)
+{
+	int bossTeam = GetClientTeam(boss.iClient);
+	float vecPos[3], vecTargetPos[3];
+	float flRageDuration = boss.GetPropFloat("RageGas", "Duration");
+	GetClientAbsOrigin(boss.iClient, vecPos);
 	
-	public void OnThink()
+	float flRadius = boss.GetPropFloat("RageGas", "Radius");
+	if (boss.bSuperRage) flRadius *= 1.5;
+	if (boss.bSuperRage) flRageDuration *= 1.5;
+	
+	for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
 	{
-		if (g_flRageGasEnd[this.iClient] == 0.0)
-			return;
-		
-		float flGameTime = GetGameTime();
-		if (flGameTime <= g_flRageGasEnd[this.iClient])
+		if (IsClientInGame(iVictim) && IsPlayerAlive(iVictim) && GetClientTeam(iVictim) != bossTeam && !TF2_IsUbercharged(iVictim))
 		{
-			if (g_flRageGasNext[this.iClient] > flGameTime) return;
+			GetClientAbsOrigin(iVictim, vecTargetPos);
 			
-			g_flRageGasNext[this.iClient] = flGameTime + this.flRate;
+			float flDistance = GetVectorDistance(vecTargetPos, vecPos);
 			
-			float vecOrigin[3], vecVelocity[3], vecAngleVelocity[3];
-			GetClientAbsOrigin(this.iClient, vecOrigin);
-			vecOrigin[2] += 42.0;
-			
-			for (int i = 0; i < 8; i++)
+			if (flDistance <= flRadius)
 			{
-				int iBomb = CreateEntityByName("tf_projectile_jar_gas");
-				if (iBomb > MaxClients)
-				{
-					vecAngleVelocity[1] = float(45 * i);
-					
-					GetAngleVectors(vecAngleVelocity, vecVelocity, vecVelocity, NULL_VECTOR);
-					
-					ScaleVector(vecVelocity, this.flDistance);
-					vecVelocity[2] = this.flHeight;
-						
-					SetEntProp(iBomb, Prop_Send, "m_iTeamNum", GetClientTeam(this.iClient));
-					SetEntPropEnt(iBomb, Prop_Send, "m_hOwnerEntity", this.iClient);
-					
-					DispatchSpawn(iBomb);
-					
-					TeleportEntity(iBomb, vecOrigin, NULL_VECTOR, vecVelocity);
-					
-					SetEntProp(iBomb, Prop_Send, "m_CollisionGroup", 24);
-				}
+				TF2_AddCondition(iVictim, TFCond_Gas, flRageDuration, boss.iClient);
 			}
 		}
-		else
+	}
+	
+	if (g_flRageGasEnd[boss.iClient] == 0.0)
+	{
+		g_flPreviousSpeed[boss.iClient] = boss.flSpeed;
+		boss.flSpeed *= boss.GetPropFloat("RageGas", "RageSpeedMult");
+		
+		if (boss.bSuperRage)
 		{
-			g_flRageGasEnd[this.iClient] = 0.0;
-			this.flSpeed = g_flPreviousSpeed[this.iClient];
+		TF2_AddCondition(boss.iClient, TFCond_TeleportedGlow, flRageDuration, boss.iClient);
+		boss.flSpeed *= boss.GetPropFloat("RageGas", "RageSpeedMult");
 		}
 	}
-};
+	
+	g_flRageGasEnd[boss.iClient] = GetGameTime() + flRageDuration;
+	
+	TF2_AddCondition(boss.iClient, TFCond_SpeedBuffAlly, flRageDuration, boss.iClient);
+}
+
+public void RageGas_OnThink(SaxtonHaleBase boss)
+{
+	if (g_flRageGasEnd[boss.iClient] == 0.0)
+		return;
+	
+	float flGameTime = GetGameTime();
+	if (flGameTime > g_flRageGasEnd[boss.iClient])
+	{
+		g_flRageGasEnd[boss.iClient] = 0.0;
+		boss.flSpeed = g_flPreviousSpeed[boss.iClient];
+	}
+}

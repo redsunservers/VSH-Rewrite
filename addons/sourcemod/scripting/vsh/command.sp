@@ -23,8 +23,8 @@ public void Command_Init()
 	Command_Create("settings", Command_Preferences);
 	Command_Create("preferences", Command_Preferences);
 	Command_Create("bosstoggle", Command_Preferences_Boss);
-	Command_Create("winstreak", Command_Preferences_Winstreak);
-	Command_Create("duo", Command_Preferences_Duo);
+	Command_Create("duo", Command_Preferences_Multi);
+	Command_Create("multi", Command_Preferences_Multi);
 	Command_Create("music", Command_Preferences_Music);
 	Command_Create("revival", Command_Preferences_Revival);
 	Command_Create("zombie", Command_Preferences_Revival);
@@ -56,7 +56,7 @@ public Action Command_MainMenu(int iClient, int iArgs)
 
 	if (iClient == 0)
 	{
-		ReplyToCommand(iClient, "This Command can only be used ingame");
+		ReplyToCommand(iClient, "This command can only be used in-game.");
 		return Plugin_Handled;
 	}
 
@@ -70,7 +70,7 @@ public Action Command_Weapon(int iClient, int iArgs)
 
 	if (iClient == 0)
 	{
-		ReplyToCommand(iClient, "This Command can only be used ingame");
+		ReplyToCommand(iClient, "This command can only be used in-game.");
 		return Plugin_Handled;
 	}
 
@@ -112,7 +112,7 @@ public Action Command_Boss(int iClient, int iArgs)
 
 	if (iClient == 0)
 	{
-		ReplyToCommand(iClient, "This Command can only be used ingame");
+		ReplyToCommand(iClient, "This command can only be used in-game.");
 		return Plugin_Handled;
 	}
 
@@ -126,7 +126,7 @@ public Action Command_MultiBoss(int iClient, int iArgs)
 
 	if (iClient == 0)
 	{
-		ReplyToCommand(iClient, "This Command can only be used ingame");
+		ReplyToCommand(iClient, "This command can only be used in-game.");
 		return Plugin_Handled;
 	}
 
@@ -140,7 +140,7 @@ public Action Command_Modifiers(int iClient, int iArgs)
 
 	if (iClient == 0)
 	{
-		ReplyToCommand(iClient, "This Command can only be used ingame");
+		ReplyToCommand(iClient, "This command can only be used in-game.");
 		return Plugin_Handled;
 	}
 
@@ -154,7 +154,7 @@ public Action Command_HaleNext(int iClient, int iArgs)
 
 	if (iClient == 0)
 	{
-		ReplyToCommand(iClient, "This Command can only be used ingame");
+		ReplyToCommand(iClient, "This command can only be used in-game.");
 		return Plugin_Handled;
 	}
 
@@ -162,13 +162,14 @@ public Action Command_HaleNext(int iClient, int iArgs)
 	return Plugin_Handled;
 }
 
+
 public Action Command_Preferences(int iClient, int iArgs)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
 	if (iClient == 0)
 	{
-		ReplyToCommand(iClient, "This Command can only be used ingame");
+		ReplyToCommand(iClient, "This command can only be used in-game.");
 		return Plugin_Handled;
 	}
 
@@ -183,14 +184,12 @@ public Action Command_Preferences(int iClient, int iArgs)
 		char sPreferences[64];
 		GetCmdArg(1, sPreferences, sizeof(sPreferences));
 		
-		for (int iPreferences = 0; iPreferences < sizeof(g_strPreferencesName); iPreferences++)
+		for (SaxtonHalePreferences nPreferences; nPreferences < view_as<SaxtonHalePreferences>(sizeof(g_strPreferencesName)); nPreferences++)
 		{
-			if (!StrEmpty(g_strPreferencesName[iPreferences]) && StrContains(g_strPreferencesName[iPreferences], sPreferences, false) == 0)
+			if (!StrEmpty(g_strPreferencesName[nPreferences]) && StrContains(g_strPreferencesName[nPreferences], sPreferences, false) == 0)
 			{
-				Preferences preferences = view_as<Preferences>(RoundToNearest(Pow(2.0, float(iPreferences))));
-				
-				bool bValue = !Preferences_Get(iClient, preferences);
-				if (Preferences_Set(iClient, preferences, bValue))
+				bool bValue = !Preferences_Get(iClient, nPreferences);
+				if (Preferences_Set(iClient, nPreferences, bValue))
 				{
 					char buffer[512];
 					
@@ -199,18 +198,18 @@ public Action Command_Preferences(int iClient, int iArgs)
 					else
 						Format(buffer, sizeof(buffer), "Disable");
 					
-					PrintToChat(iClient, "%s%s %s %s", TEXT_TAG, TEXT_COLOR, buffer, g_strPreferencesName[iPreferences]);
+					PrintToChat(iClient, "%s%s %s %s", TEXT_TAG, TEXT_COLOR, buffer, g_strPreferencesName[nPreferences]);
 					return Plugin_Handled;
 				}
 				else
 				{
-					PrintToChat(iClient, "%s%s Your preferences is still loading, try again later.", TEXT_TAG, TEXT_ERROR);
+					PrintToChat(iClient, "%s%s Your preferences are still loading, try again later.", TEXT_TAG, TEXT_ERROR);
 					return Plugin_Handled;
 				}
 			}
 		}
 		
-		PrintToChat(iClient, "Invalid preferences entered", TEXT_TAG, TEXT_ERROR);
+		PrintToChat(iClient, "%s%s Invalid preferences entered.", TEXT_TAG, TEXT_ERROR);
 		return Plugin_Handled;
 	}
 }
@@ -221,7 +220,7 @@ public Action Command_Preferences_Boss(int iClient, int iArgs)
 
 	if (iClient == 0)
 	{
-		ReplyToCommand(iClient, "This Command can only be used ingame");
+		ReplyToCommand(iClient, "This command can only be used in-game.");
 		return Plugin_Handled;
 	}
 
@@ -229,31 +228,17 @@ public Action Command_Preferences_Boss(int iClient, int iArgs)
 	return Plugin_Handled;
 }
 
-public Action Command_Preferences_Winstreak(int iClient, int iArgs)
+public Action Command_Preferences_Multi(int iClient, int iArgs)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
 	if (iClient == 0)
 	{
-		ReplyToCommand(iClient, "This Command can only be used ingame");
+		ReplyToCommand(iClient, "This command can only be used in-game.");
 		return Plugin_Handled;
 	}
 
-	ClientCommand(iClient, "vsh_preferences winstreak");
-	return Plugin_Handled;
-}
-
-public Action Command_Preferences_Duo(int iClient, int iArgs)
-{
-	if (!g_bEnabled) return Plugin_Continue;
-
-	if (iClient == 0)
-	{
-		ReplyToCommand(iClient, "This Command can only be used ingame");
-		return Plugin_Handled;
-	}
-
-	ClientCommand(iClient, "vsh_preferences duo");
+	ClientCommand(iClient, "vsh_preferences multi");
 	return Plugin_Handled;
 }
 
@@ -263,7 +248,7 @@ public Action Command_Preferences_Music(int iClient, int iArgs)
 
 	if (iClient == 0)
 	{
-		ReplyToCommand(iClient, "This Command can only be used ingame");
+		ReplyToCommand(iClient, "This command can only be used in-game.");
 		return Plugin_Handled;
 	}
 
@@ -277,7 +262,7 @@ public Action Command_Preferences_Revival(int iClient, int iArgs)
 
 	if (iClient == 0)
 	{
-		ReplyToCommand(iClient, "This Command can only be used ingame");
+		ReplyToCommand(iClient, "This command can only be used in-game.");
 		return Plugin_Handled;
 	}
 
@@ -291,7 +276,7 @@ public Action Command_Credits(int iClient, int iArgs)
 
 	if (iClient == 0)
 	{
-		ReplyToCommand(iClient, "This Command can only be used ingame");
+		ReplyToCommand(iClient, "This command can only be used in-game.");
 		return Plugin_Handled;
 	}
 
@@ -305,7 +290,7 @@ public Action Command_AdminMenu(int iClient, int iArgs)
 
 	if (iClient == 0)
 	{
-		ReplyToCommand(iClient, "This Command can only be used ingame");
+		ReplyToCommand(iClient, "This command can only be used in-game.");
 		return Plugin_Handled;
 	}
 
@@ -329,7 +314,7 @@ public Action Command_ConfigRefresh(int iClient, int iArgs)
 	{
 		Config_Refresh();
 		
-		PrintToChatAll("%s%s %N refreshed vsh config", TEXT_TAG, TEXT_COLOR, iClient);
+		PrintToChatAll("%s%s %N refreshed the VSH config.", TEXT_TAG, TEXT_COLOR, iClient);
 		return Plugin_Handled;
 	}
 
@@ -367,14 +352,14 @@ public Action Command_AddQueuePoints(int iClient, int iArgs)
 		int iTargetCount = ProcessTargetString(sArg1, iClient, iTargetList, sizeof(iTargetList), COMMAND_FILTER_NO_IMMUNITY, sTargetName, sizeof(sTargetName), bIsML);
 		if (iTargetCount <= 0)
 		{
-			ReplyToCommand(iClient, "%s%s Could not find anyone to give queue points", TEXT_TAG, TEXT_ERROR);
+			ReplyToCommand(iClient, "%s%s Could not find anyone to give queue points to.", TEXT_TAG, TEXT_ERROR);
 			return Plugin_Handled;
 		}
 		
 		for (int i = 0; i < iTargetCount; i++)
 			Queue_AddPlayerPoints(iTargetList[i], iAddQueue);
 		
-		ReplyToCommand(iClient, "%s%s Gave %s %d queue points", TEXT_TAG, TEXT_COLOR, sTargetName, iAddQueue);
+		ReplyToCommand(iClient, "%s%s Gave %s %d queue points.", TEXT_TAG, TEXT_COLOR, sTargetName, iAddQueue);
 		return Plugin_Handled;
 	}
 
@@ -410,7 +395,7 @@ public Action Command_ForceSpecialRound(int iClient, int iArgs)
 			NextBoss_SetSpecialClass(nClass);
 		}
 		
-		PrintToChatAll("%s%s %N force set next round a %s special round!", TEXT_TAG, TEXT_COLOR, iClient, sClass);
+		PrintToChatAll("%s%s %N set the next round as a %s special round!", TEXT_TAG, TEXT_COLOR, iClient, sClass);
 		return Plugin_Handled;
 	}
 
@@ -461,9 +446,9 @@ public Action Command_ForceDome(int iClient, int iArgs)
 		}
 		
 		if (Dome_Start())
-			PrintToChatAll("%s%s %N force start %s dome!", TEXT_TAG, TEXT_COLOR, iClient, sTeam);
+			PrintToChatAll("%s%s %N forcibly started a %s dome.", TEXT_TAG, TEXT_COLOR, iClient, sTeam);
 		else
-			PrintToChatAll("%s%s %N changed dome team to %s!", TEXT_TAG, TEXT_COLOR, iClient, sTeam);
+			PrintToChatAll("%s%s %N changed the dome team to %s.", TEXT_TAG, TEXT_COLOR, iClient, sTeam);
 		
 		return Plugin_Handled;
 	}
@@ -499,14 +484,14 @@ public Action Command_SetRage(int iClient, int iArgs)
 			return Plugin_Handled;
 		}
 
-		for (int i = 1; i <= TF_MAXPLAYERS; i++)
+		for (int i = 1; i <= MaxClients; i++)
 		{
 			SaxtonHaleBase boss = SaxtonHaleBase(i);
 			if (boss.bValid && boss.iMaxRageDamage != -1)
 				boss.iRageDamage = RoundToNearest(float(boss.iMaxRageDamage) * (float(iRage)/100.0));
 		}
 
-		PrintToChatAll("%s%s %N sets rage to %i percent", TEXT_TAG, TEXT_COLOR, iClient, iRage);
+		PrintToChatAll("%s%s %N has set boss rage to %i percent.", TEXT_TAG, TEXT_COLOR, iClient, iRage);
 		return Plugin_Handled;
 	}
 

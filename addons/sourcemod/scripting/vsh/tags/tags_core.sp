@@ -1,5 +1,5 @@
 ArrayList g_aTags;	//Arrays of every tags
-ArrayList g_aTagsClient[TF_MAXPLAYERS+1][view_as<int>(TagsCall)][WeaponSlot_BuilderEngie+1];	//List of tags id from g_aTags builted to call from each clients
+ArrayList g_aTagsClient[TF_MAXPLAYERS][view_as<int>(TagsCall_MAX)][WeaponSlot_BuilderEngie+1];	//List of tags id from g_aTags builted to call from each clients
 
 TagsFunction g_tFunctions;	//List of all functions and overrides
 
@@ -96,7 +96,7 @@ void TagsCore_Clear()
 void TagsCore_RefreshClient(int iClient, bool bClearTimer = true)
 {
 	//Delet existing arrays before creating new ones
-	for (TagsCall nCall; nCall < TagsCall; nCall++)
+	for (TagsCall nCall; nCall < TagsCall_MAX; nCall++)
 		for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
 			delete g_aTagsClient[iClient][nCall][iSlot];
 	
@@ -217,7 +217,7 @@ stock bool TagsCore_GetStruct(int &iPos, int iClient, TagsCall nCall, int iSlot,
 stock bool TagsCore_IsAllowed(int iClient, int iId, TagsParams tParams = null)
 {
 	//Check if client have given id first
-	for (TagsCall nCall; nCall < TagsCall; nCall++)
+	for (TagsCall nCall; nCall < TagsCall_MAX; nCall++)
 	{
 		for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
 		{

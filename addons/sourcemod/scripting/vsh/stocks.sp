@@ -45,17 +45,35 @@ stock int Client_GetEyeTarget(int iClient)
 	return iHit;
 }
 
-stock bool TraceRay_DontHitEntity(int iEntity, int contentsMask, int data)
+stock bool IsPointsClear(const float vecPos1[3], const float vecPos2[3])
 {
-	if (iEntity == data) return false;
-
-	return true;
+	TR_TraceRayFilter(vecPos1, vecPos2, MASK_PLAYERSOLID, RayType_EndPoint, TraceRay_DontHitPlayersAndObjects);
+	return !TR_DidHit();
 }
 
-stock bool TraceRay_DontHitPlayers(int entity, int mask, any data)
+stock bool TraceRay_DontHitEntity(int iEntity, int iMask, int iData)
 {
-	if (entity > 0 && entity <= MaxClients) return false;
-	return true;
+	return iEntity != iData;
+}
+
+stock bool TraceRay_DontHitPlayersAndObjects(int iEntity, int iMask, int iData)
+{
+	if (0 < iEntity <= MaxClients)
+		return false;
+	
+	char sClassname[256];
+	GetEntityClassname(iEntity, sClassname, sizeof(sClassname));
+	return StrContains(sClassname, "obj_") != 0;
+}
+
+stock bool TraceRay_HitEnemyPlayersAndObjects(int iEntity, int iMask, int iClient)
+{
+	if (0 < iEntity <= MaxClients)
+		return GetClientTeam(iEntity) != GetClientTeam(iClient);
+	
+	char sClassname[256];
+	GetEntityClassname(iEntity, sClassname, sizeof(sClassname));
+	return StrContains(sClassname, "obj_") == 0 && GetEntProp(iEntity, Prop_Send, "m_iTeamNum") != GetClientTeam(iClient);
 }
 
 stock int GetMainBoss()
@@ -82,7 +100,7 @@ stock ArrayList GetValidSummonableClients(bool bAllowBoss = false)
 		if (IsClientInGame(iClient)
 			&& TF2_GetClientTeam(iClient) > TFTeam_Spectator
 			&& !IsPlayerAlive(iClient)
-			&& Preferences_Get(iClient, Preferences_Revival)
+			&& Preferences_Get(iClient, VSHPreferences_Revival)
 			&& !Client_HasFlag(iClient, ClientFlags_Punishment))
 		{
 			if (!bAllowBoss)
@@ -105,12 +123,48 @@ stock void TF2_ForceTeamJoin(int iClient, TFTeam nTeam)
 		// Player hasn't chosen a class. Choose one for him.
 		TF2_SetPlayerClass(iClient, view_as<TFClassType>(GetRandomInt(1, 9)), true, true);
 	}
-
-	SetEntProp(iClient, Prop_Send, "m_lifeState", LifeState_Dead);
+	
+	bool bAlive = IsPlayerAlive(iClient);
+	if (bAlive)
+		SetEntProp(iClient, Prop_Send, "m_lifeState", LifeState_Dead);
+	
 	TF2_ChangeClientTeam(iClient, nTeam);
-	SetEntProp(iClient, Prop_Send, "m_lifeState", LifeState_Alive);
-
+	
+	if (bAlive)
+		SetEntProp(iClient, Prop_Send, "m_lifeState", LifeState_Alive);
+	
 	TF2_RespawnPlayer(iClient);
+}
+
+stock bool TF2_CreateEntityGlow(int iEntity, char[] sModel, int iColor[4] = {255, 255, 255, 255})
+{
+	int iGlow = CreateEntityByName("tf_taunt_prop");
+	if (iGlow != -1)
+	{
+		SetEntityModel(iGlow, sModel);
+		
+		DispatchSpawn(iGlow);
+		ActivateEntity(iGlow);
+		
+		SetEntityRenderMode(iGlow, RENDER_TRANSCOLOR);
+		SetEntityRenderColor(iGlow, 0, 0, 0, 0);
+		
+		int iGlowManager = TF2_CreateGlow(iGlow, iColor);
+		SDK_AlwaysTransmitEntity(iGlow);
+		SDK_AlwaysTransmitEntity(iGlowManager);
+		
+		// Set effect flags.
+		int iFlags = GetEntProp(iGlow, Prop_Send, "m_fEffects");
+		SetEntProp(iGlow, Prop_Send, "m_fEffects", iFlags | EF_BONEMERGE); // EF_BONEMERGE
+		
+		SetVariantString("!activator");
+		AcceptEntityInput(iGlow, "SetParent", iEntity);
+		
+		SetEntPropEnt(iGlow, Prop_Send, "m_hOwnerEntity", iGlowManager);
+		return true;
+	}
+	
+	return false;
 }
 
 stock int TF2_CreateGlow(int iEnt, int iColor[4])
@@ -139,6 +193,30 @@ stock int TF2_CreateGlow(int iEnt, int iColor[4])
 	AcceptEntityInput(ent, "SetParent", iEnt);
 
 	return ent;
+}
+
+stock int TF2_CreateTransmitGlow(int iClient, const char[] sModel, SDKHookCB callback)
+{
+	int iGlow = CreateEntityByName("tf_taunt_prop");
+	
+	int iTeam = GetClientTeam(iClient);
+	SetEntProp(iGlow, Prop_Data, "m_iInitialTeamNum", iTeam);
+	SetEntProp(iGlow, Prop_Send, "m_iTeamNum", iTeam);
+	
+	DispatchSpawn(iGlow);
+	
+	SetEntityModel(iGlow, sModel);
+	SetEntPropEnt(iGlow, Prop_Data, "m_hEffectEntity", iClient);
+	SetEntProp(iGlow, Prop_Send, "m_bGlowEnabled", true);
+	SetEntProp(iGlow, Prop_Send, "m_fEffects", GetEntProp(iGlow, Prop_Send, "m_fEffects")|EF_BONEMERGE|EF_NOSHADOW|EF_NOINTERP);
+	
+	SetVariantString("!activator");
+	AcceptEntityInput(iGlow, "SetParent", iClient);
+	
+	SetEntityRenderMode(iGlow, RENDER_TRANSCOLOR);
+	SetEntityRenderColor(iGlow, 255, 255, 255, 255);
+	SDKHook(iGlow, SDKHook_SetTransmit, callback);
+	return EntIndexToEntRef(iGlow);
 }
 
 stock bool TF2_FindAttribute(int iEntity, int iAttrib, float &flVal)
@@ -238,7 +316,7 @@ stock int TF2_GetSlotFromWeapon(int iWeapon)
 
 stock int TF2_GetItemSlot(int iIndex, TFClassType nClass)
 {
-	int iSlot = TF2Econ_GetItemSlot(iIndex, nClass);
+	int iSlot = TF2Econ_GetItemLoadoutSlot(iIndex, nClass);
 	if (iSlot >= 0)
 	{
 		// Econ reports wrong slots for Engineer and Spy
@@ -293,6 +371,14 @@ stock void TF2_RemoveItemInSlot(int client, int slot)
 		SDK_RemoveWearable(client, iWearable);
 		AcceptEntityInput(iWearable, "Kill");
 	}
+}
+
+stock bool TF2_SwitchToWeapon(int iClient, int iWeapon)
+{
+	char sClassname[256];
+	GetEntityClassname(iWeapon, sClassname, sizeof(sClassname));
+	FakeClientCommand(iClient, "use %s", sClassname);
+	return GetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon") == iWeapon;
 }
 
 stock void TF2_CheckClientWeapons(int iClient)
@@ -423,6 +509,14 @@ stock TFObjectMode TF2_GetBuildingMode(int iBuilding)
 	return TFObjectMode_Invalid;
 }
 
+stock int TF2_GetSapper(int iBuilding)
+{
+	if (!GetEntProp(iBuilding, Prop_Send, "m_bHasSapper"))
+		return INVALID_ENT_REFERENCE;
+	
+	return GetEntPropEnt(iBuilding, Prop_Data, "m_hMoveChild");
+}
+
 stock void TF2_StunBuilding(int iBuilding, float flDuration)
 {
 	SetEntProp(iBuilding, Prop_Send, "m_bDisabled", true);
@@ -434,6 +528,8 @@ public Action Timer_EnableBuilding(Handle timer, int iRef)
 	int iBuilding = EntRefToEntIndex(iRef);
 	if (iBuilding > MaxClients)
 		SetEntProp(iBuilding, Prop_Send, "m_bDisabled", false);
+	
+	return Plugin_Continue;
 }
 
 stock void TF2_SetBuildingTeam(int iBuilding, TFTeam nTeam, int iNewBuilder = -1)
@@ -851,6 +947,12 @@ stock void StrToLower(char[] sBuffer)
 	int iLength = strlen(sBuffer);
 	for (int i = 0; i < iLength; i++)
 		sBuffer[i] = CharToLower(sBuffer[i]);
+}
+
+stock void ColorToTextStr(const int iColor[4], char[] sBuffer, int iLength)
+{
+	//ignoring alpha
+	Format(sBuffer, iLength, "\x07%02X%02X%02X", iColor[0], iColor[1], iColor[2]);
 }
 
 stock void PrepareSound(const char[] sSoundPath)

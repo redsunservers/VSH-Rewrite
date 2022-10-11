@@ -1,12 +1,14 @@
 name: Compile
 
-on:
-  pull_request:
-    branches: master
+on: pull_request
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        version: ["1.11"]
     
     steps:
       - name: Checkout
@@ -14,7 +16,7 @@ jobs:
       
       - name: Environments
         run: |
-          echo ::set-env name=SM_VERSION::1.10
+          echo "SM_VERSION=${{ matrix.version }}" >> $GITHUB_ENV
       
       - name: Install
         run: |
@@ -23,4 +25,4 @@ jobs:
       - name: Compile
         run: |
           cd build/addons/sourcemod/scripting
-          ./spcomp-custom-$SM_VERSION -E saxtonhale.sp -o ../plugins/saxtonhale.smx
+          ./spcomp -E saxtonhale.sp -o ../plugins/saxtonhale.smx

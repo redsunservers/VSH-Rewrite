@@ -75,9 +75,9 @@ public Action Console_JoinTeamCommand(int iClient, const char[] sCommand, int iA
 		if (boss.bValid && IsPlayerAlive(iClient) && (g_bRoundStarted || GameRules_GetRoundState() == RoundState_Preround))
 		{
 			if (!boss.bMinion)
-				PrintToChat(iClient, "%s%s Do not suicide and waste round as Boss. Use !vshbosstoggle instead.", TEXT_TAG, TEXT_ERROR);
+				PrintToChat(iClient, "%s%s Please do not suicide and waste the round as Boss. Use !vshbosstoggle instead.", TEXT_TAG, TEXT_ERROR);
 			else
-				PrintToChat(iClient, "%s%s Do not suicide and play abnormally as Minion. Use !vshrevival instead if possible.", TEXT_TAG, TEXT_ERROR);
+				PrintToChat(iClient, "%s%s Please do not suicide and play abnormally as a Minion. Use !vshrevival instead if possible.", TEXT_TAG, TEXT_ERROR);
 			
 			return Plugin_Handled;
 		}
@@ -89,20 +89,21 @@ public Action Console_JoinTeamCommand(int iClient, const char[] sCommand, int iA
 	bool bBoss = false;
 	for (int iBoss = 1; iBoss <= MaxClients; iBoss++)
 	{
-		if (SaxtonHale_IsValidBoss(iClient))
+		if (SaxtonHale_IsValidBoss(iBoss))
 		{
 			bBoss = true;
 			break;
 		}
 	}
 	
-	if (!bBoss) return Plugin_Continue;
+	if (!bBoss)
+		return Plugin_Continue;
 
-	if (Client_HasFlag(iClient, ClientFlags_BossTeam))
-		TF2_ChangeClientTeam(iClient, TFTeam_Boss);
-	else
-		TF2_ChangeClientTeam(iClient, TFTeam_Attack);
-
+	if (SaxtonHaleBase(iClient).bValid)
+		return Plugin_Handled;
+	
+	TF2_ChangeClientTeam(iClient, TFTeam_Attack);
+	
 	TFTeam nTeam = TF2_GetClientTeam(iClient);
 	ShowVGUIPanel(iClient, nTeam == TFTeam_Blue ? "class_blue" : "class_red");
 

@@ -1,52 +1,58 @@
-enum ( <<=1 )
+enum
 {
-	MenuBossFlags_Hidden = 1,
-	MenuBossFlags_Random,
-	MenuBossFlags_None
+	MenuBossFlags_Hidden = (1 << 0),
+	MenuBossFlags_Random = (1 << 1),
+	MenuBossFlags_None = (1 << 2),
+}
+
+enum MenuBossOption
+{
+	MenuBossOption_Unknown,	//Also used for "back" button
+	MenuBossOption_Select,
+	MenuBossOption_Random,
+	MenuBossOption_None
 }
 
 enum struct MenuBossSelect
 {
 	int iClient;
+	MenuBossOption nOption[view_as<int>(VSHClassType_Modifier) + 1];
 	char sBossType[MAX_TYPE_CHAR];
 	char sModifierType[MAX_TYPE_CHAR];
 	char sBossMultiType[MAX_TYPE_CHAR];
+	bool bModifierSet;
 }
 
 enum struct MenuBossListInfo
 {
 	char sTitle[32];
-	char sSetType[MAX_TYPE_CHAR];
 	char sIsHidden[MAX_TYPE_CHAR];
 	char sGetName[MAX_TYPE_CHAR];
 	char sGetInfo[512];
 }
 
 //Callback when selecting boss/modifiers list
-typedef MenuBossListCallback = function void (int iClient, const char[] sType);
+typedef MenuBossListCallback = function void (int iClient, MenuBossOption nOption, const char[] sType);
 
-static SaxtonHaleClassType g_nMenuBossClassType[TF_MAXPLAYERS+1];	//Current class type using
-static MenuBossListCallback g_fMenuBossCallback[TF_MAXPLAYERS+1];	//Callback function to use once client selected boss/modifiers
+static SaxtonHaleClassType g_nMenuBossClassType[TF_MAXPLAYERS];	//Current class type using
+static MenuBossListCallback g_fMenuBossCallback[TF_MAXPLAYERS];	//Callback function to use once client selected boss/modifiers
 
-static MenuBossSelect g_menuBossSelect[TF_MAXPLAYERS+1];
-static MenuBossListInfo g_menuBossListInfo[view_as<int>(SaxtonHaleClassType)];
+static MenuBossSelect g_menuBossSelect[TF_MAXPLAYERS];
+static MenuBossListInfo g_menuBossListInfo[view_as<int>(VSHClassType_Modifier) + 1];
 
 void MenuBoss_Init()
 {
 	g_menuBossListInfo[VSHClassType_Boss].sTitle = "Boss Menu";
-	g_menuBossListInfo[VSHClassType_Boss].sSetType = "SetBossType";
 	g_menuBossListInfo[VSHClassType_Boss].sIsHidden = "IsBossHidden";
 	g_menuBossListInfo[VSHClassType_Boss].sGetName = "GetBossName";
 	g_menuBossListInfo[VSHClassType_Boss].sGetInfo = "GetBossInfo";
 	
 	g_menuBossListInfo[VSHClassType_Modifier].sTitle = "Modifiers Menu";
-	g_menuBossListInfo[VSHClassType_Modifier].sSetType = "SetModifiersType";
 	g_menuBossListInfo[VSHClassType_Modifier].sIsHidden = "IsModifiersHidden";
 	g_menuBossListInfo[VSHClassType_Modifier].sGetName = "GetModifiersName";
 	g_menuBossListInfo[VSHClassType_Modifier].sGetInfo = "GetModifiersInfo";
 	
 	g_menuBossListInfo[VSHClassType_BossMulti].sTitle = "Multi Boss Menu";
-	g_menuBossListInfo[VSHClassType_BossMulti].sSetType = "SetBossMultiType";
 	g_menuBossListInfo[VSHClassType_BossMulti].sIsHidden = "IsBossMultiHidden";
 	g_menuBossListInfo[VSHClassType_BossMulti].sGetName = "GetBossMultiName";
 	g_menuBossListInfo[VSHClassType_BossMulti].sGetInfo = "GetBossMultiInfo";
@@ -62,16 +68,16 @@ void MenuBoss_DisplayList(int iClient, SaxtonHaleClassType nClassType, MenuBossL
 {
 	Menu hMenuList = new Menu(MenuBoss_SelectList);
 	hMenuList.SetTitle("%s\n---", g_menuBossListInfo[nClassType].sTitle);
-	hMenuList.AddItem("back", "<- back");
+	hMenuList.AddItem("__back__", "<- back");
 	
 	if (iFlags & MenuBossFlags_Random)
-		hMenuList.AddItem("random", "Random");
+		hMenuList.AddItem("__random__", "Random");
 	
 	if (iFlags & MenuBossFlags_None)
-		hMenuList.AddItem("none", "None");
+		hMenuList.AddItem("__none__", "None");
 	
 	//Loop through every classes by type
-	ArrayList aClasses = FuncClass_GetAllType(nClassType);
+	ArrayList aClasses = SaxtonHale_GetAllClassType(nClassType);
 	aClasses.Sort(Sort_Ascending, Sort_String);
 	int iLength = aClasses.Length;
 	for (int i = 0; i < iLength; i++)
@@ -80,16 +86,15 @@ void MenuBoss_DisplayList(int iClient, SaxtonHaleClassType nClassType, MenuBossL
 		char sBossType[MAX_TYPE_CHAR];
 		aClasses.GetString(i, sBossType, sizeof(sBossType));
 		
-		SaxtonHaleBase boss = SaxtonHaleBase(0);
-		boss.CallFunction(g_menuBossListInfo[nClassType].sSetType, sBossType);
-		
 		//If disallow hidden class, check that
-		if (!(iFlags & MenuBossFlags_Hidden) && boss.CallFunction(g_menuBossListInfo[nClassType].sIsHidden))
+		if (!(iFlags & MenuBossFlags_Hidden) && SaxtonHale_CallFunction(sBossType, g_menuBossListInfo[nClassType].sIsHidden))
 			continue;
 		
 		//Get boss name
 		char sName[512];
-		boss.CallFunction(g_menuBossListInfo[nClassType].sGetName, sName, sizeof(sName));
+		SaxtonHale_CallFunction(sBossType, g_menuBossListInfo[nClassType].sGetName, sName, sizeof(sName));
+		if (!sName[0])
+			strcopy(sName, sizeof(sName), sBossType);
 		
 		//Add to menu
 		hMenuList.AddItem(sBossType, sName);
@@ -118,22 +123,36 @@ public int MenuBoss_SelectList(Menu hMenu, MenuAction action, int iClient, int i
 		char sSelect[MAX_TYPE_CHAR];
 		hMenu.GetItem(iSelect, sSelect, sizeof(sSelect));
 		
+		SaxtonHaleClassType nClassType = g_nMenuBossClassType[iClient];
+		
+		if (StrEqual(sSelect, "__back__"))
+			g_menuBossSelect[iClient].nOption[nClassType] = MenuBossOption_Unknown;
+		else if (StrEqual(sSelect, "__random__"))
+			g_menuBossSelect[iClient].nOption[nClassType] = MenuBossOption_Random;
+		else if (StrEqual(sSelect, "__none__"))
+			g_menuBossSelect[iClient].nOption[nClassType] = MenuBossOption_None;
+		else
+			g_menuBossSelect[iClient].nOption[nClassType] = MenuBossOption_Select;
+		
 		Call_StartFunction(null, g_fMenuBossCallback[iClient]);
 		g_fMenuBossCallback[iClient] = INVALID_FUNCTION;
 		
 		Call_PushCell(iClient);
+		Call_PushCell(g_menuBossSelect[iClient].nOption[nClassType]);
 		Call_PushString(sSelect);
 		Call_Finish();
 	}
+	
+	return 0;
 }
 
 /*
  * Display bosses/modifiers info
  */
 
-public void MenuBoss_CallbackInfo(int iClient, const char[] sType)
+public void MenuBoss_CallbackInfo(int iClient, MenuBossOption nOption, const char[] sType)
 {
-	if (StrEqual(sType, "back"))
+	if (nOption == MenuBossOption_Unknown)
 		Menu_DisplayMain(iClient);
 	else
 		MenuBoss_DisplayInfo(iClient, g_nMenuBossClassType[iClient], sType);
@@ -145,15 +164,15 @@ void MenuBoss_DisplayInfo(int iClient, SaxtonHaleClassType nClassType, const cha
 	
 	char sName[512], sInfo[512];
 	
-	SaxtonHaleBase boss = SaxtonHaleBase(0);
-	boss.CallFunction(g_menuBossListInfo[nClassType].sSetType, sType);
-	boss.CallFunction(g_menuBossListInfo[nClassType].sGetName, sName, sizeof(sName));
+	SaxtonHale_CallFunction(sType, g_menuBossListInfo[nClassType].sGetName, sName, sizeof(sName));
+	if (!sName[0])
+		strcopy(sName, sizeof(sName), sType);
 	
 	//Create menu info for boss
 	Menu hMenuBossInfo = new Menu(MenuBoss_SelectInfo);
 	
 	//Get Boss info to set title
-	boss.CallFunction(g_menuBossListInfo[nClassType].sGetInfo, sInfo, sizeof(sInfo));
+	SaxtonHale_CallFunction(sType, g_menuBossListInfo[nClassType].sGetInfo, sInfo, sizeof(sInfo));
 	if (StrEmpty(sInfo))
 		Format(sInfo, sizeof(sInfo), "%s\n \nThere seems to be nothing here...", sName);
 	else
@@ -171,6 +190,8 @@ public int MenuBoss_SelectInfo(Menu hMenu, MenuAction action, int iClient, int i
 		MenuBoss_DisplayList(iClient, g_nMenuBossClassType[iClient], MenuBoss_CallbackInfo);
 	else if (action == MenuAction_End)
 		delete hMenu;
+	
+	return 0;
 }
 
 /*
@@ -211,7 +232,7 @@ void MenuBoss_DisplayNextList(int iClient)
 	hAdminBossList.SetTitle(sBuffer);
 	hAdminBossList.AddItem("back", "<- back");
 	hAdminBossList.AddItem("boss", "Add New Boss");
-	hAdminBossList.AddItem("bossmulti", "Add New Multi Boss");
+	hAdminBossList.AddItem("bossmulti", "Add New Multi-Boss");
 	hAdminBossList.AddItem("clear", "Clear List");
 	hAdminBossList.Display(iClient, MENU_TIME_FOREVER);
 }
@@ -221,10 +242,10 @@ public int MenuBoss_SelectNextList(Menu hMenu, MenuAction action, int iClient, i
 	if (action == MenuAction_End)
 	{
 		delete hMenu;
-		return;
+		return 0;
 	}
 	
-	if (action != MenuAction_Select) return;
+	if (action != MenuAction_Select) return 0;
 	
 	char sSelect[16];
 	hMenu.GetItem(iSelect, sSelect, sizeof(sSelect));
@@ -240,7 +261,7 @@ public int MenuBoss_SelectNextList(Menu hMenu, MenuAction action, int iClient, i
 	else if (StrEqual(sSelect, "clear"))
 	{
 		g_aNextBoss.Clear();
-		PrintToChatAll("%s%s %N cleared all next boss", TEXT_TAG, TEXT_COLOR, iClient);
+		PrintToChatAll("%s %s%N%s cleared all queued bosses.", TEXT_TAG, TEXT_DARK, iClient, TEXT_COLOR);
 		MenuBoss_DisplayNextList(iClient);
 	}
 	else if (StrEqual(sSelect, "back"))
@@ -251,6 +272,8 @@ public int MenuBoss_SelectNextList(Menu hMenu, MenuAction action, int iClient, i
 	{
 		Menu_DisplayError(iClient);
 	}
+	
+	return 0;
 }
 
 void MenuBoss_DisplayNextClient(int iClient)
@@ -298,10 +321,10 @@ public int MenuBoss_SelectNextClient(Menu hMenu, MenuAction action, int iClient,
 	if (action == MenuAction_End)
 	{
 		delete hMenu;
-		return;
+		return 0;
 	}
 	
-	if (action != MenuAction_Select) return;
+	if (action != MenuAction_Select) return 0;
 	
 	char sSelect[16];
 	hMenu.GetItem(iSelect, sSelect, sizeof(sSelect));
@@ -320,20 +343,18 @@ public int MenuBoss_SelectNextClient(Menu hMenu, MenuAction action, int iClient,
 		
 		MenuBoss_DisplayList(iClient, VSHClassType_Boss, MenuBoss_CallbackNextBoss, MenuBossFlags_Hidden|MenuBossFlags_Random);
 	}
+	
+	return 0;
 }
 
-public void MenuBoss_CallbackNextBoss(int iClient, const char[] sType)
+public void MenuBoss_CallbackNextBoss(int iClient, MenuBossOption nOption, const char[] sType)
 {
-	if (StrEqual(sType, "back"))
+	if (nOption == MenuBossOption_Unknown)
 	{
 		MenuBoss_DisplayNextClient(iClient);
 		return;
 	}
-	else if (StrEqual(sType, "random"))
-	{
-		g_menuBossSelect[iClient].sBossType = NULL_STRING;
-	}
-	else
+	else if (nOption == MenuBossOption_Select)
 	{
 		Format(g_menuBossSelect[iClient].sBossType, sizeof(g_menuBossSelect[].sBossType), sType);
 	}
@@ -341,48 +362,60 @@ public void MenuBoss_CallbackNextBoss(int iClient, const char[] sType)
 	MenuBoss_DisplayList(iClient, VSHClassType_Modifier, MenuBoss_CallbackNextModifiers, MenuBossFlags_Hidden|MenuBossFlags_Random|MenuBossFlags_None);
 }
 
-public void MenuBoss_CallbackNextModifiers(int iClient, const char[] sType)
+public void MenuBoss_CallbackNextModifiers(int iClient, MenuBossOption nOption, const char[] sType)
 {
-	if (StrEqual(sType, "back"))
+	if (nOption == MenuBossOption_Unknown)
 	{
 		MenuBoss_DisplayList(iClient, VSHClassType_Boss, MenuBoss_CallbackNextBoss, MenuBossFlags_Hidden|MenuBossFlags_Random);
 		return;
 	}
-	else if (StrEqual(sType, "random"))
-	{
-		g_menuBossSelect[iClient].sModifierType = NULL_STRING;
-	}
-	else if (StrEqual(sType, "none"))
-	{
-		g_menuBossSelect[iClient].sModifierType = "CModifiersNone";
-	}
-	else
+	else if (nOption == MenuBossOption_Select)
 	{
 		Format(g_menuBossSelect[iClient].sModifierType, sizeof(g_menuBossSelect[].sModifierType), sType);
+		g_menuBossSelect[iClient].bModifierSet = true;
+	}
+	else	// Random and None
+	{
+		Format(g_menuBossSelect[iClient].sModifierType, sizeof(g_menuBossSelect[].sModifierType), "");
+		
+		if (nOption == MenuBossOption_Random)
+			g_menuBossSelect[iClient].bModifierSet = false;
+		else
+			g_menuBossSelect[iClient].bModifierSet = true;
 	}
 	
-	if (!StrEmpty(g_menuBossSelect[iClient].sBossType))
+	int iColor[4];
+	char sColor[16];
+	if (g_menuBossSelect[iClient].sModifierType[0])
+		SaxtonHale_CallFunction(g_menuBossSelect[iClient].sModifierType, "GetRenderColor", iColor);
+	
+	if (iColor[3])
+		ColorToTextStr(iColor, sColor, sizeof(sColor));
+	else
+		sColor = TEXT_DARK;
+	
+	if (view_as<MenuBossOption>(g_menuBossSelect[iClient].nOption[VSHClassType_Boss]) != MenuBossOption_Unknown)
 	{
 		//Add to list
 		SaxtonHaleNextBoss nextBoss = SaxtonHaleNextBoss(g_menuBossSelect[iClient].iClient);
 		nextBoss.SetBoss(g_menuBossSelect[iClient].sBossType);
-		nextBoss.SetModifier(g_menuBossSelect[iClient].sModifierType);
 		nextBoss.bForceNext = true;
+		
+		if (g_menuBossSelect[iClient].bModifierSet)
+			nextBoss.SetModifier(g_menuBossSelect[iClient].sModifierType);
+		else
+			nextBoss.SetModifier(NULL_STRING);
 		
 		//Print chat boss been set
 		char sBuffer[256];
 		nextBoss.GetName(sBuffer, sizeof(sBuffer));
-		PrintToChatAll("%s%s %N added next boss %s", TEXT_TAG, TEXT_COLOR, iClient, sBuffer);
+		PrintToChatAll("%s %s%N%s added next boss %s%s", TEXT_TAG, TEXT_DARK, iClient, TEXT_COLOR, sColor, sBuffer);
 	}
-	else if (!StrEmpty(g_menuBossSelect[iClient].sBossMultiType))
+	else if (view_as<MenuBossOption>(g_menuBossSelect[iClient].nOption[VSHClassType_BossMulti]) != MenuBossOption_Unknown)
 	{
 		//Add all bosses from multi to list
-		SaxtonHaleBase boss = SaxtonHaleBase(0);
-		boss.CallFunction("SetBossMultiType", g_menuBossSelect[iClient].sBossMultiType);
-		boss.CallFunction("SetModifiersType", g_menuBossSelect[iClient].sModifierType);
-		
 		ArrayList aList = new ArrayList(ByteCountToCells(MAX_TYPE_CHAR));
-		boss.CallFunction("GetBossMultiList", aList);
+		SaxtonHale_CallFunction(g_menuBossSelect[iClient].sBossMultiType, "GetBossMultiList", aList);
 		
 		int iLength = aList.Length;
 		for (int i = 0; i < iLength; i++)
@@ -393,20 +426,29 @@ public void MenuBoss_CallbackNextModifiers(int iClient, const char[] sType)
 			SaxtonHaleNextBoss nextBoss = SaxtonHaleNextBoss();
 			nextBoss.SetBoss(sBossType);
 			nextBoss.SetBossMulti(g_menuBossSelect[iClient].sBossMultiType);
-			nextBoss.SetModifier(g_menuBossSelect[iClient].sModifierType);
 			nextBoss.bForceNext = true;
+			
+			if (g_menuBossSelect[iClient].bModifierSet)
+				nextBoss.SetModifier(g_menuBossSelect[iClient].sModifierType);
+			else
+				nextBoss.SetModifier(NULL_STRING);
 		}
 		
 		delete aList;
 		
-		char sModifiersName[256], sBossMultiName[256];
-		boss.CallFunction("GetModifiersName", sModifiersName, sizeof(sModifiersName));
-		boss.CallFunction("GetBossMultiName", sBossMultiName, sizeof(sBossMultiName));
+		char sBossMultiName[256];
+		SaxtonHale_CallFunction(g_menuBossSelect[iClient].sBossMultiType, "GetBossMultiName", sBossMultiName, sizeof(sBossMultiName));
 		
-		if (StrEmpty(sModifiersName))
-			PrintToChatAll("%s%s %N added next multi boss %s", TEXT_TAG, TEXT_COLOR, iClient, sBossMultiName);
+		if (view_as<MenuBossOption>(g_menuBossSelect[iClient].nOption[VSHClassType_Modifier]) == MenuBossOption_Select)
+		{
+			char sModifiersName[256];
+			SaxtonHale_CallFunction(g_menuBossSelect[iClient].sModifierType, "GetModifiersName", sModifiersName, sizeof(sModifiersName));
+			PrintToChatAll("%s %s%N%s added %s%s %s as the next multi-boss.", TEXT_TAG, TEXT_DARK, iClient, TEXT_COLOR, sColor, sModifiersName, sBossMultiName);
+		}
 		else
-			PrintToChatAll("%s%s %N added next multi boss %s %s", TEXT_TAG, TEXT_COLOR, iClient, sModifiersName, sBossMultiName);
+		{
+			PrintToChatAll("%s %s%N%s added %s%s as the next multi-boss.", TEXT_TAG, TEXT_DARK, iClient, TEXT_COLOR, sColor, sBossMultiName);
+		}
 	}
 	else
 	{
@@ -421,14 +463,14 @@ public void MenuBoss_CallbackNextModifiers(int iClient, const char[] sType)
 	MenuBoss_DisplayNextList(iClient);
 }
 
-public void MenuBoss_CallbackNextBossMulti(int iClient, const char[] sType)
+public void MenuBoss_CallbackNextBossMulti(int iClient, MenuBossOption nOption, const char[] sType)
 {
-	if (StrEqual(sType, "back"))
+	if (nOption == MenuBossOption_Unknown)
 	{
 		MenuBoss_DisplayNextList(iClient);
 		return;
 	}
-	else
+	else if (nOption == MenuBossOption_Select)
 	{
 		Format(g_menuBossSelect[iClient].sBossMultiType, sizeof(g_menuBossSelect[].sBossMultiType), sType);
 	}

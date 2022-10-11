@@ -1,65 +1,36 @@
-static float g_flRageCondDuration[TF_MAXPLAYERS+1];
-static float g_flRageCondSuperRageMultiplier[TF_MAXPLAYERS+1];
-static ArrayList g_aConditions[TF_MAXPLAYERS+1];
+static ArrayList g_aConditions[TF_MAXPLAYERS];
 
-methodmap CRageAddCond < SaxtonHaleBase
+void RageAddCond_AddCond(SaxtonHaleBase boss, TFCond cond, bool bSuperRage = false)
 {
-	property float flRageCondDuration
-	{
-		public set(float flVal)
-		{
-			g_flRageCondDuration[this.iClient] = flVal;
-		}
-		public get()
-		{
-			return g_flRageCondDuration[this.iClient];
-		}
-	}
+	int iLength = g_aConditions[boss.iClient].Length;
+	g_aConditions[boss.iClient].Resize(iLength+1);
+	g_aConditions[boss.iClient].Set(iLength, cond, 0);
+	g_aConditions[boss.iClient].Set(iLength, bSuperRage, 1);
+}
+
+public void RageAddCond_Create(SaxtonHaleBase boss)
+{
+	if (g_aConditions[boss.iClient] == null)
+		g_aConditions[boss.iClient] = new ArrayList(2);
+	g_aConditions[boss.iClient].Clear();
 	
-	property float flRageCondSuperRageMultiplier
-	{
-		public set(float flVal)
-		{
-			g_flRageCondSuperRageMultiplier[this.iClient] = flVal;
-		}
-		public get()
-		{
-			return g_flRageCondSuperRageMultiplier[this.iClient];
-		}
-	}
+	boss.SetPropFloat("RageAddCond", "RageCondDuration", 5.0);
+	boss.SetPropFloat("RageAddCond", "RageCondSuperRageMultiplier", 2.0);
+}
+
+public void RageAddCond_OnRage(SaxtonHaleBase boss)
+{
+	int iLength = g_aConditions[boss.iClient].Length;
 	
-	public void AddCond(TFCond cond, bool bSuperRage = false)
-	{
-		int iLength = g_aConditions[this.iClient].Length;
-		g_aConditions[this.iClient].Resize(iLength+1);
-		g_aConditions[this.iClient].Set(iLength, cond, 0);
-		g_aConditions[this.iClient].Set(iLength, bSuperRage, 1);
-	}
+	float flDuration = boss.GetPropFloat("RageAddCond", "RageCondDuration");
+	if (boss.bSuperRage)
+		flDuration *= boss.GetPropFloat("RageAddCond", "RageCondSuperRageMultiplier");
 	
-	public CRageAddCond(CRageAddCond ability)
+	for (int i = 0; i < iLength; i++)
 	{
-		if (g_aConditions[ability.iClient] == null)
-			g_aConditions[ability.iClient] = new ArrayList(2);
-		g_aConditions[ability.iClient].Clear();
+		bool bSuperRageCond = g_aConditions[boss.iClient].Get(i, 1);
 		
-		g_flRageCondDuration[ability.iClient] = 5.0;
-		g_flRageCondSuperRageMultiplier[ability.iClient] = 2.0;
+		if (!bSuperRageCond || bSuperRageCond && boss.bSuperRage)
+			TF2_AddCondition(boss.iClient, g_aConditions[boss.iClient].Get(i, 0), flDuration);
 	}
-	
-	public void OnRage()
-	{
-		int iLength = g_aConditions[this.iClient].Length;
-		
-		float flDuration = this.flRageCondDuration;
-		if (this.bSuperRage)
-			flDuration *= this.flRageCondSuperRageMultiplier;
-		
-		for (int i = 0; i < iLength; i++)
-		{
-			bool bSuperRageCond = g_aConditions[this.iClient].Get(i, 1);
-			
-			if (!bSuperRageCond || bSuperRageCond && this.bSuperRage)
-				TF2_AddCondition(this.iClient, g_aConditions[this.iClient].Get(i, 0), flDuration);
-		}
-	}
-};
+}

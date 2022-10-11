@@ -11,7 +11,7 @@ void Menu_Init()
 	
 	// Error Menu
 	g_hMenuError = new Menu(Menu_SelectError);
-	g_hMenuError.SetTitle("You found an error menu your not suppose to be here, oops!\nYou probably want to tell an admin about this...");
+	g_hMenuError.SetTitle("You found an error menu - you're not supposed to be here... oops!\nYou probably want to tell an admin about this...");
 	g_hMenuError.AddItem("back", "<- Main Menu");
 	
 	// Main Menu
@@ -19,7 +19,7 @@ void Menu_Init()
 	g_hMenuMain.SetTitle("[VSH REWRITE] - %s.%s", PLUGIN_VERSION, PLUGIN_VERSION_REVISION);
 	g_hMenuMain.AddItem("class", "Class & Weapon Menu (!vshclass)");
 	g_hMenuMain.AddItem("boss", "Bosses Info (!vshboss)");
-	g_hMenuMain.AddItem("bossmulti", "Multi Bosses Info (!vshmultiboss)");
+	g_hMenuMain.AddItem("bossmulti", "Multi-Bosses Info (!vshmultiboss)");
 	g_hMenuMain.AddItem("modifiers", "Modifiers Info (!vshmodifiers)");
 	g_hMenuMain.AddItem("queue", "Queue List (!vshnext)");
 	g_hMenuMain.AddItem("preference", "Settings (!vshsettings)");
@@ -53,9 +53,10 @@ void Menu_DisplayError(int iClient)
 
 public int Menu_SelectError(Menu hMenu, MenuAction action, int iClient, int iSelect)
 {
-	if (action != MenuAction_Select) return;
+	if (action != MenuAction_Select) return 0;
 	
 	Menu_DisplayMain(iClient);
+	return 0;
 }
 
 void Menu_DisplayMain(int iClient)
@@ -65,7 +66,7 @@ void Menu_DisplayMain(int iClient)
 
 public int Menu_SelectMain(Menu hMenu, MenuAction action, int iClient, int iSelect)
 {
-	if (action != MenuAction_Select) return;
+	if (action != MenuAction_Select) return 0;
 	
 	char sSelect[32];
 	hMenu.GetItem(iSelect, sSelect, sizeof(sSelect));
@@ -86,6 +87,8 @@ public int Menu_SelectMain(Menu hMenu, MenuAction action, int iClient, int iSele
 		Menu_DisplayCredits(iClient);
 	else
 		Menu_DisplayError(iClient);
+	
+	return 0;
 }
 
 void Menu_DisplayQueue(int iClient)
@@ -109,7 +112,7 @@ void Menu_DisplayQueue(int iClient)
 	if (iPoints >= 0)
 		Format(buffer, sizeof(buffer), "%s\nYour queue points: %i", buffer, iPoints);
 	else
-		Format(buffer, sizeof(buffer), "%s\nYour queue points is still loading, try again later", buffer, iPoints);
+		Format(buffer, sizeof(buffer), "%s\nYour queue points are still loading, try again later", buffer, iPoints);
 	
 	hMenuQueue.SetTitle(buffer);
 	hMenuQueue.AddItem("back", "<- Back");
@@ -121,12 +124,13 @@ public int Menu_SelectQueue(Menu hMenu, MenuAction action, int iClient, int iSel
 	if (action == MenuAction_End)
 	{
 		delete hMenu;
-		return;
+		return 0;
 	}
 	
-	if (action != MenuAction_Select) return;
+	if (action != MenuAction_Select) return 0;
 
 	Menu_DisplayMain(iClient);
+	return 0;
 }
 
 void Menu_DisplayPreferences(int iClient)
@@ -135,20 +139,18 @@ void Menu_DisplayPreferences(int iClient)
 	Menu hMenuPreferences = new Menu(Menu_SelectPreferences);
 	hMenuPreferences.SetTitle("Toggle Preferences");
 	
-	for (int iPreferences = 0; iPreferences < sizeof(g_strPreferencesName); iPreferences++)
+	for (SaxtonHalePreferences nPreferences; nPreferences < view_as<SaxtonHalePreferences>(sizeof(g_strPreferencesName)); nPreferences++)
 	{
-		if (StrEmpty(g_strPreferencesName[iPreferences]))
+		if (StrEmpty(g_strPreferencesName[nPreferences]))
 			continue;
 		
-		Preferences preferences = view_as<Preferences>(RoundToNearest(Pow(2.0, float(iPreferences))));
-		
 		char buffer[512];
-		if (Preferences_Get(iClient, preferences))
-			Format(buffer, sizeof(buffer), "%s (Enable)", g_strPreferencesName[iPreferences]);
+		if (Preferences_Get(iClient, nPreferences))
+			Format(buffer, sizeof(buffer), "%s (Enabled)", g_strPreferencesName[nPreferences]);
 		else
-			Format(buffer, sizeof(buffer), "%s (Disable)", g_strPreferencesName[iPreferences]);
+			Format(buffer, sizeof(buffer), "%s (Disabled)", g_strPreferencesName[nPreferences]);
 		
-		hMenuPreferences.AddItem(g_strPreferencesName[iPreferences], buffer);
+		hMenuPreferences.AddItem(g_strPreferencesName[nPreferences], buffer);
 	}
 	
 	hMenuPreferences.AddItem("back", "<- Back");
@@ -160,21 +162,21 @@ public int Menu_SelectPreferences(Menu hMenu, MenuAction action, int iClient, in
 	if (action == MenuAction_End)
 	{
 		delete hMenu;
-		return;
+		return 0;
 	}
 	
-	if (action != MenuAction_Select) return;
+	if (action != MenuAction_Select) return 0;
 	
 	char sSelect[32];
 	hMenu.GetItem(iSelect, sSelect, sizeof(sSelect));
 	
 	//Find preferences thats selected
-	for (int iPreferences = 0; iPreferences < sizeof(g_strPreferencesName); iPreferences++)
+	for (SaxtonHalePreferences nPreferences; nPreferences < view_as<SaxtonHalePreferences>(sizeof(g_strPreferencesName)); nPreferences++)
 	{
-		if (StrEqual(sSelect, g_strPreferencesName[iPreferences]))
+		if (StrEqual(sSelect, g_strPreferencesName[nPreferences]))
 		{
-			ClientCommand(iClient, "vsh_preferences %s", g_strPreferencesName[iPreferences]);
-			return;
+			ClientCommand(iClient, "vsh_preferences %s", g_strPreferencesName[nPreferences]);
+			return 0;
 		}
 	}
 	
@@ -182,6 +184,8 @@ public int Menu_SelectPreferences(Menu hMenu, MenuAction action, int iClient, in
 		Menu_DisplayMain(iClient);
 	else
 		Menu_DisplayError(iClient);
+	
+	return 0;
 }
 
 void Menu_DisplayCredits(int iClient)
@@ -191,7 +195,8 @@ void Menu_DisplayCredits(int iClient)
 
 public int Menu_SelectCredits(Menu hMenu, MenuAction action, int iClient, int iSelect)
 {
-	if (action != MenuAction_Select) return;
+	if (action != MenuAction_Select) return 0;
 
 	Menu_DisplayMain(iClient);
+	return 0;
 }

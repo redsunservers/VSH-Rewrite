@@ -4,8 +4,6 @@ static GlobalForward g_hForwardTeleportDamage;
 static GlobalForward g_hForwardChainStabs;
 static GlobalForward g_hForwardUpdatePreferences;
 static GlobalForward g_hForwardUpdateQueue;
-static GlobalForward g_hForwardUpdateRank;
-static GlobalForward g_hForwardUpdateWinstreak;
 
 void Forward_AskLoad()
 {
@@ -15,8 +13,6 @@ void Forward_AskLoad()
 	g_hForwardChainStabs = new GlobalForward("SaxtonHale_OnChainStabs", ET_Ignore, Param_Cell, Param_Cell);
 	g_hForwardUpdatePreferences = new GlobalForward("SaxtonHale_OnUpdatePreferences", ET_Ignore, Param_Cell, Param_Cell);
 	g_hForwardUpdateQueue = new GlobalForward("SaxtonHale_OnUpdateQueue", ET_Ignore, Param_Cell, Param_Cell);
-	g_hForwardUpdateRank = new GlobalForward("SaxtonHale_OnUpdateRank", ET_Ignore, Param_Cell, Param_Cell);
-	g_hForwardUpdateWinstreak = new GlobalForward("SaxtonHale_OnUpdateWinstreak", ET_Ignore, Param_Cell, Param_Cell);
 }
 
 void Forward_BossWin(TFTeam nTeam)
@@ -61,19 +57,6 @@ void Forward_UpdatePreferences(int iClient, int iValue)
 void Forward_UpdateQueue(int iClient, int iValue)
 {
 	Call_StartForward(g_hForwardUpdateQueue);
-	Call_PushCell(iClient);
-	Call_PushCell(iValue);
-	Call_Finish();
-}
-
-void Forward_UpdateRank(int iClient, int iValue)
-{
-	Call_StartForward(g_hForwardUpdateRank);
-	Call_PushCell(iClient);
-	Call_PushCell(iValue);
-	Call_Finish();
-	
-	Call_StartForward(g_hForwardUpdateWinstreak);
 	Call_PushCell(iClient);
 	Call_PushCell(iValue);
 	Call_Finish();

@@ -6,6 +6,8 @@ enum TagsFilterType			//List of possible filters
 	TagsFilterType_AttackWeapon,
 	TagsFilterType_Aim,
 	TagsFilterType_SentryTarget,
+	TagsFilterType_DamageMaximum,
+	TagsFilterType_DamageMinimum,
 	TagsFilterType_DamageType,
 	TagsFilterType_DamageCustom,
 	TagsFilterType_BackstabCount,
@@ -24,7 +26,7 @@ enum struct TagsFilterStruct
 		
 		switch (this.nType)
 		{
-			case TagsFilterType_Cond, TagsFilterType_BackstabCount:
+			case TagsFilterType_Cond, TagsFilterType_BackstabCount, TagsFilterType_DamageMaximum, TagsFilterType_DamageMinimum:
 			{
 				//Get number from string
 				return !!StringToIntEx(sValue, this.nValue);
@@ -130,6 +132,22 @@ enum struct TagsFilterStruct
 				bool bUbered = TF2_IsUbercharged(iVictim);
 				return (this.nValue ? bUbered : !bUbered);
 			}
+			case TagsFilterType_DamageMaximum:
+			{
+				int iDamage;
+				if (!tParams.GetIntEx("damage", iDamage))
+					return false;
+				
+				return iDamage <= this.nValue;
+			}
+			case TagsFilterType_DamageMinimum:
+			{
+				int iDamage;
+				if (!tParams.GetIntEx("damage", iDamage))
+					return false;
+				
+				return iDamage >= this.nValue;
+			}
 		}
 		
 		return false;
@@ -202,6 +220,8 @@ TagsFilterType TagsFilter_GetType(const char[] sTarget)
 		mFilterType.SetValue("cond", TagsFilterType_Cond);
 		mFilterType.SetValue("activeweapon", TagsFilterType_ActiveWeapon);
 		mFilterType.SetValue("attackweapon", TagsFilterType_AttackWeapon);
+		mFilterType.SetValue("damagemax", TagsFilterType_DamageMaximum);
+		mFilterType.SetValue("damagemin", TagsFilterType_DamageMinimum);
 		mFilterType.SetValue("aim", TagsFilterType_Aim);
 		mFilterType.SetValue("sentrytarget", TagsFilterType_SentryTarget);
 		mFilterType.SetValue("damagetype", TagsFilterType_DamageType);

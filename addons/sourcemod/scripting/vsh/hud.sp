@@ -1,37 +1,60 @@
-static char g_sHudText[TF_MAXPLAYERS+1][256];
-static int g_iHudColor[TF_MAXPLAYERS+1][4];
-static bool g_bHudRage[TF_MAXPLAYERS+1] = true;
+static bool g_bHudRage[TF_MAXPLAYERS] = {true, ...};
+static char g_sBossHudText[TF_MAXPLAYERS][256];
+static int g_iBossHudColor[TF_MAXPLAYERS][4];
 
 void Hud_SetRageView(int iClient, bool bEnable)
 {
 	g_bHudRage[iClient] = bEnable;
 }
 
-void Hud_AddText(int iClient, char[] sText, bool bShowWhenDead = false)
+void Hud_UpdateBossInfo(int iClient, float flinterval, float flDuration)
 {
-	if (!bShowWhenDead && !IsPlayerAlive(iClient))
-		return;
-		
-	if (!StrEmpty(g_sHudText[iClient])) StrCat(g_sHudText[iClient], sizeof(g_sHudText[]), "\n");
-	StrCat(g_sHudText[iClient], sizeof(g_sHudText[]), sText);
+	//Update now
+	g_sBossHudText[iClient] = "";
+	g_iBossHudColor[iClient] = {255, 255, 255, 255};
+	SaxtonHaleBase(iClient).CallFunction("GetHudInfo", g_sBossHudText[iClient], sizeof(g_sBossHudText[]), g_iBossHudColor[iClient]);
+	
+	if (flDuration > 0.0)
+	{
+		//Create timer to update hud on every interval
+		DataPack hPack;
+		CreateDataTimer(flinterval, Hud_TimerUpdateBossInfo, hPack, TIMER_REPEAT);
+		hPack.WriteCell(GetClientSerial(iClient));
+		hPack.WriteFloat(GetGameTime() + flDuration);
+	}
 }
 
-void Hud_SetColor(int iClient, int iColor[4])
+Action Hud_TimerUpdateBossInfo(Handle hTimer, DataPack hPack)
 {
-	for (int i = 0; i < sizeof(iColor); i++)
-		g_iHudColor[iClient][i] = iColor[i];
+	hPack.Reset();
+	int iClient = GetClientFromSerial(hPack.ReadCell());
+	float flEnd = hPack.ReadFloat();
+	
+	if (!SaxtonHale_IsValidBoss(iClient))
+		return Plugin_Stop;
+	
+	g_sBossHudText[iClient] = "";
+	g_iBossHudColor[iClient] = {255, 255, 255, 255};
+	SaxtonHaleBase(iClient).CallFunction("GetHudInfo", g_sBossHudText[iClient], sizeof(g_sBossHudText[]), g_iBossHudColor[iClient]);
+	
+	if (flEnd <= GetGameTime())	//We've reached duration, stop updating
+		return Plugin_Stop;
+	
+	return Plugin_Continue;
 }
 
 void Hud_Think(int iClient)
 {
-	if (!g_bRoundStarted) return;
+	if (!g_bRoundStarted)
+		return;
 	
-	char sMessage[255];
+	char sMessage[256];
+	int iColor[4] = {255, 255, 255, 255};
 	
 	if (!SaxtonHale_IsValidBoss(iClient, false))
 	{
 		//Display Boss's health to non-bosses regardless if dead or alive
-		Format(sMessage, sizeof(sMessage), "Boss Health: %i/%i", g_iHealthBarHealth, g_iHealthBarMaxHealth);
+		Format(sMessage, sizeof(sMessage), "Boss HP: %i/%i", g_iHealthBarHealth, g_iHealthBarMaxHealth);
 		
 		//Display boss's rage
 		if (g_bHudRage[iClient])
@@ -48,34 +71,23 @@ void Hud_Think(int iClient)
 			}
 		}
 		
-		Hud_AddText(iClient, sMessage, true);
-
 		//Display Client's damage
 		if (g_iPlayerAssistDamage[iClient] <= 0)
-			Format(sMessage, sizeof(sMessage), "Damage: %i", g_iPlayerDamage[iClient]);
+			Format(sMessage, sizeof(sMessage), "%s\nDamage: %i", sMessage, g_iPlayerDamage[iClient]);
 		else
-			Format(sMessage, sizeof(sMessage), "Damage: %i Assist: %i", g_iPlayerDamage[iClient], g_iPlayerAssistDamage[iClient]);
-
-		Hud_AddText(iClient, sMessage, true);
+			Format(sMessage, sizeof(sMessage), "%s\nDamage: %i Assist: %i", sMessage, g_iPlayerDamage[iClient], g_iPlayerAssistDamage[iClient]);
 		
 		//Display airblast percentage
-		float flPercentage = Tags_GetAirblastPercentage(iClient);
-		if (flPercentage >= 0.0)
-		{
-			Format(sMessage, sizeof(sMessage), "Airblast: %i%%", RoundToFloor(flPercentage * 100.0));
-			Hud_AddText(iClient, sMessage);
-		}
+		float flCooldown = Tags_GetAirblastCooldown(iClient);
+		if (flCooldown > 0.0)
+			Format(sMessage, sizeof(sMessage), "%s\nAirblast Cooldown: %d sec", sMessage, RoundToCeil(flCooldown));
 	}
-	else
+	else if (!IsPlayerAlive(iClient))
 	{
 		//Display Boss's health to other bosses if they're dead
-		if (!IsPlayerAlive(iClient))
-		{
-			Format(sMessage, sizeof(sMessage), "Boss Health: %i/%i", g_iHealthBarHealth, g_iHealthBarMaxHealth);
-			Hud_AddText(iClient, sMessage, true);
-		}
+		Format(sMessage, sizeof(sMessage), "Boss HP: %i/%i", g_iHealthBarHealth, g_iHealthBarMaxHealth);
 	}
-
+	
 	if (!IsPlayerAlive(iClient))
 	{
 		//If dead, display whoever client is spectating and damage
@@ -83,39 +95,26 @@ void Hud_Think(int iClient)
 		if (iObserverTarget != iClient && 0 < iObserverTarget <= MaxClients && IsClientInGame(iObserverTarget) && !SaxtonHale_IsValidBoss(iObserverTarget, false))
 		{
 			if (g_iPlayerAssistDamage[iObserverTarget] <= 0)
-				Format(sMessage, sizeof(sMessage), "%N's Damage: %i", iObserverTarget, g_iPlayerDamage[iObserverTarget]);
+				Format(sMessage, sizeof(sMessage), "%s\n%N's Damage: %i", sMessage, iObserverTarget, g_iPlayerDamage[iObserverTarget]);
 			else
-				Format(sMessage, sizeof(sMessage), "%N's Damage: %i Assist: %i", iObserverTarget, g_iPlayerDamage[iObserverTarget], g_iPlayerAssistDamage[iObserverTarget]);
-			
-			Hud_AddText(iClient, sMessage, true);
+				Format(sMessage, sizeof(sMessage), "%s\n%N's Damage: %i (Assist: %i)", sMessage, iObserverTarget, g_iPlayerDamage[iObserverTarget], g_iPlayerAssistDamage[iObserverTarget]);
 		}
-
-		int iColor[4];
-		iColor[0] = 90; iColor[1] = 255; iColor[2] = 90; iColor[3] = 255;
-		Hud_SetColor(iClient, iColor);
 	}
+	else if (SaxtonHale_IsValidBoss(iClient))
+	{
+		StrCat(sMessage, sizeof(sMessage), g_sBossHudText[iClient]);
+		iColor = g_iBossHudColor[iClient];
+	}
+	
+	if (StrContains(sMessage, "\n") == 0)	//Delete newline from start
+		Format(sMessage, sizeof(sMessage), sMessage[1]);
 	
 	//Display
-	float flHUD[2];
-	flHUD[0] = -1.0;
-	flHUD[1] = 0.88;
-	
-	Hud_Display(iClient, CHANNEL_HELP, g_sHudText[iClient], flHUD, 0.2, g_iHudColor[iClient]);
-	
-	//Reset string
-	Format(g_sHudText[iClient], sizeof(g_sHudText[]), "");
+	Hud_Display(iClient, CHANNEL_HELP, sMessage, view_as<float>({-1.0, 0.88}), 0.2, iColor);
 }
 
-void Hud_Display(int iClient, int iChannel, char[] sText, float flHUD[2], float flDuration = 0.0, int iColor[4] = -1, int iEffect = 0, float flTime = 0.0, float flFade[2] = 0.0)
+void Hud_Display(int iClient, int iChannel, char[] sText, float flHUD[2], float flDuration = 0.0, int iColor[4] = {255, 255, 255, 255}, int iEffect = 0, float flTime = 0.0, float flFade[2] = {0.0, 0.0})
 {
-	if (iColor[0] == -1)
-	{
-		iColor[0] = 255;
-		iColor[1] = 255;
-		iColor[2] = 255;
-		iColor[3] = 255;
-	}
-	
 	SetHudTextParams(flHUD[0], flHUD[1], flDuration, iColor[0], iColor[1], iColor[2], iColor[3], iEffect, flTime, flFade[0], flFade[1]);
 	ShowHudText(iClient, iChannel, sText);
 }

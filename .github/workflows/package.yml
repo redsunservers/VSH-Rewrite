@@ -1,8 +1,6 @@
 name: Package
 
-on:
-  push:
-    branches: master
+on: push
 
 jobs:
   build:
@@ -14,7 +12,10 @@ jobs:
       
       - name: Environments
         run: |
-          echo ::set-env name=SM_VERSION::1.10
+          echo "SM_VERSION=1.11" >> $GITHUB_ENV
+          echo "PLUGIN_VERSION_REVISION<<EOF" >> $GITHUB_ENV
+          git rev-list --count HEAD >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
       
       - name: Install
         run: |
@@ -27,7 +28,7 @@ jobs:
       - name: Compile
         run: |
           cd build/addons/sourcemod/scripting
-          ./spcomp-custom-$SM_VERSION saxtonhale.sp -o ../plugins/saxtonhale.smx
+          ./spcomp saxtonhale.sp -o ../plugins/saxtonhale.smx
       
       - name: Package
         run: |

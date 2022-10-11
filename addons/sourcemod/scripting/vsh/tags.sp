@@ -1,14 +1,14 @@
-static int g_iBackstabCount[TF_MAXPLAYERS+1][TF_MAXPLAYERS+1];
-static int g_iClimbAmount[TF_MAXPLAYERS+1];
-static int g_iZombieUsed[TF_MAXPLAYERS+1];
-static float g_flUberBeforeHealingBuilding[TF_MAXPLAYERS+1];
-static float g_flDispenserBoost[TF_MAXPLAYERS+1];
+static int g_iBackstabCount[TF_MAXPLAYERS][TF_MAXPLAYERS];
+static int g_iClimbAmount[TF_MAXPLAYERS];
+static int g_iZombieUsed[TF_MAXPLAYERS];
+static float g_flUberBeforeHealingBuilding[TF_MAXPLAYERS];
+static float g_flDispenserBoost[TF_MAXPLAYERS];
 
-static bool g_bTagsLunchbox[TF_MAXPLAYERS+1];
+static bool g_bTagsLunchbox[TF_MAXPLAYERS];
 
-static int g_iTagsAirblastRequirement[TF_MAXPLAYERS+1];
-static int g_iTagsAirblastDamage[TF_MAXPLAYERS+1];
-static FlamethrowerState g_nTagsAirblastState[TF_MAXPLAYERS+1];
+static float g_flTagsAirblastCooldown[TF_MAXPLAYERS];
+static float g_flTagsAirblastLastUsed[TF_MAXPLAYERS];
+static FlamethrowerState g_nTagsAirblastState[TF_MAXPLAYERS];
 
 static ArrayList g_aAttrib;	//Arrays of active attribs to be removed later
 
@@ -38,13 +38,12 @@ void Tags_ResetClient(int iClient)
 	g_flUberBeforeHealingBuilding[iClient] = 0.0;
 	g_flDispenserBoost[iClient] = 0.0;
 	
-	g_iTagsAirblastRequirement[iClient] = -1;
-	g_iTagsAirblastDamage[iClient] = 0;
+	g_flTagsAirblastCooldown[iClient] = 0.0;
+	g_flTagsAirblastLastUsed[iClient] = 0.0;
 	
 	for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
 		g_iBackstabCount[iClient][iVictim] = 0;
 	
-	TF2Attrib_SetByDefIndex(iClient, ATTRIB_SENTRYATTACKSPEED, 1.0);
 	TF2Attrib_SetByDefIndex(iClient, ATTRIB_BIDERECTIONAL, 0.0);
 	
 	Hud_SetRageView(iClient, false);
@@ -57,7 +56,7 @@ void Tags_OnThink(int iClient)
 	if (GetEntityFlags(iClient) & FL_ONGROUND)
 		g_iClimbAmount[iClient] = 0;
 	
-	if (g_iTagsAirblastRequirement[iClient] > 0 && g_iTagsAirblastDamage[iClient] >= g_iTagsAirblastRequirement[iClient])
+	if (g_flTagsAirblastCooldown[iClient] > 0.0 && g_flTagsAirblastLastUsed[iClient] + g_flTagsAirblastCooldown[iClient] < GetGameTime())
 	{
 		//Detect if airblast is used, and reset if so
 		int iPrimary = TF2_GetItemInSlot(iClient, WeaponSlot_Primary);
@@ -66,8 +65,8 @@ void Tags_OnThink(int iClient)
 			FlamethrowerState nState = view_as<FlamethrowerState>(GetEntProp(iPrimary, Prop_Send, "m_iWeaponState"));
 			if (nState != g_nTagsAirblastState[iClient] && nState == FlamethrowerState_Airblast)
 			{
-				g_iTagsAirblastDamage[iClient] = 0;	//Reset damage
-				SetEntPropFloat(iPrimary, Prop_Send, "m_flNextSecondaryAttack", 31536000.0+GetGameTime());	//3 years
+				g_flTagsAirblastLastUsed[iClient] = GetGameTime();	//Set cooldown
+				SetEntPropFloat(iPrimary, Prop_Send, "m_flNextSecondaryAttack", GetGameTime() + g_flTagsAirblastCooldown[iClient]);
 			}
 			
 			g_nTagsAirblastState[iClient] = nState;
@@ -116,8 +115,8 @@ void Tags_OnThink(int iClient)
 	static int TELEPORTER_BODYGROUP_ARROW 	= (1 << 1);
 	
 	//Compiler no like this
-	const int iObjectType = view_as<int>(TFObjectType);
-	const int iObjectMode = view_as<int>(TFObjectMode);
+	const int iObjectType = view_as<int>(TFObject_Sentry) + 1;
+	const int iObjectMode = view_as<int>(TFObjectMode_Exit) + 1;
 	int iBuilding[iObjectType][iObjectMode];	//Building index built from client
 	
 	TFTeam nTeam = TF2_GetClientTeam(iClient);
@@ -153,9 +152,7 @@ void Tags_OnThink(int iClient)
 	
 	//Sentry
 	if (iBuilding[TFObject_Sentry][TFObjectMode_None] > MaxClients)
-		TF2Attrib_SetByDefIndex(iClient, ATTRIB_SENTRYATTACKSPEED, 0.5);
-	else
-		TF2Attrib_SetByDefIndex(iClient, ATTRIB_SENTRYATTACKSPEED, 1.0);
+		TF2_AddCondition(iClient, TFCond_Buffed, 0.05);
 	
 	//Dispenser
 	if (iBuilding[TFObject_Dispenser][TFObjectMode_None] > MaxClients && g_flDispenserBoost[iClient] <= GetGameTime())
@@ -197,36 +194,10 @@ void Tags_OnThink(int iClient)
 	}
 }
 
-void Tags_PlayerHurt(int iVictim, int iAttacker, int iDamage)
-{
-	if (SaxtonHale_IsValidBoss(iVictim) && SaxtonHale_IsValidAttack(iAttacker))
-	{
-		if (g_iTagsAirblastRequirement[iAttacker] > 0)
-		{
-			bool bFull = (g_iTagsAirblastDamage[iAttacker] >= g_iTagsAirblastRequirement[iAttacker]);
-			g_iTagsAirblastDamage[iAttacker] += iDamage;
-			
-			if (g_iTagsAirblastDamage[iAttacker] >= g_iTagsAirblastRequirement[iAttacker])
-			{
-				g_iTagsAirblastDamage[iAttacker] = g_iTagsAirblastRequirement[iAttacker];
-				
-				if (!bFull)
-				{
-					EmitSoundToClient(iAttacker, SOUND_METERFULL);	//Alert player meter is fully
-					
-					int iPrimary = TF2_GetItemInSlot(iAttacker, WeaponSlot_Primary);
-					if (iPrimary > MaxClients)
-						SetEntPropFloat(iPrimary, Prop_Send, "m_flNextSecondaryAttack", 0.0);	//Allow airblast to be used
-				}
-			}
-		}
-	}
-}
-
 void Tags_OnButton(int iClient, int &iButtons)
 {
 	//Prevent clients holding m2 while airblast in cooldown
-	if (iButtons & IN_ATTACK2 && g_iTagsAirblastRequirement[iClient] > 0 && g_iTagsAirblastDamage[iClient] < g_iTagsAirblastRequirement[iClient])
+	if (iButtons & IN_ATTACK2 && g_flTagsAirblastLastUsed[iClient] + g_flTagsAirblastCooldown[iClient] > GetGameTime())
 	{
 		int iPrimary = TF2_GetItemInSlot(iClient, WeaponSlot_Primary);
 		int iActiveWep = GetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon");
@@ -385,6 +356,10 @@ public void Tags_SetAttrib(int iClient, int iTarget, TagsParams tParams)
 		case TagsMath_Damage: flValue = float(g_iPlayerDamage[iClient]) / flValue;
 	}
 	
+	float flMin, flMax;
+	if (tParams.GetFloatEx("min", flMin) && flValue < flMin) flValue = flMin;
+	if (tParams.GetFloatEx("max", flMax) && flValue > flMax) flValue = flMax;
+	
 	//Set attrib
 	TF2Attrib_SetByDefIndex(iTarget, iIndex, flValue);
 	TF2Attrib_ClearCache(iTarget);
@@ -442,6 +417,29 @@ public void Tags_AddAttrib(int iClient, int iTarget, TagsParams tParams)
 	data.WriteCell(iIndex);
 }
 
+public void Tags_RemoveAttrib(int iClient, int iTarget, TagsParams tParams)
+{
+	if (iTarget <= 0 || !IsValidEdict(iTarget))
+		return;
+	
+	int iRef = EntIndexToEntRef(iTarget);
+	int iIndex = tParams.GetInt("index");
+	
+	TF2Attrib_RemoveByDefIndex(iTarget, iIndex);
+	TF2Attrib_ClearCache(iTarget);
+	
+	//Find in array thats using added attrib and remove it
+	int iLength = g_aAttrib.Length;
+	for (int iPos = 0; iPos < iLength; iPos++)
+	{
+		if (g_aAttrib.Get(iPos, TagsAttrib_Ref) == iRef && g_aAttrib.Get(iPos, TagsAttrib_Index) == iIndex)
+		{
+			g_aAttrib.Erase(iPos);
+			return;
+		}
+	}
+}
+
 public void Tags_AreaOfEffect(int iClient, int iTarget, TagsParams tParams)
 {
 	if (iTarget <= 0 || iTarget > MaxClients || !IsClientInGame(iTarget) || !IsPlayerAlive(iTarget))
@@ -482,6 +480,7 @@ public void Tags_Climb(int iClient, int iTarget, TagsParams tParams)
 	float flHeight = tParams.GetFloat("height");
 	int iMax = tParams.GetInt("max");
 	float flDamage = tParams.GetFloat("selfdamage");
+	float flHorizontalSpeedMult = tParams.GetFloat("horizontal", 1.0);
 	
 	if (iMax >= 0 && iMax <= g_iClimbAmount[iTarget])
 		return;
@@ -519,6 +518,8 @@ public void Tags_Climb(int iClient, int iTarget, TagsParams tParams)
 	
 	float fVelocity[3];
 	GetEntPropVector(iTarget, Prop_Data, "m_vecVelocity", fVelocity);
+	fVelocity[0] *= flHorizontalSpeedMult;
+	fVelocity[1] *= flHorizontalSpeedMult;
 	fVelocity[2] = flHeight;
 	TeleportEntity(iTarget, NULL_VECTOR, NULL_VECTOR, fVelocity);
 	
@@ -643,9 +644,10 @@ public void Tags_RemoveRage(int iClient, int iTarget, TagsParams tParams)
 	if (!SaxtonHale_IsValidBoss(iTarget))
 		return;
 	
-	int iAmount = tParams.GetInt("amount");
-	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
-	boss.CallFunction("AddRage", -iAmount);
+	SaxtonHaleBase boss = SaxtonHaleBase(iTarget);
+	int iOldRageDamage = boss.iRageDamage;
+	boss.CallFunction("AddRage", -tParams.GetInt("amount"));
+	g_iPlayerAssistDamage[iClient] += (iOldRageDamage - boss.iRageDamage);
 }
 
 public void Tags_ViewRage(int iClient, int iTarget, TagsParams tParams)
@@ -697,12 +699,12 @@ public void Tags_SummonZombie(int iClient, int iTarget, TagsParams tParams)
 		int iZombie = aDeadPlayers.Get(i);
 		SaxtonHaleBase boss = SaxtonHaleBase(iZombie);
 		if (boss.bValid)
-			boss.CallFunction("Destroy");
+			boss.DestroyAllClass();
 		
 		ChangeClientTeam(iZombie, GetClientTeam(iTarget));
 		g_iClientOwner[iZombie] = iTarget;
 		
-		boss.CallFunction("CreateBoss", "CZombie");
+		boss.CreateClass("Zombie");
 		TF2_RespawnPlayer(iZombie);
 		
 		TF2_TeleportToClient(iZombie, iTarget);
@@ -783,13 +785,7 @@ public void Tags_AddHealersUber(int iClient, int iTarget, TagsParams tParams)
 
 public void Tags_Airblast(int iClient, int iTarget, TagsParams tParams)
 {
-	g_iTagsAirblastRequirement[iClient] = tParams.GetInt("damage", -1);
-	g_iTagsAirblastDamage[iClient] = tParams.GetInt("start", 0);
-	
-	if (g_iTagsAirblastRequirement[iClient] > g_iTagsAirblastDamage[iClient])
-		SetEntPropFloat(iTarget, Prop_Send, "m_flNextSecondaryAttack", 31536000.0+GetGameTime());	//3 years
-	else
-		SetEntPropFloat(iTarget, Prop_Send, "m_flNextSecondaryAttack", 0.0);
+	g_flTagsAirblastCooldown[iClient] = tParams.GetFloat("cooldown", 0.0);
 }
 
 public void Tags_Explode(int iClient, int iTarget, TagsParams tParams)
@@ -817,18 +813,46 @@ public void Tags_Explode(int iClient, int iTarget, TagsParams tParams)
 
 public void Tags_DestroyEntity(int iClient, int iTarget, TagsParams tParams)
 {
+	if (iTarget <= 0 || !IsValidEntity(iTarget))
+		return;
+	
 	//Check if target is a weapon
 	for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
 	{
-		if (TF2_GetItemInSlot(iClient, iSlot) == iTarget)
+		if (TF2_GetItemInSlot(iClient, iSlot) != iTarget)
+			continue;
+		
+		//Has attribute?
+		int iAttrib;
+		if (tParams.GetIntEx("attrib", iAttrib))
 		{
-			//Kill em
-			TF2_RemoveItemInSlot(iClient, iSlot);
-			
-			//Refresh tags stuff now that weapon is crabbed, without clearing any pending function timers
-			TagsCore_RefreshClient(iClient, false);
-			return;
+			float flValue;
+			TF2_WeaponFindAttribute(iTarget, iAttrib, flValue);
+			if (flValue != tParams.GetFloat("value"))
+				return;	//Dont remove weapon
 		}
+		
+		//Kill em
+		TF2_RemoveItemInSlot(iClient, iSlot);
+		
+		//Refresh tags stuff now that weapon is crabbed, without clearing any pending function timers
+		TagsCore_RefreshClient(iClient, false);
+		
+		//Check if active weapon need to be switched
+		if (GetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon") == INVALID_ENT_REFERENCE)
+		{
+			for (int i = 0; i <= WeaponSlot_BuilderEngie; i++)
+			{
+				int iWeapon = TF2_GetItemInSlot(iClient, i);
+				if (iWeapon == INVALID_ENT_REFERENCE)
+					continue;
+				
+				if (TF2_SwitchToWeapon(iClient, iWeapon))
+					break;	//Switch successful
+			}
+		}
+		
+		return;
 	}
 	
 	//Not a weapon, remove as normal
@@ -842,6 +866,34 @@ public void Tags_ForceSuicide(int iClient, int iTarget, TagsParams tParams)
 	
 	//Pretty straight-forward, isn't it?
 	ForcePlayerSuicide(iTarget);
+}
+
+public void Tags_Stun(int iClient, int iTarget, TagsParams tParams)
+{
+	if (iTarget <= 0 || iTarget > MaxClients || !IsClientInGame(iTarget) || !IsPlayerAlive(iTarget))
+		return;
+	
+	float flDuration = tParams.GetFloat("duration");
+	float flSlowdown = tParams.GetFloat("slowdown");
+	int iStunflags = tParams.GetInt("type", 1);
+
+	TF2_StunPlayer(iTarget, flDuration, flSlowdown, iStunflags);
+}
+ 
+public void Tags_MakeBleed(int iClient, int iTarget, TagsParams tParams)
+{
+	if (iTarget <= 0 || iTarget > MaxClients || !IsClientInGame(iTarget) || !IsPlayerAlive(iTarget))
+		return;
+	
+	TF2_MakeBleed(iTarget, iClient, tParams.GetFloat("duration"));
+}
+
+public void Tags_IgnitePlayer(int iClient, int iTarget, TagsParams tParams)
+{
+	if (iTarget <= 0 || iTarget > MaxClients || !IsClientInGame(iTarget) || !IsPlayerAlive(iTarget))
+		return;
+	
+	TF2_IgnitePlayer(iTarget, iClient, tParams.GetFloat("duration"));
 }
 
 //---------------------------
@@ -862,13 +914,15 @@ public void Frame_AreaOfRange(DataPack data)
 
 		for (int i = 1; i <= MaxClients; i++)
 		{
+			g_bClientAreaOfEffect[iClient][i] = false;
+			
 			if (SaxtonHale_IsValidAttack(i) && IsPlayerAlive(i))
 			{
 				GetClientAbsOrigin(i, vecTargetPos);
 				if (GetVectorDistance(vecPos, vecTargetPos) <= flRadius)
 				{
-					if (view_as<int>(cond) >= 0)
-						TF2_AddCondition(i, cond, 0.05);
+					TF2_AddCondition(i, cond, 0.05);
+					g_bClientAreaOfEffect[iClient][i] = true;
 				}
 			}
 		}
@@ -889,6 +943,10 @@ public void Frame_AreaOfRange(DataPack data)
 	{
 		//Duration ended
 		delete data;
+		
+		if (0 < iClient <= MaxClients)
+			for (int i = 1; i <= MaxClients; i++)
+				g_bClientAreaOfEffect[iClient][i] = false;
 	}
 }
 
@@ -904,6 +962,8 @@ public Action Timer_ResetClip(Handle hTimer, int iRef)
 		
 		SetEntProp(iEntity, Prop_Send, "m_iClip1", iCurrentClip);
 	}
+	
+	return Plugin_Continue;
 }
 
 public Action Timer_ResetAttrib(Handle hTimer, DataPack data)
@@ -914,7 +974,7 @@ public Action Timer_ResetAttrib(Handle hTimer, DataPack data)
 	
 	int iEntity = EntRefToEntIndex(iRef);
 	if (iEntity <= 0 || !IsValidEdict(iEntity))
-		return;
+		return Plugin_Continue;
 	
 	//Check if still exists and outside of time
 	int iLength = g_aAttrib.Length;
@@ -928,9 +988,11 @@ public Action Timer_ResetAttrib(Handle hTimer, DataPack data)
 			TF2Attrib_RemoveByDefIndex(iEntity, iIndex);
 			TF2Attrib_ClearCache(iEntity);
 			g_aAttrib.Erase(iPos);
-			return;
+			return Plugin_Continue;
 		}
 	}
+	
+	return Plugin_Continue;
 }
 
 stock TagsMath Tags_GetMath(const char[] sMath)
@@ -952,10 +1014,7 @@ stock int Tags_GetBackstabCount(int iClient, int iVictim)
 	return g_iBackstabCount[iClient][iVictim];
 }
 
-stock float Tags_GetAirblastPercentage(int iClient)
+stock float Tags_GetAirblastCooldown(int iClient)
 {
-	if (g_iTagsAirblastRequirement[iClient] <= 0)
-		return -1.0;
-	
-	return float(g_iTagsAirblastDamage[iClient]) / float(g_iTagsAirblastRequirement[iClient]);
+	return g_flTagsAirblastLastUsed[iClient] + g_flTagsAirblastCooldown[iClient] - GetGameTime();
 }

@@ -1,8 +1,6 @@
 #define VAGINEER_MODEL		"models/player/saxton_hale/vagineer_v150.mdl"
 #define VAGINEER_KILL_SOUND "vsh_rewrite/vagineer/vagineer_kill.mp3"
 
-static float g_flVagineerSentryHealthDecay[TF_MAXPLAYERS+1] = 0.0;
-
 static char g_strVagineerRageMusic[][] = {
 	"vsh_rewrite/vagineer/vagineer_rage_music_1.mp3",
 	"vsh_rewrite/vagineer/vagineer_rage_music_2.mp3",
@@ -49,219 +47,124 @@ static char g_strVagineerBackStabbed[][] = {
 	"vsh_rewrite/vagineer/vagineer_responce_rage_3.mp3"
 };
 
-methodmap CVagineer < SaxtonHaleBase
+public void Vagineer_Create(SaxtonHaleBase boss)
 {
-	public CVagineer(CVagineer boss)
-	{
-		boss.CallFunction("CreateAbility", "CBraveJump");
-		CScareRage scareAbility = boss.CallFunction("CreateAbility", "CScareRage");
-		scareAbility.flRadius = 200.0;
-		
-		boss.iBaseHealth = 750;
-		boss.iHealthPerPlayer = 700;
-		boss.nClass = TFClass_Engineer;
-		boss.iMaxRageDamage = 2500;
-		
-		g_flVagineerSentryHealthDecay[boss.iClient] = 0.0;
-	}
+	boss.CreateClass("BraveJump");
+	boss.CreateClass("WeaponSentry");
+	boss.CreateClass("ScareRage");
+	boss.SetPropFloat("ScareRage", "Radius", 200.0);
 	
-	public void GetBossName(char[] sName, int length)
-	{
-		strcopy(sName, length, "Vagineer");
-	}
+	boss.iHealthPerPlayer = 550;
+	boss.flHealthExponential = 1.05;
+	boss.nClass = TFClass_Engineer;
+	boss.iMaxRageDamage = 2500;
+}
+
+public void Vagineer_GetBossName(SaxtonHaleBase boss, char[] sName, int length)
+{
+	strcopy(sName, length, "Vagineer");
+}
+
+public void Vagineer_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length)
+{
+	StrCat(sInfo, length, "\nHealth: Slightly low");
+	StrCat(sInfo, length, "\n ");
+	StrCat(sInfo, length, "\nAbilities");
+	StrCat(sInfo, length, "\n- Brave Jump");
+	StrCat(sInfo, length, "\n ");
+	StrCat(sInfo, length, "\nRage");
+	StrCat(sInfo, length, "\n- Damage requirement: 2500");
+	StrCat(sInfo, length, "\n- Builds Level 1 Sentry with faster rotate and firing speed, health scales based on players alive");
+	StrCat(sInfo, length, "\n- Scares players at small range for 5 seconds");
+	StrCat(sInfo, length, "\n- 200%% Rage: Level 2 Sentry, larger scare range and extends duration to 7.5 seconds");
+}
+
+public void Vagineer_OnSpawn(SaxtonHaleBase boss)
+{
+	char attribs[256];
+	Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 93 ; 0.0 ; 95 ; 0.0 ; 343 ; 0.5 ; 353 ; 1.0 ; 436 ; 1.0 ; 464 ; 10.0 ; 2043 ; 0.0");
+	int iWeapon = boss.CallFunction("CreateWeapon", 7, "tf_weapon_wrench", 100, TFQual_Collectors, attribs);
+	if (iWeapon > MaxClients)
+		SetEntPropEnt(boss.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
+	/*
+	Wrench attributes:
 	
-	public void GetBossInfo(char[] sInfo, int length)
-	{
-		StrCat(sInfo, length, "\nHealth: Slightly low");
-		StrCat(sInfo, length, "\n ");
-		StrCat(sInfo, length, "\nAbilities");
-		StrCat(sInfo, length, "\n- Brave Jump");
-		StrCat(sInfo, length, "\n ");
-		StrCat(sInfo, length, "\nRage");
-		StrCat(sInfo, length, "\n- Builds Sentry with faster firing speed, and health scales with players alive");
-		StrCat(sInfo, length, "\n- Scares players at small range for 5 seconds");
-		StrCat(sInfo, length, "\n- 200%% Rage: 50%% extra Sentry health, larger scare range and extends duration to 7.5 seconds");
-	}
+	2: damage bonus
+	252: reduction in push force taken from damage
+	259: Deals 3x falling damage to the player you land on
 	
-	public void OnSpawn()
+	93: Construction hit speed boost decreased
+	95: Slower repair speed
+	343: Sentry firing speed bonus
+	353: Cannot carry buildings
+	436: Plasma effect
+	464: Sentry build speed increased
+	2043: slower upgrade rate
+	*/
+}
+
+public void Vagineer_GetModel(SaxtonHaleBase boss, char[] sModel, int length)
+{
+	strcopy(sModel, length, VAGINEER_MODEL);
+}
+
+public void Vagineer_GetSound(SaxtonHaleBase boss, char[] sSound, int length, SaxtonHaleSound iSoundType)
+{
+	switch (iSoundType)
 	{
-		SetEntProp(this.iClient, Prop_Send, "m_iAmmo", 0, 4, 3);
-		this.CallFunction("CreateWeapon", 25, "tf_weapon_pda_engineer_build", 100, TFQual_Unusual, "");
-		
-		char attribs[256];
-		Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 93 ; 0.0 ; 95 ; 0.0 ; 343 ; 0.5 ; 353 ; 1.0 ; 436 ; 1.0 ; 464 ; 10.0 ; 2043 ; 0.0");
-		int iWeapon = this.CallFunction("CreateWeapon", 7, "tf_weapon_wrench", 100, TFQual_Collectors, attribs);
-		if (iWeapon > MaxClients)
-			SetEntPropEnt(this.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
-		/*
-		Wrench attributes:
-		
-		2: damage bonus
-		252: reduction in push force taken from damage
-		259: Deals 3x falling damage to the player you land on
-		
-		93: Construction hit speed boost decreased
-		95: Slower repair speed
-		343: Sentry firing speed bonus
-		353: Cannot carry buildings
-		436: Plasma effect
-		464: Sentry build speed increased
-		2043: slower upgrade rate
-		*/
+		case VSHSound_RoundStart: strcopy(sSound, length, g_strVagineerRoundStart[GetRandomInt(0,sizeof(g_strVagineerRoundStart)-1)]);
+		case VSHSound_Lose: strcopy(sSound, length, g_strVagineerLose[GetRandomInt(0,sizeof(g_strVagineerLose)-1)]);
+		case VSHSound_Rage: strcopy(sSound, length, g_strVagineerRage[GetRandomInt(0,sizeof(g_strVagineerRage)-1)]);
+		case VSHSound_Lastman: strcopy(sSound, length, g_strVagineerLastMan[GetRandomInt(0,sizeof(g_strVagineerLastMan)-1)]);
+		case VSHSound_Backstab: strcopy(sSound, length, g_strVagineerBackStabbed[GetRandomInt(0,sizeof(g_strVagineerBackStabbed)-1)]);
 	}
-	
-	public Action OnGiveNamedItem(const char[] sClassname, int iIndex)
-	{
-		//Allow keep tf_weapon_builder
-		if (StrEqual(sClassname, "tf_weapon_builder"))
-			return Plugin_Continue;
-		
+}
+
+public void Vagineer_GetSoundAbility(SaxtonHaleBase boss, char[] sSound, int length, const char[] sType)
+{
+	if (strcmp(sType, "BraveJump") == 0)
+		strcopy(sSound, length, g_strVagineerJump[GetRandomInt(0,sizeof(g_strVagineerJump)-1)]);
+}
+
+public void Vagineer_GetSoundKill(SaxtonHaleBase boss, char[] sSound, int length, TFClassType nClass)
+{
+	strcopy(sSound, length, g_strVagineerKill[GetRandomInt(0,sizeof(g_strVagineerKill)-1)]);
+}
+
+public void Vagineer_OnPlayerKilled(SaxtonHaleBase boss, Event event, int iVictim)
+{
+	EmitSoundToAll(VAGINEER_KILL_SOUND);
+}
+
+public void Vagineer_GetRageMusicInfo(SaxtonHaleBase boss, char[] sSound, int length, float &time)
+{
+	strcopy(sSound, length, g_strVagineerRageMusic[GetRandomInt(0,sizeof(g_strVagineerRageMusic)-1)]);
+	time = 19.0;
+}
+
+public Action Vagineer_OnSoundPlayed(SaxtonHaleBase boss, int clients[MAXPLAYERS], int &numClients, char sample[PLATFORM_MAX_PATH], int &channel, float &volume, int &level, int &pitch, int &flags, char soundEntry[PLATFORM_MAX_PATH], int &seed)
+{
+	if (strncmp(sample, "vo/", 3) == 0)//Block voicelines
 		return Plugin_Handled;
-	}
+	return Plugin_Continue;
+}
+
+public void Vagineer_Precache(SaxtonHaleBase boss)
+{
+	PrepareSound(VAGINEER_KILL_SOUND);
+	for (int i = 0; i < sizeof(g_strVagineerRageMusic); i++) PrepareSound(g_strVagineerRageMusic[i]);
+	for (int i = 0; i < sizeof(g_strVagineerRoundStart); i++) PrepareSound(g_strVagineerRoundStart[i]);
+	for (int i = 0; i < sizeof(g_strVagineerLose); i++) PrepareSound(g_strVagineerLose[i]);
+	for (int i = 0; i < sizeof(g_strVagineerRage); i++) PrepareSound(g_strVagineerRage[i]);
+	for (int i = 0; i < sizeof(g_strVagineerJump); i++) PrepareSound(g_strVagineerJump[i]);
+	for (int i = 0; i < sizeof(g_strVagineerKill); i++) PrepareSound(g_strVagineerKill[i]);
+	for (int i = 0; i < sizeof(g_strVagineerLastMan); i++) PrepareSound(g_strVagineerLastMan[i]);
+	for (int i = 0; i < sizeof(g_strVagineerBackStabbed); i++) PrepareSound(g_strVagineerBackStabbed[i]);
 	
-	public void GetModel(char[] sModel, int length)
-	{
-		strcopy(sModel, length, VAGINEER_MODEL);
-	}
-	
-	public void GetSound(char[] sSound, int length, SaxtonHaleSound iSoundType)
-	{
-		switch (iSoundType)
-		{
-			case VSHSound_RoundStart: strcopy(sSound, length, g_strVagineerRoundStart[GetRandomInt(0,sizeof(g_strVagineerRoundStart)-1)]);
-			case VSHSound_Lose: strcopy(sSound, length, g_strVagineerLose[GetRandomInt(0,sizeof(g_strVagineerLose)-1)]);
-			case VSHSound_Rage: strcopy(sSound, length, g_strVagineerRage[GetRandomInt(0,sizeof(g_strVagineerRage)-1)]);
-			case VSHSound_Lastman: strcopy(sSound, length, g_strVagineerLastMan[GetRandomInt(0,sizeof(g_strVagineerLastMan)-1)]);
-			case VSHSound_Backstab: strcopy(sSound, length, g_strVagineerBackStabbed[GetRandomInt(0,sizeof(g_strVagineerBackStabbed)-1)]);
-		}
-	}
-	
-	public void GetSoundAbility(char[] sSound, int length, const char[] sType)
-	{
-		if (strcmp(sType, "CBraveJump") == 0)
-			strcopy(sSound, length, g_strVagineerJump[GetRandomInt(0,sizeof(g_strVagineerJump)-1)]);
-	}
-	
-	public void GetSoundKill(char[] sSound, int length, TFClassType nClass)
-	{
-		strcopy(sSound, length, g_strVagineerKill[GetRandomInt(0,sizeof(g_strVagineerKill)-1)]);
-	}
-	
-	public void OnPlayerKilled(Event event, int iVictim)
-	{
-		EmitSoundToAll(VAGINEER_KILL_SOUND);
-	}
-	
-	public void GetRageMusicInfo(char[] sSound, int length, float &time)
-	{
-		strcopy(sSound, length, g_strVagineerRageMusic[GetRandomInt(0,sizeof(g_strVagineerRageMusic)-1)]);
-		time = 19.0;
-	}
-	
-	public Action OnSoundPlayed(int clients[MAXPLAYERS], int &numClients, char sample[PLATFORM_MAX_PATH], int &channel, float &volume, int &level, int &pitch, int &flags, char soundEntry[PLATFORM_MAX_PATH], int &seed)
-	{
-		if (strncmp(sample, "vo/", 3) == 0)//Block voicelines
-			return Plugin_Handled;
-		return Plugin_Continue;
-	}
-	
-	public Action OnBuild(TFObjectType nType, TFObjectMode nMode)
-	{
-		if (nType == TFObject_Sentry)	//Allow sentry to be built, block otherwise
-			return Plugin_Continue;
-		
-		return Plugin_Handled;
-	}
-	
-	public Action OnBuildObject(Event event)
-	{
-		int iEntity = event.GetInt("index");
-		int iAliveCount = SaxtonHale_GetAliveAttackPlayers();
-		
-		int iSentryHealth = iAliveCount * 150 + 200;
-		if (iSentryHealth > 1800)
-			iSentryHealth = 1800;
-			
-		if (this.bSuperRage)
-			iSentryHealth = RoundToNearest(float(iSentryHealth) * 1.5);
-		
-		SetVariantInt(iSentryHealth);
-		AcceptEntityInput(iEntity, "SetHealth");	//Sets sentry health
-		SDK_RemoveObject(this.iClient, iEntity);	//Make the boss not the sentry's original owner so he gets to potentially build more of them
-		
-		return Plugin_Continue;
-	}
-	
-	public Action OnObjectSapped(Event event)
-	{
-		int iVictim = GetClientOfUserId(event.GetInt("ownerid"));
-		
-		int iSentry = MaxClients+1;
-		while((iSentry = FindEntityByClassname(iSentry, "obj_sentrygun")) > MaxClients)
-			if (GetEntPropEnt(iSentry, Prop_Send, "m_hBuilder") == iVictim)
-				SetEntProp(iSentry, Prop_Send, "m_bDisabled", 0);
-	}
-	
-	public void OnRage()
-	{
-		SetEntProp(this.iClient, Prop_Send, "m_iAmmo", 130, 4, 3);
-		FakeClientCommand(this.iClient, "build 2 0");
-	}
-	
-	public void OnThink()
-	{
-		Hud_AddText(this.iClient, "Use your rage to build sentry at a safe place!");
-		
-		if (g_flVagineerSentryHealthDecay[this.iClient] < GetGameTime() - 0.01)
-		{
-			int iSentry = MaxClients+1;
-			while((iSentry = FindEntityByClassname(iSentry, "obj_sentrygun")) > MaxClients)
-			{
-				//Wait until the sentry is fully built to drain HP so it doesn't explode while being carried
-				//m_iState: 0 is being carried or in the process of building, 1 is idle (can be either enabled or disabled), 2 is shooting at a target or being wrangled, 3 is in the process of upgrading
-				if (GetEntPropEnt(iSentry, Prop_Send, "m_hBuilder") == this.iClient && GetEntProp(iSentry, Prop_Send, "m_iState") > 0)
-				{
-					SetVariantInt(1);
-					AcceptEntityInput(iSentry, "RemoveHealth");
-					g_flVagineerSentryHealthDecay[this.iClient] = GetGameTime();
-					
-					if (GetEntPropFloat(iSentry, Prop_Send, "m_flModelScale") != 1.22)
-						SetEntPropFloat(iSentry, Prop_Send, "m_flModelScale", 1.22);
-				}
-			}
-		}
-	}
-	
-	public void Destroy()
-	{
-		int iSentry = MaxClients+1;
-		while((iSentry = FindEntityByClassname(iSentry, "obj_sentrygun")) > MaxClients)
-		{
-			if (GetEntPropEnt(iSentry, Prop_Send, "m_hBuilder") == this.iClient)
-			{
-				SetVariantInt(999999);
-				AcceptEntityInput(iSentry, "RemoveHealth");
-			}
-		}
-	}
-		
-	public void Precache()
-	{
-		PrepareSound(VAGINEER_KILL_SOUND);
-		for (int i = 0; i < sizeof(g_strVagineerRageMusic); i++) PrepareSound(g_strVagineerRageMusic[i]);
-		for (int i = 0; i < sizeof(g_strVagineerRoundStart); i++) PrepareSound(g_strVagineerRoundStart[i]);
-		for (int i = 0; i < sizeof(g_strVagineerLose); i++) PrepareSound(g_strVagineerLose[i]);
-		for (int i = 0; i < sizeof(g_strVagineerRage); i++) PrepareSound(g_strVagineerRage[i]);
-		for (int i = 0; i < sizeof(g_strVagineerJump); i++) PrepareSound(g_strVagineerJump[i]);
-		for (int i = 0; i < sizeof(g_strVagineerKill); i++) PrepareSound(g_strVagineerKill[i]);
-		for (int i = 0; i < sizeof(g_strVagineerLastMan); i++) PrepareSound(g_strVagineerLastMan[i]);
-		for (int i = 0; i < sizeof(g_strVagineerBackStabbed); i++) PrepareSound(g_strVagineerBackStabbed[i]);
-		
-		AddFileToDownloadsTable("models/player/saxton_hale/vagineer_v150.mdl");
-		AddFileToDownloadsTable("models/player/saxton_hale/vagineer_v150.phy");
-		AddFileToDownloadsTable("models/player/saxton_hale/vagineer_v150.sw.vtx");
-		AddFileToDownloadsTable("models/player/saxton_hale/vagineer_v150.vvd");
-		AddFileToDownloadsTable("models/player/saxton_hale/vagineer_v150.dx80.vtx");
-		AddFileToDownloadsTable("models/player/saxton_hale/vagineer_v150.dx90.vtx");
-	}
-};
+	AddFileToDownloadsTable("models/player/saxton_hale/vagineer_v150.mdl");
+	AddFileToDownloadsTable("models/player/saxton_hale/vagineer_v150.phy");
+	AddFileToDownloadsTable("models/player/saxton_hale/vagineer_v150.sw.vtx");
+	AddFileToDownloadsTable("models/player/saxton_hale/vagineer_v150.vvd");
+	AddFileToDownloadsTable("models/player/saxton_hale/vagineer_v150.dx80.vtx");
+	AddFileToDownloadsTable("models/player/saxton_hale/vagineer_v150.dx90.vtx");
+}
