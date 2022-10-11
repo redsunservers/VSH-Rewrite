@@ -1,155 +1,88 @@
-static float g_flCondCooldown[TF_MAXPLAYERS + 1];
-static float g_flCondCooldownWait[TF_MAXPLAYERS + 1];
-static float g_flCondDuration[TF_MAXPLAYERS + 1];
-static float g_flCondMaxCharge[TF_MAXPLAYERS + 1];
-static bool g_bRemoveOnRage[TF_MAXPLAYERS + 1];
 static ArrayList g_aConditions[TF_MAXPLAYERS + 1];
 
-methodmap CAddCond < SaxtonHaleBase
+public void AddCond_Create(SaxtonHaleBase boss)
 {
-	property float flCondCooldown
+	if (g_aConditions[boss.iClient] == null)
+		g_aConditions[boss.iClient] = new ArrayList();
+	g_aConditions[boss.iClient].Clear();
+	
+	boss.SetPropFloat("AddCond", "CondDuration", 30.0);
+	boss.SetPropFloat("AddCond", "CondCooldownWait", 0.0);
+	boss.SetPropFloat("AddCond", "CondDuration", 8.0);
+	boss.SetPropFloat("AddCond", "CondMaxCharge", 1.0);
+}
+
+public void AddCond_AddCond(SaxtonHaleBase boss, TFCond cond)
+{
+	g_aConditions[boss.iClient].Push(cond);
+}
+
+public void AddCond_GetHudInfo(SaxtonHaleBase boss, char[] sMessage, int iLength, int iColor[4])
+{
+	int iCharge;
+	
+	float flCondCooldownWait = boss.GetPropFloat("AddCond", "CondCooldownWait");
+	if (flCondCooldownWait < GetGameTime())
 	{
-		public get()
-		{
-			return g_flCondCooldown[this.iClient];
-		}
-		public set(float flVal)
-		{
-			g_flCondCooldown[this.iClient] = flVal;
-		}
+		iCharge = RoundToFloor(boss.GetPropFloat("AddCond", "CondMaxCharge") * 100.0);
+	}
+	else
+	{
+		float flPercentage = (flCondCooldownWait - GetGameTime()) / boss.GetPropFloat("AddCond", "CondCooldown");
+		iCharge = RoundToFloor((boss.GetPropFloat("AddCond", "CondMaxCharge") - flPercentage) * 100.0);
 	}
 	
-	property float flCondCooldownWait
+	if (iCharge >= 100)
+		Format(sMessage, iLength, "Ability Charge: %d%%%% - Press MOUSE2 to use!", iCharge);
+	else
+		Format(sMessage, iLength, "Ability Charge: %d%%%%", iCharge);
+}
+
+public void AddCond_OnButtonPress(SaxtonHaleBase boss, int iButton)
+{
+	if (iButton == IN_ATTACK2 && GameRules_GetRoundState() != RoundState_Preround && !TF2_IsPlayerInCondition(boss.iClient, TFCond_Dazed))
 	{
-		public get()
+		float flCondCooldownWait = boss.GetPropFloat("AddCond", "CondCooldownWait");
+		if (flCondCooldownWait < GetGameTime())
 		{
-			return g_flCondCooldownWait[this.iClient];
+			flCondCooldownWait = GetGameTime();
+			boss.SetPropFloat("AddCond", "CondCooldownWait", flCondCooldownWait);
 		}
-		public set(float flVal)
-		{
-			g_flCondCooldownWait[this.iClient] = flVal;
-		}
-	}
-	
-	property float flCondDuration
-	{
-		public get()
-		{
-			return g_flCondDuration[this.iClient];
-		}
-		public set(float flVal)
-		{
-			g_flCondDuration[this.iClient] = flVal;
-		}
-	}
-	
-	property float flCondMaxCharge
-	{
-		public get()
-		{
-			return g_flCondMaxCharge[this.iClient];
-		}
-		public set(float flVal)
-		{
-			g_flCondMaxCharge[this.iClient] = flVal;
-		}
-	}
-	
-	property bool bRemoveOnRage
-	{
-		public get()
-		{
-			return g_bRemoveOnRage[this.iClient];
-		}
-		public set(bool bVal)
-		{
-			g_bRemoveOnRage[this.iClient] = bVal;
-		}
-	}
-	
-	public CAddCond(CAddCond ability)
-	{
-		if (g_aConditions[ability.iClient] == null)
-			g_aConditions[ability.iClient] = new ArrayList();
-		g_aConditions[ability.iClient].Clear();
 		
-		ability.flCondCooldown = 30.0;
-		ability.flCondCooldownWait = 0.0;
-		ability.flCondDuration = 8.0;
-		ability.flCondMaxCharge = 1.0;
-	}
-	
-	public void AddCond(TFCond cond)
-	{
-		g_aConditions[this.iClient].Push(cond);
-	}
-	
-	public void OnThink()
-	{
-		if (GameRules_GetRoundState() == RoundState_Preround)
+		float flPercentage = (flCondCooldownWait - GetGameTime()) / boss.GetPropFloat("AddCond", "CondCooldown");
+		float flCharge = boss.GetPropFloat("AddCond", "CondMaxCharge") - flPercentage;
+		
+		if (flCharge < 1.0)
 			return;
 		
-		char sMessage[255];
-		int iCharge;
-		
-		if (this.flCondCooldownWait < GetGameTime())
+		for (int i = 0; i < g_aConditions[boss.iClient].Length; i++)
 		{
-			iCharge = RoundToFloor(this.flCondMaxCharge * 100.0);
-		}
-		else
-		{
-			float flPercentage = (this.flCondCooldownWait - GetGameTime()) / this.flCondCooldown;
-			iCharge = RoundToFloor((this.flCondMaxCharge - flPercentage) * 100.0);
+			TF2_AddCondition(boss.iClient, g_aConditions[boss.iClient].Get(i), boss.GetPropFloat("AddCond", "CondDuration"));
 		}
 		
-		if (iCharge >= 100)
-			Format(sMessage, sizeof(sMessage), "Ability Charge: %d%%%% - Press MOUSE2 to use!", iCharge);
-		else
-			Format(sMessage, sizeof(sMessage), "Ability Charge: %d%%%%", iCharge);
+		flCondCooldownWait += boss.GetPropFloat("AddCond", "CondCooldown");
+		boss.SetPropFloat("AddCond", "CondCooldownWait", flCondCooldownWait);
 		
-		Hud_AddText(this.iClient, sMessage);
+		char sSound[PLATFORM_MAX_PATH];
+		boss.CallFunction("GetSoundAbility", sSound, sizeof(sSound), "AddCond");
+		if (!StrEmpty(sSound))
+			EmitSoundToAll(sSound, boss.iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
 	}
-	
-	public void OnButtonPress(int iButton)
+}
+
+public void AddCond_OnRage(SaxtonHaleBase boss)
+{
+	if (boss.GetPropInt("AddCond", "RemoveOnRage"))
 	{
-		if (iButton == IN_ATTACK2 && GameRules_GetRoundState() != RoundState_Preround && !TF2_IsPlayerInCondition(this.iClient, TFCond_Dazed))
+		for (int i = 0; i < g_aConditions[boss.iClient].Length; i++)
 		{
-			if (this.flCondCooldownWait < GetGameTime())
-				this.flCondCooldownWait = GetGameTime();
-			
-			float flPercentage = (this.flCondCooldownWait - GetGameTime()) / this.flCondCooldown;
-			float flCharge = this.flCondMaxCharge - flPercentage;
-			
-			if (flCharge < 1.0)
-				return;
-			
-			for (int i = 0; i < g_aConditions[this.iClient].Length; i++)
-			{
-				TF2_AddCondition(this.iClient, g_aConditions[this.iClient].Get(i), this.flCondDuration);
-			}
-			
-			this.flCondCooldownWait += this.flCondCooldown;
-			
-			char sSound[PLATFORM_MAX_PATH];
-			this.CallFunction("GetSoundAbility", sSound, sizeof(sSound), "CAddCond");
-			if (!StrEmpty(sSound))
-				EmitSoundToAll(sSound, this.iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
+			TF2_RemoveCondition(boss.iClient, g_aConditions[boss.iClient].Get(i));
 		}
+		
+		//If conditions are removed due to rage, refund remaining duration as cooldown reduction
+		float flCondCooldownWait = boss.GetPropFloat("AddCond", "CondCooldownWait");
+		float flDurationRemaining = flCondCooldownWait - GetGameTime() - boss.GetPropFloat("AddCond", "CondCooldown") + boss.GetPropFloat("AddCond", "CondDuration");
+		if (0 < flDurationRemaining < boss.GetPropFloat("AddCond", "CondDuration"))
+			boss.SetPropFloat("AddCond", "CondCooldownWait", flCondCooldownWait - flDurationRemaining);
 	}
-	
-	public void OnRage()
-	{
-		if (this.bRemoveOnRage)
-		{
-			for (int i = 0; i < g_aConditions[this.iClient].Length; i++)
-			{
-				TF2_RemoveCondition(this.iClient, g_aConditions[this.iClient].Get(i));
-			}
-			
-			//If conditions are removed due to rage, refund remaining duration as cooldown reduction
-			float flDurationRemaining = this.flCondCooldownWait - GetGameTime() - this.flCondCooldown + this.flCondDuration;
-			if (0 < flDurationRemaining < this.flCondDuration)
-				this.flCondCooldownWait -= flDurationRemaining;
-		}
-	}
-};
+}
