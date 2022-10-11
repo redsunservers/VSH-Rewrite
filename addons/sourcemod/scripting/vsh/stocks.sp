@@ -955,6 +955,11 @@ stock void ColorToTextStr(const int iColor[4], char[] sBuffer, int iLength)
 	Format(sBuffer, iLength, "\x07%02X%02X%02X", iColor[0], iColor[1], iColor[2]);
 }
 
+stock bool IsEntitySolid(int iEntity)
+{
+	return GetEntProp(iEntity, Prop_Send, "m_nSolidType") != view_as<int>(SOLID_NONE) && !(GetEntProp(iEntity, Prop_Send, "m_usSolidFlags") & view_as<int>(FSOLID_NOT_SOLID));
+}
+
 stock void PrepareSound(const char[] sSoundPath)
 {
 	PrecacheSound(sSoundPath, true);

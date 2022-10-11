@@ -24,10 +24,6 @@ static char g_strSamyroRoundLose[][] =  {
 	"vo/taunts/pyro/pyro_taunt_rps_lose_03.mp3"
 };
 
-static char g_strSamyroRage[][] =  {
-	"vo/pyro_laughlong01.mp3"
-};
-
 static char g_strSamyroKill[][] =  {
 	"vo/taunts/pyro_taunts01.mp3", 
 	"vo/taunts/pyro_taunts02.mp3", 
@@ -50,17 +46,7 @@ static char g_strSamyroAbility[][] =  {
 public void Samyro_Create(SaxtonHaleBase boss)
 {
 	boss.CreateClass("WallClimb");
-	
-	boss.CreateClass("AddCond");
-	AddCond_AddCond(boss, TFCond_RuneAgility);
-	boss.SetPropInt("AddCond", "RemoveOnRage", true);
-	
-	boss.CreateClass("RageAddCond");
-	boss.SetPropFloat("RageAddCond", "RageCondDuration", 12.0);
-	boss.SetPropFloat("RageAddCond", "RageCondSuperRageMultiplier", 14.0 / 12.0);
-	RageAddCond_AddCond(boss, TFCond_RuneHaste);
-	RageAddCond_AddCond(boss, TFCond_DefenseBuffed);
-	RageAddCond_AddCond(boss, TFCond_Ubercharged, true);
+	boss.CreateClass("DashStrike");
 	
 	boss.iBaseHealth = 700;
 	boss.iHealthPerPlayer = 650;
@@ -157,7 +143,6 @@ public void Samyro_GetSound(SaxtonHaleBase boss, char[] sSound, int length, Saxt
 		case VSHSound_RoundStart: strcopy(sSound, length, g_strSamyroRoundStart[GetRandomInt(0, sizeof(g_strSamyroRoundStart) - 1)]);
 		case VSHSound_Win: strcopy(sSound, length, g_strSamyroRoundWin[GetRandomInt(0, sizeof(g_strSamyroRoundWin) - 1)]);
 		case VSHSound_Lose: strcopy(sSound, length, g_strSamyroRoundLose[GetRandomInt(0, sizeof(g_strSamyroRoundLose) - 1)]);
-		case VSHSound_Rage: strcopy(sSound, length, g_strSamyroRage[GetRandomInt(0, sizeof(g_strSamyroRage) - 1)]);
 		case VSHSound_Lastman: strcopy(sSound, length, g_strSamyroLastMan[GetRandomInt(0, sizeof(g_strSamyroLastMan) - 1)]);
 	}
 }
@@ -191,7 +176,6 @@ public void Samyro_Precache(SaxtonHaleBase boss)
 	for (int i = 0; i < sizeof(g_strSamyroRoundStart); i++) PrecacheSound(g_strSamyroRoundStart[i]);
 	for (int i = 0; i < sizeof(g_strSamyroRoundWin); i++) PrecacheSound(g_strSamyroRoundWin[i]);
 	for (int i = 0; i < sizeof(g_strSamyroRoundLose); i++) PrecacheSound(g_strSamyroRoundLose[i]);
-	for (int i = 0; i < sizeof(g_strSamyroRage); i++) PrecacheSound(g_strSamyroRage[i]);
 	for (int i = 0; i < sizeof(g_strSamyroKill); i++) PrecacheSound(g_strSamyroKill[i]);
 	for (int i = 0; i < sizeof(g_strSamyroLastMan); i++) PrecacheSound(g_strSamyroLastMan[i]);
 	for (int i = 0; i < sizeof(g_strSamyroAbility); i++) PrecacheSound(g_strSamyroAbility[i]);
