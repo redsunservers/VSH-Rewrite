@@ -797,6 +797,9 @@ stock void TF2_TeleportSwap(int iClient[2])
 		
 		//Create particle
 		CreateTimer(3.0, Timer_EntityCleanup, TF2_SpawnParticle(PARTICLE_GHOST, vecOrigin[i], vecAngles[i]));
+		
+		//Play a sound
+		EmitGameSoundToAll("Halloween.spell_teleport", iClient[i]);
 	}
 	
 	for (int i = 0; i <= 1; i++)
