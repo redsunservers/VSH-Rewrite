@@ -250,8 +250,8 @@ public void RageGhost_OnThink(SaxtonHaleBase boss)
 			}
 		}
 		
-		//Random Spook effects, 1.5 sec cooldown
-		if (g_flGhostLastSpookTime[iClient] < GetGameTime() - 1.5)
+		//Random Spook effects, 2.5 sec cooldown
+		if (g_flGhostLastSpookTime[iClient] < GetGameTime() - 2.5)
 		{
 			g_flGhostLastSpookTime[iClient] = GetGameTime();
 			
@@ -281,32 +281,28 @@ public void RageGhost_OnThink(SaxtonHaleBase boss)
 				iLength -= 2;
 			}
 			
-			//Other random effects
+			//Attempt to change to a random weapon slot
 			for (int i = 0; i < iLength; i++)
 			{
-				//Attempt use random slot
-				if (GetRandomInt(0, 1))
+				ArrayList aWeapons = new ArrayList();
+				int iActiveWeapon = GetEntPropEnt(iSpooked[i], Prop_Send, "m_hActiveWeapon");
+				
+				//We don't want to count PDA2 due to invis watch
+				for (int iSlot = 0; iSlot <= WeaponSlot_PDADisguise; iSlot++)
 				{
-					ArrayList aWeapons = new ArrayList();
-					int iActiveWeapon = GetEntPropEnt(iSpooked[i], Prop_Send, "m_hActiveWeapon");
-					
-					//We don't want to count PDA2 due to invis watch
-					for (int iSlot = 0; iSlot <= WeaponSlot_PDADisguise; iSlot++)
-					{
-						int iWeapon = GetPlayerWeaponSlot(iSpooked[i], iSlot);
-						if (IsValidEdict(iWeapon) && iWeapon != iActiveWeapon)
-							aWeapons.Push(iWeapon);
-					}
-					
-					if (aWeapons.Length > 0)
-					{
-						//Get random weapon/slot to change
-						aWeapons.Sort(Sort_Random, Sort_Integer);
-						TF2_SwitchToWeapon(iSpooked[i], aWeapons.Get(0));
-					}
-					
-					delete aWeapons;
+					int iWeapon = GetPlayerWeaponSlot(iSpooked[i], iSlot);
+					if (IsValidEdict(iWeapon) && iWeapon != iActiveWeapon)
+						aWeapons.Push(iWeapon);
 				}
+				
+				if (aWeapons.Length > 0)
+				{
+					//Get random weapon/slot to change
+					aWeapons.Sort(Sort_Random, Sort_Integer);
+					TF2_SwitchToWeapon(iSpooked[i], aWeapons.Get(0));
+				}
+				
+				delete aWeapons;
 			}
 		}
 	}
