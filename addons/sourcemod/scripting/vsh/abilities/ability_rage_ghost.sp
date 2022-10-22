@@ -75,7 +75,7 @@ public void RageGhost_OnRage(SaxtonHaleBase boss)
 	
 	//Thirdperson
 	SetVariantInt(1);
-	AcceptEntityInput(boss.iClient, "SetForcedTauntCam");
+	AcceptEntityInput(iClient, "SetForcedTauntCam");
 }
 
 public void RageGhost_OnThink(SaxtonHaleBase boss)
@@ -101,15 +101,15 @@ public void RageGhost_OnThink(SaxtonHaleBase boss)
 		int[] iSpooked = new int[MaxClients];
 		int iLength = 0;
 		
-		float flRadius = (boss.bSuperRage) ? boss.GetPropFloat("RageGhost", "Radius") * 1.5 : boss.GetPropFloat("RageGhost", "Radius");
-		float flHealSteal = (boss.bSuperRage) ? boss.GetPropFloat("RageGhost", "HealSteal") * 2 : boss.GetPropFloat("RageGhost", "HealSteal");
+		float flRadius = (boss.bSuperRage) ? boss.GetPropFloat("RageGhost", "Radius") * 1.25 : boss.GetPropFloat("RageGhost", "Radius");
+		float flHealSteal = (boss.bSuperRage) ? boss.GetPropFloat("RageGhost", "HealSteal") * 2.0 : boss.GetPropFloat("RageGhost", "HealSteal");
 		
 		//Player interaction
 		for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
 		{
 			bool bSpook = false;
 			
-			if (SaxtonHale_IsValidAttack(iVictim) && IsPlayerAlive(iVictim))
+			if (IsClientInGame(iVictim) && IsPlayerAlive(iVictim) && TF2_GetClientTeam(iVictim) != TF2_GetClientTeam(iClient))
 			{
 				float vecTargetOrigin[3];
 				GetClientAbsOrigin(iVictim, vecTargetOrigin);
@@ -166,15 +166,20 @@ public void RageGhost_OnThink(SaxtonHaleBase boss)
 						if (iHealthLost > 0)	//Health is lost
 						{
 							g_iGhostHealStealCount[iClient][iVictim] += iHealthLost;
-							g_flGhostHealGainBuffer[iClient] += float(iHealthLost) * boss.GetPropFloat("RageGhost", "HealGainMultiplier");
-							int iExpectedGain = RoundToFloor(g_flGhostHealGainBuffer[iClient]);
-							if (iExpectedGain > 0)
+							
+							//Only heal the boss if we're connected to attackers
+							if (SaxtonHale_IsValidAttack(iVictim))
 							{
-								Client_AddHealth(iClient, iExpectedGain);
-								g_flGhostHealGainBuffer[iClient] -= iExpectedGain;
+								g_flGhostHealGainBuffer[iClient] += float(iHealthLost) * boss.GetPropFloat("RageGhost", "HealGainMultiplier");
+								int iExpectedGain = RoundToFloor(g_flGhostHealGainBuffer[iClient]);
+								if (iExpectedGain > 0)
+								{
+									Client_AddHealth(iClient, iExpectedGain);
+									g_flGhostHealGainBuffer[iClient] -= iExpectedGain;
+								}
 							}
 						}
-						else if (flDamage > 3.0)	//Player is prob ubered etc, just update steal count without giving boss health
+						else if (flDamage > 3.0)	//Player is invincible, just update steal count without giving boss health
 						{
 							g_iGhostHealStealCount[iClient][iVictim]++;
 						}
@@ -245,8 +250,8 @@ public void RageGhost_OnThink(SaxtonHaleBase boss)
 			}
 		}
 		
-		//Random Spook effects, 1.5 sec cooldown
-		if (g_flGhostLastSpookTime[iClient] < GetGameTime() - 1.5)
+		//Random Spook effects, 2.5 sec cooldown
+		if (g_flGhostLastSpookTime[iClient] < GetGameTime() - 2.5)
 		{
 			g_flGhostLastSpookTime[iClient] = GetGameTime();
 			
@@ -276,47 +281,28 @@ public void RageGhost_OnThink(SaxtonHaleBase boss)
 				iLength -= 2;
 			}
 			
-			//Other random effects
+			//Attempt to change to a random weapon slot
 			for (int i = 0; i < iLength; i++)
 			{
-				bool bEffectDone = false;
+				ArrayList aWeapons = new ArrayList();
+				int iActiveWeapon = GetEntPropEnt(iSpooked[i], Prop_Send, "m_hActiveWeapon");
 				
-				//Attempt use random slot
-				if (GetRandomInt(0, 1))
+				//We don't want to count PDA2 due to invis watch
+				for (int iSlot = 0; iSlot <= WeaponSlot_PDADisguise; iSlot++)
 				{
-					ArrayList aWeapons = new ArrayList();
-					int iActiveWepon = GetEntPropEnt(iSpooked[i], Prop_Send, "m_hActiveWeapon");
-					
-					//We don't want to count PDA2 due to invis watch
-					for (int iSlot = 0; iSlot <= WeaponSlot_PDADisguise; iSlot++)
-					{
-						int iWeapon = GetPlayerWeaponSlot(iSpooked[i], iSlot);
-						if (IsValidEdict(iWeapon) && iWeapon != iActiveWepon)
-							aWeapons.Push(iWeapon);
-					}
-					
-					if (aWeapons.Length > 0)
-					{
-						//Get random weapon/slot to change
-						aWeapons.Sort(Sort_Random, Sort_Integer);
-						char sClassname[256];
-						GetEntityClassname(aWeapons.Get(0), sClassname, sizeof(sClassname));
-						FakeClientCommand(iSpooked[i], "use %s", sClassname);
-						bEffectDone = true;
-					}
-					
-					delete aWeapons;
+					int iWeapon = GetPlayerWeaponSlot(iSpooked[i], iSlot);
+					if (IsValidEdict(iWeapon) && iWeapon != iActiveWeapon)
+						aWeapons.Push(iWeapon);
 				}
 				
-				//Random angles
-				if (!bEffectDone)
+				if (aWeapons.Length > 0)
 				{
-					float vecAngles[3];
-					vecAngles[0] = GetRandomFloat(-90.0, 90.0);
-					vecAngles[1] = GetRandomFloat(0.0, 360.0);
-					
-					TeleportEntity(iSpooked[i], NULL_VECTOR, vecAngles, NULL_VECTOR);
+					//Get random weapon/slot to change
+					aWeapons.Sort(Sort_Random, Sort_Integer);
+					TF2_SwitchToWeapon(iSpooked[i], aWeapons.Get(0));
 				}
+				
+				delete aWeapons;
 			}
 		}
 	}
@@ -355,7 +341,7 @@ public void RageGhost_OnThink(SaxtonHaleBase boss)
 		
 		//Firstperson
 		SetVariantInt(0);
-		AcceptEntityInput(boss.iClient, "SetForcedTauntCam");
+		AcceptEntityInput(iClient, "SetForcedTauntCam");
 	}
 }
 

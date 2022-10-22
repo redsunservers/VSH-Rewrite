@@ -49,11 +49,11 @@ public void TeleportSwap_GetHudInfo(SaxtonHaleBase boss, char[] sMessage, int iL
 	if (g_flTeleportSwapCooldownWait[boss.iClient] != 0.0 && g_flTeleportSwapCooldownWait[boss.iClient] > GetGameTime())
 	{
 		int iSec = RoundToCeil(g_flTeleportSwapCooldownWait[boss.iClient]-GetGameTime());
-		Format(sMessage, iLength, "%s\nTeleport-swap cooldown %i second%s remaining!", sMessage, iSec, (iSec > 1) ? "s" : "");
+		Format(sMessage, iLength, "%s\nTeleport-swap is on cooldown for %d second%s!", sMessage, iSec, (iSec > 1) ? "s" : "");
 	}
 	else if (boss.GetPropInt("TeleportSwap", "Charge") > 0)
 	{
-		Format(sMessage, iLength, "%s\nTeleport-swap: %0.2f%%. Look up and stand up to use teleport-swap.", sMessage, (float(boss.GetPropInt("TeleportSwap", "Charge"))/float(boss.GetPropInt("TeleportSwap", "MaxCharge")))*100.0);
+		Format(sMessage, iLength, "%s\nTeleport-swap: %.0f％. Look up and release right click to teleport.", sMessage, (float(boss.GetPropInt("TeleportSwap", "Charge"))/float(boss.GetPropInt("TeleportSwap", "MaxCharge")))*100.0);
 	}
 	else
 	{
@@ -71,13 +71,22 @@ public void TeleportSwap_OnButtonRelease(SaxtonHaleBase boss, int button)
 {
 	if (button == IN_ATTACK2)
 	{
-		if (TF2_IsPlayerInCondition(boss.iClient, TFCond_Dazed))//Can't teleport-swap if stunned
-			return;
-		
-		if (!(GetEntityFlags(boss.iClient) & FL_ONGROUND))
-			return;
-		
 		g_bTeleportSwapHoldingChargeButton[boss.iClient] = false;
+		
+		// Deny teleporting when stunned
+		if (TF2_IsPlayerInCondition(boss.iClient, TFCond_Dazed))
+		{
+			PrintHintText(boss.iClient, "Can't teleport-swap when stunned.");
+			return;
+		}
+		
+		// Deny teleporting when airborne
+		if (!(GetEntityFlags(boss.iClient) & FL_ONGROUND))
+		{
+			PrintHintText(boss.iClient, "Can't teleport-swap when airborne.");
+			return;
+		}
+		
 		if (g_flTeleportSwapCooldownWait[boss.iClient] > GetGameTime()) return;
 		
 		float vecAng[3];
