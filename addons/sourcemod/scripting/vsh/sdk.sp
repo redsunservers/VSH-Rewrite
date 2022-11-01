@@ -14,6 +14,7 @@ static Handle g_hSDKGetEquippedWearable;
 static Handle g_hSDKEquipWearable;
 static Handle g_hSDKAddObject;
 static Handle g_hSDKRemoveObject;
+static Handle g_hSDKTossJarThink;
 
 int g_iOffsetFuseTime = -1;
 
@@ -134,6 +135,12 @@ void SDK_Init()
 	g_hSDKRemoveObject = EndPrepSDKCall();
 	if (g_hSDKRemoveObject == null)
 		LogMessage("Failed to create call: CTFPlayer::RemoveObject!");
+	
+	StartPrepSDKCall(SDKCall_Entity);
+	PrepSDKCall_SetFromConf(hGameData, SDKConf_Virtual, "CTFJar::TossJarThink");
+	g_hSDKTossJarThink = EndPrepSDKCall();
+	if (!g_hSDKTossJarThink)
+		LogError("Failed to create call: CTFJar::TossJarThink!");
 	
 	// This hook allows entity to always transmit
 	iOffset = hGameData.GetOffset("CBaseEntity::ShouldTransmit");
@@ -461,6 +468,11 @@ void SDK_RemoveObject(int iClient, int iEntity)
 {
 	if(g_hSDKRemoveObject != null)
 		SDKCall(g_hSDKRemoveObject, iClient, iEntity);
+}
+
+void SDK_TossJarThink(int iEntity)
+{
+	SDKCall(g_hSDKTossJarThink, iEntity);
 }
 
 void SDK_SetFuseTime(int iEntity, float flTime)
