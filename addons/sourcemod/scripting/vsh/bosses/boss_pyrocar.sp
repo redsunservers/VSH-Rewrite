@@ -385,8 +385,6 @@ public void PyroCar_OnButtonPress(SaxtonHaleBase boss, int button)
 		
 		int iWeapon = CreateEntityByName("tf_weapon_jar_gas");
 		SetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex", ITEM_GAS_PASSER);
-		//SetEntProp(iWeapon, Prop_Send, "m_bInitialized", 1);
-		//SetEntProp(iWeapon, Prop_Send, "m_bOnlyIterateItemViewAttributes", false);
 		
 		int iActiveWeapon = GetEntPropEnt(boss.iClient, Prop_Send, "m_hActiveWeapon");
 		float flChargeMeter = GetEntPropFloat(boss.iClient, Prop_Send, "m_flItemChargeMeter", 1);
