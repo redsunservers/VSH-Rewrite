@@ -115,6 +115,11 @@
 				"linux"		"266"
 				"windows"	"265"
 			}
+			"CTFJar::TossJarThink"
+			{
+				"linux"		"494"
+				"windows"	"487"
+			}
 		}
 	}
 }

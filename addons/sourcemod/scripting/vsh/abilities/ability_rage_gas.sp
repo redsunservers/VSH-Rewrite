@@ -1,3 +1,5 @@
+#define ATTRIB_MINICRIT_BECOMES_CRIT	179
+
 static float g_flRageGasEnd[TF_MAXPLAYERS];
 static float g_flPreviousSpeed[TF_MAXPLAYERS];
 
@@ -52,6 +54,13 @@ public void RageGas_OnRage(SaxtonHaleBase boss)
 	g_flRageGasEnd[boss.iClient] = GetGameTime() + flRageDuration;
 	
 	TF2_AddCondition(boss.iClient, TFCond_SpeedBuffAlly, flRageDuration, boss.iClient);
+	
+	int iWeapon = TF2_GetItemInSlot(boss.iClient, WeaponSlot_Primary);
+	if (iWeapon != INVALID_ENT_REFERENCE)
+	{
+		TF2Attrib_SetByDefIndex(iWeapon, ATTRIB_MINICRIT_BECOMES_CRIT, 1.0);
+		TF2Attrib_ClearCache(iWeapon);
+	}
 }
 
 public void RageGas_OnThink(SaxtonHaleBase boss)
@@ -64,5 +73,12 @@ public void RageGas_OnThink(SaxtonHaleBase boss)
 	{
 		g_flRageGasEnd[boss.iClient] = 0.0;
 		boss.flSpeed = g_flPreviousSpeed[boss.iClient];
+		
+		int iWeapon = TF2_GetItemInSlot(boss.iClient, WeaponSlot_Primary);
+		if (iWeapon != INVALID_ENT_REFERENCE)
+		{
+			TF2Attrib_RemoveByDefIndex(iWeapon, ATTRIB_MINICRIT_BECOMES_CRIT);
+			TF2Attrib_ClearCache(iWeapon);
+		}
 	}
 }

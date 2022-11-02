@@ -5,8 +5,8 @@
 #define ATTRIB_LESSHEALING				734
 #define TF_DMG_AFTERBURN				DMG_PREVENT_PHYSICS_FORCE | DMG_BURN
 #define TF_DMG_GAS_AFTERBURN			DMG_BURN|DMG_PREVENT_PHYSICS_FORCE|DMG_ACID
-#define PYROCAR_BACKBURNER_ATTRIBUTES	"24 ; 1.0 ; 72 ; 0.5 ; 112 ; 0.25 ; 178 ; 0.2 ; 179 ; 1.0 ; 181 ; 1.0 ; 252 ; 0.5 ; 259 ; 1.0 ; 356 ; 1.0 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 1850.0 ; 862 ; 0.45 ; 863 ; 0.01 ; 865 ; 85 ; 214 ; %d"
-#define PYROCAR_THERMAL_THRUSTER_ATTRIBUTES	"259 ; 1.0 ; 870 ; 1.0 ; 872 ; 1.0 ; 873 ; 1.0"
+#define PYROCAR_BACKBURNER_ATTRIBUTES	"24 ; 1.0 ; 72 ; 0.5 ; 74 ; 0.0 ; 112 ; 0.25 ; 178 ; 0.2 ; 181 ; 1.0 ; 252 ; 0.5 ; 259 ; 1.0 ; 356 ; 1.0 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 1850.0 ; 862 ; 0.45 ; 863 ; 0.01 ; 865 ; 85 ; 214 ; %d"
+#define PYROCAR_THERMAL_THRUSTER_ATTRIBUTES	"259 ; 1.0 ; 801 ; 20.0 ; 856 ; 1.0 ; 870 ; 1.0 ; 872 ; 1.0 ; 873 ; 1.0"
 #define PYROCAR_HEALINGREDUCTION		0.5
 
 static char g_strPyrocarRoundStart[][] =  {
@@ -61,17 +61,16 @@ static int g_iCosmetics[] =  {
 	394 //Connoisseur's Cap
 };
 
-static float g_flGasMinCharge = 225.0;
-static int g_iMaxGasPassers = 5;
+static float g_flGasMinCharge = 350.0;
+static int g_iMaxGasPassers = 3;
 
 static int g_iPyrocarCosmetics[sizeof(g_iCosmetics)];
 
 static int g_iPyrocarPrimary[TF_MAXPLAYERS];
-static int g_iPyrocarJetpack[TF_MAXPLAYERS];
 static int g_iPyrocarMelee[TF_MAXPLAYERS];
 
+static float g_flPyrocarBurnEnd[TF_MAXPLAYERS];
 static float g_flPyrocarGasCharge[TF_MAXPLAYERS];
-static float g_flPyrocarJetpackCharge[TF_MAXPLAYERS];
 
 static Handle g_hPyrocarHealTimer[TF_MAXPLAYERS];
 static Handle g_hGasTimer[TF_MAXPLAYERS];
@@ -98,16 +97,16 @@ public void PyroCar_GetBossName(SaxtonHaleBase boss, char[] sName, int length)
 public void PyroCar_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length)
 {
 	StrCat(sInfo, length, "\nHealth: Medium");
-	StrCat(sInfo, length, "\nYour backburner does little damage");
-	StrCat(sInfo, length, "\nDoused enemies take critical hits");
+	StrCat(sInfo, length, "\nDoused enemies take mini crits");
 	StrCat(sInfo, length, "\nYou can chain thermal thruster jumps");
 	StrCat(sInfo, length, "\n ");
 	StrCat(sInfo, length, "\nAbilities");
-	StrCat(sInfo, length, "\n- Throw gas passer (Deal damage to gain up to 5)");
+	StrCat(sInfo, length, "\n- Throw gas passer (Deal damage to gain up to 3)");
 	StrCat(sInfo, length, "\n ");
 	StrCat(sInfo, length, "\nRage");
 	StrCat(sInfo, length, "\n- Damage requirement: 2500");
 	StrCat(sInfo, length, "\n- Douses enemies around you and grants a speed boost for 8 seconds");
+	StrCat(sInfo, length, "\n- Minicrits become crits");
 	StrCat(sInfo, length, "\n- 200%% Rage: Increases bonus speed and extends duration to 12 seconds");
 }
 
@@ -116,12 +115,14 @@ public void PyroCar_OnSpawn(SaxtonHaleBase boss)
 	char attribs[256];
 	Format(attribs, sizeof(attribs), PYROCAR_BACKBURNER_ATTRIBUTES, GetRandomInt(9999, 99999));
 	g_iPyrocarPrimary[boss.iClient] = boss.CallFunction("CreateWeapon", ITEM_BACKBURNER, "tf_weapon_flamethrower", 100, TFQual_Strange, attribs);
-	g_iPyrocarJetpack[boss.iClient] = boss.CallFunction("CreateWeapon", ITEM_THERMAL_THRUSTER, "tf_weapon_rocketpack", 100, TFQual_Unusual, PYROCAR_THERMAL_THRUSTER_ATTRIBUTES);
 	if (g_iPyrocarPrimary[boss.iClient] > MaxClients)
 	{
 		SetEntPropEnt(boss.iClient, Prop_Send, "m_hActiveWeapon", g_iPyrocarPrimary[boss.iClient]);
 		//TF2_SetAmmo(boss.iClient, WeaponSlot_Primary, 0);	//Reset ammo for TF2 to give correct amount of ammo
 	}
+	
+	boss.CallFunction("CreateWeapon", ITEM_THERMAL_THRUSTER, "tf_weapon_rocketpack", 100, TFQual_Unusual, PYROCAR_THERMAL_THRUSTER_ATTRIBUTES);
+	SetEntPropFloat(boss.iClient, Prop_Send, "m_flItemChargeMeter", 0.0, 1);
 	
 	g_iPyrocarMelee[boss.iClient] = -1;
 	g_flPyrocarGasCharge[boss.iClient] = 0.0;
@@ -130,12 +131,11 @@ public void PyroCar_OnSpawn(SaxtonHaleBase boss)
 	Backburner attributes:
 	
 	24: allow crits from behind
-	37: mult_maxammo_primary
 	59: self dmg push force decreased
 	72: afterburn damage penalty
+	74: afterburn duration
 	112: ammo regen
 	178: deploy time decreased
-	179: minicrits become crits
 	181: no self blast dmg
 	214: kill_eater
 	252: reduction in push force taken from damage
@@ -159,6 +159,10 @@ public void PyroCar_OnSpawn(SaxtonHaleBase boss)
 
 public void PyroCar_OnThink(SaxtonHaleBase boss)
 {
+	//No jetpack charging during preround
+	if (GameRules_GetRoundState() == RoundState_Preround)
+		SetEntPropFloat(boss.iClient, Prop_Send, "m_flItemChargeMeter", 0.0, 1);
+	
 	char attribs[256];
 	
 	int iWaterLevel = GetEntProp(boss.iClient, Prop_Send, "m_nWaterLevel");
@@ -203,30 +207,6 @@ public void PyroCar_OnThink(SaxtonHaleBase boss)
 		}
 	}
 	
-	//Check if Gas Passer has been used
-	int iSecondaryWep = GetPlayerWeaponSlot(boss.iClient, WeaponSlot_Secondary);
-	if (IsValidEntity(iSecondaryWep))
-	{
-		if (iSecondaryWep != g_iPyrocarJetpack[boss.iClient] && GetEntPropFloat(boss.iClient, Prop_Send, "m_flItemChargeMeter", 1) < 100.0)
-		{
-			TF2_RemoveItemInSlot(boss.iClient, WeaponSlot_Secondary);
-
-			g_iPyrocarJetpack[boss.iClient] = boss.CallFunction("CreateWeapon", ITEM_THERMAL_THRUSTER, "tf_weapon_rocketpack", 100, TFQual_Unusual, PYROCAR_THERMAL_THRUSTER_ATTRIBUTES);
-			SetEntPropFloat(boss.iClient, Prop_Send, "m_flItemChargeMeter", g_flPyrocarJetpackCharge[boss.iClient], 1);
-
-			//Call client to reset HUD meter
-			Event event = CreateEvent("localplayer_pickup_weapon", true);
-			event.FireToClient(boss.iClient);
-			event.Cancel();
-
-			//Change active weapon
-			if (IsValidEntity(GetPlayerWeaponSlot(boss.iClient, WeaponSlot_Primary)))
-				TF2_SwitchToWeapon(boss.iClient, g_iPyrocarPrimary[boss.iClient]);
-			else
-				TF2_SwitchToWeapon(boss.iClient, g_iPyrocarMelee[boss.iClient]);
-		}
-	}
-	
 	//Prevent marked-for-death to be removed
 	int iTeam = GetClientTeam(boss.iClient);
 	
@@ -245,25 +225,6 @@ public void PyroCar_OnThink(SaxtonHaleBase boss)
 			}
 		}
 	}
-	
-	//Handle Pyrocar's M2 ability
-	if (GameRules_GetRoundState() == RoundState_Preround)
-		return;
-	
-	//Jetpack regen
-	if (g_iPyrocarJetpack[boss.iClient] == GetPlayerWeaponSlot(boss.iClient, WeaponSlot_Secondary))
-	{
-		g_flPyrocarJetpackCharge[boss.iClient] = GetEntPropFloat(boss.iClient, Prop_Send, "m_flItemChargeMeter", 1);
-		if (g_flPyrocarJetpackCharge[boss.iClient] < 100.0)
-			g_flPyrocarJetpackCharge[boss.iClient] += 0.08;
-		SetEntPropFloat(boss.iClient, Prop_Send, "m_flItemChargeMeter", g_flPyrocarJetpackCharge[boss.iClient], 1);
-	}
-	else
-	{
-		if (g_flPyrocarJetpackCharge[boss.iClient] < 100.0)
-			g_flPyrocarJetpackCharge[boss.iClient] += 0.08;
-	}
-	
 }
 
 public void PyroCar_GetHudInfo(SaxtonHaleBase boss, char[] sMessage, int iLength, int iColor[4])
@@ -296,9 +257,24 @@ public void PyroCar_GetHudInfo(SaxtonHaleBase boss, char[] sMessage, int iLength
 
 public Action PyroCar_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-	if (TF2_IsPlayerInCondition(victim, TFCond_Ubercharged)) return Plugin_Continue;
-	if (weapon == TF2_GetItemInSlot(boss.iClient, WeaponSlot_Primary) && !(damagetype == TF_DMG_AFTERBURN || damagetype == TF_DMG_GAS_AFTERBURN))
+	if (TF2_IsUbercharged(victim))
+		return Plugin_Continue;
+	
+	if (damagetype & DMG_IGNITE)
 	{
+		//Direct flamethrower damage
+		float flGameTime = GetGameTime();
+		float flDuration = g_flPyrocarBurnEnd[victim] - flGameTime;
+		if (flDuration < 0.0)
+			flDuration = 0.0;
+		
+		flDuration += 0.15;
+		if (flDuration > 10.0)
+			flDuration = 10.0;
+		
+		g_flPyrocarBurnEnd[victim] = flGameTime + flDuration;
+		TF2_IgnitePlayer(victim, boss.iClient, flDuration);
+		
 		//Give victim less healing while damaged by pyrocar
 		if (!g_hPyrocarHealTimer[victim])
 		{
@@ -314,15 +290,8 @@ public Action PyroCar_OnAttackDamage(SaxtonHaleBase boss, int victim, int &infli
 		}
 		
 		g_hPyrocarHealTimer[victim] = CreateTimer(0.4, Timer_RemoveLessHealing, GetClientSerial(victim));
-		
-		//Deal constant damage for flamethrower
-		damage = 8.0;
 	}
 	
-	//Deal constant damage for afterburn
-	if (damagetype == TF_DMG_AFTERBURN || damagetype == TF_DMG_GAS_AFTERBURN)
-		damage = 2.0;
-		
 	if (g_flPyrocarGasCharge[boss.iClient] <= g_iMaxGasPassers * g_flGasMinCharge)
 		g_flPyrocarGasCharge[boss.iClient] += damage;
 		
@@ -330,13 +299,6 @@ public Action PyroCar_OnAttackDamage(SaxtonHaleBase boss, int victim, int &infli
 		g_flPyrocarGasCharge[boss.iClient] = g_iMaxGasPassers * g_flGasMinCharge;
 	
 	boss.CallFunction("UpdateHudInfo", 0.0, 0.0);	//Update once
-	
-	//Any kind of crit deals 2.5x damage, bonus damage does not give extra gas charge
-	if (damagetype & DMG_CRIT)
-	{
-		damage *= 2.5;
-	}
-		
 	return Plugin_Changed;
 }
 
@@ -381,6 +343,7 @@ public void PyroCar_Destroy(SaxtonHaleBase boss)
 {
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
+		g_flPyrocarBurnEnd[iClient] = 0.0;
 		g_hPyrocarHealTimer[iClient] = null;
 		g_hGasTimer[iClient] = null;
 		
@@ -415,19 +378,25 @@ public void PyroCar_Precache(SaxtonHaleBase boss)
 
 public void PyroCar_OnButtonPress(SaxtonHaleBase boss, int button)
 {
-	if (button == IN_ATTACK2 && g_flPyrocarGasCharge[boss.iClient] > g_flGasMinCharge && g_iPyrocarJetpack[boss.iClient] == GetPlayerWeaponSlot(boss.iClient, WeaponSlot_Secondary))
+	if (button == IN_ATTACK2 && g_flPyrocarGasCharge[boss.iClient] > g_flGasMinCharge)
 	{
 		g_flPyrocarGasCharge[boss.iClient] -= g_flGasMinCharge;
 		boss.CallFunction("UpdateHudInfo", 0.0, 0.0);	//Update once
 		
-		int iSecondaryWep = GetPlayerWeaponSlot(boss.iClient, WeaponSlot_Secondary);
-		if (IsValidEntity(iSecondaryWep))
-		{
-			TF2_RemoveItemInSlot(boss.iClient, WeaponSlot_Secondary);
-			
-			iSecondaryWep = boss.CallFunction("CreateWeapon", ITEM_GAS_PASSER, "tf_weapon_jar_gas", 100, TFQual_Unusual, "");
-			SetEntPropFloat(boss.iClient, Prop_Send, "m_flItemChargeMeter", 100.0, 1);
-		}
+		int iWeapon = CreateEntityByName("tf_weapon_jar_gas");
+		SetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex", ITEM_GAS_PASSER);
+		
+		int iActiveWeapon = GetEntPropEnt(boss.iClient, Prop_Send, "m_hActiveWeapon");
+		float flChargeMeter = GetEntPropFloat(boss.iClient, Prop_Send, "m_flItemChargeMeter", 1);
+		
+		DispatchSpawn(iWeapon);
+		EquipPlayerWeapon(boss.iClient, iWeapon);
+		SDK_TossJarThink(iWeapon);
+		RemovePlayerItem(boss.iClient, iWeapon);
+		RemoveEntity(iWeapon);
+		
+		TF2_SwitchToWeapon(boss.iClient, iActiveWeapon);
+		SetEntPropFloat(boss.iClient, Prop_Send, "m_flItemChargeMeter", flChargeMeter, 1);
 	}
 }
 
