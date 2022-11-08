@@ -120,7 +120,7 @@ bool WeaponBall_IsValidBall(int iEntity, int &iThrower = 0, float &flTime = 0.0)
 		return false;
 	
 	SaxtonHaleBase boss = SaxtonHaleBase(iOwner);
-	if (boss.HasClass("CWeaponBall"))
+	if (!boss.HasClass("WeaponBall"))
 		return false;
 	
 	//Get whoever threw the ball, either from bonk boy, or from deflected pyro
