@@ -1080,6 +1080,7 @@ public void Frame_CallJarate(DataPack data)
 	data.Reset();
 	int iClient = GetClientOfUserId(data.ReadCell());
 	TagsParams tParams = data.ReadCell();
+	delete data;
 	
 	if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient) || !IsPlayerAlive(iClient))
 	{
