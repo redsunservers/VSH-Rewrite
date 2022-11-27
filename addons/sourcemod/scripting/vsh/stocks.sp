@@ -968,6 +968,7 @@ stock void PrepareSound(const char[] sSoundPath)
 
 stock void PrepareMusic(const char[] sSoundPath)
 {
+	// Ensure the filepath has a # prefix, so it's considered as music by the engine (so people can adjust its volume through the music volume slider)
 	if (sSoundPath[0] != '#')
 	{
 		PrintToServer("[VSH REWRITE] PrepareMusic could not prepare %s: filepath must have the '#' prefix.", sSoundPath);
