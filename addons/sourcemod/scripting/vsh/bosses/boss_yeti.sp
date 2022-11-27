@@ -1,5 +1,5 @@
 #define YETI_MODEL "models/player/kirillian/boss/yeti_modded.mdl"
-#define YETI_THEME "ui/gamestartup29.mp3"
+#define YETI_THEME "#ui/gamestartup29.mp3"
 
 static char g_strYetiRoundStart[][] =  {
 	"ambient_mp3/lair/animal_call_yeti1.mp3", 

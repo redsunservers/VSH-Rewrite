@@ -966,6 +966,27 @@ stock void PrepareSound(const char[] sSoundPath)
 	AddFileToDownloadsTable(s);
 }
 
+stock void PrepareMusic(const char[] sSoundPath)
+{
+	if (sSoundPath[0] != '#')
+	{
+		PrintToServer("[VSH REWRITE] PrepareMusic could not prepare %s: filepath must have the '#' prefix.", sSoundPath);
+		return;
+	}
+	
+	char s[PLATFORM_MAX_PATH];
+	strcopy(s, sizeof(s), sSoundPath);
+	
+	if (ReplaceString(s, sizeof(s), "#", "sound/") != 1)
+	{
+		PrintToServer("[VSH REWRITE] PrepareMusic could not prepare %s: filepath must only have one '#' character.", sSoundPath);
+		return;
+	}
+	
+	PrecacheSound(sSoundPath, true);
+	AddFileToDownloadsTable(s);
+}
+
 stock int PrecacheParticleSystem(const char[] particleSystem)
 {
 	static int particleEffectNames = INVALID_STRING_TABLE;

@@ -1,5 +1,5 @@
 #define BRUTALSNIPER_MODEL "models/player/saxton_hale/cbs_v4.mdl"
-#define BRUTALSNIPER_THEME "vsh_rewrite/brutalsniper/brutalsniper_music.mp3"
+#define BRUTALSNIPER_THEME "#vsh_rewrite/brutalsniper/brutalsniper_music.mp3"
 #define BRUTALSNIPER_MAXWEAPONS 4
 
 #define ITEM_KUKRI			3
@@ -343,7 +343,7 @@ public void BrutalSniper_Precache(SaxtonHaleBase boss)
 {
 	PrecacheModel(BRUTALSNIPER_MODEL);
 	
-	PrepareSound(BRUTALSNIPER_THEME);
+	PrepareMusic(BRUTALSNIPER_THEME);
 	
 	for (int i = 0; i < sizeof(g_strBrutalSniperRoundStart); i++) PrecacheSound(g_strBrutalSniperRoundStart[i]);
 	for (int i = 0; i < sizeof(g_strBrutalSniperWin); i++) PrecacheSound(g_strBrutalSniperWin[i]);

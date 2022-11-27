@@ -191,7 +191,7 @@ public void Event_RoundArenaStart(Event event, const char[] sName, bool bDontBro
 				{
 					for (int i = 1; i <= MaxClients; i++)
 						if (IsClientInGame(i) && Preferences_Get(i, VSHPreferences_Music))
-							EmitSoundToClient(i, g_sBossMusic);
+							EmitSoundToClient(i, g_sBossMusic, _, SNDCHAN_STATIC, SNDLEVEL_NONE);
 					
 					if (flMusicTime > 0.0)
 						g_hTimerBossMusic = CreateTimer(flMusicTime, Timer_Music, boss, TIMER_REPEAT);
@@ -337,7 +337,7 @@ public void Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcast)
 		{
 			//End music
 			if (!StrEmpty(g_sBossMusic))
-				StopSound(iClient, SNDCHAN_AUTO, g_sBossMusic);
+				StopSound(iClient, SNDCHAN_STATIC, g_sBossMusic);
 			
 			if (GetClientTeam(iClient) > 1 && (!SaxtonHale_IsValidBoss(iClient, false)))
 			{				

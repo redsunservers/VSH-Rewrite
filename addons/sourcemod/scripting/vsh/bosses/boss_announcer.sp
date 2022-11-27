@@ -1,5 +1,5 @@
 #define ANNOUNCER_MODEL "models/player/kirillian/boss/sedisocks_administrator.mdl"
-#define ANNOUNCER_THEME "vsh_rewrite/administrator/admin_music.mp3"
+#define ANNOUNCER_THEME "#vsh_rewrite/administrator/admin_music.mp3"
 
 static char g_strAnnouncerRoundStart[][] = {
 	"vo/announcer_dec_missionbegins60s01.mp3",
@@ -242,7 +242,7 @@ public void Announcer_Precache(SaxtonHaleBase boss)
 {
 	PrecacheModel(ANNOUNCER_MODEL);
 	
-	PrepareSound(ANNOUNCER_THEME);
+	PrepareMusic(ANNOUNCER_THEME);
 	
 	for (int i = 0; i < sizeof(g_strAnnouncerRoundStart); i++) PrecacheSound(g_strAnnouncerRoundStart[i]);
 	for (int i = 0; i < sizeof(g_strAnnouncerWin); i++) PrecacheSound(g_strAnnouncerWin[i]);

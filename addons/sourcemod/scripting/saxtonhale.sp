@@ -1164,10 +1164,10 @@ public Action Timer_Music(Handle hTimer, SaxtonHaleBase boss)
 		if (IsClientInGame(iClient))
 		{
 			//Stop current music before playing another one
-			StopSound(iClient, SNDCHAN_AUTO, g_sBossMusic);
+			StopSound(iClient, SNDCHAN_STATIC, g_sBossMusic);
 			
 			if (Preferences_Get(iClient, VSHPreferences_Music))
-				EmitSoundToClient(iClient, g_sBossMusic);
+				EmitSoundToClient(iClient, g_sBossMusic, _, SNDCHAN_STATIC, SNDLEVEL_NONE);
 		}
 	}
 

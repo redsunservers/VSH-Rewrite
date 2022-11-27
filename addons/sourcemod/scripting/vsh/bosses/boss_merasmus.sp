@@ -2,7 +2,7 @@
 #define MERASMUS_MODEL "models/player/vsh_rewrite/merasmus/merasmus_v2.mdl"
 #define MERASMUS_MODEL_WAND "models/player/vsh_rewrite/merasmus/c_merasmus_staff.mdl"
 #define MERASMUS_MODEL_ARMS "models/player/vsh_rewrite/merasmus/c_merasmus_arms.mdl"
-#define MERASMUS_THEME "ui/holiday/gamestartup_halloween1.mp3"
+#define MERASMUS_THEME "#ui/holiday/gamestartup_halloween1.mp3"
 
 static char g_strMerasmusRoundStart[][] = {
 	"vo/halloween_merasmus/sf12_appears02.mp3",
