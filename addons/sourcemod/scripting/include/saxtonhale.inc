@@ -837,6 +837,31 @@ stock void SaxtonHale_PrepareSound(const char[] sSound)
 }
 
 /**
+ * Precaches a sound and adds music volume compatibility
+ *
+ * @param sSound			Sound to precache
+ * @param bCustom			Should the sound be added to the downloads table?
+ */
+stock void SaxtonHale_PrepareMusic(const char[] sSound, bool bCustom = true)
+{
+	// Prefix the filepath with #, so it's considered as music by the engine, allowing people to adjust its volume through the music volume slider
+	char sBuffer[PLATFORM_MAX_PATH];
+	FormatEx(sBuffer, sizeof(sBuffer), "#%s", sSound);
+	PrecacheSound(sBuffer, true);
+	
+	if (!bCustom)
+		return;
+	
+	if (ReplaceString(sBuffer, sizeof(sBuffer), "#", "sound/") != 1)
+	{
+		LogError("PrepareMusic could not prepare %s: filepath must not have any '#' characters.", sSound);
+		return;
+	}
+	
+	AddFileToDownloadsTable(sBuffer);
+}
+
+/**
  * Deprecated functions, do not use
  */
 
