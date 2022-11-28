@@ -978,7 +978,7 @@ stock void PrepareMusic(const char[] sSoundPath, bool bCustom = true)
 	
 	if (ReplaceString(s, sizeof(s), "#", "sound/") != 1)
 	{
-		PrintToServer("[VSH REWRITE] PrepareMusic could not prepare %s: filepath must not have any '#' characters.", sSoundPath);
+		LogError("PrepareMusic could not prepare %s: filepath must not have any '#' characters.", sSoundPath);
 		return;
 	}
 	
