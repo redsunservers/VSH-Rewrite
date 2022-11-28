@@ -242,7 +242,7 @@ public void Announcer_Precache(SaxtonHaleBase boss)
 {
 	PrecacheModel(ANNOUNCER_MODEL);
 	
-	PrepareSound(ANNOUNCER_THEME);
+	PrepareMusic(ANNOUNCER_THEME);
 	
 	for (int i = 0; i < sizeof(g_strAnnouncerRoundStart); i++) PrecacheSound(g_strAnnouncerRoundStart[i]);
 	for (int i = 0; i < sizeof(g_strAnnouncerWin); i++) PrecacheSound(g_strAnnouncerWin[i]);

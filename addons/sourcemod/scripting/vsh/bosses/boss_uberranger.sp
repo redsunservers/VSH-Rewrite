@@ -196,7 +196,7 @@ public void UberRanger_GetHudInfo(SaxtonHaleBase boss, char[] sMessage, int iLen
 public void UberRanger_Precache(SaxtonHaleBase boss)
 {
 	PrecacheModel(RANGER_MODEL);
-	PrepareSound(RANGER_THEME);
+	PrepareMusic(RANGER_THEME);
 	PrecacheSound(RANGER_RAGESOUND);
 	
 	for (int i = 0; i < sizeof(g_strUberRangerRoundStart); i++) PrecacheSound(g_strUberRangerRoundStart[i]);

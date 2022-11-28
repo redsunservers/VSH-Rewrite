@@ -324,7 +324,7 @@ public void GentleSpy_Precache(SaxtonHaleBase boss)
 {
 	PrecacheModel(GENTLE_SPY_MODEL);
 	
-	PrepareSound(GENTLE_SPY_THEME);
+	PrepareMusic(GENTLE_SPY_THEME);
 	
 	for (int i = 0; i < sizeof(g_strGentleSpyRoundStart); i++) PrecacheSound(g_strGentleSpyRoundStart[i]);
 	for (int i = 0; i < sizeof(g_strGentleSpyWin); i++) PrecacheSound(g_strGentleSpyWin[i]);

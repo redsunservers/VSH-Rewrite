@@ -245,7 +245,7 @@ public void Merasmus_Precache(SaxtonHaleBase boss)
 	g_iMerasmusModelWand = PrecacheModel(MERASMUS_MODEL_WAND);
 	g_iMerasmusModelArms = PrecacheModel(MERASMUS_MODEL_ARMS);
 	
-	PrecacheSound(MERASMUS_THEME);
+	PrepareMusic(MERASMUS_THEME, false);
 	
 	for (int i = 0; i < sizeof(g_strMerasmusRoundStart); i++) PrecacheSound(g_strMerasmusRoundStart[i]);
 	for (int i = 0; i < sizeof(g_strMerasmusWin); i++) PrecacheSound(g_strMerasmusWin[i]);

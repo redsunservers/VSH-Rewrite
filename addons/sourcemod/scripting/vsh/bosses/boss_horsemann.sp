@@ -183,7 +183,7 @@ public void Horsemann_Precache(SaxtonHaleBase boss)
 {
 	PrecacheModel(HORSEMANN_MODEL);
 	
-	PrecacheSound(HORSEMANN_THEME);
+	PrepareMusic(HORSEMANN_THEME, false);
 	
 	for (int i = 0; i < sizeof(g_strHorsemannRoundStart); i++) PrecacheSound(g_strHorsemannRoundStart[i]);
 	for (int i = 0; i < sizeof(g_strHorsemannWin); i++) PrecacheSound(g_strHorsemannWin[i]);

@@ -966,6 +966,25 @@ stock void PrepareSound(const char[] sSoundPath)
 	AddFileToDownloadsTable(s);
 }
 
+stock void PrepareMusic(const char[] sSoundPath, bool bCustom = true)
+{
+	// Prefix the filepath with #, so it's considered as music by the engine, allowing people to adjust its volume through the music volume slider
+	char s[PLATFORM_MAX_PATH];
+	FormatEx(s, sizeof(s), "#%s", sSoundPath);
+	PrecacheSound(s, true);
+	
+	if (!bCustom)
+		return;
+	
+	if (ReplaceString(s, sizeof(s), "#", "sound/") != 1)
+	{
+		LogError("PrepareMusic could not prepare %s: filepath must not have any '#' characters.", sSoundPath);
+		return;
+	}
+	
+	AddFileToDownloadsTable(s);
+}
+
 stock int PrecacheParticleSystem(const char[] particleSystem)
 {
 	static int particleEffectNames = INVALID_STRING_TABLE;

@@ -173,7 +173,7 @@ public void Yeti_Precache(SaxtonHaleBase boss)
 {
 	PrecacheModel(YETI_MODEL);
 	
-	PrecacheSound(YETI_THEME);
+	PrepareMusic(YETI_THEME, false);
 	
 	for (int i = 0; i < sizeof(g_strYetiRoundStart); i++)PrecacheSound(g_strYetiRoundStart[i]);
 	for (int i = 0; i < sizeof(g_strYetiWin); i++)PrecacheSound(g_strYetiWin[i]);

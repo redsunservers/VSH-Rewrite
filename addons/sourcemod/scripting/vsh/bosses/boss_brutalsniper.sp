@@ -343,7 +343,7 @@ public void BrutalSniper_Precache(SaxtonHaleBase boss)
 {
 	PrecacheModel(BRUTALSNIPER_MODEL);
 	
-	PrepareSound(BRUTALSNIPER_THEME);
+	PrepareMusic(BRUTALSNIPER_THEME);
 	
 	for (int i = 0; i < sizeof(g_strBrutalSniperRoundStart); i++) PrecacheSound(g_strBrutalSniperRoundStart[i]);
 	for (int i = 0; i < sizeof(g_strBrutalSniperWin); i++) PrecacheSound(g_strBrutalSniperWin[i]);
