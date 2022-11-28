@@ -966,25 +966,22 @@ stock void PrepareSound(const char[] sSoundPath)
 	AddFileToDownloadsTable(s);
 }
 
-stock void PrepareMusic(const char[] sSoundPath)
+stock void PrepareMusic(const char[] sSoundPath, bool bCustom = true)
 {
-	// Ensure the filepath has a # prefix, so it's considered as music by the engine (so people can adjust its volume through the music volume slider)
-	if (sSoundPath[0] != '#')
-	{
-		PrintToServer("[VSH REWRITE] PrepareMusic could not prepare %s: filepath must have the '#' prefix.", sSoundPath);
-		return;
-	}
-	
+	// Prefix the filepath with #, so it's considered as music by the engine, allowing people to adjust its volume through the music volume slider
 	char s[PLATFORM_MAX_PATH];
-	strcopy(s, sizeof(s), sSoundPath);
+	FormatEx(s, sizeof(s), "#%s", sSoundPath);
+	PrecacheSound(s, true);
+	
+	if (!bCustom)
+		return;
 	
 	if (ReplaceString(s, sizeof(s), "#", "sound/") != 1)
 	{
-		PrintToServer("[VSH REWRITE] PrepareMusic could not prepare %s: filepath must only have one '#' character.", sSoundPath);
+		PrintToServer("[VSH REWRITE] PrepareMusic could not prepare %s: filepath must not have any '#' characters.", sSoundPath);
 		return;
 	}
 	
-	PrecacheSound(sSoundPath, true);
 	AddFileToDownloadsTable(s);
 }
 

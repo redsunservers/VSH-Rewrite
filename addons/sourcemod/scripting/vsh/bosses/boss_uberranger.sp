@@ -1,5 +1,5 @@
 #define RANGER_MODEL 		"models/player/vsh_rewrite/uber_ranger/uber_ranger_v2.mdl"
-#define RANGER_THEME 		"#vsh_rewrite/uber_ranger/uberrangers_music.mp3"
+#define RANGER_THEME 		"vsh_rewrite/uber_ranger/uberrangers_music.mp3"
 #define RANGER_RAGESOUND 	"mvm/mvm_tele_deliver.wav"
 
 static int g_iUberRangerMinionAFKTimeLeft[TF_MAXPLAYERS];

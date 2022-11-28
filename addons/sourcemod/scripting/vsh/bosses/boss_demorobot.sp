@@ -1,6 +1,6 @@
 #define DEMO_ROBOT_GIANT_SCALE					1.75
 #define DEMO_ROBOT_TURN_INTO_GIANT  			"mvm/giant_heavy/giant_heavy_entrance.wav"
-#define DEMO_ROBOT_THEME						"#vsh_rewrite/demorobot/demorobot_music.mp3"
+#define DEMO_ROBOT_THEME						"vsh_rewrite/demorobot/demorobot_music.mp3"
 #define DEMO_ROBOT_DEATH						"mvm/sentrybuster/mvm_sentrybuster_explode.wav"
 #define DEMO_ROBOT_MODEL						"models/bots/demo/bot_demo.mdl"
 #define DEMO_ROBOT_GRENADE_LAUNCHER_SHOOT		"mvm/giant_demoman/giant_demoman_grenade_shoot.wav"

@@ -1,5 +1,5 @@
 #define BRUTALSNIPER_MODEL "models/player/saxton_hale/cbs_v4.mdl"
-#define BRUTALSNIPER_THEME "#vsh_rewrite/brutalsniper/brutalsniper_music.mp3"
+#define BRUTALSNIPER_THEME "vsh_rewrite/brutalsniper/brutalsniper_music.mp3"
 #define BRUTALSNIPER_MAXWEAPONS 4
 
 #define ITEM_KUKRI			3

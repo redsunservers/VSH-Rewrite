@@ -189,6 +189,10 @@ public void Event_RoundArenaStart(Event event, const char[] sName, bool bDontBro
 				boss.CallFunction("GetMusicInfo", g_sBossMusic, sizeof(g_sBossMusic), flMusicTime);
 				if (!StrEmpty(g_sBossMusic))
 				{
+					// Prefix the filepath with #, so it's considered as music by the engine, allowing people to adjust its volume through the music volume slider
+					if (g_sBossMusic[0] != '#')
+						Format(g_sBossMusic, sizeof(g_sBossMusic), "#%s", g_sBossMusic);
+					
 					for (int i = 1; i <= MaxClients; i++)
 						if (IsClientInGame(i) && Preferences_Get(i, VSHPreferences_Music))
 							EmitSoundToClient(i, g_sBossMusic, _, SNDCHAN_STATIC, SNDLEVEL_NONE);
