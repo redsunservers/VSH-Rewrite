@@ -92,8 +92,8 @@
 			}
 			"CTFPlayer::GiveNamedItem"
 			{
-				"linux"		"413"
-				"windows"	"412"
+				"linux"		"493"
+				"windows"	"486"
 			}
 			"CTFWeaponBase::SendWeaponAnim"
 			{
