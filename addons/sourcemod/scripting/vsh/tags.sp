@@ -468,7 +468,7 @@ public void Tags_Glow(int iClient, int iTarget, TagsParams tParams)
 	flGlowTime += GetGameTime();
 	
 	SaxtonHaleBase boss = SaxtonHaleBase(iTarget);
-	if (boss.flGlowTime < flGlowTime)
+	if (boss.flGlowTime != -1.0 && boss.flGlowTime < flGlowTime)
 		boss.flGlowTime = flGlowTime;
 }
 
