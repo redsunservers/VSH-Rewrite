@@ -5,7 +5,12 @@ static char g_strHaleRoundStart[][] = {
 	"vsh_rewrite/saxton_hale/saxton_hale_responce_start2.mp3",
 	"vsh_rewrite/saxton_hale/saxton_hale_responce_start3.mp3",
 	"vsh_rewrite/saxton_hale/saxton_hale_responce_start4.mp3",
-	"vsh_rewrite/saxton_hale/saxton_hale_responce_start5.mp3"
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_start5.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_132_start_1.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_132_start_2.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_132_start_3.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_132_start_4.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_132_start_5.mp3"
 };
 
 static char g_strHaleWin[][] = {
@@ -31,6 +36,16 @@ static char g_strHaleJump[][] = {
 	"vsh_rewrite/saxton_hale/saxton_hale_responce_jump2.mp3",
 	"vsh_rewrite/saxton_hale/saxton_hale_132_jump_1.mp3",
 	"vsh_rewrite/saxton_hale/saxton_hale_132_jump_2.mp3"
+};
+
+static char g_strHaleKill[][] = {
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_spree1.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_spree2.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_spree3.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_spree4.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_spree5.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_132_kspree_1.mp3",
+	"vsh_rewrite/saxton_hale/saxton_hale_132_kspree_2.mp3"
 };
 
 static char g_strHaleKillScout[][] = {
@@ -171,17 +186,24 @@ public void SaxtonHale_GetSoundAbility(SaxtonHaleBase boss, char[] sSound, int l
 
 public void SaxtonHale_GetSoundKill(SaxtonHaleBase boss, char[] sSound, int length, TFClassType nClass)
 {
-	switch (nClass)
+	if (!GetRandomInt(0, 1))
 	{
-		case TFClass_Scout: strcopy(sSound, length, g_strHaleKillScout[GetRandomInt(0,sizeof(g_strHaleKillScout)-1)]);
-		//case TFClass_Soldier: strcopy(sSound, length, g_strHaleKillSoldier[GetRandomInt(0,sizeof(g_strHaleKillSoldier)-1)]);
-		case TFClass_Pyro: strcopy(sSound, length, g_strHaleKillPyro[GetRandomInt(0,sizeof(g_strHaleKillPyro)-1)]);
-		case TFClass_DemoMan: strcopy(sSound, length, g_strHaleKillDemoman[GetRandomInt(0,sizeof(g_strHaleKillDemoman)-1)]);
-		case TFClass_Heavy: strcopy(sSound, length, g_strHaleKillHeavy[GetRandomInt(0,sizeof(g_strHaleKillHeavy)-1)]);
-		case TFClass_Engineer: strcopy(sSound, length, g_strHaleKillEngineer[GetRandomInt(0,sizeof(g_strHaleKillEngineer)-1)]);
-		case TFClass_Medic: strcopy(sSound, length, g_strHaleKillMedic[GetRandomInt(0,sizeof(g_strHaleKillMedic)-1)]);
-		case TFClass_Sniper: strcopy(sSound, length, g_strHaleKillSniper[GetRandomInt(0,sizeof(g_strHaleKillSniper)-1)]);
-		case TFClass_Spy: strcopy(sSound, length, g_strHaleKillSpy[GetRandomInt(0,sizeof(g_strHaleKillSpy)-1)]);
+		strcopy(sSound, length, g_strHaleKill[GetRandomInt(0,sizeof(g_strHaleKill)-1)]);
+	}
+	else
+	{
+		switch (nClass)
+		{
+			case TFClass_Scout: strcopy(sSound, length, g_strHaleKillScout[GetRandomInt(0,sizeof(g_strHaleKillScout)-1)]);
+			//case TFClass_Soldier: strcopy(sSound, length, g_strHaleKillSoldier[GetRandomInt(0,sizeof(g_strHaleKillSoldier)-1)]);
+			case TFClass_Pyro: strcopy(sSound, length, g_strHaleKillPyro[GetRandomInt(0,sizeof(g_strHaleKillPyro)-1)]);
+			case TFClass_DemoMan: strcopy(sSound, length, g_strHaleKillDemoman[GetRandomInt(0,sizeof(g_strHaleKillDemoman)-1)]);
+			case TFClass_Heavy: strcopy(sSound, length, g_strHaleKillHeavy[GetRandomInt(0,sizeof(g_strHaleKillHeavy)-1)]);
+			case TFClass_Engineer: strcopy(sSound, length, g_strHaleKillEngineer[GetRandomInt(0,sizeof(g_strHaleKillEngineer)-1)]);
+			case TFClass_Medic: strcopy(sSound, length, g_strHaleKillMedic[GetRandomInt(0,sizeof(g_strHaleKillMedic)-1)]);
+			case TFClass_Sniper: strcopy(sSound, length, g_strHaleKillSniper[GetRandomInt(0,sizeof(g_strHaleKillSniper)-1)]);
+			case TFClass_Spy: strcopy(sSound, length, g_strHaleKillSpy[GetRandomInt(0,sizeof(g_strHaleKillSpy)-1)]);
+		}
 	}
 }
 
@@ -200,6 +222,7 @@ public void SaxtonHale_Precache(SaxtonHaleBase boss)
 	for (int i = 0; i < sizeof(g_strHaleLose); i++) PrepareSound(g_strHaleLose[i]);
 	for (int i = 0; i < sizeof(g_strHaleRage); i++) PrepareSound(g_strHaleRage[i]);
 	for (int i = 0; i < sizeof(g_strHaleJump); i++) PrepareSound(g_strHaleJump[i]);
+	for (int i = 0; i < sizeof(g_strHaleKill); i++) PrepareSound(g_strHaleKill[i]);
 	for (int i = 0; i < sizeof(g_strHaleKillScout); i++) PrepareSound(g_strHaleKillScout[i]);
 	//for (int i = 0; i < sizeof(g_strHaleKillSoldier); i++) PrepareSound(g_strHaleKillSoldier[i]);
 	for (int i = 0; i < sizeof(g_strHaleKillPyro); i++) PrepareSound(g_strHaleKillPyro[i]);
