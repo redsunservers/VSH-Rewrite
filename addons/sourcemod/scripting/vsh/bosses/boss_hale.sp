@@ -186,7 +186,7 @@ public void SaxtonHale_GetSoundAbility(SaxtonHaleBase boss, char[] sSound, int l
 
 public void SaxtonHale_GetSoundKill(SaxtonHaleBase boss, char[] sSound, int length, TFClassType nClass)
 {
-	if (!GetRandomInt(0, 1))
+	if (!GetRandomInt(0, 1) || nClass == TFClass_Soldier)
 	{
 		strcopy(sSound, length, g_strHaleKill[GetRandomInt(0,sizeof(g_strHaleKill)-1)]);
 	}
@@ -195,7 +195,6 @@ public void SaxtonHale_GetSoundKill(SaxtonHaleBase boss, char[] sSound, int leng
 		switch (nClass)
 		{
 			case TFClass_Scout: strcopy(sSound, length, g_strHaleKillScout[GetRandomInt(0,sizeof(g_strHaleKillScout)-1)]);
-			//case TFClass_Soldier: strcopy(sSound, length, g_strHaleKillSoldier[GetRandomInt(0,sizeof(g_strHaleKillSoldier)-1)]);
 			case TFClass_Pyro: strcopy(sSound, length, g_strHaleKillPyro[GetRandomInt(0,sizeof(g_strHaleKillPyro)-1)]);
 			case TFClass_DemoMan: strcopy(sSound, length, g_strHaleKillDemoman[GetRandomInt(0,sizeof(g_strHaleKillDemoman)-1)]);
 			case TFClass_Heavy: strcopy(sSound, length, g_strHaleKillHeavy[GetRandomInt(0,sizeof(g_strHaleKillHeavy)-1)]);
