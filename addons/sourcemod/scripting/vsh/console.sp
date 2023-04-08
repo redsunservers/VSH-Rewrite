@@ -8,6 +8,7 @@ void Console_Init()
 	AddCommandListener(Console_JoinTeamCommand, "spectate");
 	AddCommandListener(Console_JoinClass, "joinclass");
 	AddCommandListener(Console_BuildCommand, "build");
+	AddCommandListener(Console_DropItem, "dropitem");
 }
 
 public Action Console_VoiceCommand(int iClient, const char[] sCommand, int iArgs)
@@ -163,4 +164,13 @@ public Action Console_BuildCommand(int iClient, const char[] sCommand, int iArgs
 	}
 	
 	return boss.CallFunction("OnBuild", nType, nMode);
+}
+
+public Action Console_DropItem(int iClient, const char[] sCommand, int iArgs)
+{
+	//Prevent boss from dropping powerups
+	if (SaxtonHaleBase(iClient).bValid)
+		return Plugin_Handled;
+	
+	return Plugin_Continue;
 }

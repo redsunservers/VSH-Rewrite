@@ -134,9 +134,18 @@ enum
 	COLLISION_GROUP_PUSHAWAY,		// Nonsolid on client and server, pushaway in player code
 
 	COLLISION_GROUP_NPC_ACTOR,		// Used so NPCs in scripts ignore the player.
-	COLLISION_GROUP_NPC_SCRIPTED,	// USed for NPCs in scripts that should not collide with each other
+	COLLISION_GROUP_NPC_SCRIPTED = 19,	// Used for NPCs in scripts that should not collide with each other.
 
-	LAST_SHARED_COLLISION_GROUP
+	LAST_SHARED_COLLISION_GROUP,
+
+	TF_COLLISIONGROUP_GRENADE = 20,
+	TFCOLLISION_GROUP_OBJECT,
+	TFCOLLISION_GROUP_OBJECT_SOLIDTOPLAYERMOVEMENT,
+	TFCOLLISION_GROUP_COMBATOBJECT,
+	TFCOLLISION_GROUP_ROCKETS,		// Solid to players, but not player movement. ensures touch calls are originating from rocket
+	TFCOLLISION_GROUP_RESPAWNROOMS,
+	TFCOLLISION_GROUP_TANK,
+	TFCOLLISION_GROUP_ROCKET_BUT_NOT_WITH_OTHER_ROCKETS
 };
 
 // entity effects
@@ -177,6 +186,35 @@ enum
 	DAMAGE_EVENTS_ONLY,		// Call damage functions, but don't modify health
 	DAMAGE_YES,
 	DAMAGE_AIM,
+};
+
+enum SolidType_t
+{
+    SOLID_NONE		= 0,    // no solid model
+    SOLID_BSP		= 1,    // a BSP tree
+    SOLID_BBOX		= 2,    // an AABB
+    SOLID_OBB		= 3,    // an OBB (not implemented yet)
+    SOLID_OBB_YAW	= 4,    // an OBB, constrained so that it can only yaw
+    SOLID_CUSTOM	= 5,    // Always call into the entity for tests
+    SOLID_VPHYSICS	= 6,    // solid vphysics object, get vcollide from the model and collide with that
+    SOLID_LAST,
+};
+
+enum SolidFlags_t
+{
+    FSOLID_CUSTOMRAYTEST		= 0x0001,	// Ignore solid type + always call into the entity for ray tests
+    FSOLID_CUSTOMBOXTEST		= 0x0002,	// Ignore solid type + always call into the entity for swept box tests
+    FSOLID_NOT_SOLID			= 0x0004,	// Are we currently not solid?
+    FSOLID_TRIGGER				= 0x0008,	// This is something may be collideable but fires touch functions
+    										// even when it's not collideable (when the FSOLID_NOT_SOLID flag is set)
+    FSOLID_NOT_STANDABLE		= 0x0010,	// You can't stand on this
+    FSOLID_VOLUME_CONTENTS		= 0x0020,	// Contains volumetric contents (like water)
+    FSOLID_FORCE_WORLD_ALIGNED	= 0x0040,	// Forces the collision rep to be world-aligned even if it's SOLID_BSP or SOLID_VPHYSICS
+    FSOLID_USE_TRIGGER_BOUNDS	= 0x0080,	// Uses a special trigger bounds separate from the normal OBB
+    FSOLID_ROOT_PARENT_ALIGNED	= 0x0100,	// Collisions are defined in root parent's local coordinate space
+    FSOLID_TRIGGER_TOUCH_DEBRIS	= 0x0200,	// This trigger will touch debris objects
+	
+    FSOLID_MAX_BITS    = 10
 };
 
 enum
@@ -338,7 +376,9 @@ ConVar tf_arena_preround_time;
 
 #include "vsh/abilities/ability_body_eat.sp"
 #include "vsh/abilities/ability_brave_jump.sp"
+#include "vsh/abilities/ability_conditions.sp"
 #include "vsh/abilities/ability_dash_jump.sp"
+#include "vsh/abilities/ability_dash_strike.sp"
 #include "vsh/abilities/ability_groundpound.sp"
 #include "vsh/abilities/ability_rage_bomb.sp"
 #include "vsh/abilities/ability_rage_bomb_projectile.sp"
@@ -369,6 +409,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/bosses/boss_painiscupcakes.sp"
 #include "vsh/bosses/boss_pyrocar.sp"
 #include "vsh/bosses/boss_redmond.sp"
+#include "vsh/bosses/boss_samyro.sp"
 #include "vsh/bosses/boss_seeldier.sp"
 #include "vsh/bosses/boss_seeman.sp"
 #include "vsh/bosses/boss_uberranger.sp"
@@ -637,6 +678,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("PainisCupcake", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("PyroCar", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("Redmond", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("Samyro", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("Seeldier", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("SeeMan", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("UberRanger", VSHClassType_Boss);
@@ -654,11 +696,13 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("Zombie", VSHClassType_Boss);
 	
 	//Register ability
+	SaxtonHale_RegisterClass("AddCond", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("BodyEat", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("Bomb", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("BombProjectile", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("BraveJump", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("DashJump", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("DashStrike", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("GroundPound", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("RageAddCond", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("RageFreeze", VSHClassType_Ability);
