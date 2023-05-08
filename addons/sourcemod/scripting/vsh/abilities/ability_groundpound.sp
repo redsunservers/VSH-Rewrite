@@ -8,6 +8,7 @@ static float g_flClientBossWeighDownTimer[TF_MAXPLAYERS];
 public void GroundPound_Create(SaxtonHaleBase boss)
 {
 	g_bClientBossWeighDownForce[boss.iClient] = false;
+	g_flClientBossWeighDownTimer[boss.iClient] = 0.0;
 	
 	boss.SetPropFloat("GroundPound", "StartTimer", 2.8);
 	boss.SetPropFloat("GroundPound", "GravityMultiplier", 8.0);
@@ -108,6 +109,15 @@ public void GroundPound_GetSoundAbility(SaxtonHaleBase boss, char[] sSound, int 
 	// Allow ground pound immediately on brave jump
 	if (StrEqual(sAbility, "BraveJump"))
 		g_flClientBossWeighDownTimer[boss.iClient] = 1.0;
+}
+
+public void GroundPound_Destroy(SaxtonHaleBase boss)
+{
+	if (g_bClientBossWeighDownForce[boss.iClient])
+	{
+		SetEntityGravity(boss.iClient, GetEntityGravity(boss.iClient) / boss.GetPropFloat("GroundPound", "GravityMultiplier"));
+		TF2_RemoveCondition(boss.iClient, TFCond_SpeedBuffAlly);
+	}
 }
 
 public void GroundPound_Precache(SaxtonHaleBase boss)
