@@ -42,7 +42,7 @@ public void GroundPound_OnThink(SaxtonHaleBase boss)
 
 public Action GroundPound_OnTakeDamage(SaxtonHaleBase boss, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-	if (!(damagetype & DMG_FALL))
+	if (!(damagetype & DMG_FALL) || !g_bClientBossWeighDownForce[boss.iClient])
 		return Plugin_Continue;
 	
 	float vecVel[3];
