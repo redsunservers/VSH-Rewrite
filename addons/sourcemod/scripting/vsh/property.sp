@@ -7,8 +7,6 @@ static bool g_bHealthPerPlayerAlive[TF_MAXPLAYERS];
 static float g_flSpeed[TF_MAXPLAYERS];
 static float g_flSpeedMult[TF_MAXPLAYERS];
 static float g_flEnvDamageCap[TF_MAXPLAYERS];
-static float g_flWeighDownTimer[TF_MAXPLAYERS];
-static float g_flWeighDownForce[TF_MAXPLAYERS];
 static float g_flGlowTime[TF_MAXPLAYERS];
 static float g_flRageLastTime[TF_MAXPLAYERS];
 static float g_flMaxRagePercentage[TF_MAXPLAYERS];
@@ -41,10 +39,6 @@ void Property_AskLoad()
 	CreateNative("SaxtonHaleBase.flSpeedMult.get", Property_GetSpeedMult);
 	CreateNative("SaxtonHaleBase.flEnvDamageCap.set", Property_SetEnvDamageCap);
 	CreateNative("SaxtonHaleBase.flEnvDamageCap.get", Property_GetEnvDamageCap);
-	CreateNative("SaxtonHaleBase.flWeighDownTimer.set", Property_SetWeighDownTimer);
-	CreateNative("SaxtonHaleBase.flWeighDownTimer.get", Property_GetWeighDownTimer);
-	CreateNative("SaxtonHaleBase.flWeighDownForce.set", Property_SetWeighDownForce);
-	CreateNative("SaxtonHaleBase.flWeighDownForce.get", Property_GetWeighDownForce);
 	CreateNative("SaxtonHaleBase.flGlowTime.set", Property_SetGlowTime);
 	CreateNative("SaxtonHaleBase.flGlowTime.get", Property_GetGlowTime);
 	CreateNative("SaxtonHaleBase.flRageLastTime.set", Property_SetRageLastTime);
@@ -166,28 +160,6 @@ public any Property_SetEnvDamageCap(Handle hPlugin, int iNumParams)
 public any Property_GetEnvDamageCap(Handle hPlugin, int iNumParams)
 {
 	return g_flEnvDamageCap[GetNativeCell(1)];
-}
-
-public any Property_SetWeighDownTimer(Handle hPlugin, int iNumParams)
-{
-	g_flWeighDownTimer[GetNativeCell(1)] = GetNativeCell(2);
-	return 0;
-}
-
-public any Property_GetWeighDownTimer(Handle hPlugin, int iNumParams)
-{
-	return g_flWeighDownTimer[GetNativeCell(1)];
-}
-
-public any Property_SetWeighDownForce(Handle hPlugin, int iNumParams)
-{
-	g_flWeighDownForce[GetNativeCell(1)] = GetNativeCell(2);
-	return 0;
-}
-
-public any Property_GetWeighDownForce(Handle hPlugin, int iNumParams)
-{
-	return g_flWeighDownForce[GetNativeCell(1)];
 }
 
 public any Property_SetGlowTime(Handle hPlugin, int iNumParams)
