@@ -93,9 +93,11 @@ public void BraveJump_OnButtonRelease(SaxtonHaleBase boss, int button)
 			vecVel[2] = boss.GetPropFloat("BraveJump", "MaxHeight")*((float(boss.GetPropInt("BraveJump", "JumpCharge"))/float(boss.GetPropInt("BraveJump", "MaxJumpCharge"))));
 			vecVel[0] *= (1.0+Sine((float(boss.GetPropInt("BraveJump", "JumpCharge"))/float(boss.GetPropInt("BraveJump", "MaxJumpCharge"))) * FLOAT_PI * boss.GetPropFloat("BraveJump", "MaxDistance")));
 			vecVel[1] *= (1.0+Sine((float(boss.GetPropInt("BraveJump", "JumpCharge"))/float(boss.GetPropInt("BraveJump", "MaxJumpCharge"))) * FLOAT_PI * boss.GetPropFloat("BraveJump", "MaxDistance")));
-			SetEntProp(boss.iClient, Prop_Send, "m_bJumping", true);
 			
 			TeleportEntity(boss.iClient, NULL_VECTOR, NULL_VECTOR, vecVel);
+			
+			SetEntProp(boss.iClient, Prop_Send, "m_bJumping", true);
+			SetEntityFlags(boss.iClient, GetEntityFlags(boss.iClient) & ~FL_ONGROUND);
 			
 			float flCooldownTime = (boss.GetPropFloat("BraveJump", "Cooldown")*(float(boss.GetPropInt("BraveJump", "JumpCharge"))/float(boss.GetPropInt("BraveJump", "MaxJumpCharge"))));
 			if (flCooldownTime < boss.GetPropFloat("BraveJump", "MinCooldown"))

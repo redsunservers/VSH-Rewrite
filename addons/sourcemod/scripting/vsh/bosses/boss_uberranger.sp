@@ -239,7 +239,6 @@ public void MinionRanger_Create(SaxtonHaleBase boss)
 	boss.iHealthPerPlayer = 40;
 	boss.nClass = TFClass_Medic;
 	boss.iMaxRageDamage = -1;
-	boss.flWeighDownTimer = -1.0;
 	boss.bMinion = true;
 	boss.bHealthPerPlayerAlive = true;
 	

@@ -148,7 +148,6 @@ public void SeeldierMinion_Create(SaxtonHaleBase boss)
 	boss.iHealthPerPlayer = 0;
 	boss.nClass = TFClass_Soldier;
 	boss.iMaxRageDamage = -1;
-	boss.flWeighDownTimer = -1.0;
 	boss.bMinion = true;
 	
 	EmitSoundToClient(boss.iClient, SOUND_ALERT);	//Alert player as he spawned
