@@ -48,8 +48,6 @@ public any FuncNative_InitFunction(Handle hPlugin, int iNumParams)
 	if (iNumParams > SP_MAX_EXEC_PARAMS)
 		ThrowNativeError(SP_ERROR_NATIVE, "Too many ParamType passed (Found %d, max %d)", iNumParams, SP_MAX_EXEC_PARAMS);
 	
-	g_aFuncFunctionList.ClearUnloadedPlugin();
-	
 	FuncFunction funcFunction;
 	GetNativeString(1, funcFunction.sName, sizeof(funcFunction.sName));
 	if (g_aFuncFunctionList.GetByName(funcFunction.sName, funcFunction))
@@ -240,8 +238,6 @@ public any FuncNative_RegisterClass(Handle hPlugin, int iNumParams)
 	if (nClassType == VSHClassType_Core && hPlugin != GetMyHandle())
 		ThrowNativeError(SP_ERROR_NATIVE, "VSHClassType_Core passed from non-main plugin");
 	
-	FuncClass_ClearUnloadedPlugin();
-	
 	if (FuncClass_Exists(sClass))
 		ThrowNativeError(SP_ERROR_NATIVE, "Methodmap Class (%s) already registered", sClass);
 	
@@ -273,14 +269,12 @@ public any FuncNative_GetPlugin(Handle hPlugin, int iNumParams)
 	char sType[MAX_TYPE_CHAR];
 	GetNativeString(1, sType, sizeof(sType));
 	
-	FuncClass_ClearUnloadedPlugin();
 	return FuncClass_GetPlugin(sType);
 }
 
 //ArrayList SaxtonHale_GetAllClass();
 public any FuncNative_GetAllClass(Handle hPlugin, int iNumParams)
 {
-	FuncClass_ClearUnloadedPlugin();
 	ArrayList aClass = FuncClass_GetAll();
 	
 	ArrayList aClone = view_as<ArrayList>(CloneHandle(aClass, hPlugin));
@@ -292,7 +286,6 @@ public any FuncNative_GetAllClass(Handle hPlugin, int iNumParams)
 //ArrayList SaxtonHale_GetAllClassType(SaxtonHaleClassType nClassType);
 public any FuncNative_GetAllClassType(Handle hPlugin, int iNumParams)
 {
-	FuncClass_ClearUnloadedPlugin();
 	ArrayList aClass = FuncClass_GetAllType(GetNativeCell(1));
 	
 	ArrayList aClone = view_as<ArrayList>(CloneHandle(aClass, hPlugin));
@@ -304,8 +297,6 @@ public any FuncNative_GetAllClassType(Handle hPlugin, int iNumParams)
 //any SaxtonHale_CallFunction(const char[] sClass, const char[] sFunction, any...);
 public any FuncNative_CallFunctionClass(Handle hPlugin, int iNumParams)
 {
-	g_aFuncFunctionList.ClearUnloadedPlugin();
-	
 	char sClass[MAX_TYPE_CHAR];
 	GetNativeString(1, sClass, sizeof(sClass));
 	if (!FuncClass_Exists(sClass))
@@ -328,9 +319,7 @@ public any FuncNative_CallFunctionClass(Handle hPlugin, int iNumParams)
 
 //any SaxtonHaleBase.CallFunction(const char[] sName, any...);
 public any FuncNative_CallFunctionClient(Handle hPlugin, int iNumParams)
-{
-	g_aFuncFunctionList.ClearUnloadedPlugin();
-	
+{	
 	//Get function to call
 	FuncFunction funcFunction;
 	GetNativeString(2, funcFunction.sName, sizeof(funcFunction.sName));
@@ -650,4 +639,9 @@ int FuncNative_GetFuncStack(FuncStack funcStack, ParamType &nParamType)
 	
 	nParamType = funcStack.nParamType[iParam - 1];
 	return iParam;
+}
+
+void FuncNative_ClearUnloadedPlugin(Handle hPlugin)
+{
+	g_aFuncFunctionList.ClearUnloadedPlugin(hPlugin);
 }

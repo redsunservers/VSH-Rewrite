@@ -113,23 +113,11 @@ ArrayList FuncClass_GetAllType(SaxtonHaleClassType nClassType)
 	return aClass;
 }
 
-void FuncClass_ClearUnloadedPlugin()
+void FuncClass_ClearUnloadedPlugin(Handle hPlugin)
 {
-	//TODO use OnNotifyPluginUnloaded when SM 1.11 is stable
-	ArrayList aPlugins = new ArrayList();
-	Handle hIterator = GetPluginIterator();
-	while (MorePlugins(hIterator))
-		aPlugins.Push(ReadPlugin(hIterator));
-	
-	delete hIterator;
-	aPlugins.Push(GetMyHandle());	//My handle is not in iterator during OnPluginEnd
-	
-	int iLength = g_aFuncClasses.Length;
-	for (int iPos = iLength - 1; iPos >= 0; iPos--)
-		if (aPlugins.FindValue(g_aFuncClasses.Get(iPos, FuncClass::hPlugin)) == -1)
-			g_aFuncClasses.Erase(iPos);
-	
-	delete aPlugins;
+	int iPos = -1;
+	while ((iPos = g_aFuncClasses.FindValue(hPlugin, FuncClass::hPlugin)) != -1)
+		g_aFuncClasses.Erase(iPos);
 }
 
 void FuncClass_ClientCreate(SaxtonHaleBase boss, const char[] sClass, bool bCreate = true)
