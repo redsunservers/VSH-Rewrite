@@ -64,23 +64,11 @@ methodmap FuncFunctionList < ArrayList
 		return funcFunction.nId;
 	}
 	
-	public void ClearUnloadedPlugin()
+	public void ClearUnloadedPlugin(Handle hPlugin)
 	{
-		//TODO use OnNotifyPluginUnloaded when SM 1.11 is stable
-		ArrayList aPlugins = new ArrayList();
-		Handle hIterator = GetPluginIterator();
-		while (MorePlugins(hIterator))
-			aPlugins.Push(ReadPlugin(hIterator));
-		
-		delete hIterator;
-		aPlugins.Push(GetMyHandle());	//My handle is not in iterator during OnPluginEnd
-		
-		int iLength = this.Length;
-		for (int iPos = iLength - 1; iPos >= 0; iPos--)
-			if (aPlugins.FindValue(this.Get(iPos, FuncFunction::hPlugin)) == -1)
-				this.Erase(iPos);
-		
-		delete aPlugins;
+		int iPos = -1;
+		while ((iPos = this.FindValue(hPlugin, FuncFunction::hPlugin)) != -1)
+			this.Erase(iPos);
 	}
 }
 

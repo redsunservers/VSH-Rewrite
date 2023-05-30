@@ -732,6 +732,12 @@ public void OnLibraryRemoved(const char[] sName)
 	}
 }
 
+public void OnNotifyPluginUnloaded(Handle hPlugin)
+{
+	FuncClass_ClearUnloadedPlugin(hPlugin);
+	FuncNative_ClearUnloadedPlugin(hPlugin);
+}
+
 public void OnPluginEnd()
 {
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
