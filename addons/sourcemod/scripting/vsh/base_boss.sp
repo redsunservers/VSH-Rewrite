@@ -1,8 +1,5 @@
 static char g_sClientBossRageMusic[TF_MAXPLAYERS][255];
 
-static bool g_bClientBossWeighDownForce[TF_MAXPLAYERS];
-
-static float g_flClientBossWeighDownTimer[TF_MAXPLAYERS];
 static float g_flClientBossRageMusicVolume[TF_MAXPLAYERS];
 
 static Handle g_hClientBossModelTimer[TF_MAXPLAYERS];
@@ -24,8 +21,6 @@ public void SaxtonHaleBoss_Create(SaxtonHaleBase boss)
 	boss.flMaxRagePercentage = 2.0;
 	boss.iRageDamage = 0;
 	boss.flEnvDamageCap = 200.0;
-	boss.flWeighDownTimer = 2.8;
-	boss.flWeighDownForce = 3000.0;
 	boss.flGlowTime = 0.0;
 	
 	boss.bMinion = false;
@@ -33,8 +28,6 @@ public void SaxtonHaleBoss_Create(SaxtonHaleBase boss)
 	boss.nClass = TFClass_Unknown;
 
 	g_sClientBossRageMusic[boss.iClient] = "";
-	g_bClientBossWeighDownForce[boss.iClient] = false;
-	g_flClientBossWeighDownTimer[boss.iClient] = 0.0;
 	g_flClientBossRageMusicVolume[boss.iClient] = 0.0;
 	g_hClientBossRageMusicTime[boss.iClient] = null;
 	
@@ -71,25 +64,6 @@ public void SaxtonHaleBoss_OnThink(SaxtonHaleBase boss)
 	{
 		float flMaxSpeed = boss.flSpeed + (boss.flSpeed*boss.flSpeedMult*(1.0-(float(boss.iHealth)/float(boss.iMaxHealth))));
 		SetEntPropFloat(boss.iClient, Prop_Data, "m_flMaxspeed", flMaxSpeed);
-	}
-	
-	if (GetEntityFlags(boss.iClient) & FL_ONGROUND)
-	{
-		//Reset weighdown timer
-		g_bClientBossWeighDownForce[boss.iClient] = false;
-		g_flClientBossWeighDownTimer[boss.iClient] = 0.0;
-	}
-	else if (g_bClientBossWeighDownForce[boss.iClient])
-	{
-		//Set weighdown force
-		float flVelocity[3];
-		flVelocity[2] = -boss.flWeighDownForce;
-		TeleportEntity(boss.iClient, NULL_VECTOR, NULL_VECTOR, flVelocity);
-	}
-	else if (g_flClientBossWeighDownTimer[boss.iClient] == 0.0 && !g_bClientBossWeighDownForce[boss.iClient])
-	{
-		//Start weighdown timer
-		g_flClientBossWeighDownTimer[boss.iClient] = GetGameTime();
 	}
 	
 	if (g_bRoundStarted && IsPlayerAlive(boss.iClient) && boss.iMaxRageDamage != -1)
@@ -132,26 +106,6 @@ public void SaxtonHaleBoss_OnThink(SaxtonHaleBase boss)
 	}
 }
 
-public void SaxtonHaleBoss_OnButton(SaxtonHaleBase boss, int &buttons)
-{
-	//Is boss crouching, allowed to use weighdown and passed timer
-	if (buttons & IN_DUCK
-		&& boss.flWeighDownTimer >= 0.0
-		&& g_flClientBossWeighDownTimer[boss.iClient] != 0.0
-		&& g_flClientBossWeighDownTimer[boss.iClient] < GetGameTime() - boss.flWeighDownTimer)
-	{
-		//Check if boss is looking down
-		float vecAngles[3];
-		GetClientEyeAngles(boss.iClient, vecAngles);
-		if (vecAngles[0] > 60.0)
-		{
-			//Enable weighdown
-			g_bClientBossWeighDownForce[boss.iClient] = true;
-			g_flClientBossWeighDownTimer[boss.iClient] = 0.0;
-		}
-	}
-}
-
 public void SaxtonHaleBoss_OnSpawn(SaxtonHaleBase boss)
 {
 	if (boss.bModel)
@@ -166,6 +120,10 @@ public void SaxtonHaleBoss_OnSpawn(SaxtonHaleBase boss)
 	
 	if (!boss.bMinion)
 	{
+		//Give every boss ground pound by default
+		if (!boss.HasClass("GroundPound"))
+			boss.CreateClass("GroundPound");
+		
 		//Give every bosses able to scare scout by default
 		if (!boss.HasClass("ScareRage")) //If boss don't have scare rage ability, give him one
 			boss.CreateClass("ScareRage");

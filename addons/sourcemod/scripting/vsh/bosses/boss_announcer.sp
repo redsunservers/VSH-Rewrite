@@ -283,7 +283,6 @@ public void AnnouncerMinion_Create(SaxtonHaleBase boss)
 {
 	boss.flSpeed = -1.0;
 	boss.iMaxRageDamage = -1;
-	boss.flWeighDownTimer = -1.0;
 	boss.bMinion = true;
 	boss.bModel = false;
 	
