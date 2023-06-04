@@ -44,11 +44,34 @@ public void ScareRage_OnRage(SaxtonHaleBase boss)
 			
 			float flDistance = GetVectorDistance(vecTargetPos, vecPos);
 			
+			float flDuration = 0.0;
+			int iStunFlags = 0;
+			
 			if (flDistance <= boss.GetPropFloat("ScareRage", "Radius") * flMultiplier)
-				TF2_StunPlayer(iVictim, boss.GetPropFloat("ScareRage", "Duration") * flMultiplier, 0.0, boss.GetPropInt("ScareRage", "StunFlags"), 0);
+			{
+				if (flDuration < boss.GetPropFloat("ScareRage", "Duration"))
+					flDuration = boss.GetPropFloat("ScareRage", "Duration");
+				
+				iStunFlags |= boss.GetPropInt("ScareRage", "StunFlags");
+			}
 			
 			if (flDistance <= g_flScareRadiusClass[boss.iClient][nClass] * flMultiplier)
-				TF2_StunPlayer(iVictim, g_flScareDurationClass[boss.iClient][nClass] * flMultiplier, 0.0, g_iScareStunFlagsClass[boss.iClient][nClass], 0);
+			{
+				if (flDuration < g_flScareDurationClass[boss.iClient][nClass])
+					flDuration = g_flScareDurationClass[boss.iClient][nClass];
+				
+				iStunFlags |= g_iScareStunFlagsClass[boss.iClient][nClass];
+			}
+			
+			flDuration *= flMultiplier;
+			
+			if (iStunFlags)
+			{
+				if (TF2_IsPlayerInCondition(iVictim, TFCond_Dazed))
+					TF2_RemoveCondition(iVictim, TFCond_Dazed);
+				
+				TF2_StunPlayer(iVictim, flDuration, 0.0, iStunFlags, 0);
+			}
 		}
 	}
 	
