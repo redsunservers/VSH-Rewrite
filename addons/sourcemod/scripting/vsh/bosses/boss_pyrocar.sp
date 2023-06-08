@@ -118,7 +118,7 @@ public void PyroCar_OnSpawn(SaxtonHaleBase boss)
 	if (g_iPyrocarPrimary[boss.iClient] > MaxClients)
 	{
 		SetEntPropEnt(boss.iClient, Prop_Send, "m_hActiveWeapon", g_iPyrocarPrimary[boss.iClient]);
-		//TF2_SetAmmo(boss.iClient, WeaponSlot_Primary, 0);	//Reset ammo for TF2 to give correct amount of ammo
+		//TF2_SetAmmo(boss.iClient, TF_AMMO_PRIMARY, 0);	//Reset ammo for TF2 to give correct amount of ammo
 	}
 	
 	boss.CallFunction("CreateWeapon", ITEM_THERMAL_THRUSTER, "tf_weapon_rocketpack", 100, TFQual_Unusual, PYROCAR_THERMAL_THRUSTER_ATTRIBUTES);

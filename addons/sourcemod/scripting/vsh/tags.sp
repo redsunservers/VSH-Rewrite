@@ -83,7 +83,7 @@ void Tags_OnThink(int iClient)
 			int iAmmoType = GetEntProp(iSecondary, Prop_Send, "m_iPrimaryAmmoType");
 			if (iAmmoType > -1)
 			{
-				int iAmmo = GetEntProp(iClient, Prop_Send, "m_iAmmo", 4, iAmmoType);
+				int iAmmo = TF2_GetAmmo(iClient, iAmmoType);
 				
 				if (iAmmo == 1)
 				{
@@ -729,13 +729,13 @@ public void Tags_AddAmmo(int iClient, int iTarget, TagsParams tParams)
 		if (TF2_GetItemInSlot(iClient, iSlot) == iTarget)
 		{
 			//Slot found
-			int iAmmo = tParams.GetInt("amount") + GetEntProp(iClient, Prop_Send, "m_iAmmo", 4, iAmmoType);	//Primary weapon ammo
+			int iAmmo = tParams.GetInt("amount") + TF2_GetAmmo(iClient, iAmmoType);	//Primary weapon ammo
 			
 			int iMaxAmmo;
 			if (tParams.GetIntEx("max", iMaxAmmo) && iAmmo > iMaxAmmo)
 				iAmmo = iMaxAmmo;
 			
-			SetEntProp(iClient, Prop_Send, "m_iAmmo", iAmmo, 4, iAmmoType);
+			TF2_SetAmmo(iClient, iAmmoType, iAmmo);
 			return;
 		}
 	}

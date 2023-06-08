@@ -106,7 +106,7 @@ public void GentleSpy_OnSpawn(SaxtonHaleBase boss)
 	if (iWeapon > MaxClients)
 	{
 		SetEntProp(iWeapon, Prop_Send, "m_iClip1", 0);
-		SetEntProp(iClient, Prop_Send, "m_iAmmo", 0, _, 2);
+		TF2_SetAmmo(iClient, TF_AMMO_SECONDARY, 0);
 	}
 	/*
 	Ambassador attributes:

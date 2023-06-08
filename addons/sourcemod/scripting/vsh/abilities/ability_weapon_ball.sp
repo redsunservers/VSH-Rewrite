@@ -24,7 +24,7 @@ public void WeaponBall_OnSpawn(SaxtonHaleBase boss)
 		TF2Attrib_ClearCache(iMelee);
 		
 		//Correctly set ammo
-		TF2_SetAmmo(boss.iClient, WeaponSlot_Melee, boss.GetPropInt("WeaponBall", "MaxBall"));
+		TF2_SetAmmo(boss.iClient, TF_AMMO_GRENADES1, boss.GetPropInt("WeaponBall", "MaxBall"));
 	}
 }
 
@@ -37,7 +37,7 @@ public void WeaponBall_OnThink(SaxtonHaleBase boss)
 {
 	//Unlimited ball during rage
 	if (g_flWeaponBallRageEnd[boss.iClient] > GetGameTime())
-		TF2_SetAmmo(boss.iClient, WeaponSlot_Melee, boss.GetPropInt("WeaponBall", "MaxBall"));
+		TF2_SetAmmo(boss.iClient, TF_AMMO_GRENADES1, boss.GetPropInt("WeaponBall", "MaxBall"));
 }
 
 public void WeaponBall_OnEntityCreated(SaxtonHaleBase boss, int iEntity, const char[] sClassname)
