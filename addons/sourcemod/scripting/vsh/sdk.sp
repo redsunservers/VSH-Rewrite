@@ -5,7 +5,6 @@ static Handle g_hHookGiveNamedItem;
 static Handle g_hHookBallImpact;
 static Handle g_hHookShouldBallTouch;
 static Handle g_hSDKGetMaxHealth;
-static Handle g_hSDKGetMaxAmmo;
 static Handle g_hSDKSendWeaponAnim;
 static Handle g_hSDKPlaySpecificSequence;
 static Handle g_hSDKGetMaxClip;
@@ -76,16 +75,6 @@ void SDK_Init()
 		LogMessage("Failed to create hook: CTFGameRules::GetCaptureValueForPlayer");
 	else
 		DHookAddParam(g_hHookGetCaptureValueForPlayer, HookParamType_CBaseEntity);
-	
-	// This call gets the weapon max ammo
-	StartPrepSDKCall(SDKCall_Player);
-	PrepSDKCall_SetFromConf(hGameData, SDKConf_Signature, "CTFPlayer::GetMaxAmmo");
-	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
-	PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
-	PrepSDKCall_SetReturnInfo(SDKType_PlainOldData, SDKPass_Plain);
-	g_hSDKGetMaxAmmo = EndPrepSDKCall();
-	if (g_hSDKGetMaxAmmo == null)
-		LogMessage("Failed to create call: CTFPlayer::GetMaxAmmo!");
 
 	// This call gets wearable equipped in loadout slots
 	StartPrepSDKCall(SDKCall_Player);
@@ -405,13 +394,6 @@ public MRESReturn Hook_CouldHealTarget(int iDispenser, Handle hReturn, Handle hP
 	}
 	
 	return MRES_Ignored;
-}
-
-int SDK_GetMaxAmmo(int iClient, int iSlot)
-{
-	if (g_hSDKGetMaxAmmo != null)
-		return SDKCall(g_hSDKGetMaxAmmo, iClient, iSlot, -1);
-	return -1;
 }
 
 void SDK_SendWeaponAnim(int weapon, int anim)

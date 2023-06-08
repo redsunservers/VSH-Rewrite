@@ -619,12 +619,12 @@ stock int TF2_CreateAndEquipWeapon(int iClient, int iIndex, char[] sClassnameTem
 			EquipPlayerWeapon(iClient, iWeapon);
 			
 			//Make sure max ammo is set correctly
-			int iSlot = TF2_GetItemSlot(iIndex, TF2_GetPlayerClass(iClient));
-			int iMaxAmmo = SDK_GetMaxAmmo(iClient, iSlot);
 			int iAmmoType = GetEntProp(iWeapon, Prop_Send, "m_iPrimaryAmmoType");
-			
-			if (iMaxAmmo > 0 && iAmmoType > -1)
-				SetEntProp(iClient, Prop_Send, "m_iAmmo", iMaxAmmo, 4, iAmmoType);
+			if (iAmmoType > -1)
+			{
+				SetEntProp(iClient, Prop_Send, "m_iAmmo", 0, 4, iAmmoType);
+				GivePlayerAmmo(iClient, 9999, iAmmoType, true);
+			}
 		}
 		
 		char atts[32][32];
