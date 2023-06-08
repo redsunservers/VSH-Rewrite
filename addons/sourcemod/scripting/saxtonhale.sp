@@ -179,6 +179,20 @@ enum
 	DAMAGE_AIM,
 };
 
+// TF ammo types - from tf_shareddefs.h
+enum
+{
+	TF_AMMO_DUMMY = 0,
+	TF_AMMO_PRIMARY,
+	TF_AMMO_SECONDARY,
+	TF_AMMO_METAL,
+	TF_AMMO_GRENADES1,
+	TF_AMMO_GRENADES2,
+	TF_AMMO_GRENADES3,
+
+	TF_AMMO_COUNT,
+};
+
 enum
 {
 	CHANNEL_INTRO = 0,

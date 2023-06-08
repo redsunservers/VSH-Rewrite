@@ -120,7 +120,7 @@ public void BrutalSniper_OnSpawn(SaxtonHaleBase boss)
 	if (IsValidEntity(iWeapon)) 
 	{
 		SetEntProp(iWeapon, Prop_Send, "m_iClip1", 0);
-		SetEntProp(iClient, Prop_Send, "m_iAmmo", 0, _, 1);
+		TF2_SetAmmo(iClient, TF_AMMO_PRIMARY, 0);
 	}
 	/*
 	Huntsman attributes:
@@ -284,11 +284,11 @@ public void BrutalSniper_OnRage(SaxtonHaleBase boss)
 	int iPrimaryWep = GetPlayerWeaponSlot(iClient, WeaponSlot_Primary);
 	if (IsValidEntity(iPrimaryWep))
 	{
-		int iAmmo = GetEntProp(iClient, Prop_Send, "m_iAmmo", _, 1);
+		int iAmmo = TF2_GetAmmo(iClient, TF_AMMO_PRIMARY);
 		iAmmo += (1 + RoundToFloor(iPlayerCount / 4.0));
 		if (iAmmo > 6)
 			iAmmo = 6;
-		SetEntProp(iClient, Prop_Send, "m_iAmmo", iAmmo, _, 1);
+		TF2_SetAmmo(iClient, TF_AMMO_PRIMARY, iAmmo);
 		SetEntProp(iPrimaryWep, Prop_Send, "m_iClip1", 1);
 		SetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon", iPrimaryWep);
 	}

@@ -421,28 +421,14 @@ stock void TF2_CheckClientWeapons(int iClient)
 	}
 }
 
-stock int TF2_GetAmmo(int iClient, int iSlot)
+stock int TF2_GetAmmo(int iClient, int iAmmoType)
 {
-	int iWeapon = GetPlayerWeaponSlot(iClient, iSlot);
-	if (iWeapon > MaxClients)
-	{
-		int iAmmoType = GetEntProp(iWeapon, Prop_Send, "m_iPrimaryAmmoType");
-		if (iAmmoType > -1)
-			return GetEntProp(iClient, Prop_Send, "m_iAmmo", _, iAmmoType);
-	}
-	
-	return -1;
+	return GetEntProp(iClient, Prop_Send, "m_iAmmo", _, iAmmoType);
 }
 
-stock void TF2_SetAmmo(int iClient, int iSlot, int iAmmo)
+stock void TF2_SetAmmo(int iClient, int iAmmoType, int iAmmo)
 {
-	int iWeapon = GetPlayerWeaponSlot(iClient, iSlot);
-	if (iWeapon > MaxClients)
-	{
-		int iAmmoType = GetEntProp(iWeapon, Prop_Send, "m_iPrimaryAmmoType");
-		if (iAmmoType > -1)
-			SetEntProp(iClient, Prop_Send, "m_iAmmo", iAmmo, _, iAmmoType);
-	}
+	SetEntProp(iClient, Prop_Send, "m_iAmmo", iAmmo, _, iAmmoType);
 }
 
 stock int TF2_GetPatient(int iClient)
@@ -619,12 +605,12 @@ stock int TF2_CreateAndEquipWeapon(int iClient, int iIndex, char[] sClassnameTem
 			EquipPlayerWeapon(iClient, iWeapon);
 			
 			//Make sure max ammo is set correctly
-			int iSlot = TF2_GetItemSlot(iIndex, TF2_GetPlayerClass(iClient));
-			int iMaxAmmo = SDK_GetMaxAmmo(iClient, iSlot);
 			int iAmmoType = GetEntProp(iWeapon, Prop_Send, "m_iPrimaryAmmoType");
-			
-			if (iMaxAmmo > 0 && iAmmoType > -1)
-				SetEntProp(iClient, Prop_Send, "m_iAmmo", iMaxAmmo, 4, iAmmoType);
+			if (iAmmoType > -1)
+			{
+				TF2_SetAmmo(iClient, iAmmoType, 0);
+				GivePlayerAmmo(iClient, 9999, iAmmoType, true);
+			}
 		}
 		
 		char atts[32][32];

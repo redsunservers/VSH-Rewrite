@@ -7,7 +7,7 @@ public void WeaponSentry_Create(SaxtonHaleBase boss)
 
 public void WeaponSentry_OnSpawn(SaxtonHaleBase boss)
 {
-	SetEntProp(boss.iClient, Prop_Send, "m_iAmmo", 0, 4, 3);
+	TF2_SetAmmo(boss.iClient, TF_AMMO_METAL, 0);
 	boss.CallFunction("CreateWeapon", 25, "tf_weapon_pda_engineer_build", 100, TFQual_Unusual, "");
 }
 
@@ -64,7 +64,7 @@ public Action WeaponSentry_OnObjectSapped(SaxtonHaleBase boss, Event event)
 
 public void WeaponSentry_OnRage(SaxtonHaleBase boss)
 {
-	SetEntProp(boss.iClient, Prop_Send, "m_iAmmo", 130, 4, 3);
+	TF2_SetAmmo(boss.iClient, TF_AMMO_METAL, 130);
 	FakeClientCommand(boss.iClient, "build 2 0");
 }
 
