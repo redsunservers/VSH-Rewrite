@@ -43,24 +43,24 @@ public void ScareRage_OnRage(SaxtonHaleBase boss)
 				flMultiplier = 1.5;
 			
 			float flDistance = GetVectorDistance(vecTargetPos, vecPos);
+			float flMinDistance = 99999.0;
 			
+			// Use whichever radius is the smallest
 			float flDuration = 0.0;
 			int iStunFlags = 0;
 			
-			if (flDistance <= boss.GetPropFloat("ScareRage", "Radius") * flMultiplier)
+			if (flDistance <= boss.GetPropFloat("ScareRage", "Radius") * flMultiplier <= flMinDistance)
 			{
-				if (flDuration < boss.GetPropFloat("ScareRage", "Duration"))
-					flDuration = boss.GetPropFloat("ScareRage", "Duration");
-				
-				iStunFlags |= boss.GetPropInt("ScareRage", "StunFlags");
+				flMinDistance = boss.GetPropFloat("ScareRage", "Radius") * flMultiplier;
+				flDuration = boss.GetPropFloat("ScareRage", "Duration");
+				iStunFlags = boss.GetPropInt("ScareRage", "StunFlags");
 			}
 			
-			if (flDistance <= g_flScareRadiusClass[boss.iClient][nClass] * flMultiplier)
+			if (flDistance <= g_flScareRadiusClass[boss.iClient][nClass] * flMultiplier <= flMinDistance)
 			{
-				if (flDuration < g_flScareDurationClass[boss.iClient][nClass])
-					flDuration = g_flScareDurationClass[boss.iClient][nClass];
-				
-				iStunFlags |= g_iScareStunFlagsClass[boss.iClient][nClass];
+				flMinDistance = g_flScareRadiusClass[boss.iClient][nClass] * flMultiplier;
+				flDuration = g_flScareDurationClass[boss.iClient][nClass];
+				iStunFlags = g_iScareStunFlagsClass[boss.iClient][nClass];
 			}
 			
 			flDuration *= flMultiplier;
