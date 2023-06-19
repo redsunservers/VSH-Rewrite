@@ -38,19 +38,38 @@ public void ScareRage_OnRage(SaxtonHaleBase boss)
 			GetClientAbsOrigin(iVictim, vecTargetPos);
 			TFClassType nClass = TF2_GetPlayerClass(iVictim);
 			
-			float flRadius = (g_flScareRadiusClass[boss.iClient][nClass] >= 0.0) ? g_flScareRadiusClass[boss.iClient][nClass] : boss.GetPropFloat("ScareRage", "Radius");
-			if (boss.bSuperRage) flRadius *= 1.5;
-			float flDuration = (g_flScareDurationClass[boss.iClient][nClass] >= 0.0) ? g_flScareDurationClass[boss.iClient][nClass] : boss.GetPropFloat("ScareRage", "Duration");
-			if (boss.bSuperRage) flDuration *= 1.5;
-			int iStunFlags = (g_iScareStunFlagsClass[boss.iClient][nClass] >= 0) ? g_iScareStunFlagsClass[boss.iClient][nClass] : boss.GetPropInt("ScareRage", "StunFlags");
+			float flMultiplier = 1.0;
+			if (boss.bSuperRage)
+				flMultiplier = 1.5;
 			
 			float flDistance = GetVectorDistance(vecTargetPos, vecPos);
+			float flMinDistance = 99999.0;
 			
-			if (flDistance <= flRadius)
+			// Use whichever radius is the smallest
+			float flDuration = 0.0;
+			int iStunFlags = 0;
+			
+			if (flDistance <= boss.GetPropFloat("ScareRage", "Radius") * flMultiplier <= flMinDistance)
+			{
+				flMinDistance = boss.GetPropFloat("ScareRage", "Radius") * flMultiplier;
+				flDuration = boss.GetPropFloat("ScareRage", "Duration");
+				iStunFlags = boss.GetPropInt("ScareRage", "StunFlags");
+			}
+			
+			if (flDistance <= g_flScareRadiusClass[boss.iClient][nClass] * flMultiplier <= flMinDistance)
+			{
+				flMinDistance = g_flScareRadiusClass[boss.iClient][nClass] * flMultiplier;
+				flDuration = g_flScareDurationClass[boss.iClient][nClass];
+				iStunFlags = g_iScareStunFlagsClass[boss.iClient][nClass];
+			}
+			
+			flDuration *= flMultiplier;
+			
+			if (iStunFlags)
 			{
 				if (TF2_IsPlayerInCondition(iVictim, TFCond_Dazed))
 					TF2_RemoveCondition(iVictim, TFCond_Dazed);
-					
+				
 				TF2_StunPlayer(iVictim, flDuration, 0.0, iStunFlags, 0);
 			}
 		}
