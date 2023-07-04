@@ -164,6 +164,8 @@ void NextBoss_SetNextBoss()
 				nextBoss.SetBossMulti(sMultiBoss);
 				NextBoss_SetBoss(nextBoss, aNonBosses);
 			}
+
+			delete aList;
 		}
 		else
 		{
