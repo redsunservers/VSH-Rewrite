@@ -1,7 +1,7 @@
 #define ATTRIB_MINICRIT_BECOMES_CRIT	179
 
-static float g_flRageGasEnd[TF_MAXPLAYERS];
-static float g_flPreviousSpeed[TF_MAXPLAYERS];
+static float g_flRageGasEnd[MAXPLAYERS];
+static float g_flPreviousSpeed[MAXPLAYERS];
 
 	
 public void RageGas_Create(SaxtonHaleBase boss)

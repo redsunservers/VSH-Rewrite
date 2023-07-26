@@ -3,16 +3,16 @@
 #define PARTICLE_BEAM_BLU	"medicgun_beam_blue"
 #define PARTICLE_BEAM_RED	"medicgun_beam_red"
 
-static float g_flGhostHealStartTime[TF_MAXPLAYERS][2048];
-static int g_iGhostHealStealCount[TF_MAXPLAYERS][2048];
+static float g_flGhostHealStartTime[MAXPLAYERS][2048];
+static int g_iGhostHealStealCount[MAXPLAYERS][2048];
 
-static float g_flGhostHealGainBuffer[TF_MAXPLAYERS];
-static float g_flGhostLastSpookTime[TF_MAXPLAYERS];
+static float g_flGhostHealGainBuffer[MAXPLAYERS];
+static float g_flGhostLastSpookTime[MAXPLAYERS];
 
-static bool g_bGhostEnable[TF_MAXPLAYERS];
+static bool g_bGhostEnable[MAXPLAYERS];
 
-static int g_iGhostParticleBeam[TF_MAXPLAYERS][2048];
-static int g_iGhostParticleCentre[TF_MAXPLAYERS];
+static int g_iGhostParticleBeam[MAXPLAYERS][2048];
+static int g_iGhostParticleCentre[MAXPLAYERS];
 
 public void RageGhost_GetModel(SaxtonHaleBase boss, char[] sModel, int iLength)
 {
@@ -34,7 +34,7 @@ public void RageGhost_Create(SaxtonHaleBase boss)
 	g_bGhostEnable[boss.iClient] = false;
 	g_flGhostLastSpookTime[boss.iClient] = 0.0;
 	
-	for (int iVictim = 1; iVictim <= TF_MAXPLAYERS; iVictim++)
+	for (int iVictim = 1; iVictim <= MAXPLAYERS; iVictim++)
 		g_iGhostParticleBeam[boss.iClient][iVictim] = 0;
 }
 

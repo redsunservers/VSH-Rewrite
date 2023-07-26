@@ -1,5 +1,5 @@
-static float g_flTeleportSwapCooldownWait[TF_MAXPLAYERS];
-static bool g_bTeleportSwapHoldingChargeButton[TF_MAXPLAYERS];
+static float g_flTeleportSwapCooldownWait[MAXPLAYERS];
+static bool g_bTeleportSwapHoldingChargeButton[MAXPLAYERS];
 
 public void TeleportSwap_Create(SaxtonHaleBase boss)
 {

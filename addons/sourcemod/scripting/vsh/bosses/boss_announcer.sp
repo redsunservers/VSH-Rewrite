@@ -276,8 +276,8 @@ public void Announcer_Precache(SaxtonHaleBase boss)
 	AddFileToDownloadsTable("models/player/kirillian/boss/sedisocks_administrator.vvd");
 }
 
-static Handle g_hAnnouncerMinionTimer[TF_MAXPLAYERS];
-static int g_iAnnouncerMinionTimeLeft[TF_MAXPLAYERS];
+static Handle g_hAnnouncerMinionTimer[MAXPLAYERS];
+static int g_iAnnouncerMinionTimeLeft[MAXPLAYERS];
 
 public void AnnouncerMinion_Create(SaxtonHaleBase boss)
 {

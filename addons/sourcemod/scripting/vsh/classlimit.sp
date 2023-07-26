@@ -1,8 +1,8 @@
 static bool g_bClassLimit = false;		//Whenever if Class limit is enabled
 static TFClassType g_nSpecialRoundClass = TFClass_Unknown;	//Class for current special round, TFClass_Unknown if not on
 
-static TFClassType g_classMain[TF_MAXPLAYERS];
-static TFClassType g_classDesired[TF_MAXPLAYERS];
+static TFClassType g_classMain[MAXPLAYERS];
+static TFClassType g_classDesired[MAXPLAYERS];
 
 static ConVar g_cvClassLimit[view_as<int>(TFClass_Engineer) + 1];
 
@@ -46,11 +46,11 @@ public void ClassLimit_Refresh()
 			}
 		}
 		
-		if (iMaxLimit < TF_MAXPLAYERS && iMaxLimit != -1)	//If total count is smaller than max players and not unlimited...
+		if (iMaxLimit < MAXPLAYERS && iMaxLimit != -1)	//If total count is smaller than max players and not unlimited...
 		{
 			g_bClassLimit = false;				//...disable class limit
-			PrintToChatAll("%s%s Class Limit config total number is too small! (min %d out of %d)", TEXT_TAG, TEXT_ERROR, TF_MAXPLAYERS, iMaxLimit);
-			LogMessage("Class Limit config total number is too small! (min %d out of %d)", TF_MAXPLAYERS, iMaxLimit);
+			PrintToChatAll("%s%s Class Limit config total number is too small! (min %d out of %d)", TEXT_TAG, TEXT_ERROR, MAXPLAYERS, iMaxLimit);
+			LogMessage("Class Limit config total number is too small! (min %d out of %d)", MAXPLAYERS, iMaxLimit);
 		}
 		else
 		{

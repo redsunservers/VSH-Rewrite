@@ -2,9 +2,9 @@
 
 static int g_iWeaponBallStunType;
 
-static float g_flWeaponBallRageEnd[TF_MAXPLAYERS];
-static float g_flWeaponBallStunTime[TF_MAXPLAYERS];
-static int g_iWeaponBallThrower[TF_MAXPLAYERS];
+static float g_flWeaponBallRageEnd[MAXPLAYERS];
+static float g_flWeaponBallStunTime[MAXPLAYERS];
+static int g_iWeaponBallThrower[MAXPLAYERS];
 
 public void WeaponBall_Create(SaxtonHaleBase boss)
 {

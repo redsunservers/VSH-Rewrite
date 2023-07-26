@@ -1,4 +1,4 @@
-static int g_iRageLightColor[TF_MAXPLAYERS][4];
+static int g_iRageLightColor[MAXPLAYERS][4];
 
 public void LightRage_SetColor(SaxtonHaleBase boss, int iColor[4])
 {

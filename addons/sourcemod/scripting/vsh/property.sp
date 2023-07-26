@@ -1,23 +1,23 @@
-static bool g_bValid[TF_MAXPLAYERS];
-static bool g_bModifiers[TF_MAXPLAYERS];
-static bool g_bMinion[TF_MAXPLAYERS];
-static bool g_bSuperRage[TF_MAXPLAYERS];
-static bool g_bModel[TF_MAXPLAYERS];
-static bool g_bHealthPerPlayerAlive[TF_MAXPLAYERS];
-static float g_flSpeed[TF_MAXPLAYERS];
-static float g_flSpeedMult[TF_MAXPLAYERS];
-static float g_flEnvDamageCap[TF_MAXPLAYERS];
-static float g_flGlowTime[TF_MAXPLAYERS];
-static float g_flRageLastTime[TF_MAXPLAYERS];
-static float g_flMaxRagePercentage[TF_MAXPLAYERS];
-static float g_flHealthExponential[TF_MAXPLAYERS];
-static float g_flHealthMultiplier[TF_MAXPLAYERS];
-static int g_iMaxHealth[TF_MAXPLAYERS];
-static int g_iBaseHealth[TF_MAXPLAYERS];
-static int g_iHealthPerPlayer[TF_MAXPLAYERS];
-static int g_iRageDamage[TF_MAXPLAYERS];
-static int g_iMaxRageDamage[TF_MAXPLAYERS];
-static TFClassType g_nClass[TF_MAXPLAYERS];
+static bool g_bValid[MAXPLAYERS];
+static bool g_bModifiers[MAXPLAYERS];
+static bool g_bMinion[MAXPLAYERS];
+static bool g_bSuperRage[MAXPLAYERS];
+static bool g_bModel[MAXPLAYERS];
+static bool g_bHealthPerPlayerAlive[MAXPLAYERS];
+static float g_flSpeed[MAXPLAYERS];
+static float g_flSpeedMult[MAXPLAYERS];
+static float g_flEnvDamageCap[MAXPLAYERS];
+static float g_flGlowTime[MAXPLAYERS];
+static float g_flRageLastTime[MAXPLAYERS];
+static float g_flMaxRagePercentage[MAXPLAYERS];
+static float g_flHealthExponential[MAXPLAYERS];
+static float g_flHealthMultiplier[MAXPLAYERS];
+static int g_iMaxHealth[MAXPLAYERS];
+static int g_iBaseHealth[MAXPLAYERS];
+static int g_iHealthPerPlayer[MAXPLAYERS];
+static int g_iRageDamage[MAXPLAYERS];
+static int g_iMaxRageDamage[MAXPLAYERS];
+static TFClassType g_nClass[MAXPLAYERS];
 
 void Property_AskLoad()
 {

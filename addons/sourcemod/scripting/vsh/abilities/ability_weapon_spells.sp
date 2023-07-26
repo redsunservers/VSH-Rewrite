@@ -1,7 +1,7 @@
-static ArrayList g_aSpells[TF_MAXPLAYERS];
-static int g_iCurrentSpellArray[TF_MAXPLAYERS];
-static haleSpells g_rageSpells[TF_MAXPLAYERS];
-static float g_flSpellsLastUsed[TF_MAXPLAYERS];
+static ArrayList g_aSpells[MAXPLAYERS];
+static int g_iCurrentSpellArray[MAXPLAYERS];
+static haleSpells g_rageSpells[MAXPLAYERS];
+static float g_flSpellsLastUsed[MAXPLAYERS];
 
 enum haleSpells
 {

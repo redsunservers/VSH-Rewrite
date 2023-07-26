@@ -17,7 +17,7 @@
 
 #include "include/saxtonhale.inc"
 
-#define PLUGIN_VERSION 					"2.1.0"
+#define PLUGIN_VERSION 					"2.1.1"
 #define PLUGIN_VERSION_REVISION 		"manual"
 
 #if !defined SP_MAX_EXEC_PARAMS
@@ -31,7 +31,6 @@
 #define MAXLEN_CONFIG_VALUE 			256		//Config: Max string buffer size for individual values
 #define MAXLEN_CONFIG_VALUEARRAY		1024	//Config: Max string buffer size for groups of values
 
-#define TF_MAXPLAYERS					34	//32 clients + 1 for 0/world/console + 1 for replay/SourceTV
 #define MAX_ATTRIBUTES_SENT 			20
 
 #define ATTRIB_MELEE_RANGE_MULTIPLIER	264
@@ -321,13 +320,13 @@ int g_iHealthBarHealth;
 int g_iHealthBarMaxHealth;
 
 //Player data
-int g_iPlayerLastButtons[TF_MAXPLAYERS];
-int g_iPlayerDamage[TF_MAXPLAYERS];
-int g_iPlayerAssistDamage[TF_MAXPLAYERS];
-int g_iClientOwner[TF_MAXPLAYERS];
-bool g_bClientAreaOfEffect[TF_MAXPLAYERS][TF_MAXPLAYERS];
+int g_iPlayerLastButtons[MAXPLAYERS];
+int g_iPlayerDamage[MAXPLAYERS];
+int g_iPlayerAssistDamage[MAXPLAYERS];
+int g_iClientOwner[MAXPLAYERS];
+bool g_bClientAreaOfEffect[MAXPLAYERS][MAXPLAYERS];
 
-int g_iClientFlags[TF_MAXPLAYERS];
+int g_iClientFlags[MAXPLAYERS];
 
 //Game state data
 int g_iTotalRoundPlayed;
@@ -1639,7 +1638,7 @@ void UpdateClientGlowEnt(int iClient)
 		"models/player/engineer.mdl",
 	};
 	
-	static int iClientGlowEnt[TF_MAXPLAYERS];
+	static int iClientGlowEnt[MAXPLAYERS];
 	if (!iClientGlowEnt[iClient])
 		iClientGlowEnt[iClient] = INVALID_ENT_REFERENCE;
 	

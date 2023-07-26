@@ -1,7 +1,7 @@
 #define BOMBPROJECTILE_MODEL	"models/props_lakeside_event/bomb_temp.mdl"
 
-static float g_flBombProjectileNext[TF_MAXPLAYERS];
-static float g_flBombProjectileEnd[TF_MAXPLAYERS];
+static float g_flBombProjectileNext[MAXPLAYERS];
+static float g_flBombProjectileEnd[MAXPLAYERS];
 
 	
 public void BombProjectile_Create(SaxtonHaleBase boss)

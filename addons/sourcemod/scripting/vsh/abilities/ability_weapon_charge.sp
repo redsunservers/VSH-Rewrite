@@ -1,10 +1,10 @@
 #define ATTRIB_CHARGE_DURATION_SEC		202
 #define ATTRIB_FULL_TURN_CONTROL		639
 
-static float g_flChargePreviousSound[TF_MAXPLAYERS];
-static bool g_bChargeIsCharging[TF_MAXPLAYERS];
-static bool g_bChargeRage[TF_MAXPLAYERS];
-static bool g_bChargeJump[TF_MAXPLAYERS];
+static float g_flChargePreviousSound[MAXPLAYERS];
+static bool g_bChargeIsCharging[MAXPLAYERS];
+static bool g_bChargeRage[MAXPLAYERS];
+static bool g_bChargeJump[MAXPLAYERS];
 
 public void WeaponCharge_Create(SaxtonHaleBase boss)
 {

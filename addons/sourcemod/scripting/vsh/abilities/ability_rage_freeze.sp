@@ -5,7 +5,7 @@
 #define FREEZE_PARTICLE_02 "xms_icicle_impact_dryice"
 #define FREEZE_PARTICLE_03 "xmas_ornament_glitter_alt"
 
-static bool g_bFreezeAffected[TF_MAXPLAYERS];
+static bool g_bFreezeAffected[MAXPLAYERS];
 
 public void RageFreeze_Create(SaxtonHaleBase boss)
 {

@@ -1,7 +1,7 @@
 static int g_iDemoPanModelBountyHat;
 static int g_iDemoPanModelDangeresqueToo;
 
-static float g_flDemoPanPreviousKill[TF_MAXPLAYERS];
+static float g_flDemoPanPreviousKill[MAXPLAYERS];
 
 static char g_strDemoPanRoundStart[][] = {
 	"vsh_rewrite/demopan/demopan_begin.mp3"

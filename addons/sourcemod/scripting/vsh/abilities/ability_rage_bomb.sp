@@ -2,8 +2,8 @@
 #define BOMB_PARTICLE		"ExplosionCore_MidAir"
 #define BOMB_NUKE_SOUND 	"misc/doomsday_missile_explosion.wav"
 
-static float g_flBombEndTime[TF_MAXPLAYERS];
-static float g_flLastExplosionTime[TF_MAXPLAYERS];
+static float g_flBombEndTime[MAXPLAYERS];
+static float g_flLastExplosionTime[MAXPLAYERS];
 
 public void Bomb_Create(SaxtonHaleBase boss)
 {

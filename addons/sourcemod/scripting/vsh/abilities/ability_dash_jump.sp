@@ -1,4 +1,4 @@
-static float g_flDashJumpCooldownWait[TF_MAXPLAYERS];
+static float g_flDashJumpCooldownWait[MAXPLAYERS];
 
 public void DashJump_Create(SaxtonHaleBase boss)
 {

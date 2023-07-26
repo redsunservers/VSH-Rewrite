@@ -1,9 +1,9 @@
 #define IMPACT_SOUND "player/taunt_yeti_land.wav"
 #define IMPACT_PARTICLE "hammer_impact_button"
 
-static bool g_bClientBossWeighDownForce[TF_MAXPLAYERS];
+static bool g_bClientBossWeighDownForce[MAXPLAYERS];
 
-static float g_flClientBossWeighDownTimer[TF_MAXPLAYERS];
+static float g_flClientBossWeighDownTimer[MAXPLAYERS];
 
 public void GroundPound_Create(SaxtonHaleBase boss)
 {

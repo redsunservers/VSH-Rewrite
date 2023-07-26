@@ -2,14 +2,14 @@
 #define RANGER_THEME 		"vsh_rewrite/uber_ranger/uberrangers_music.mp3"
 #define RANGER_RAGESOUND 	"mvm/mvm_tele_deliver.wav"
 
-static int g_iUberRangerMinionAFKTimeLeft[TF_MAXPLAYERS];
+static int g_iUberRangerMinionAFKTimeLeft[MAXPLAYERS];
 
 static ArrayList g_aUberRangerColorList;
 
-static Handle g_hUberRangerMinionAFKTimer[TF_MAXPLAYERS];
+static Handle g_hUberRangerMinionAFKTimer[MAXPLAYERS];
 
-static bool g_bUberRangerPlayerWasSummoned[TF_MAXPLAYERS];
-static bool g_bUberRangerMinionHasMoved[TF_MAXPLAYERS];
+static bool g_bUberRangerPlayerWasSummoned[MAXPLAYERS];
+static bool g_bUberRangerMinionHasMoved[MAXPLAYERS];
 
 static char g_strUberRangerRoundStart[][] = {
 	"vo/medic_battlecry05.mp3"

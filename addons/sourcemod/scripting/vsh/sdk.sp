@@ -17,7 +17,7 @@ static Handle g_hSDKTossJarThink;
 
 int g_iOffsetFuseTime = -1;
 
-static int g_iHookIdGiveNamedItem[TF_MAXPLAYERS];
+static int g_iHookIdGiveNamedItem[MAXPLAYERS];
 
 void SDK_Init()
 {

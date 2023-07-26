@@ -34,10 +34,10 @@ enum struct MenuBossListInfo
 //Callback when selecting boss/modifiers list
 typedef MenuBossListCallback = function void (int iClient, MenuBossOption nOption, const char[] sType);
 
-static SaxtonHaleClassType g_nMenuBossClassType[TF_MAXPLAYERS];	//Current class type using
-static MenuBossListCallback g_fMenuBossCallback[TF_MAXPLAYERS];	//Callback function to use once client selected boss/modifiers
+static SaxtonHaleClassType g_nMenuBossClassType[MAXPLAYERS];	//Current class type using
+static MenuBossListCallback g_fMenuBossCallback[MAXPLAYERS];	//Callback function to use once client selected boss/modifiers
 
-static MenuBossSelect g_menuBossSelect[TF_MAXPLAYERS];
+static MenuBossSelect g_menuBossSelect[MAXPLAYERS];
 static MenuBossListInfo g_menuBossListInfo[view_as<int>(VSHClassType_Modifier) + 1];
 
 void MenuBoss_Init()

@@ -5,7 +5,7 @@
 #define DEMO_ROBOT_MODEL						"models/bots/demo/bot_demo.mdl"
 #define DEMO_ROBOT_GRENADE_LAUNCHER_SHOOT		"mvm/giant_demoman/giant_demoman_grenade_shoot.wav"
 
-static float g_flGrenadeLauncherRemoveTime[TF_MAXPLAYERS];
+static float g_flGrenadeLauncherRemoveTime[MAXPLAYERS];
 
 static char g_strSoundRobotFootsteps[][] =
 {

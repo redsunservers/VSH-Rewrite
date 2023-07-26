@@ -1,6 +1,6 @@
 #define ELECTRIC_BEAM	"sprites/laserbeam.spr"
 
-static bool g_bElectricDamage[TF_MAXPLAYERS];	//Whenever if client is currently being damaged or not
+static bool g_bElectricDamage[MAXPLAYERS];	//Whenever if client is currently being damaged or not
 
 public void ModifiersElectric_Create(SaxtonHaleBase boss)
 {

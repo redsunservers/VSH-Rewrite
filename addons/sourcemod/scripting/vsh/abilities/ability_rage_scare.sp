@@ -1,6 +1,6 @@
-static float g_flScareRadiusClass[TF_MAXPLAYERS][10];
-static float g_flScareDurationClass[TF_MAXPLAYERS][10];
-static int g_iScareStunFlagsClass[TF_MAXPLAYERS][10];
+static float g_flScareRadiusClass[MAXPLAYERS][10];
+static float g_flScareDurationClass[MAXPLAYERS][10];
+static int g_iScareStunFlagsClass[MAXPLAYERS][10];
 
 public void ScareRage_SetClass(SaxtonHaleBase boss, TFClassType nClass, float flRadius, float flDuration, int iStunFlags)
 {

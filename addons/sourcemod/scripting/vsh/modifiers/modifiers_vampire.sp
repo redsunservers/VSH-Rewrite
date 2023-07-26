@@ -3,7 +3,7 @@
 #define VAMPIRE_LOSS	0.002	//Per second
 
 static int g_iVampireCount = 0;
-static float g_flVampireHealthDrainBuffer[TF_MAXPLAYERS];
+static float g_flVampireHealthDrainBuffer[MAXPLAYERS];
 
 public void ModifiersVampire_Create(SaxtonHaleBase boss)
 {

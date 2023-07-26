@@ -6,8 +6,8 @@ enum struct FuncClass
 }
 
 static ArrayList g_aFuncClasses;
-static ArrayList g_aClientClasses[TF_MAXPLAYERS];
-static StringMap g_mClientProps[TF_MAXPLAYERS];	//StringMap inside a StringMap!
+static ArrayList g_aClientClasses[MAXPLAYERS];
+static StringMap g_mClientProps[MAXPLAYERS];	//StringMap inside a StringMap!
 
 void FuncClass_Init()
 {

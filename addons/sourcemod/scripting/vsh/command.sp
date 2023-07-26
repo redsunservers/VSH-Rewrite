@@ -345,7 +345,7 @@ public Action Command_AddQueuePoints(int iClient, int iArgs)
 			return Plugin_Handled;
 		}
 		
-		int iTargetList[TF_MAXPLAYERS];
+		int iTargetList[MAXPLAYERS];
 		char sTargetName[MAX_TARGET_LENGTH];
 		bool bIsML;
 		

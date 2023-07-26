@@ -7,10 +7,10 @@ enum TeleportViewMode
 	TeleportViewMode_Teleported
 }
 
-static TeleportViewMode g_nTeleportViewMode[TF_MAXPLAYERS];
-static float g_vecTeleportViewPos[TF_MAXPLAYERS][3];
-static float g_flTeleportViewStartCharge[TF_MAXPLAYERS];
-static float g_flTeleportViewCooldownWait[TF_MAXPLAYERS];
+static TeleportViewMode g_nTeleportViewMode[MAXPLAYERS];
+static float g_vecTeleportViewPos[MAXPLAYERS][3];
+static float g_flTeleportViewStartCharge[MAXPLAYERS];
+static float g_flTeleportViewCooldownWait[MAXPLAYERS];
 
 public void TeleportView_Create(SaxtonHaleBase boss)
 {

@@ -1,6 +1,6 @@
 #define ATTRIB_NO_JUMP	819
 
-static float g_flJumpCooldown[TF_MAXPLAYERS];
+static float g_flJumpCooldown[MAXPLAYERS];
 
 public void ModifiersJumper_Create(SaxtonHaleBase boss)
 {

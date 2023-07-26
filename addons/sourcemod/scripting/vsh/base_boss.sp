@@ -1,9 +1,9 @@
-static char g_sClientBossRageMusic[TF_MAXPLAYERS][255];
+static char g_sClientBossRageMusic[MAXPLAYERS][255];
 
-static float g_flClientBossRageMusicVolume[TF_MAXPLAYERS];
+static float g_flClientBossRageMusicVolume[MAXPLAYERS];
 
-static Handle g_hClientBossModelTimer[TF_MAXPLAYERS];
-static Handle g_hClientBossRageMusicTime[TF_MAXPLAYERS];
+static Handle g_hClientBossModelTimer[MAXPLAYERS];
+static Handle g_hClientBossRageMusicTime[MAXPLAYERS];
 
 public void SaxtonHaleBoss_Create(SaxtonHaleBase boss)
 {

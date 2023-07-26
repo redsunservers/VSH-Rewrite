@@ -1,4 +1,4 @@
-static float g_flClientAngryLastTime[TF_MAXPLAYERS];
+static float g_flClientAngryLastTime[MAXPLAYERS];
 
 public void ModifiersAngry_Create(SaxtonHaleBase boss)
 {

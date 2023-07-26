@@ -66,16 +66,16 @@ static int g_iMaxGasPassers = 3;
 
 static int g_iPyrocarCosmetics[sizeof(g_iCosmetics)];
 
-static int g_iPyrocarPrimary[TF_MAXPLAYERS];
-static int g_iPyrocarMelee[TF_MAXPLAYERS];
+static int g_iPyrocarPrimary[MAXPLAYERS];
+static int g_iPyrocarMelee[MAXPLAYERS];
 
-static float g_flPyrocarBurnEnd[TF_MAXPLAYERS];
-static float g_flPyrocarGasCharge[TF_MAXPLAYERS];
+static float g_flPyrocarBurnEnd[MAXPLAYERS];
+static float g_flPyrocarGasCharge[MAXPLAYERS];
 
-static Handle g_hPyrocarHealTimer[TF_MAXPLAYERS];
-static Handle g_hGasTimer[TF_MAXPLAYERS];
+static Handle g_hPyrocarHealTimer[MAXPLAYERS];
+static Handle g_hGasTimer[MAXPLAYERS];
 
-static bool g_bUnderEffect[TF_MAXPLAYERS];
+static bool g_bUnderEffect[MAXPLAYERS];
 
 public void PyroCar_Create(SaxtonHaleBase boss)
 {

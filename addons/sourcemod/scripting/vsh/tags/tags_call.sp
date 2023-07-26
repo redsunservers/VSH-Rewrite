@@ -42,7 +42,7 @@ TagsCall TagsCall_GetType(const char[] sCall)
 	return nCall;
 }
 
-static ArrayList g_aTagsCallTimer[TF_MAXPLAYERS];	//Arrays of pending function timers to be called
+static ArrayList g_aTagsCallTimer[MAXPLAYERS];	//Arrays of pending function timers to be called
 
 void TagsCall_Init()
 {

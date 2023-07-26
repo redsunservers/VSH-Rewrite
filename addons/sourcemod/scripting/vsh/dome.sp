@@ -11,7 +11,7 @@
 static bool g_bDomeCustomPos;	//Whenever if capture point is in custom pos
 static float g_vecDomeCP[3];	//Pos of CP
 static int g_iDomeTriggerRef;	//Trigger to control touch
-static bool g_bDomeCapturing[TF_MAXPLAYERS];
+static bool g_bDomeCapturing[MAXPLAYERS];
 
 //Dome prop
 static int g_iDomeEntRef;
@@ -21,8 +21,8 @@ static int g_iDomeColor[4];
 static float g_flDomeStart = 0.0;
 static float g_flDomeRadius = 0.0;
 static float g_flDomePreviousGameTime = 0.0;
-static float g_flDomePlayerTime[TF_MAXPLAYERS];
-static bool g_bDomePlayerOutside[TF_MAXPLAYERS];
+static float g_flDomePlayerTime[MAXPLAYERS];
+static bool g_bDomePlayerOutside[MAXPLAYERS];
 static Handle g_hDomeTimerBleed = null;
 
 void Dome_Init()

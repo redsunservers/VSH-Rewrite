@@ -1,4 +1,4 @@
-static ArrayList g_aConditions[TF_MAXPLAYERS];
+static ArrayList g_aConditions[MAXPLAYERS];
 
 public void RageAddCond_AddCond(SaxtonHaleBase boss, TFCond cond)
 {

@@ -1,4 +1,4 @@
-static float g_flZombieLastDamage[TF_MAXPLAYERS];
+static float g_flZombieLastDamage[MAXPLAYERS];
 
 public void Zombie_Create(SaxtonHaleBase boss)
 {

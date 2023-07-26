@@ -1,4 +1,4 @@
-static bool g_bBraveJumpHoldingChargeButton[TF_MAXPLAYERS];
+static bool g_bBraveJumpHoldingChargeButton[MAXPLAYERS];
 
 public void BraveJump_Create(SaxtonHaleBase boss)
 {

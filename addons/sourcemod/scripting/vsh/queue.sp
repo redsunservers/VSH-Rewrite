@@ -1,4 +1,4 @@
-static int g_iClientQueuePoints[TF_MAXPLAYERS] = {-1, ...};
+static int g_iClientQueuePoints[MAXPLAYERS] = {-1, ...};
 
 int Queue_GetPlayerFromRank(int iRank)
 {	
