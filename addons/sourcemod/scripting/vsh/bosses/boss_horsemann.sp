@@ -207,13 +207,26 @@ public void Horsemann_Precache(SaxtonHaleBase boss)
 
 public void Horsemann_CreateEyeGlow(SaxtonHaleBase boss)
 {
-	int iParticle;
+	char sEffectName[64];
+	int iParticle = MaxClients + 1;
+	while ((iParticle = FindEntityByClassname(iParticle, "info_particle_system")) > MaxClients)
+	{
+		if (GetEntPropEnt(iParticle, Prop_Send, "m_hOwnerEntity") != boss.iClient)
+			continue;
+
+		GetEntPropString(iParticle, Prop_Data, "m_iszEffectName", sEffectName, sizeof(sEffectName));
+		if (strcmp(sEffectName, "halloween_boss_eye_glow") != 0)
+			continue;
+
+		RemoveEntity(iParticle);
+	}
+
 	char sAttachment[64];
 	for (int i = 0; i <= 1; i++)
 	{
 		strcopy(sAttachment, sizeof(sAttachment), (i == 0) ? "lefteye" : "righteye");
 
-		iParticle = EntRefToEntIndex(TF2_SpawnParticle("halloween_boss_eye_glow", .iEntity = boss.iClient, .sAttachment = sAttachment));
+		iParticle = TF2_SpawnParticle("halloween_boss_eye_glow", .iEntity = boss.iClient, .sAttachment = sAttachment);
 		SetEntPropEnt(iParticle, Prop_Send, "m_hOwnerEntity", boss.iClient);
 
 		if (GetEdictFlags(iParticle) & FL_EDICT_ALWAYS)
