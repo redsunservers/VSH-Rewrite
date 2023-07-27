@@ -710,7 +710,7 @@ stock void TF2_Shake(float vecOrigin[3], float flAmplitude, float flRadius, floa
 	}
 }
 
-stock int TF2_SpawnParticle(char[] sParticle, float vecOrigin[3] = NULL_VECTOR, float flAngles[3] = NULL_VECTOR, bool bActivate = true, int iEntity = 0, int iControlPoint = 0)
+stock int TF2_SpawnParticle(char[] sParticle, float vecOrigin[3] = NULL_VECTOR, float flAngles[3] = NULL_VECTOR, bool bActivate = true, int iEntity = 0, int iControlPoint = 0, const char[] sAttachment = "")
 {
 	int iParticle = CreateEntityByName("info_particle_system");
 	TeleportEntity(iParticle, vecOrigin, flAngles, NULL_VECTOR);
@@ -721,6 +721,12 @@ stock int TF2_SpawnParticle(char[] sParticle, float vecOrigin[3] = NULL_VECTOR, 
 	{
 		SetVariantString("!activator");
 		AcceptEntityInput(iParticle, "SetParent", iEntity);
+
+		if (sAttachment[0])
+		{
+			SetVariantString(sAttachment);
+			AcceptEntityInput(iParticle, "SetParentAttachment", iParticle);
+		}
 	}
 	
 	if (0 < iControlPoint && IsValidEntity(iControlPoint))

@@ -120,6 +120,8 @@ public void Horsemann_OnSpawn(SaxtonHaleBase boss)
 	264: melee range multiplier (tf_weapon_sword have 37% extra range)
 	551: special taunt
 	*/
+
+	Horsemann_CreateEyeGlow(boss);
 }
 
 public void Horsemann_GetModel(SaxtonHaleBase boss, char[] sModel, int length)
@@ -203,3 +205,44 @@ public void Horsemann_Precache(SaxtonHaleBase boss)
 	AddFileToDownloadsTable("models/player/saxton_hale/hhh_jr_mk3.dx90.vtx");
 }
 
+public void Horsemann_CreateEyeGlow(SaxtonHaleBase boss)
+{
+	int iParticle;
+	char sAttachment[64];
+	for (int i = 0; i <= 1; i++)
+	{
+		strcopy(sAttachment, sizeof(sAttachment), (i == 0) ? "lefteye" : "righteye");
+
+		iParticle = EntRefToEntIndex(TF2_SpawnParticle("halloween_boss_eye_glow", .iEntity = boss.iClient, .sAttachment = sAttachment));
+		SetEntPropEnt(iParticle, Prop_Send, "m_hOwnerEntity", boss.iClient);
+
+		if (GetEdictFlags(iParticle) & FL_EDICT_ALWAYS)
+	 		SetEdictFlags(iParticle, GetEdictFlags(iParticle) & ~FL_EDICT_ALWAYS);
+
+		SDKHook(iParticle, SDKHook_SetTransmit, Horsemann_EyeGlowTransmit);
+	}
+}
+
+public Action Horsemann_EyeGlowTransmit(int iEntity, int iClient)
+{
+	if (GetEdictFlags(iEntity) & FL_EDICT_ALWAYS)
+	 	SetEdictFlags(iEntity, GetEdictFlags(iEntity) & ~FL_EDICT_ALWAYS);
+
+	int iBossOwner = GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity");
+	if (!SaxtonHale_IsValidBoss(iBossOwner) || !SaxtonHaleBase(iBossOwner).HasClass("Horsemann"))
+	{
+		RemoveEntity(iEntity);
+		return Plugin_Handled;
+	}
+
+	if (iClient == iBossOwner && GetEntProp(iClient, Prop_Send, "m_nForceTauntCam") == 0)
+		return Plugin_Handled;
+
+	if (!IsPlayerAlive(iClient) && GetEntPropEnt(iClient, Prop_Send, "m_hObserverTarget") == iBossOwner)
+	{
+		if (GetEntProp(iClient, Prop_Send, "m_iObserverMode") == 4)	//SPEC_MODE_FIRSTPERSON
+			return Plugin_Handled;
+	}
+
+	return Plugin_Continue;
+}
