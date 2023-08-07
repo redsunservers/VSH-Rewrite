@@ -46,11 +46,11 @@ public void ClassLimit_Refresh()
 			}
 		}
 		
-		if (iMaxLimit < MAXPLAYERS && iMaxLimit != -1)	//If total count is smaller than max players and not unlimited...
+		if (iMaxLimit < MaxClients && iMaxLimit != -1)	//If total count is smaller than max players and not unlimited...
 		{
 			g_bClassLimit = false;				//...disable class limit
-			PrintToChatAll("%s%s Class Limit config total number is too small! (min %d out of %d)", TEXT_TAG, TEXT_ERROR, MAXPLAYERS, iMaxLimit);
-			LogMessage("Class Limit config total number is too small! (min %d out of %d)", MAXPLAYERS, iMaxLimit);
+			PrintToChatAll("%s%s Class Limit config total number is too small! (min %d out of %d)", TEXT_TAG, TEXT_ERROR, iMaxLimit, MaxClients);
+			LogMessage("Class Limit config total number is too small! (min %d out of %d)", iMaxLimit, MaxClients);
 		}
 		else
 		{
