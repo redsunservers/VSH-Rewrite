@@ -320,11 +320,11 @@ public Action SaxtonHaleBoss_OnTakeDamage(SaxtonHaleBase boss, int &attacker, in
 
 			if (flEnvDamage >= boss.flEnvDamageCap)
 			{
-				int iBossSpawn = MaxClients+1;
 				int iTeam = GetClientTeam(boss.iClient);
 				ArrayList aSpawnPoints = new ArrayList();
 				
-				while ((iBossSpawn = FindEntityByClassname(iBossSpawn, "info_player_teamspawn")) > MaxClients)
+				int iBossSpawn = INVALID_ENT_REFERENCE;
+				while ((iBossSpawn = FindEntityByClassname(iBossSpawn, "info_player_teamspawn")) != INVALID_ENT_REFERENCE)
 					if (GetEntProp(iBossSpawn, Prop_Send, "m_iTeamNum") == iTeam)
 						aSpawnPoints.Push(iBossSpawn);
 				
