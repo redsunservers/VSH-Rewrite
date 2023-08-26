@@ -318,7 +318,7 @@ public Action SaxtonHaleBoss_OnTakeDamage(SaxtonHaleBase boss, int &attacker, in
 			float flEnvDamage = damage;
 			if ((damagetype & DMG_ACID)) flEnvDamage *= 3.0;
 
-			if (flEnvDamage > boss.flEnvDamageCap)
+			if (flEnvDamage >= boss.flEnvDamageCap)
 			{
 				int iBossSpawn = MaxClients+1;
 				int iTeam = GetClientTeam(boss.iClient);
