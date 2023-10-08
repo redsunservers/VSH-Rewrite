@@ -11,6 +11,7 @@ public Action TagsDamage_OnTakeDamage(int victim, CTakeDamageInfo info)
 	tParams.SetInt("filter_damagetype", info.m_bitsDamageType);	//Because 'damagetype' is already used from config to set
 	tParams.SetInt("weapon", info.m_hWeapon);
 	tParams.SetInt("filter_damagecustom", info.m_iDamageCustom);
+	tParams.SetInt("filter_crittype", info.m_eCritType);
 	
 	//Call takedamage function
 	if (SaxtonHale_IsValidAttack(victim))
@@ -105,6 +106,18 @@ public Action TagsDamage_OnTakeDamage(int victim, CTakeDamageInfo info)
 		delete aDamageType;
 		action = Plugin_Changed;
 	}
+
+	char sCritType[32];
+	if (tParams.GetString("crittype", sCritType, sizeof(sCritType)))
+	{
+		int iCritType = TagsDamage_GetCrit(sCritType);
+		if (iCritType != Crit_Invalid)
+		{
+			info.m_eCritType = iCritType;
+			g_iContextCritType = iCritType;
+			action = Plugin_Changed;
+		}
+	}
 	
 	delete tParams;
 	return action;
@@ -149,4 +162,23 @@ int TagsDamage_GetCustom(const char[] sDamageCustom)
 	int iDamageCustom = 0;
 	mDamageCustom.GetValue(sDamageCustom, iDamageCustom);
 	return iDamageCustom;
+}
+
+int TagsDamage_GetCrit(const char[] sCritType)
+{
+	static StringMap mCritType;
+	
+	if (!mCritType)
+	{
+		mCritType = new StringMap();
+		mCritType.SetValue("none", Crit_None);
+		mCritType.SetValue("minicrit", Crit_Mini);
+		mCritType.SetValue("nominicrit", -Crit_Mini);
+		mCritType.SetValue("crit", Crit_Full);
+		mCritType.SetValue("nocrit", -Crit_Full);
+	}
+	
+	int iCritType = Crit_Invalid;
+	mCritType.GetValue(sCritType, iCritType);
+	return iCritType;
 }

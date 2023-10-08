@@ -13,6 +13,7 @@ enum TagsFilterType			//List of possible filters
 	TagsFilterType_BackstabCount,
 	TagsFilterType_FeignDeath,
 	TagsFilterType_VictimUber,
+	TagsFilterType_CritType
 }
 
 enum struct TagsFilterStruct
@@ -51,6 +52,11 @@ enum struct TagsFilterStruct
 			{
 				this.nValue = TagsDamage_GetCustom(sValue);
 				return this.nValue != 0;
+			}
+			case TagsFilterType_CritType:
+			{
+				this.nValue = TagsDamage_GetCrit(sValue);
+				return this.nValue != Crit_Invalid;
 			}
 		}
 		
@@ -148,6 +154,17 @@ enum struct TagsFilterStruct
 				
 				return iDamage >= this.nValue;
 			}
+			case TagsFilterType_CritType:
+			{
+				int iCritType;
+				if (!tParams.GetIntEx("filter_crittype", iCritType))
+					return false;
+
+				if (!this.nValue)
+					return iCritType != -this.nValue;
+
+				return iCritType == this.nValue;
+			}
 		}
 		
 		return false;
@@ -229,6 +246,7 @@ TagsFilterType TagsFilter_GetType(const char[] sTarget)
 		mFilterType.SetValue("backstabcount", TagsFilterType_BackstabCount);
 		mFilterType.SetValue("feigndeath", TagsFilterType_FeignDeath);
 		mFilterType.SetValue("victimuber", TagsFilterType_VictimUber);
+		mFilterType.SetValue("crittype", TagsFilterType_CritType);
 	}
 	
 	TagsFilterType nFilterType = TagsFilterType_Invalid;

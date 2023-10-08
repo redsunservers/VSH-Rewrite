@@ -802,13 +802,13 @@ public void Event_PlayerInventoryUpdate(Event event, const char[] sName, bool bD
 		TagsCore_CallAll(iClient, TagsCall_Spawn);
 }
 
-public void Event_PlayerHurt(Event event, const char[] sName, bool bDontBroadcast)
+public Action Event_PlayerHurt(Event event, const char[] sName, bool bDontBroadcast)
 {
-	if (!g_bEnabled) return;
-	if (g_iTotalRoundPlayed <= 0) return;
+	if (!g_bEnabled) return Plugin_Continue;
+	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
 
 	int iClient = GetClientOfUserId(event.GetInt("userid"));
-	if (GetClientTeam(iClient) <= 1) return;
+	if (GetClientTeam(iClient) <= 1) return Plugin_Continue;
 	
 	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 	if (boss.bValid)
@@ -872,6 +872,14 @@ public void Event_PlayerHurt(Event event, const char[] sName, bool bDontBroadcas
 			}
 		}
 	}
+
+	if (g_iContextCritType == Crit_Mini)
+	{
+		event.SetInt("bonuseffect", Crit_Mini);
+		g_iContextCritType = Crit_None;
+	}
+
+	return Plugin_Continue;
 }
 
 public void Event_BuffBannerDeployed(Event event, const char[] sName, bool bDontBroadcast)

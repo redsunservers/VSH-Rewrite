@@ -157,6 +157,15 @@ enum
 	EF_PARENT_ANIMATES		= (1<<9),	// always assume that the parent entity is animating
 };
 
+// Crit types
+enum
+{
+	Crit_Invalid = -3,
+	Crit_None = 0,
+	Crit_Mini,
+	Crit_Full,
+};
+
 // Beam types, encoded as a byte
 enum 
 {
@@ -313,6 +322,7 @@ bool g_bTF2Items;
 
 int g_iSpritesLaserbeam;
 int g_iSpritesGlow;
+int g_iContextCritType;
 
 Handle g_hTimerBossMusic;
 char g_sBossMusic[PLATFORM_MAX_PATH];
