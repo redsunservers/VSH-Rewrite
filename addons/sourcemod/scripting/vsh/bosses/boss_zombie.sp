@@ -46,11 +46,11 @@ public void Zombie_OnThink(SaxtonHaleBase boss)
 		TF2_MakeBleed(iClient, iClient, 99999.0);
 }
 
-public Action Zombie_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action Zombie_OnAttackDamage(SaxtonHaleBase boss, int iVictim, CTakeDamageInfo info)
 {
-	if (boss.iClient != victim && GetClientTeam(boss.iClient) != GetClientTeam(victim))
+	if (boss.iClient != iVictim && GetClientTeam(boss.iClient) != GetClientTeam(iVictim))
 	{
-		int iHeal = RoundToNearest(damage);
+		int iHeal = RoundToNearest(info.m_flDamage);
 		if (iHeal > 20) iHeal = 20;
 		
 		Client_AddHealth(boss.iClient, iHeal, 0);

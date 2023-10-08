@@ -255,16 +255,16 @@ public void PyroCar_GetHudInfo(SaxtonHaleBase boss, char[] sMessage, int iLength
 	}
 }
 
-public Action PyroCar_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action PyroCar_OnAttackDamage(SaxtonHaleBase boss, int iVictim, CTakeDamageInfo info)
 {
-	if (TF2_IsUbercharged(victim))
+	if (TF2_IsUbercharged(iVictim))
 		return Plugin_Continue;
 	
-	if (damagetype & DMG_IGNITE)
+	if (info.m_bitsDamageType & DMG_IGNITE)
 	{
 		//Direct flamethrower damage
 		float flGameTime = GetGameTime();
-		float flDuration = g_flPyrocarBurnEnd[victim] - flGameTime;
+		float flDuration = g_flPyrocarBurnEnd[iVictim] - flGameTime;
 		if (flDuration < 0.0)
 			flDuration = 0.0;
 		
@@ -272,11 +272,11 @@ public Action PyroCar_OnAttackDamage(SaxtonHaleBase boss, int victim, int &infli
 		if (flDuration > 10.0)
 			flDuration = 10.0;
 		
-		g_flPyrocarBurnEnd[victim] = flGameTime + flDuration;
-		TF2_IgnitePlayer(victim, boss.iClient, flDuration);
+		g_flPyrocarBurnEnd[iVictim] = flGameTime + flDuration;
+		TF2_IgnitePlayer(iVictim, boss.iClient, flDuration);
 		
 		//Give victim less healing while damaged by pyrocar
-		if (!g_hPyrocarHealTimer[victim])
+		if (!g_hPyrocarHealTimer[iVictim])
 		{
 			for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
 			{
@@ -289,11 +289,11 @@ public Action PyroCar_OnAttackDamage(SaxtonHaleBase boss, int victim, int &infli
 			}
 		}
 		
-		g_hPyrocarHealTimer[victim] = CreateTimer(0.4, Timer_RemoveLessHealing, GetClientSerial(victim));
+		g_hPyrocarHealTimer[iVictim] = CreateTimer(0.4, Timer_RemoveLessHealing, GetClientSerial(iVictim));
 	}
 	
 	if (g_flPyrocarGasCharge[boss.iClient] <= g_iMaxGasPassers * g_flGasMinCharge)
-		g_flPyrocarGasCharge[boss.iClient] += damage;
+		g_flPyrocarGasCharge[boss.iClient] += info.m_flDamage;
 		
 	if (g_flPyrocarGasCharge[boss.iClient] > g_iMaxGasPassers * g_flGasMinCharge)
 		g_flPyrocarGasCharge[boss.iClient] = g_iMaxGasPassers * g_flGasMinCharge;

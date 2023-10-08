@@ -40,6 +40,99 @@ enum SaxtonHaleArrayType
 	VSHArrayType_Dynamic,   /**< Data is Param_Cell param position for length of array, starting from 1 */
 }
 
+// CTakeDamageInfo offsets
+enum
+{
+	m_DamageForce,
+	m_DamagePosition = 12,
+	m_ReportedPosition = 24,
+
+	m_Inflictor = 36,
+	m_Attacker = 40,
+	m_Weapon = 44,
+	m_Damage = 48,
+	m_MaxDamage = 52,
+	m_BaseDamage = 56,
+	m_BitsDamageType = 60,
+	m_DamageCustom = 64,
+	m_DamageStats = 68,
+	m_AmmoType = 72,
+	m_DamagedOtherPlayers = 76,
+	m_PlayerPenetrationCount = 80,
+	m_DamageBonus = 84,
+	m_DamageBonusProvider = 88,
+	m_ForceFriendlyFire = 92,
+	m_DamageForForce = 96,
+	m_CritType = 100
+};
+
+/**
+ * Take damage structure used for damage hooks
+ */
+enum struct CTakeDamageInfo
+{
+	Address pInfo;
+
+	int m_hAttacker;
+	int m_hInflictor;
+	int m_hWeapon;
+
+	float m_flDamage;
+	float m_flDamageForForce;
+	int m_bitsDamageType;
+	int m_iDamageCustom;
+	int m_eCritType;
+
+	float m_vecDamageForce[3];
+	float m_vecDamagePosition[3];
+
+	void Init(Address pInfo)
+	{
+		this.pInfo = pInfo;
+
+		this.m_hAttacker = this.LoadEntHandle(m_Attacker);
+		this.m_hInflictor = this.LoadEntHandle(m_Inflictor);
+		this.m_hWeapon = this.LoadEntHandle(m_Weapon);
+
+		this.m_flDamage = this.Load(m_Damage);
+		this.m_flDamageForForce = this.Load(m_DamageForForce);
+		this.m_bitsDamageType = this.Load(m_BitsDamageType);
+		this.m_iDamageCustom = this.Load(m_DamageCustom);
+		this.m_eCritType = this.Load(m_CritType);
+	}
+
+	void Save()
+	{
+		this.StoreEntHandle(m_Attacker, this.m_hAttacker);
+		this.StoreEntHandle(m_Inflictor, this.m_hInflictor);
+		this.StoreEntHandle(m_Weapon, this.m_hWeapon);
+
+		this.Store(m_Damage, this.m_flDamage);
+		this.Store(m_DamageForForce, this.m_flDamageForForce);
+		this.Store(m_BitsDamageType, this.m_bitsDamageType);
+		this.Store(m_DamageCustom, this.m_iDamageCustom);
+		this.Store(m_CritType, this.m_eCritType);
+	}
+
+	any Load(int iOffset, NumberType size = NumberType_Int32)
+	{
+		return LoadFromAddress(this.pInfo + view_as<Address>(iOffset), size);
+	}
+	int LoadEntHandle(int iOffset)
+	{
+		return EntRefToEntIndex(this.Load(iOffset) | (1 << 31));
+	}
+
+	void Store(int iOffset, any value, NumberType size = NumberType_Int32)
+	{
+		StoreToAddress(this.pInfo + view_as<Address>(iOffset), value, size);
+	}
+	void StoreEntHandle(int iOffset, int iEntity)
+	{
+		this.Store(iOffset, IsValidEntity(iEntity) ? EntIndexToEntRef(iEntity) & ~(1 << 31) : 0);
+	}
+}
+
 /**
  * Boss Functions methodmap
  */

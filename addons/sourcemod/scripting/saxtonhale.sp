@@ -578,13 +578,11 @@ public void OnPluginStart()
 	func.SetParam(6, Param_Array, VSHArrayType_Static, 3);
 	func.SetParam(7, Param_Array, VSHArrayType_Static, 3);
 	
-	func = SaxtonHaleFunction("OnAttackDamage", ET_Hook, Param_Cell, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array, Param_Cell);
-	func.SetParam(6, Param_Array, VSHArrayType_Static, 3);
-	func.SetParam(7, Param_Array, VSHArrayType_Static, 3);
+	func = SaxtonHaleFunction("OnAttackDamage", ET_Hook, Param_Array);
+	func.SetParam(1, Param_Array, VSHArrayType_Static, sizeof(CTakeDamageInfo));
 	
-	func = SaxtonHaleFunction("OnTakeDamage", ET_Hook, Param_CellByRef, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array, Param_Cell);
-	func.SetParam(6, Param_Array, VSHArrayType_Static, 3);
-	func.SetParam(7, Param_Array, VSHArrayType_Static, 3);
+	func = SaxtonHaleFunction("OnTakeDamage", ET_Hook, Param_Array);
+	func.SetParam(1, Param_Array, VSHArrayType_Static, sizeof(CTakeDamageInfo));
 	
 	//Button functions
 	SaxtonHaleFunction("OnButton", ET_Ignore, Param_CellByRef);
@@ -1236,7 +1234,6 @@ public void OnClientPutInServer(int iClient)
 	SDK_HookGetMaxHealth(iClient);
 	SDK_HookGiveNamedItem(iClient);
 	SDKHook(iClient, SDKHook_PreThink, Client_OnThink);
-	SDKHook(iClient, SDKHook_OnTakeDamageAlive, Client_OnTakeDamageAlive);
 	SDKHook(iClient, SDKHook_StartTouch, Client_OnStartTouch);
 	SDKHook(iClient, SDKHook_WeaponSwitchPost, Client_OnWeaponSwitchPost);
 	
@@ -1347,92 +1344,6 @@ public void Client_OnThink(int iClient)
 	}
 	
 	Hud_Think(iClient);
-}
-
-public Action Client_OnTakeDamageAlive(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
-{
-	if (!g_bEnabled) return Plugin_Continue;
-	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
-	
-	Action finalAction = Plugin_Continue;
-	
-	if (0 < victim <= MaxClients && IsClientInGame(victim) && GetClientTeam(victim) > 1)
-	{
-		SaxtonHaleBase bossVictim = SaxtonHaleBase(victim);
-		SaxtonHaleBase bossAttacker = SaxtonHaleBase(attacker);
-		
-		Action action = Plugin_Continue;
-		
-		if (bossVictim.bValid)
-		{
-			action = bossVictim.CallFunction("OnTakeDamage", attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
-			if (action > finalAction)
-				finalAction = action;
-		}
-		
-		if (0 < attacker <= MaxClients && victim != attacker && bossAttacker.bValid)
-		{
-			action = bossAttacker.CallFunction("OnAttackDamage", victim, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
-			if (action > finalAction)
-				finalAction = action;
-		}
-		
-		//Stop immediately if returning Plugin_Stop
-		if (finalAction == Plugin_Stop)
-			return finalAction;
-		
-		//Call damage tags
-		action = TagsDamage_OnTakeDamage(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
-		if (action > finalAction)
-			finalAction = action;
-		
-		char sWeaponClass[64];
-		if (weapon > MaxClients)
-			GetEdictClassname(weapon, sWeaponClass, sizeof(sWeaponClass));
-		
-		if (0 < attacker <= MaxClients && IsClientInGame(attacker))
-		{
-			if (!bossAttacker.bValid)
-			{
-				if (bossVictim.bValid && !bossVictim.bMinion)
-				{
-					if (damagecustom == TF_CUSTOM_TELEFRAG && !TF2_IsUbercharged(victim))
-					{
-						int iTelefragDamage = g_ConfigConvar.LookupInt("vsh_telefrag_damage");
-						damage = float(iTelefragDamage);
-						PrintCenterText(attacker, "TELEFRAG! You are a pro.");
-						PrintCenterText(victim, "TELEFRAG! Be careful around quantum tunneling devices!");
-						
-						//Try to retrieve the entity under the player, and hopefully this is the teleporter
-						int iBuilder = 0;
-						int iGroundEntity = GetEntPropEnt(attacker, Prop_Send, "m_hGroundEntity");
-						if (iGroundEntity > MaxClients)
-						{
-							char strGroundEntity[32];
-							GetEdictClassname(iGroundEntity, strGroundEntity, sizeof(strGroundEntity));
-							if (strcmp(strGroundEntity, "obj_teleporter") == 0)
-							{
-								iBuilder = GetEntPropEnt(iGroundEntity, Prop_Send, "m_hBuilder");
-								if (0 < iBuilder <= MaxClients && IsClientInGame(iBuilder))
-								{
-									if (attacker != iBuilder)
-										g_iPlayerAssistDamage[attacker] = iTelefragDamage;
-								}
-								else
-								{
-									iBuilder = 0;
-								}
-							}
-						}
-
-						Forward_TeleportDamage(victim, attacker, iBuilder);
-						finalAction = Plugin_Changed;
-					}
-				}
-			}
-		}
-	}
-	return finalAction;
 }
 
 public Action Client_OnStartTouch(int iClient, int iToucher)

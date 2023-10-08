@@ -94,7 +94,7 @@ public void Seeldier_OnRage(SaxtonHaleBase boss)
 	delete aValidMinions;
 }
 
-public Action Seeldier_OnTakeDamage(SaxtonHaleBase boss, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action Seeldier_OnTakeDamage(SaxtonHaleBase boss, CTakeDamageInfo info)
 {
 	EmitSoundToAll(SEELDIER_SEE_SND, boss.iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
 	return Plugin_Continue;

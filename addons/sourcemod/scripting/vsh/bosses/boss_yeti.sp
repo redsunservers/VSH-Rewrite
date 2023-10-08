@@ -151,14 +151,11 @@ public Action Yeti_OnSoundPlayed(SaxtonHaleBase boss, int clients[MAXPLAYERS], i
 	return Plugin_Continue;
 }
 
-public Action Yeti_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action Yeti_OnAttackDamage(SaxtonHaleBase boss, int iVictim, CTakeDamageInfo info)
 {
 	// Prevent kill taunt
-	if (victim != boss.iClient && damagecustom == TF_CUSTOM_TAUNT_HIGH_NOON)
-	{
-		damage = 0.0;
-		return Plugin_Changed;
-	}
+	if (iVictim != boss.iClient && info.m_iDamageCustom == TF_CUSTOM_TAUNT_HIGH_NOON)
+		return Plugin_Stop;
 	
 	return Plugin_Continue;
 }

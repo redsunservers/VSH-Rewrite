@@ -177,23 +177,24 @@ public void BonkBoy_OnThink(SaxtonHaleBase boss)
 	}
 }
 
-public Action BonkBoy_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action BonkBoy_OnAttackDamage(SaxtonHaleBase boss, int iVictim, CTakeDamageInfo info)
 {
-	if (g_bBonkBoyRage[boss.iClient] && weapon > MaxClients && TF2_GetItemInSlot(boss.iClient, WeaponSlot_Melee) == weapon && damagecustom == 0)
+	int iWeapon = info.m_hWeapon;
+	if (g_bBonkBoyRage[boss.iClient] && iWeapon > MaxClients && TF2_GetItemInSlot(boss.iClient, WeaponSlot_Melee) == iWeapon && info.m_iDamageCustom == 0)
 	{
-		TF2_StunPlayer(victim, 5.0, _, TF_STUNFLAGS_SMALLBONK, boss.iClient);
+		TF2_StunPlayer(iVictim, 5.0, _, TF_STUNFLAGS_SMALLBONK, boss.iClient);
 		
 		float vecEye[3], vecVel[3], vecVictim[3];
 		GetClientEyeAngles(boss.iClient, vecEye);
-		
+
 		vecEye[0] = ((vecEye[0] + 90.0) / 3.0) - 90.0;	//Move eye angle more upward
-		
+
 		GetAngleVectors(vecEye, vecVel, NULL_VECTOR, NULL_VECTOR);
 		ScaleVector(vecVel, 500.0);
-		
-		GetEntPropVector(victim, Prop_Data, "m_vecVelocity", vecVictim);
+
+		GetEntPropVector(iVictim, Prop_Data, "m_vecVelocity", vecVictim);
 		AddVectors(vecVictim, vecVel, vecVictim);
-		TeleportEntity(victim, NULL_VECTOR, NULL_VECTOR, vecVictim);
+		TeleportEntity(iVictim, NULL_VECTOR, NULL_VECTOR, vecVictim);
 	}
 	
 	return Plugin_Continue;

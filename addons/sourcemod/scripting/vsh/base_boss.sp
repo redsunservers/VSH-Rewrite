@@ -258,28 +258,29 @@ public Action SaxtonHaleBoss_OnSoundPlayed(SaxtonHaleBase boss, int clients[MAXP
 	return Plugin_Continue;
 }
 
-public Action SaxtonHaleBoss_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action SaxtonHaleBoss_OnAttackDamage(SaxtonHaleBase boss, int iVictim, CTakeDamageInfo info)
 {
-	if (damagecustom == TF_CUSTOM_BOOTS_STOMP)
+	if (info.m_iDamageCustom == TF_CUSTOM_BOOTS_STOMP)
 	{
 		//Because we made fall damage deal near zero, hard set stomp damage to insta kill
-		damage = 999.0;
+		info.m_flDamage = 999.0;
 		return Plugin_Changed;
 	}
 	
 	return Plugin_Continue;
 }
 
-public Action SaxtonHaleBoss_OnTakeDamage(SaxtonHaleBase boss, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action SaxtonHaleBoss_OnTakeDamage(SaxtonHaleBase boss, CTakeDamageInfo info)
 {
 	Action action = Plugin_Continue;
-	
-	if (damagetype & DMG_FALL)
+
+	int iAttacker = info.m_hAttacker;
+	if (info.m_bitsDamageType & DMG_FALL)
 	{
-		if ((attacker <= 0 || attacker > MaxClients) && inflictor == 0)
+		if ((iAttacker <= 0 || iAttacker > MaxClients) && info.m_hInflictor == 0)
 		{
 			//Make fall damage deal 0.1, so boss dont take any damage but allow stomp damage hook to work 
-			damage = 0.1;
+			info.m_flDamage = 0.1;
 			action = Plugin_Changed;
 		}
 	}
@@ -294,29 +295,30 @@ public Action SaxtonHaleBoss_OnTakeDamage(SaxtonHaleBase boss, int &attacker, in
 
 	if (GetEntityFlags(boss.iClient) & FL_ONGROUND || TF2_IsUbercharged(boss.iClient))
 	{
-		damagetype |= DMG_PREVENT_PHYSICS_FORCE;
+		info.m_bitsDamageType |= DMG_PREVENT_PHYSICS_FORCE;
 		action = Plugin_Changed;
 	}
 
-	if (inflictor > MaxClients && !boss.bMinion)
+	int iInflictor = info.m_hInflictor;
+	if (iInflictor > MaxClients && IsValidEdict(iInflictor) && !boss.bMinion)
 	{
 		char sInflictor[32];
-		GetEdictClassname(inflictor, sInflictor, sizeof(sInflictor));
+		GetEdictClassname(iInflictor, sInflictor, sizeof(sInflictor));
 		if (strcmp(sInflictor, "tf_projectile_sentryrocket") == 0 || strcmp(sInflictor, "obj_sentrygun") == 0)
 		{
-			damagetype |= DMG_PREVENT_PHYSICS_FORCE;
+			info.m_bitsDamageType |= DMG_PREVENT_PHYSICS_FORCE;
 			action = Plugin_Changed;
 		}
 	}
 
-	if (MaxClients < attacker)
+	if (MaxClients < iAttacker && IsValidEdict(iAttacker))
 	{
-		char strAttacker[32];
-		GetEdictClassname(attacker, strAttacker, sizeof(strAttacker));
-		if (strcmp(strAttacker, "trigger_hurt") == 0)
+		char sAttacker[32];
+		GetEdictClassname(iAttacker, sAttacker, sizeof(sAttacker));
+		if (strcmp(sAttacker, "trigger_hurt") == 0)
 		{
-			float flEnvDamage = damage;
-			if ((damagetype & DMG_ACID)) flEnvDamage *= 3.0;
+			float flEnvDamage = info.m_flDamage;
+			if ((info.m_bitsDamageType & DMG_ACID)) flEnvDamage *= 3.0;
 
 			if (flEnvDamage >= boss.flEnvDamageCap)
 			{
@@ -339,7 +341,7 @@ public Action SaxtonHaleBoss_OnTakeDamage(SaxtonHaleBase boss, int &attacker, in
 				}
 				
 				delete aSpawnPoints;
-				damage = (damagetype & DMG_ACID) ? boss.flEnvDamageCap/3.0 : boss.flEnvDamageCap;
+				info.m_flDamage = (info.m_bitsDamageType & DMG_ACID) ? boss.flEnvDamageCap/3.0 : boss.flEnvDamageCap;
 				action = Plugin_Changed;
 			}
 		}

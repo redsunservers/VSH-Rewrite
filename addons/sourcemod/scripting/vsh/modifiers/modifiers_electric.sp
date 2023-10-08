@@ -27,21 +27,21 @@ public void ModifiersElectric_GetRenderColor(SaxtonHaleBase boss, int iColor[4])
 	iColor[3] = 255;
 }
 
-public Action ModifiersElectric_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action ModifiersElectric_OnAttackDamage(SaxtonHaleBase boss, int iVictim, CTakeDamageInfo info)
 {		
-	if (damage < 3.0 || g_bElectricDamage[victim] || TF2_IsUbercharged(victim))
+	if (info.m_flDamage < 3.0 || g_bElectricDamage[iVictim] || TF2_IsUbercharged(iVictim))
 		return Plugin_Continue;
 	
-	TFTeam nTeam = TF2_GetClientTeam(victim);
+	TFTeam nTeam = TF2_GetClientTeam(iVictim);
 	
 	float vecVictimPos[3];
-	GetClientAbsOrigin(victim, vecVictimPos);
+	GetClientAbsOrigin(iVictim, vecVictimPos);
 	vecVictimPos[2] += 40.0;
 	
-	damage *= 0.85;
+	info.m_flDamage *= 0.85;
 	
 	//Mark victim as currently taking damage to avoid endless loop
-	g_bElectricDamage[victim] = true;
+	g_bElectricDamage[iVictim] = true;
 	
 	//Create entity at centre so lasers can connect
 	int iTarget = CreateEntityByName("info_target");
@@ -55,7 +55,7 @@ public Action ModifiersElectric_OnAttackDamage(SaxtonHaleBase boss, int victim, 
 	
 	for (int i = 1; i <= MaxClients; i++)
 	{
-		if (IsClientInGame(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == nTeam && i != victim)
+		if (IsClientInGame(i) && IsPlayerAlive(i) && TF2_GetClientTeam(i) == nTeam && i != iVictim)
 		{
 			float vecTargetPos[3];
 			GetClientAbsOrigin(i, vecTargetPos);
@@ -65,7 +65,7 @@ public Action ModifiersElectric_OnAttackDamage(SaxtonHaleBase boss, int victim, 
 			{
 				//Mark victim as currently taking damage to avoid endless loop
 				g_bElectricDamage[i] = true;
-				SDKHooks_TakeDamage(i, 0, boss.iClient, (damage * 0.40), DMG_SHOCK, _, _, vecVictimPos);
+				SDKHooks_TakeDamage(i, 0, boss.iClient, (info.m_flDamage * 0.40), DMG_SHOCK, _, _, vecVictimPos);
 				g_bElectricDamage[i] = false;
 				
 				int iLaser = CreateEntityByName("env_laser");
@@ -96,7 +96,6 @@ public Action ModifiersElectric_OnAttackDamage(SaxtonHaleBase boss, int victim, 
 		}
 	}
 	
-	g_bElectricDamage[victim] = false;
-	
+	g_bElectricDamage[iVictim] = false;
 	return Plugin_Changed;
 }

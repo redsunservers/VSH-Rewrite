@@ -80,22 +80,22 @@ public void Redmond_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length)
 	StrCat(sInfo, length, "\n- 200%% Rage: Grants 3 MONOCULUS! spells");
 }
 
-public Action Redmond_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action Redmond_OnAttackDamage(SaxtonHaleBase boss, int iVictim, CTakeDamageInfo info)
 {
 	//Monos spell damage sucks, buff it
-	if (weapon > MaxClients)
+	int iWeapon = info.m_hWeapon;
+	if (iWeapon > MaxClients)
 	{
 		char sClassname[256];
-		GetEntityClassname(weapon, sClassname, sizeof(sClassname));
+		GetEntityClassname(iWeapon, sClassname, sizeof(sClassname));
 		if (StrEqual(sClassname, "eyeball_boss"))
 		{
-			damage *= 2.0;
+			info.m_flDamage *= 2.0;
 			return Plugin_Changed;
 		}
 	}
-	
+
 	return Plugin_Continue;
-	
 }
 
 public void Redmond_GetModel(SaxtonHaleBase boss, char[] sModel, int length)

@@ -50,10 +50,10 @@ public void ModifiersIce_OnEntityCreated(SaxtonHaleBase boss, int iEntity, const
 	}
 }
 
-public Action ModifiersIce_OnTakeDamage(SaxtonHaleBase boss, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action ModifiersIce_OnTakeDamage(SaxtonHaleBase boss, CTakeDamageInfo info)
 {
 	//OnTakeDamageAlive takes stomping as dealing damage through falling, so we only trigger the effect if the server deals damage
-	if (!(damagetype & DMG_FALL) || attacker != 0)
+	if (!(info.m_bitsDamageType & DMG_FALL) || info.m_hAttacker != 0)
 		return Plugin_Continue;
 	
 	int iTeam = GetClientTeam(boss.iClient);
@@ -95,9 +95,9 @@ public Action ModifiersIce_OnTakeDamage(SaxtonHaleBase boss, int &attacker, int 
 	return Plugin_Stop;
 }
 
-public Action ModifiersIce_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action ModifiersIce_OnAttackDamage(SaxtonHaleBase boss, int iVictim, CTakeDamageInfo info)
 {
-	if (damagecustom == TF_CUSTOM_BOOTS_STOMP)
+	if (info.m_iDamageCustom == TF_CUSTOM_BOOTS_STOMP)
 		return Plugin_Stop;
 	
 	return Plugin_Continue;

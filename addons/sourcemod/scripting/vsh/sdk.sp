@@ -170,7 +170,7 @@ void SDK_Init()
 		DHookAddParam(g_hHookShouldBallTouch, HookParamType_CBaseEntity);
 	
 	// This hook allows to allow/block medigun heals
-	Handle hHook = DHookCreateFromConf(hGameData, "CWeaponMedigun::AllowedToHealTarget");
+	DynamicDetour hHook = DHookCreateFromConf(hGameData, "CWeaponMedigun::AllowedToHealTarget");
 	if (hHook == null)
 		LogMessage("Failed to create hook: CWeaponMedigun::AllowedToHealTarget!");
 	else
@@ -185,6 +185,15 @@ void SDK_Init()
 	else
 		DHookEnableDetour(hHook, true, Hook_CouldHealTarget);
 	
+	delete hHook;
+
+	// This hook allows to modify take damage rules
+	hHook = DynamicDetour.FromConf(hGameData, "CTFPlayer::OnTakeDamage_Alive");
+	if (!hHook)
+		LogMessage("Failed to create hook: CTFPlayer::OnTakeDamage_Alive!");
+	else
+		hHook.Enable(Hook_Pre, Hook_OnTakeDamageAlivePre);
+
 	delete hHook;
 	delete hGameData;
 	
@@ -393,6 +402,98 @@ public MRESReturn Hook_CouldHealTarget(int iDispenser, Handle hReturn, Handle hP
 		}
 	}
 	
+	return MRES_Ignored;
+}
+
+public MRESReturn Hook_OnTakeDamageAlivePre(int iVictim, DHookReturn ret, DHookParam params)
+{
+	if (!g_bEnabled) return MRES_Ignored;
+	if (g_iTotalRoundPlayed <= 0) return MRES_Ignored;
+
+	CTakeDamageInfo info;
+	info.Init(params.Get(1));
+
+	Action finalAction = Plugin_Continue;
+
+	int iAttacker = info.m_hAttacker;
+	if (0 < iVictim <= MaxClients && IsClientInGame(iVictim) && GetClientTeam(iVictim) > 1)
+	{
+		SaxtonHaleBase bossVictim = SaxtonHaleBase(iVictim);
+		SaxtonHaleBase bossAttacker = SaxtonHaleBase(iAttacker);
+
+		Action action = Plugin_Continue;
+
+		if (bossVictim.bValid)
+		{
+			action = bossVictim.CallFunction("OnTakeDamage", info);
+			if (action > finalAction)
+				finalAction = action;
+		}
+
+		if (0 < iAttacker <= MaxClients && iVictim != iAttacker && bossAttacker.bValid)
+		{
+			action = bossAttacker.CallFunction("OnAttackDamage", iVictim, info);
+			if (action > finalAction)
+				finalAction = action;
+		}
+
+		if (finalAction == Plugin_Stop)
+		{
+			ret.Value = 0;
+			return MRES_Supercede;
+		}
+
+		// Call damage tags
+		action = TagsDamage_OnTakeDamage(iVictim, info);
+		if (action > finalAction)
+			finalAction = action;
+
+		if (0 < iAttacker <= MaxClients && IsClientInGame(iAttacker))
+		{
+			if (!bossAttacker.bValid)
+			{
+				if (bossVictim.bValid && !bossVictim.bMinion)
+				{
+					if (info.m_iDamageCustom == TF_CUSTOM_TELEFRAG && !TF2_IsUbercharged(iVictim))
+					{
+						int iTelefragDamage = g_ConfigConvar.LookupInt("vsh_telefrag_damage");
+						info.m_flDamage = float(iTelefragDamage);
+						PrintCenterText(iAttacker, "TELEFRAG! You are a pro.");
+						PrintCenterText(iVictim, "TELEFRAG! Be careful around quantum tunneling devices!");
+						
+						// Try to retrieve the entity under the player, and hopefully this is the teleporter
+						int iBuilder = 0;
+						int iGroundEntity = GetEntPropEnt(iAttacker, Prop_Send, "m_hGroundEntity");
+						if (iGroundEntity > MaxClients)
+						{
+							char sGroundEntity[32];
+							GetEdictClassname(iGroundEntity, sGroundEntity, sizeof(sGroundEntity));
+							if (strcmp(sGroundEntity, "obj_teleporter") == 0)
+							{
+								iBuilder = GetEntPropEnt(iGroundEntity, Prop_Send, "m_hBuilder");
+								if (0 < iBuilder <= MaxClients && IsClientInGame(iBuilder))
+								{
+									if (iAttacker != iBuilder)
+										g_iPlayerAssistDamage[iAttacker] = iTelefragDamage;
+								}
+								else
+								{
+									iBuilder = 0;
+								}
+							}
+						}
+
+						Forward_TeleportDamage(iVictim, iAttacker, iBuilder);
+						finalAction = Plugin_Changed;
+					}
+				}
+			}
+		}
+	}
+
+	if (finalAction == Plugin_Changed)
+		info.Save();
+
 	return MRES_Ignored;
 }
 

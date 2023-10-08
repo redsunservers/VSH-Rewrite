@@ -45,31 +45,32 @@ public void ModifiersHot_OnThink(SaxtonHaleBase boss)
 	}
 }
 
-public Action ModifiersHot_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action ModifiersHot_OnAttackDamage(SaxtonHaleBase boss, int iVictim, CTakeDamageInfo info)
 {
-	if (damagetype & DMG_BURN)
+	if (info.m_bitsDamageType & DMG_BURN)
 	{
-		damage *= 0.75;
+		info.m_flDamage *= 0.75;
 		return Plugin_Changed;
 	}
 	
 	return Plugin_Continue;
 }
 
-public Action ModifiersHot_OnTakeDamage(SaxtonHaleBase boss, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action ModifiersHot_OnTakeDamage(SaxtonHaleBase boss, CTakeDamageInfo info)
 {
 	if (TF2_IsUbercharged(boss.iClient))
 		return Plugin_Continue;
 	
-	if (damagetype & DMG_BURN)
+	if (info.m_bitsDamageType & DMG_BURN)
 	{
-		damage *= 3.0;
-		if (damage > 12.0) damage = 12.0;
-		return Plugin_Continue;
+		info.m_flDamage *= 3.0;
+		if (info.m_flDamage > 12.0) info.m_flDamage = 12.0;
+		return Plugin_Changed;
 	}
 	
-	if (0 < attacker <= MaxClients && IsClientInGame(attacker))
-		TF2_IgnitePlayer(boss.iClient, attacker);
+	int iAttacker = info.m_hAttacker;
+	if (0 < iAttacker <= MaxClients && IsClientInGame(iAttacker))
+		TF2_IgnitePlayer(boss.iClient, iAttacker);
 	
 	return Plugin_Continue;
 }

@@ -41,9 +41,9 @@ public void GroundPound_OnThink(SaxtonHaleBase boss)
 	}
 }
 
-public Action GroundPound_OnTakeDamage(SaxtonHaleBase boss, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action GroundPound_OnTakeDamage(SaxtonHaleBase boss, CTakeDamageInfo info)
 {
-	if (!(damagetype & DMG_FALL) || !g_bClientBossWeighDownForce[boss.iClient])
+	if (!(info.m_bitsDamageType & DMG_FALL) || !g_bClientBossWeighDownForce[boss.iClient])
 		return Plugin_Continue;
 	
 	float vecVel[3];
@@ -74,8 +74,13 @@ public Action GroundPound_OnTakeDamage(SaxtonHaleBase boss, int &attacker, int &
 			ScaleVector(vecVelocity, boss.GetPropFloat("GroundPound", "ImpactPush"));
 			AddVectors(vecClientVelocity, vecVelocity, vecClientVelocity);
 			
-			SDKHooks_TakeDamage(iClient, boss.iClient, boss.iClient, boss.GetPropFloat("GroundPound", "ImpactDamage"));
-			TeleportEntity(iClient, NULL_VECTOR, NULL_VECTOR, vecClientVelocity);
+			// Delay is required to avoid crash from CTFPlayer::OnTakeDamage_Alive
+			DataPack data = new DataPack();
+			data.WriteCell(iClient);
+			data.WriteCell(boss.iClient);
+			data.WriteFloat(boss.GetPropFloat("GroundPound", "ImpactDamage"));
+			data.WriteFloatArray(vecClientVelocity, sizeof(vecClientVelocity));
+			RequestFrame(GroundPound_Smash, data);
 		}
 	}
 	
@@ -137,3 +142,19 @@ public void GroundPound_Precache(SaxtonHaleBase boss)
 	PrecacheParticleSystem(IMPACT_PARTICLE);
 }
 
+public void GroundPound_Smash(DataPack data)
+{
+	data.Reset();
+
+	int iVictim = data.ReadCell();
+	int iAttacker = data.ReadCell();
+	float flDamage = data.ReadFloat();
+
+	float vecVel[3];
+	data.ReadFloatArray(vecVel, sizeof(vecVel));
+
+	SDKHooks_TakeDamage(iVictim, iAttacker, iAttacker, flDamage, DMG_DIRECT);
+	TeleportEntity(iVictim, NULL_VECTOR, NULL_VECTOR, vecVel);
+
+	delete data;
+}

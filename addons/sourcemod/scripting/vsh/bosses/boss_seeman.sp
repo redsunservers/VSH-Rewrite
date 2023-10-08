@@ -56,13 +56,13 @@ public void SeeMan_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length)
 	StrCat(sInfo, length, "\n- 200%% Rage: instakill nuke at end of rage");
 }
 
-public Action SeeMan_OnTakeDamage(SaxtonHaleBase boss, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action SeeMan_OnTakeDamage(SaxtonHaleBase boss, CTakeDamageInfo info)
 {
 	char sWeaponClassName[32];
-	if (inflictor >= 0) GetEdictClassname(inflictor, sWeaponClassName, sizeof(sWeaponClassName));
-	
+	if (info.m_hInflictor >= 0) GetEdictClassname(info.m_hInflictor, sWeaponClassName, sizeof(sWeaponClassName));
+
 	//Disable self-damage from bomb rage ability
-	if (boss.iClient == attacker && strcmp(sWeaponClassName, "tf_generic_bomb") == 0) return Plugin_Stop;
+	if (boss.iClient == info.m_hAttacker && strcmp(sWeaponClassName, "tf_generic_bomb") == 0) return Plugin_Stop;
 
 	EmitSoundToAll(SEEMAN_SEE_SND, boss.iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
 	return Plugin_Continue;

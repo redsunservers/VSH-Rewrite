@@ -177,41 +177,41 @@ public void Announcer_OnRage(SaxtonHaleBase boss)
 	}
 }
 
-public Action Announcer_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action Announcer_OnAttackDamage(SaxtonHaleBase boss, int iVictim, CTakeDamageInfo info)
 {
-	if (weapon <= MaxClients)
+	int iWeapon = info.m_hWeapon;
+	if (iWeapon <= MaxClients)
 		return Plugin_Continue;
-	
-	int iIndex = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
+
+	int iIndex = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
 	if (TF2_GetItemSlot(iIndex, TF2_GetPlayerClass(boss.iClient)) != WeaponSlot_Primary)
 		return Plugin_Continue;
-	
-	if (TF2_IsUbercharged(victim))
+
+	if (TF2_IsUbercharged(iVictim))
 		return Plugin_Continue;
-	
-	if (!SaxtonHale_IsValidAttack(victim))
+
+	if (!SaxtonHale_IsValidAttack(iVictim))
 	{
-		damage = 999.0;
+		info.m_flDamage = 999.0;
 		return Plugin_Changed;
 	}
-	
-	SaxtonHaleBase bossVictim = SaxtonHaleBase(victim);
+
+	SaxtonHaleBase bossVictim = SaxtonHaleBase(iVictim);
 	if (bossVictim.bValid)
 		bossVictim.DestroyAllClass();
-	
+
 	bossVictim.CreateClass("AnnouncerMinion");
-	
+
 	//Alert teammates, herself and unconverted minions that the victim is about to change teams
-	TFClassType nClass = TF2_GetPlayerClass(victim);
+	TFClassType nClass = TF2_GetPlayerClass(iVictim);
 	char sMessage[128];
 	Format(sMessage, sizeof(sMessage), "A%s %s was hit and will switch teams!", (nClass == TFClass_Engineer ? "n" : ""), g_strClassName[nClass]);
-	Announcer_ShowAnnotation(victim, sMessage, 6.0);
-	
+	Announcer_ShowAnnotation(iVictim, sMessage, 6.0);
+
 	EmitSoundToClient(boss.iClient, SOUND_BACKSTAB);
-	EmitSoundToClient(victim, SOUND_ALERT);
-	EmitSoundToClient(victim, g_strAnnouncerDisguise[GetRandomInt(0, sizeof(g_strAnnouncerDisguise)-1)]);
-	
-	damage = 0.0;
+	EmitSoundToClient(iVictim, SOUND_ALERT);
+	EmitSoundToClient(iVictim, g_strAnnouncerDisguise[GetRandomInt(0, sizeof(g_strAnnouncerDisguise)-1)]);
+
 	return Plugin_Stop;
 }
 
@@ -298,15 +298,12 @@ public bool AnnouncerMinion_IsBossHidden(SaxtonHaleBase boss)
 	return true;
 }
 
-public Action AnnouncerMinion_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action AnnouncerMinion_OnAttackDamage(SaxtonHaleBase boss, int iVictim, CTakeDamageInfo info)
 {
 	//Don't allow minion attack boss team
-	if (boss.iClient != victim && TF2_GetClientTeam(victim) == TFTeam_Boss)
-	{
-		damage = 0.0;
+	if (boss.iClient != iVictim && TF2_GetClientTeam(iVictim) == TFTeam_Boss)
 		return Plugin_Stop;
-	}
-	
+
 	return Plugin_Continue;
 }
 
@@ -325,20 +322,18 @@ public Action AnnouncerMinion_OnAttackBuilding(SaxtonHaleBase boss, int building
 	return Plugin_Continue;
 }
 
-public Action AnnouncerMinion_OnTakeDamage(SaxtonHaleBase boss, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action AnnouncerMinion_OnTakeDamage(SaxtonHaleBase boss, CTakeDamageInfo info)
 {
-	if (attacker <= 0 || attacker > MaxClients)
+	int iAttacker = info.m_hAttacker;
+	if (iAttacker <= 0 || iAttacker > MaxClients)
 		return Plugin_Continue;
-	
+
 	//Don't allow minion take damage from boss team
-	if (boss.iClient != attacker && TF2_GetClientTeam(attacker) == TFTeam_Boss)
-	{
-		damage = 0.0;
+	if (boss.iClient != iAttacker && TF2_GetClientTeam(iAttacker) == TFTeam_Boss)
 		return Plugin_Stop;
-	}
-	
+
 	//Because minions have defense buff to block crits, prevent the 35% resist from happening
-	damage *= (1.0 / 0.65);
+	info.m_flDamage *= (1.0 / 0.65);
 	return Plugin_Changed;
 }
 

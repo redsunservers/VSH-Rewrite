@@ -1,14 +1,16 @@
-public Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action TagsDamage_OnTakeDamage(int victim, CTakeDamageInfo info)
 {
+	int iAttacker = info.m_hAttacker, iWeapon = info.m_hWeapon;
+
 	//Get values to pass around
 	TagsParams tParams = new TagsParams();
 	tParams.SetInt("victim", victim);
-	tParams.SetInt("attacker", attacker);
-	tParams.SetInt("inflictor", inflictor);
-	tParams.SetFloat("damage", damage);
-	tParams.SetInt("filter_damagetype", damagetype);	//Because 'damagetype' is already used from config to set
-	tParams.SetInt("weapon", weapon);
-	tParams.SetInt("filter_damagecustom", damagecustom);
+	tParams.SetInt("attacker", info.m_hAttacker);
+	tParams.SetInt("inflictor", info.m_hInflictor);
+	tParams.SetFloat("damage", info.m_flDamage);
+	tParams.SetInt("filter_damagetype", info.m_bitsDamageType);	//Because 'damagetype' is already used from config to set
+	tParams.SetInt("weapon", info.m_hWeapon);
+	tParams.SetInt("filter_damagecustom", info.m_iDamageCustom);
 	
 	//Call takedamage function
 	if (SaxtonHale_IsValidAttack(victim))
@@ -24,26 +26,26 @@ public Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor,
 	
 	//Get weapon slot
 	int iWeaponSlot = -1;
-	if (weapon > MaxClients && HasEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"))
+	if (iWeapon > MaxClients && HasEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex"))
 	{
-		int iIndex = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
-		iWeaponSlot = TF2_GetItemSlot(iIndex, TF2_GetPlayerClass(attacker));
+		int iIndex = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
+		iWeaponSlot = TF2_GetItemSlot(iIndex, TF2_GetPlayerClass(iAttacker));
 	}
 	
 	//Call attackdamage function
-	if (victim != attacker && SaxtonHale_IsValidAttack(attacker))
+	if (victim != iAttacker && SaxtonHale_IsValidAttack(iAttacker))
 	{
 		for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
 		{
 			int iPos = -1;
 			Tags tagsStruct;
-			while (TagsCore_GetStruct(iPos, attacker, TagsCall_AttackDamage, iSlot, tParams, tagsStruct))	//Loop though every active structs
+			while (TagsCore_GetStruct(iPos, iAttacker, TagsCall_AttackDamage, iSlot, tParams, tagsStruct))	//Loop though every active structs
 			{
 				//Only call if either weapon used, or passive
 				if (iSlot != iWeaponSlot && tagsStruct.tParams.GetInt("passive") != 1)
 					continue;
 				
-				TagsCore_CallStruct(attacker, tagsStruct, tParams);
+				TagsCore_CallStruct(iAttacker, tagsStruct, tParams);
 			}
 		}
 	}
@@ -54,31 +56,31 @@ public Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor,
 	
 	if (tParams.GetFloatEx("set", flValue))
 	{
-		damage = flValue;
+		info.m_flDamage = flValue;
 		action = Plugin_Changed;
 	}
 	
 	if (tParams.GetFloatEx("perplayer", flValue))
 	{
-		damage = flValue * float(g_iTotalAttackCount);
+		info.m_flDamage = flValue * float(g_iTotalAttackCount);
 		action = Plugin_Changed;
 	}
 	
 	if (tParams.GetFloatEx("multiply", flValue))
 	{
-		damage *= flValue;
+		info.m_flDamage *= flValue;
 		action = Plugin_Changed;
 	}
 	
-	if (tParams.GetFloatEx("min", flValue) && damage < flValue)
+	if (tParams.GetFloatEx("min", flValue) && info.m_flDamage < flValue)
 	{
-		damage = flValue;
+		info.m_flDamage = flValue;
 		action = Plugin_Changed;
 	}
 	
-	if (tParams.GetFloatEx("max", flValue) && damage > flValue)
+	if (tParams.GetFloatEx("max", flValue) && info.m_flDamage > flValue)
 	{
-		damage = flValue;
+		info.m_flDamage = flValue;
 		action = Plugin_Changed;
 	}
 	
@@ -95,9 +97,9 @@ public Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor,
 			int iDamageType = TagsDamage_GetType(sBuffer);
 			
 			if (iDamageType > 0)
-				damagetype |= iDamageType;
+				info.m_bitsDamageType |= iDamageType;
 			else if (iDamageType < 0)
-				damagetype &= ~iDamageType;
+				info.m_bitsDamageType &= ~iDamageType;
 		}
 		
 		delete aDamageType;
