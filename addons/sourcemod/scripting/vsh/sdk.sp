@@ -1,9 +1,9 @@
-static Handle g_hHookGetCaptureValueForPlayer;
-static Handle g_hHookGetMaxHealth;
-static Handle g_hHookShouldTransmit;
-static Handle g_hHookGiveNamedItem;
-static Handle g_hHookBallImpact;
-static Handle g_hHookShouldBallTouch;
+static DynamicHook g_hHookGetCaptureValueForPlayer;
+static DynamicHook g_hHookGetMaxHealth;
+static DynamicHook g_hHookShouldTransmit;
+static DynamicHook g_hHookGiveNamedItem;
+static DynamicHook g_hHookBallImpact;
+static DynamicHook g_hHookShouldBallTouch;
 static Handle g_hSDKGetMaxHealth;
 static Handle g_hSDKSendWeaponAnim;
 static Handle g_hSDKPlaySpecificSequence;
@@ -27,7 +27,7 @@ void SDK_Init()
 
 	//This function is used to control player's max health
 	int iOffset = hGameData.GetOffset("GetMaxHealth");
-	g_hHookGetMaxHealth = DHookCreate(iOffset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity, Hook_GetMaxHealth);
+	g_hHookGetMaxHealth = new DynamicHook(iOffset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity);
 	if (g_hHookGetMaxHealth == null)
 		LogMessage("Failed to create hook: CTFPlayer::GetMaxHealth!");
 
@@ -70,11 +70,11 @@ void SDK_Init()
 	
 	// This hook allows to change capture rate
 	iOffset = hGameData.GetOffset("CTFGameRules::GetCaptureValueForPlayer");
-	g_hHookGetCaptureValueForPlayer = DHookCreate(iOffset, HookType_GameRules, ReturnType_Int, ThisPointer_Ignore);
+	g_hHookGetCaptureValueForPlayer = new DynamicHook(iOffset, HookType_GameRules, ReturnType_Int, ThisPointer_Ignore);
 	if (g_hHookGetCaptureValueForPlayer == null)
 		LogMessage("Failed to create hook: CTFGameRules::GetCaptureValueForPlayer");
 	else
-		DHookAddParam(g_hHookGetCaptureValueForPlayer, HookParamType_CBaseEntity);
+		g_hHookGetCaptureValueForPlayer.AddParam(HookParamType_CBaseEntity);
 
 	// This call gets wearable equipped in loadout slots
 	StartPrepSDKCall(SDKCall_Player);
@@ -133,57 +133,57 @@ void SDK_Init()
 	
 	// This hook allows entity to always transmit
 	iOffset = hGameData.GetOffset("CBaseEntity::ShouldTransmit");
-	g_hHookShouldTransmit = DHookCreate(iOffset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity, Hook_EntityShouldTransmit);
+	g_hHookShouldTransmit = new DynamicHook(iOffset, HookType_Entity, ReturnType_Int, ThisPointer_CBaseEntity);
 	if (g_hHookShouldTransmit == null)
 		LogMessage("Failed to create hook: CBaseEntity::ShouldTransmit!");
 	else
-		DHookAddParam(g_hHookShouldTransmit, HookParamType_ObjectPtr);
+		g_hHookShouldTransmit.AddParam(HookParamType_ObjectPtr);
 	
 	iOffset = hGameData.GetOffset("CTFPlayer::GiveNamedItem");
-	g_hHookGiveNamedItem = DHookCreate(iOffset, HookType_Entity, ReturnType_CBaseEntity, ThisPointer_CBaseEntity);
+	g_hHookGiveNamedItem = new DynamicHook(iOffset, HookType_Entity, ReturnType_CBaseEntity, ThisPointer_CBaseEntity);
 	if (g_hHookGiveNamedItem == null)
 	{
 		LogMessage("Failed to create hook: CTFPlayer::GiveNamedItem!");
 	}
 	else
 	{
-		DHookAddParam(g_hHookGiveNamedItem, HookParamType_CharPtr);
-		DHookAddParam(g_hHookGiveNamedItem, HookParamType_Int);
-		DHookAddParam(g_hHookGiveNamedItem, HookParamType_ObjectPtr);
-		DHookAddParam(g_hHookGiveNamedItem, HookParamType_Bool);
+		g_hHookGiveNamedItem.AddParam(HookParamType_CharPtr);
+		g_hHookGiveNamedItem.AddParam(HookParamType_Int);
+		g_hHookGiveNamedItem.AddParam(HookParamType_ObjectPtr);
+		g_hHookGiveNamedItem.AddParam(HookParamType_Bool);
 	}
 	
 	// This hook calls when Sandman Ball stuns a player
 	iOffset = hGameData.GetOffset("CTFStunBall::ApplyBallImpactEffectOnVictim");
-	g_hHookBallImpact = DHookCreate(iOffset, HookType_Entity, ReturnType_Void, ThisPointer_CBaseEntity);
+	g_hHookBallImpact = new DynamicHook(iOffset, HookType_Entity, ReturnType_Void, ThisPointer_CBaseEntity);
 	if (g_hHookBallImpact == null)
 		LogMessage("Failed to create hook: CTFStunBall::ApplyBallImpactEffectOnVictim!");
 	else
-		DHookAddParam(g_hHookBallImpact, HookParamType_CBaseEntity);
+		g_hHookBallImpact.AddParam(HookParamType_CBaseEntity);
 	
 	// This hook calls when Sandman Ball want to touch
 	iOffset = hGameData.GetOffset("CTFStunBall::ShouldBallTouch");
-	g_hHookShouldBallTouch = DHookCreate(iOffset, HookType_Entity, ReturnType_Bool, ThisPointer_CBaseEntity);
+	g_hHookShouldBallTouch = new DynamicHook(iOffset, HookType_Entity, ReturnType_Bool, ThisPointer_CBaseEntity);
 	if (g_hHookShouldBallTouch == null)
 		LogMessage("Failed to create hook: CTFStunBall::ApplyBallImpactEffectOnVictim!");
 	else
-		DHookAddParam(g_hHookShouldBallTouch, HookParamType_CBaseEntity);
+		g_hHookShouldBallTouch.AddParam(HookParamType_CBaseEntity);
 	
 	// This hook allows to allow/block medigun heals
-	DynamicDetour hHook = DHookCreateFromConf(hGameData, "CWeaponMedigun::AllowedToHealTarget");
+	DynamicDetour hHook = DynamicDetour.FromConf(hGameData, "CWeaponMedigun::AllowedToHealTarget");
 	if (hHook == null)
 		LogMessage("Failed to create hook: CWeaponMedigun::AllowedToHealTarget!");
 	else
-		DHookEnableDetour(hHook, true, Hook_AllowedToHealTarget);
+		hHook.Enable(Hook_Post, Hook_AllowedToHealTarget);
 	
 	delete hHook;
 	
 	// This hook allows to allow/block dispenser heals
-	hHook = DHookCreateFromConf(hGameData, "CObjectDispenser::CouldHealTarget");
+	hHook = DynamicDetour.FromConf(hGameData, "CObjectDispenser::CouldHealTarget");
 	if (hHook == null)
 		LogMessage("Failed to create hook: CObjectDispenser::CouldHealTarget!");
 	else
-		DHookEnableDetour(hHook, true, Hook_CouldHealTarget);
+		hHook.Enable(Hook_Post, Hook_CouldHealTarget);
 	
 	delete hHook;
 
@@ -215,14 +215,14 @@ static bool LookupOffset(int &iOffset, const char[] sClass, const char[] sProp)
 void SDK_HookGiveNamedItem(int iClient)
 {
 	if (g_hHookGiveNamedItem && !g_bTF2Items)
-		g_iHookIdGiveNamedItem[iClient] = DHookEntity(g_hHookGiveNamedItem, false, iClient, Hook_GiveNamedItemRemoved, Hook_GiveNamedItem);
+		g_iHookIdGiveNamedItem[iClient] = g_hHookGiveNamedItem.HookEntity(Hook_Pre, iClient, Hook_GiveNamedItem, Hook_GiveNamedItemRemoved);
 }
 
 void SDK_UnhookGiveNamedItem(int iClient)
 {
 	if (g_iHookIdGiveNamedItem[iClient])
 	{
-		DHookRemoveHookID(g_iHookIdGiveNamedItem[iClient]);
+		DynamicHook.RemoveHook(g_iHookIdGiveNamedItem[iClient]);
 		g_iHookIdGiveNamedItem[iClient] = 0;	
 	}
 }
@@ -239,63 +239,63 @@ bool SDK_IsGiveNamedItemActive()
 void SDK_HookGetCaptureValueForPlayer(DHookCallback callback)
 {
 	if (g_hHookGetCaptureValueForPlayer)
-		DHookGamerules(g_hHookGetCaptureValueForPlayer, true, _, callback);
+		g_hHookGetCaptureValueForPlayer.HookGamerules(Hook_Post, callback);
 }
 
 void SDK_HookGetMaxHealth(int iClient)
 {
 	if (g_hHookGetMaxHealth)
-		DHookEntity(g_hHookGetMaxHealth, false, iClient);
+		g_hHookGetMaxHealth.HookEntity(Hook_Pre, iClient, Hook_GetMaxHealth);
 }
 
 void SDK_AlwaysTransmitEntity(int iEntity)
 {
 	if (g_hHookShouldTransmit)
-		DHookEntity(g_hHookShouldTransmit, true, iEntity);
+		g_hHookShouldTransmit.HookEntity(Hook_Post, iEntity, Hook_EntityShouldTransmit);
 }
 
 void SDK_HookBallImpact(int iEntity, DHookCallback callback)
 {
 	if (g_hHookBallImpact)
-		DHookEntity(g_hHookBallImpact, false, iEntity, _, callback);
+		g_hHookBallImpact.HookEntity(Hook_Pre, iEntity, callback);
 }
 
 void SDK_HookBallTouch(int iEntity, DHookCallback callback)
 {
 	if (g_hHookShouldBallTouch)
-		DHookEntity(g_hHookShouldBallTouch, false, iEntity, _, callback);
+		g_hHookShouldBallTouch.HookEntity(Hook_Pre, iEntity, callback);
 }
 
-public MRESReturn Hook_GetMaxHealth(int iClient, Handle hReturn)
+public MRESReturn Hook_GetMaxHealth(int iClient, DHookReturn ret)
 {
 	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 	if (boss.bValid && boss.iMaxHealth > 0)
 	{
-		DHookSetReturn(hReturn, boss.iMaxHealth);
+		ret.Value = boss.iMaxHealth;
 		return MRES_Supercede;
 	}
 	return MRES_Ignored;
 }
 
-public MRESReturn Hook_EntityShouldTransmit(int iEntity, Handle hReturn, Handle hParams)
+public MRESReturn Hook_EntityShouldTransmit(int iEntity, DHookReturn ret, DHookParam params)
 {
-	DHookSetReturn(hReturn, FL_EDICT_ALWAYS);
+	ret.Value = FL_EDICT_ALWAYS;
 	return MRES_Supercede;
 }
 
-public MRESReturn Hook_GiveNamedItem(int iClient, Handle hReturn, Handle hParams)
+public MRESReturn Hook_GiveNamedItem(int iClient, DHookReturn ret, DHookParam params)
 {
-	if (DHookIsNullParam(hParams, 1) || DHookIsNullParam(hParams, 3))
+	if (params.IsNull(1) || params.IsNull(3))
 		return MRES_Ignored;
 	
 	char sClassname[256];
-	DHookGetParamString(hParams, 1, sClassname, sizeof(sClassname));
-	int iIndex = DHookGetParamObjectPtrVar(hParams, 3, 4, ObjectValueType_Int) & 0xFFFF;
+	params.GetString(1, sClassname, sizeof(sClassname));
+	int iIndex = params.GetObjectVar(3, 4, ObjectValueType_Int) & 0xFFFF;
 	
 	Action action = GiveNamedItem(iClient, sClassname, iIndex);
 	if (action >= Plugin_Handled)
 	{
-		DHookSetReturn(hReturn, 0);
+		ret.Value = 0;
 		return MRES_Supercede;
 	}
 	
@@ -314,12 +314,12 @@ public void Hook_GiveNamedItemRemoved(int iHookId)
 	}
 }
 
-public MRESReturn Hook_AllowedToHealTarget(int iMedigun, Handle hReturn, Handle hParams)
+public MRESReturn Hook_AllowedToHealTarget(int iMedigun, DHookReturn ret, DHookParam params)
 {
 	if (!g_bEnabled) return MRES_Ignored;
 	if (g_iTotalRoundPlayed <= 0) return MRES_Ignored;
 	
-	int iHealTarget = DHookGetParam(hParams, 1);
+	int iHealTarget = params.Get(1);
 	int iClient = GetEntPropEnt(iMedigun, Prop_Send, "m_hOwnerEntity");
 	
 	if (0 < iClient <= MaxClients && IsClientInGame(iClient))
@@ -327,11 +327,11 @@ public MRESReturn Hook_AllowedToHealTarget(int iMedigun, Handle hReturn, Handle 
 		SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 		if (boss.bValid)
 		{
-			bool bReturn = DHookGetReturn(hReturn);
+			bool bReturn = ret.Value;
 			Action action = boss.CallFunction("CanHealTarget", iHealTarget, bReturn);
 			if (action >= Plugin_Changed)
 			{
-				DHookSetReturn(hReturn, bReturn);
+				ret.Value = bReturn;
 				return MRES_Supercede;
 			}
 			
@@ -341,7 +341,7 @@ public MRESReturn Hook_AllowedToHealTarget(int iMedigun, Handle hReturn, Handle 
 		if (SaxtonHale_IsValidBoss(iHealTarget))
 		{
 			//Never allow heal boss from any other sources
-			DHookSetReturn(hReturn, false);
+			ret.Value = false;
 			return MRES_Supercede;
 		}
 		
@@ -361,7 +361,7 @@ public MRESReturn Hook_AllowedToHealTarget(int iMedigun, Handle hReturn, Handle 
 				&& tParams.GetIntEx("healbuilding", iResult))
 			{
 				bool bResult = !!iResult;
-				DHookSetReturn(hReturn, bResult);
+				ret.Value = bResult;
 				delete tParams;
 				return MRES_Supercede;
 			}
@@ -373,21 +373,21 @@ public MRESReturn Hook_AllowedToHealTarget(int iMedigun, Handle hReturn, Handle 
 	return MRES_Ignored;
 }
 
-public MRESReturn Hook_CouldHealTarget(int iDispenser, Handle hReturn, Handle hParams)
+public MRESReturn Hook_CouldHealTarget(int iDispenser, DHookReturn ret, DHookParam params)
 {
 	int iClient = GetEntPropEnt(iDispenser, Prop_Send, "m_hBuilder");
-	int iHealTarget = DHookGetParam(hParams, 1);
+	int iHealTarget = params.Get(1);
 	
 	if (0 < iClient <= MaxClients)
 	{
 		SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 		if (boss.bValid)
 		{
-			bool bReturn = DHookGetReturn(hReturn);
+			bool bReturn = ret.Value;
 			Action action = boss.CallFunction("CanHealTarget", iHealTarget, bReturn);
 			if (action >= Plugin_Changed)
 			{
-				DHookSetReturn(hReturn, bReturn);
+				ret.Value = bReturn;
 				return MRES_Supercede;
 			}
 			
@@ -397,7 +397,7 @@ public MRESReturn Hook_CouldHealTarget(int iDispenser, Handle hReturn, Handle hP
 		if (SaxtonHale_IsValidBoss(iHealTarget))
 		{
 			//Never allow heal boss from any other sources
-			DHookSetReturn(hReturn, false);
+			ret.Value = false;
 			return MRES_Supercede;
 		}
 	}
