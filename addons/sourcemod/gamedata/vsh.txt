@@ -40,6 +40,12 @@
 				"linux"		"@_ZN16CObjectDispenser15CouldHealTargetEP11CBaseEntity"
 				"windows"	"\x55\x8B\xEC\x56\x8B\x75\x08\x57\x8B\xF9\x8B\x87\x38\x01\x00\x00"
 			}
+			"CTFPlayer::OnTakeDamage_Alive"
+			{
+				"library"		"server"
+				"linux"			"@_ZN9CTFPlayer18OnTakeDamage_AliveERK15CTakeDamageInfo"
+				"windows"		"\x55\x8B\xEC\x83\xEC\x2A\x56\x57\x8B\xF9\x8B\x0D\x2A\x2A\x2A\x2A\x89\x7D\x2A"
+			}
 		}
 		"Functions"
 		{
@@ -68,6 +74,20 @@
 					"target"
 					{
 						"type"	"cbaseentity"
+					}
+				}
+			}
+			"CTFPlayer::OnTakeDamage_Alive"
+			{
+				"signature"		"CTFPlayer::OnTakeDamage_Alive"
+				"callconv"		"thiscall"
+				"return"		"int"
+				"this"			"entity"
+				"arguments"
+				{
+					"damage_info"
+					{
+						"type" "int"
 					}
 				}
 			}
