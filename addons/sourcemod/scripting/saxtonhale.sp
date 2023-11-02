@@ -1416,7 +1416,7 @@ public Action Client_OnTakeDamageAlive(int victim, int &attacker, int &inflictor
 								if (0 < iBuilder <= MaxClients && IsClientInGame(iBuilder))
 								{
 									if (attacker != iBuilder)
-										g_iPlayerAssistDamage[attacker] = iTelefragDamage;
+										g_iPlayerAssistDamage[iBuilder] = iTelefragDamage;
 								}
 								else
 								{
