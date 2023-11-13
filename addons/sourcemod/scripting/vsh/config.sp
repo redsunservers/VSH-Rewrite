@@ -94,6 +94,16 @@ methodmap ConfigClass < StringMap
 		
 		else return -1;
 	}
+	
+	//Return whenever to ignore damage falloff
+	public int IgnoreFalloff()
+	{
+		char sValue[MAXLEN_CONFIG_VALUE];
+		if (this.GetString("ignorefalloff", sValue, sizeof(sValue)))
+			return StringToInt(sValue);
+		
+		else return -1;
+	}
 };
 
 methodmap ConfigIndex < ArrayList
@@ -272,6 +282,19 @@ methodmap ConfigIndex < ArrayList
 		
 		char sValue[MAXLEN_CONFIG_VALUE];
 		if (sMap.GetString("clip", sValue, sizeof(sValue)))
+			return StringToInt(sValue);
+		
+		else return -1;
+	}
+	
+	//Return whenever to ignore damage falloff
+	public int IgnoreFalloff(int iIndex)
+	{
+		StringMap sMap = this.GetStringMap(iIndex);
+		if (sMap == null) return -1;
+		
+		char sValue[MAXLEN_CONFIG_VALUE];
+		if (sMap.GetString("ignorefalloff", sValue, sizeof(sValue)))
 			return StringToInt(sValue);
 		
 		else return -1;
