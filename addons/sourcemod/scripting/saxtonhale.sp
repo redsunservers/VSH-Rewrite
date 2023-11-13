@@ -1442,7 +1442,7 @@ public Action Client_OnTakeDamage(int victim, int &attacker, int &inflictor, flo
 	if (!g_bEnabled) return Plugin_Continue;
 	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
 	
-	if (SaxtonHale_IsValidAttack(attacker) && weapon != INVALID_ENT_REFERENCE && HasEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"))
+	if (victim != attacker && SaxtonHale_IsValidAttack(attacker) && weapon != INVALID_ENT_REFERENCE && HasEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"))
 	{
 		TFClassType nClass = TF2_GetPlayerClass(attacker);
 		int iIndex = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
@@ -1467,7 +1467,7 @@ public void Client_OnTakeDamagePost(int victim, int attacker, int inflictor, flo
 	if (!g_bEnabled) return;
 	if (g_iTotalRoundPlayed <= 0) return;
 	
-	if (SaxtonHale_IsValidAttack(attacker) && weapon != INVALID_ENT_REFERENCE && HasEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"))
+	if (victim != attacker && SaxtonHale_IsValidAttack(attacker) && weapon != INVALID_ENT_REFERENCE && HasEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"))
 	{
 		TFClassType nClass = TF2_GetPlayerClass(attacker);
 		int iIndex = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
