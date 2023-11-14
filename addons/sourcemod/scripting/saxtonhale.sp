@@ -1237,6 +1237,8 @@ public void OnClientPutInServer(int iClient)
 	SDK_HookGiveNamedItem(iClient);
 	SDKHook(iClient, SDKHook_PreThink, Client_OnThink);
 	SDKHook(iClient, SDKHook_OnTakeDamageAlive, Client_OnTakeDamageAlive);
+	SDKHook(iClient, SDKHook_OnTakeDamage, Client_OnTakeDamage);
+	SDKHook(iClient, SDKHook_OnTakeDamagePost, Client_OnTakeDamagePost);
 	SDKHook(iClient, SDKHook_StartTouch, Client_OnStartTouch);
 	SDKHook(iClient, SDKHook_WeaponSwitchPost, Client_OnWeaponSwitchPost);
 	
@@ -1433,6 +1435,54 @@ public Action Client_OnTakeDamageAlive(int victim, int &attacker, int &inflictor
 		}
 	}
 	return finalAction;
+}
+
+public Action Client_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
+	
+	if (victim != attacker && SaxtonHale_IsValidAttack(attacker) && weapon != INVALID_ENT_REFERENCE && HasEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"))
+	{
+		TFClassType nClass = TF2_GetPlayerClass(attacker);
+		int iIndex = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
+		int iSlot = TF2_GetItemSlot(iIndex, nClass);
+		
+		if (0 <= iSlot < sizeof(g_ConfigClass[]))
+		{
+			int iIgnoreFalloff = g_ConfigIndex.IgnoreFalloff(iIndex);
+			if (iIgnoreFalloff == -1)
+				iIgnoreFalloff = g_ConfigClass[nClass][iSlot].IgnoreFalloff();
+			
+			if (iIgnoreFalloff == 1)
+				TF2_AddCondition(attacker, TFCond_RunePrecision, 0.05);
+		}
+	}
+	
+	return Plugin_Continue;
+}
+
+public void Client_OnTakeDamagePost(int victim, int attacker, int inflictor, float damage, int damagetype, int weapon, const float damageForce[3], const float damagePosition[3], int damagecustom)
+{
+	if (!g_bEnabled) return;
+	if (g_iTotalRoundPlayed <= 0) return;
+	
+	if (victim != attacker && SaxtonHale_IsValidAttack(attacker) && weapon != INVALID_ENT_REFERENCE && HasEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"))
+	{
+		TFClassType nClass = TF2_GetPlayerClass(attacker);
+		int iIndex = GetEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex");
+		int iSlot = TF2_GetItemSlot(iIndex, nClass);
+		
+		if (0 <= iSlot < sizeof(g_ConfigClass[]))
+		{
+			int iIgnoreFalloff = g_ConfigIndex.IgnoreFalloff(iIndex);
+			if (iIgnoreFalloff == -1)
+				iIgnoreFalloff = g_ConfigClass[nClass][iSlot].IgnoreFalloff();
+			
+			if (iIgnoreFalloff == 1)
+				TF2_RemoveCondition(attacker, TFCond_RunePrecision);
+		}
+	}
 }
 
 public Action Client_OnStartTouch(int iClient, int iToucher)
