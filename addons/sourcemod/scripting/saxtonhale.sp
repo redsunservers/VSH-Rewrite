@@ -1383,15 +1383,7 @@ public Action Client_OnTakeDamageAlive(int victim, int &attacker, int &inflictor
 		if (finalAction == Plugin_Stop)
 			return finalAction;
 		
-		//Call damage tags
-		action = TagsDamage_OnTakeDamage(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
-		if (action > finalAction)
-			finalAction = action;
-		
-		char sWeaponClass[64];
-		if (weapon > MaxClients)
-			GetEdictClassname(weapon, sWeaponClass, sizeof(sWeaponClass));
-		
+		int iBuilder;
 		if (0 < attacker <= MaxClients && IsClientInGame(attacker))
 		{
 			if (!bossAttacker.bValid)
@@ -1406,7 +1398,6 @@ public Action Client_OnTakeDamageAlive(int victim, int &attacker, int &inflictor
 						PrintCenterText(victim, "TELEFRAG! Be careful around quantum tunneling devices!");
 						
 						//Try to retrieve the entity under the player, and hopefully this is the teleporter
-						int iBuilder = 0;
 						int iGroundEntity = GetEntPropEnt(attacker, Prop_Send, "m_hGroundEntity");
 						if (iGroundEntity > MaxClients)
 						{
@@ -1417,8 +1408,8 @@ public Action Client_OnTakeDamageAlive(int victim, int &attacker, int &inflictor
 								iBuilder = GetEntPropEnt(iGroundEntity, Prop_Send, "m_hBuilder");
 								if (0 < iBuilder <= MaxClients && IsClientInGame(iBuilder))
 								{
-									if (attacker != iBuilder)
-										g_iPlayerAssistDamage[iBuilder] = iTelefragDamage;
+									if (attacker == iBuilder)
+										iBuilder = 0;
 								}
 								else
 								{
@@ -1433,6 +1424,15 @@ public Action Client_OnTakeDamageAlive(int victim, int &attacker, int &inflictor
 				}
 			}
 		}
+		
+		//Call damage tags
+		action = TagsDamage_OnTakeDamage(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
+		if (action > finalAction)
+			finalAction = action;
+		
+		// Give telefrag assists after tags modified it
+		if (iBuilder)
+			g_iPlayerAssistDamage[iBuilder] = RoundToNearest(damage);
 	}
 	return finalAction;
 }

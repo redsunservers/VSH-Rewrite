@@ -142,6 +142,7 @@ int TagsDamage_GetCustom(const char[] sDamageCustom)
 		mDamageCustom.SetValue("noheadshot", -TF_CUSTOM_HEADSHOT); //Negative number to indicate we don't want this instead
 		mDamageCustom.SetValue("backstab", TF_CUSTOM_BACKSTAB);
 		mDamageCustom.SetValue("stomp", TF_CUSTOM_BOOTS_STOMP);
+		mDamageCustom.SetValue("telefrag", TF_CUSTOM_TELEFRAG);
 	}
 	
 	int iDamageCustom = 0;
