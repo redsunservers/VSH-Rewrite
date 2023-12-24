@@ -163,7 +163,6 @@ public void Vagineer_Precache(SaxtonHaleBase boss)
 	
 	AddFileToDownloadsTable("models/player/saxton_hale/vagineer_v150.mdl");
 	AddFileToDownloadsTable("models/player/saxton_hale/vagineer_v150.phy");
-	AddFileToDownloadsTable("models/player/saxton_hale/vagineer_v150.sw.vtx");
 	AddFileToDownloadsTable("models/player/saxton_hale/vagineer_v150.vvd");
 	AddFileToDownloadsTable("models/player/saxton_hale/vagineer_v150.dx80.vtx");
 	AddFileToDownloadsTable("models/player/saxton_hale/vagineer_v150.dx90.vtx");

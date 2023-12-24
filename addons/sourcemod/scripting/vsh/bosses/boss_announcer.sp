@@ -272,7 +272,6 @@ public void Announcer_Precache(SaxtonHaleBase boss)
 	AddFileToDownloadsTable("models/player/kirillian/boss/sedisocks_administrator.dx90.vtx");
 	AddFileToDownloadsTable("models/player/kirillian/boss/sedisocks_administrator.mdl");
 	AddFileToDownloadsTable("models/player/kirillian/boss/sedisocks_administrator.phy");
-	AddFileToDownloadsTable("models/player/kirillian/boss/sedisocks_administrator.sw.vtx");
 	AddFileToDownloadsTable("models/player/kirillian/boss/sedisocks_administrator.vvd");
 }
 

@@ -365,7 +365,6 @@ public void BrutalSniper_Precache(SaxtonHaleBase boss)
 	
 	AddFileToDownloadsTable("models/player/saxton_hale/cbs_v4.mdl");
 	AddFileToDownloadsTable("models/player/saxton_hale/cbs_v4.phy");
-	AddFileToDownloadsTable("models/player/saxton_hale/cbs_v4.sw.vtx");
 	AddFileToDownloadsTable("models/player/saxton_hale/cbs_v4.vvd");
 	AddFileToDownloadsTable("models/player/saxton_hale/cbs_v4.dx80.vtx");
 	AddFileToDownloadsTable("models/player/saxton_hale/cbs_v4.dx90.vtx");

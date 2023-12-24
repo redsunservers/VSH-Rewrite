@@ -217,7 +217,6 @@ public void UberRanger_Precache(SaxtonHaleBase boss)
 	AddFileToDownloadsTable("materials/models/player/boss/uber_ranger/uberranger_helmet.vmt");
 	
 	AddFileToDownloadsTable("models/player/vsh_rewrite/uber_ranger/uber_ranger_v2.mdl");
-	AddFileToDownloadsTable("models/player/vsh_rewrite/uber_ranger/uber_ranger_v2.sw.vtx");
 	AddFileToDownloadsTable("models/player/vsh_rewrite/uber_ranger/uber_ranger_v2.vvd");
 	AddFileToDownloadsTable("models/player/vsh_rewrite/uber_ranger/uber_ranger_v2.phy");
 	AddFileToDownloadsTable("models/player/vsh_rewrite/uber_ranger/uber_ranger_v2.dx80.vtx");

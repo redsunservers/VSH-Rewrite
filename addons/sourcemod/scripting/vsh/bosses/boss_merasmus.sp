@@ -266,21 +266,18 @@ public void Merasmus_Precache(SaxtonHaleBase boss)
 	for (int i = 0; i < sizeof(g_strMerasmusBackStabbed); i++) PrecacheSound(g_strMerasmusBackStabbed[i]);
 	
 	AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/merasmus_v2.mdl");
-	AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/merasmus_v2.sw.vtx");
 	AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/merasmus_v2.vvd");
 	AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/merasmus_v2.phy");
 	AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/merasmus_v2.dx80.vtx");
 	AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/merasmus_v2.dx90.vtx");
 	
 	AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_staff.mdl");
-	AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_staff.sw.vtx");
 	AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_staff.vvd");
 	AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_staff.phy");
 	AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_staff.dx80.vtx");
 	AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_staff.dx90.vtx");
 	
 	AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_arms.mdl");
-	AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_arms.sw.vtx");
 	AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_arms.vvd");
 	AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_arms.dx80.vtx");
 	AddFileToDownloadsTable("models/player/vsh_rewrite/merasmus/c_merasmus_arms.dx90.vtx");

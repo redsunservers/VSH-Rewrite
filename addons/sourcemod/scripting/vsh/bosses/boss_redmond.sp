@@ -128,7 +128,6 @@ public void Redmond_Precache(SaxtonHaleBase boss)
 	for (int i = 0; i < sizeof(g_strRedmondBackstabbed); i++) PrecacheSound(g_strRedmondBackstabbed[i]);
 	
 	AddFileToDownloadsTable("models/player/kirillian/boss/boss_redmond_v2.mdl");
-	AddFileToDownloadsTable("models/player/kirillian/boss/boss_redmond_v2.sw.vtx");
 	AddFileToDownloadsTable("models/player/kirillian/boss/boss_redmond_v2.vvd");
 	AddFileToDownloadsTable("models/player/kirillian/boss/boss_redmond_v2.dx80.vtx");
 	AddFileToDownloadsTable("models/player/kirillian/boss/boss_redmond_v2.dx90.vtx");
