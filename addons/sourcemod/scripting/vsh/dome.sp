@@ -59,7 +59,6 @@ void Dome_MapStart()
 	AddFileToDownloadsTable("models/kirillian/brsphere_huge.dx80.vtx");
 	AddFileToDownloadsTable("models/kirillian/brsphere_huge.dx90.vtx");
 	AddFileToDownloadsTable("models/kirillian/brsphere_huge.mdl");
-	AddFileToDownloadsTable("models/kirillian/brsphere_huge.sw.vtx");
 	AddFileToDownloadsTable("models/kirillian/brsphere_huge.vvd");
 
 	AddFileToDownloadsTable("materials/models/kirillian/brsphere/br_fog.vmt");
