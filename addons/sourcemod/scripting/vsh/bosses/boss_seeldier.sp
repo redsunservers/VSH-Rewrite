@@ -133,7 +133,6 @@ public void Seeldier_Precache(SaxtonHaleBase boss)
 	PrepareSound(SEELDIER_SEE_SND);
 	
 	AddFileToDownloadsTable("models/player/kirillian/boss/seeldier_fix.mdl");
-	AddFileToDownloadsTable("models/player/kirillian/boss/seeldier_fix.sw.vtx");
 	AddFileToDownloadsTable("models/player/kirillian/boss/seeldier_fix.vvd");
 	AddFileToDownloadsTable("models/player/kirillian/boss/seeldier_fix.dx80.vtx");
 	AddFileToDownloadsTable("models/player/kirillian/boss/seeldier_fix.dx90.vtx");

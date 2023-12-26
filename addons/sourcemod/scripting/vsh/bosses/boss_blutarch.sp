@@ -110,7 +110,6 @@ public void Blutarch_Precache(SaxtonHaleBase boss)
 	for (int i = 0; i < sizeof(g_strBlutarchBackstabbed); i++) PrecacheSound(g_strBlutarchBackstabbed[i]);
 	
 	AddFileToDownloadsTable("models/player/kirillian/boss/boss_blutarch_v2.mdl");
-	AddFileToDownloadsTable("models/player/kirillian/boss/boss_blutarch_v2.sw.vtx");
 	AddFileToDownloadsTable("models/player/kirillian/boss/boss_blutarch_v2.vvd");
 	AddFileToDownloadsTable("models/player/kirillian/boss/boss_blutarch_v2.dx80.vtx");
 	AddFileToDownloadsTable("models/player/kirillian/boss/boss_blutarch_v2.dx90.vtx");

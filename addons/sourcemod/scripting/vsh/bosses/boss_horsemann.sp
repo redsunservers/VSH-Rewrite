@@ -199,7 +199,6 @@ public void Horsemann_Precache(SaxtonHaleBase boss)
 	for (int i = 0; i < sizeof(g_strHorsemannFootsteps); i++) PrecacheSound(g_strHorsemannFootsteps[i]);
 	
 	AddFileToDownloadsTable("models/player/saxton_hale/hhh_jr_mk3.mdl");
-	AddFileToDownloadsTable("models/player/saxton_hale/hhh_jr_mk3.sw.vtx");
 	AddFileToDownloadsTable("models/player/saxton_hale/hhh_jr_mk3.vvd");
 	AddFileToDownloadsTable("models/player/saxton_hale/hhh_jr_mk3.dx80.vtx");
 	AddFileToDownloadsTable("models/player/saxton_hale/hhh_jr_mk3.dx90.vtx");

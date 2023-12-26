@@ -270,7 +270,6 @@ public void SaxtonHale_Precache(SaxtonHaleBase boss)
 	
 	AddFileToDownloadsTable("models/player/saxton_hale_jungle_inferno/saxton_hale.mdl");
 	AddFileToDownloadsTable("models/player/saxton_hale_jungle_inferno/saxton_hale.phy");
-	AddFileToDownloadsTable("models/player/saxton_hale_jungle_inferno/saxton_hale.sw.vtx");
 	AddFileToDownloadsTable("models/player/saxton_hale_jungle_inferno/saxton_hale.vvd");
 	AddFileToDownloadsTable("models/player/saxton_hale_jungle_inferno/saxton_hale.dx80.vtx");
 	AddFileToDownloadsTable("models/player/saxton_hale_jungle_inferno/saxton_hale.dx90.vtx");

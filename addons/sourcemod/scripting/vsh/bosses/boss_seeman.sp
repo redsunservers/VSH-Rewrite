@@ -128,7 +128,6 @@ public void SeeMan_Precache(SaxtonHaleBase boss)
 	PrecacheModel(SEEMAN_MODEL);
 	
 	AddFileToDownloadsTable("models/player/kirillian/boss/seeman_fix.mdl");
-	AddFileToDownloadsTable("models/player/kirillian/boss/seeman_fix.sw.vtx");
 	AddFileToDownloadsTable("models/player/kirillian/boss/seeman_fix.vvd");
 	AddFileToDownloadsTable("models/player/kirillian/boss/seeman_fix.dx80.vtx");
 	AddFileToDownloadsTable("models/player/kirillian/boss/seeman_fix.dx90.vtx");

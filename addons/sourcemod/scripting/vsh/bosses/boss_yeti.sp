@@ -194,7 +194,6 @@ public void Yeti_Precache(SaxtonHaleBase boss)
 	AddFileToDownloadsTable("models/player/kirillian/boss/yeti_modded.dx90.vtx");
 	AddFileToDownloadsTable("models/player/kirillian/boss/yeti_modded.mdl");
 	AddFileToDownloadsTable("models/player/kirillian/boss/yeti_modded.phy");
-	AddFileToDownloadsTable("models/player/kirillian/boss/yeti_modded.sw.vtx");
 	AddFileToDownloadsTable("models/player/kirillian/boss/yeti_modded.vvd");
 }
 

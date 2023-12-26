@@ -341,7 +341,6 @@ public void GentleSpy_Precache(SaxtonHaleBase boss)
 	AddFileToDownloadsTable("materials/freak_fortress_2/gentlespy_tex/stylish_spy_normal.vtf");
 	
 	AddFileToDownloadsTable("models/freak_fortress_2/gentlespy/the_gentlespy_v1.mdl");
-	AddFileToDownloadsTable("models/freak_fortress_2/gentlespy/the_gentlespy_v1.sw.vtx");
 	AddFileToDownloadsTable("models/freak_fortress_2/gentlespy/the_gentlespy_v1.vvd");
 	AddFileToDownloadsTable("models/freak_fortress_2/gentlespy/the_gentlespy_v1.dx80.vtx");
 	AddFileToDownloadsTable("models/freak_fortress_2/gentlespy/the_gentlespy_v1.dx90.vtx");
