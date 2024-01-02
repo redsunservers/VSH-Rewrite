@@ -422,7 +422,7 @@ public void Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcast)
 			boss.CallFunction("GetBossName", sBuffer, sizeof(sBuffer));
 			
 			//Format with health
-			if (IsPlayerAlive(iClient))
+			if (IsPlayerAlive(iClient) && boss.iHealth > 0)
 				Format(sMessage, sizeof(sMessage), "%s %s had %d of %d HP left", sMessage, sBuffer, boss.iHealth, boss.iMaxHealth);
 			else
 				Format(sMessage, sizeof(sMessage), "%s %s died with %d max HP", sMessage, sBuffer, boss.iMaxHealth);
