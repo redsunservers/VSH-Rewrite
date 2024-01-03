@@ -65,7 +65,7 @@ public Action ModifiersElectric_OnAttackDamage(SaxtonHaleBase boss, int victim, 
 			{
 				//Mark victim as currently taking damage to avoid endless loop
 				g_bElectricDamage[i] = true;
-				SDKHooks_TakeDamage(i, 0, boss.iClient, (damage * 0.40), DMG_SHOCK, _, _, vecVictimPos, true);
+				SDKHooks_TakeDamage(i, 0, boss.iClient, (damage * 0.40), DMG_SHOCK, _, _, vecVictimPos);
 				g_bElectricDamage[i] = false;
 				
 				int iLaser = CreateEntityByName("env_laser");
