@@ -120,6 +120,7 @@ enum struct TagsFilterStruct
 			}
 			case TagsFilterType_HitFromBehind:
 			{
+				// This mimics the closerange_backattack_minicrits attribute's functionality
 				int iVictim = tParams.GetInt("victim");
 				float vecClientPos[3], vecVictimPos[3];
 				GetClientAbsOrigin(iClient, vecClientPos);

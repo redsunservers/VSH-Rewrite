@@ -1442,6 +1442,7 @@ public Action Client_OnTakeDamageAlive(int victim, int &attacker, int &inflictor
 		if (iBuilder)
 			g_iPlayerAssistDamage[iBuilder] = RoundToNearest(damage);
 	}
+	
 	return finalAction;
 }
 

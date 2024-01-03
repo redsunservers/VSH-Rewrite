@@ -9,6 +9,87 @@ public Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor,
 {
 	//Get values to pass around
 	TagsParams tParams = new TagsParams();
+	TagsDamage_CallFunctions(tParams, victim, attacker, inflictor, damage, damagetype, weapon, damagecustom);
+	
+	//Change damagetype values from params
+	Action action = Plugin_Continue;
+	ArrayList aDamageType = tParams.GetStringArray("damagetype");
+	if (aDamageType != null)
+	{
+		int iLength = aDamageType.Length;
+		int iBlockSize = aDamageType.BlockSize;
+		for (int i = 0; i < iLength; i++)
+		{
+			//Get damagetype string name, then convert to int
+			char[] sBuffer = new char[iBlockSize];
+			aDamageType.GetString(i, sBuffer, iBlockSize);
+			int iDamageType = TagsDamage_GetType(sBuffer);
+			
+			if (iDamageType > 0)
+				damagetype |= iDamageType;
+			else if (iDamageType < 0)
+				damagetype &= ~iDamageType;
+		}
+		
+		delete aDamageType;
+		action = Plugin_Changed;
+	}
+	
+	tParams.CopyData(g_tOngoingParams);
+	delete tParams;
+	return action;
+}
+
+public Action TagsDamage_OnTakeDamageAlive(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+{
+	TagsParams tParams = new TagsParams();
+	g_tOngoingParams.CopyData(tParams);
+	
+	// SDKHooks_TakeDamage only goes through OnTakeDamageAlive, so if we didn't already get our params info, do so now
+	if (tParams.Size <= 0)
+		TagsDamage_CallFunctions(tParams, victim, attacker, inflictor, damage, damagetype, weapon, damagecustom);
+	
+	//Change damage values from params
+	Action action = Plugin_Continue;
+	float flValue;
+	
+	if (tParams.GetFloatEx("set", flValue))
+	{
+		damage = flValue;
+		action = Plugin_Changed;
+	}
+	
+	if (tParams.GetFloatEx("perplayer", flValue))
+	{
+		damage = flValue * float(g_iTotalAttackCount);
+		action = Plugin_Changed;
+	}
+	
+	if (tParams.GetFloatEx("multiply", flValue))
+	{
+		damage *= flValue;
+		action = Plugin_Changed;
+	}
+	
+	if (tParams.GetFloatEx("min", flValue) && damage < flValue)
+	{
+		damage = flValue;
+		action = Plugin_Changed;
+	}
+	
+	if (tParams.GetFloatEx("max", flValue) && damage > flValue)
+	{
+		damage = flValue;
+		action = Plugin_Changed;
+	}
+	
+	g_tOngoingParams.Clear();
+	delete tParams;
+	return action;
+}
+
+void TagsDamage_CallFunctions(TagsParams tParams, int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, int damagecustom)
+{
 	tParams.SetInt("victim", victim);
 	tParams.SetInt("attacker", attacker);
 	tParams.SetInt("inflictor", inflictor);
@@ -54,78 +135,6 @@ public Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor,
 			}
 		}
 	}
-	
-	//Change damagetype values from params
-	Action action = Plugin_Continue;
-	ArrayList aDamageType = tParams.GetStringArray("damagetype");
-	if (aDamageType != null)
-	{
-		int iLength = aDamageType.Length;
-		int iBlockSize = aDamageType.BlockSize;
-		for (int i = 0; i < iLength; i++)
-		{
-			//Get damagetype string name, then convert to int
-			char[] sBuffer = new char[iBlockSize];
-			aDamageType.GetString(i, sBuffer, iBlockSize);
-			int iDamageType = TagsDamage_GetType(sBuffer);
-			
-			if (iDamageType > 0)
-				damagetype |= iDamageType;
-			else if (iDamageType < 0)
-				damagetype &= ~iDamageType;
-		}
-		
-		delete aDamageType;
-		action = Plugin_Changed;
-	}
-	
-	tParams.CopyData(g_tOngoingParams);
-	delete tParams;
-	return action;
-}
-
-public Action TagsDamage_OnTakeDamageAlive(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
-{
-	TagsParams tParams = new TagsParams();
-	g_tOngoingParams.CopyData(tParams);
-	
-	//Change damage values from params
-	Action action = Plugin_Continue;
-	float flValue;
-	
-	if (tParams.GetFloatEx("set", flValue))
-	{
-		damage = flValue;
-		action = Plugin_Changed;
-	}
-	
-	if (tParams.GetFloatEx("perplayer", flValue))
-	{
-		damage = flValue * float(g_iTotalAttackCount);
-		action = Plugin_Changed;
-	}
-	
-	if (tParams.GetFloatEx("multiply", flValue))
-	{
-		damage *= flValue;
-		action = Plugin_Changed;
-	}
-	
-	if (tParams.GetFloatEx("min", flValue) && damage < flValue)
-	{
-		damage = flValue;
-		action = Plugin_Changed;
-	}
-	
-	if (tParams.GetFloatEx("max", flValue) && damage > flValue)
-	{
-		damage = flValue;
-		action = Plugin_Changed;
-	}
-	
-	g_tOngoingParams.Clear();
-	delete tParams;
-	return action;
 }
 
 int TagsDamage_GetType(const char[] sDamageType)
