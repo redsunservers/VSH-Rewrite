@@ -290,7 +290,7 @@ public void GentleSpy_GetHudInfo(SaxtonHaleBase boss, char[] sMessage, int iLeng
 	iColor[3] = 255;
 }
 
-public Action GentleSpy_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action GentleSpy_OnAttackDamageAlive(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if (damagetype & DMG_FALL && TF2_IsPlayerInCondition(boss.iClient, TFCond_Cloaked))
 	{

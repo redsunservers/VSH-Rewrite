@@ -258,7 +258,7 @@ public Action SaxtonHaleBoss_OnSoundPlayed(SaxtonHaleBase boss, int clients[MAXP
 	return Plugin_Continue;
 }
 
-public Action SaxtonHaleBoss_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action SaxtonHaleBoss_OnAttackDamageAlive(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if (damagecustom == TF_CUSTOM_BOOTS_STOMP)
 	{
@@ -271,6 +271,32 @@ public Action SaxtonHaleBoss_OnAttackDamage(SaxtonHaleBase boss, int victim, int
 }
 
 public Action SaxtonHaleBoss_OnTakeDamage(SaxtonHaleBase boss, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+{
+	// Do things that modify the damagetype here
+	
+	Action action = Plugin_Continue;
+	
+	if (GetEntityFlags(boss.iClient) & FL_ONGROUND || TF2_IsUbercharged(boss.iClient))
+	{
+		damagetype |= DMG_PREVENT_PHYSICS_FORCE;
+		action = Plugin_Changed;
+	}
+
+	if (inflictor > MaxClients && !boss.bMinion)
+	{
+		char sInflictor[32];
+		GetEdictClassname(inflictor, sInflictor, sizeof(sInflictor));
+		if (strcmp(sInflictor, "tf_projectile_sentryrocket") == 0 || strcmp(sInflictor, "obj_sentrygun") == 0)
+		{
+			damagetype |= DMG_PREVENT_PHYSICS_FORCE;
+			action = Plugin_Changed;
+		}
+	}
+	
+	return action;
+}
+
+public Action SaxtonHaleBoss_OnTakeDamageAlive(SaxtonHaleBase boss, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	Action action = Plugin_Continue;
 	
@@ -290,23 +316,6 @@ public Action SaxtonHaleBoss_OnTakeDamage(SaxtonHaleBase boss, int &attacker, in
 		boss.CallFunction("GetSound", sSound, sizeof(sSound), VSHSound_Pain);
 		if (!StrEmpty(sSound))
 			EmitSoundToAll(sSound, boss.iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
-	}
-
-	if (GetEntityFlags(boss.iClient) & FL_ONGROUND || TF2_IsUbercharged(boss.iClient))
-	{
-		damagetype |= DMG_PREVENT_PHYSICS_FORCE;
-		action = Plugin_Changed;
-	}
-
-	if (inflictor > MaxClients && !boss.bMinion)
-	{
-		char sInflictor[32];
-		GetEdictClassname(inflictor, sInflictor, sizeof(sInflictor));
-		if (strcmp(sInflictor, "tf_projectile_sentryrocket") == 0 || strcmp(sInflictor, "obj_sentrygun") == 0)
-		{
-			damagetype |= DMG_PREVENT_PHYSICS_FORCE;
-			action = Plugin_Changed;
-		}
 	}
 
 	if (MaxClients < attacker)

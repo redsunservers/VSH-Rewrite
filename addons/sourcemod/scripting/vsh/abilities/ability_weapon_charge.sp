@@ -176,7 +176,7 @@ public void WeaponCharge_OnConditionRemoved(SaxtonHaleBase boss, TFCond nCond)
 	}
 }
 
-public Action WeaponCharge_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action WeaponCharge_OnAttackDamageAlive(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if (damagecustom == TF_CUSTOM_CHARGE_IMPACT)
 		return Plugin_Stop;	//We want to do the dmg, not TF2. SDKHooks_TakeDamage doesn't allow custom dmg stuff

@@ -177,7 +177,7 @@ public void Announcer_OnRage(SaxtonHaleBase boss)
 	}
 }
 
-public Action Announcer_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action Announcer_OnAttackDamageAlive(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if (weapon <= MaxClients)
 		return Plugin_Continue;
@@ -297,7 +297,7 @@ public bool AnnouncerMinion_IsBossHidden(SaxtonHaleBase boss)
 	return true;
 }
 
-public Action AnnouncerMinion_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action AnnouncerMinion_OnAttackDamageAlive(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	//Don't allow minion attack boss team
 	if (boss.iClient != victim && TF2_GetClientTeam(victim) == TFTeam_Boss)
@@ -324,7 +324,7 @@ public Action AnnouncerMinion_OnAttackBuilding(SaxtonHaleBase boss, int building
 	return Plugin_Continue;
 }
 
-public Action AnnouncerMinion_OnTakeDamage(SaxtonHaleBase boss, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action AnnouncerMinion_OnTakeDamageAlive(SaxtonHaleBase boss, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if (attacker <= 0 || attacker > MaxClients)
 		return Plugin_Continue;

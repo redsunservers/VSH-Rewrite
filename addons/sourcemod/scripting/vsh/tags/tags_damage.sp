@@ -1,3 +1,10 @@
+static TagsParams g_tOngoingParams;
+
+void TagsDamage_Init()
+{
+	g_tOngoingParams = new TagsParams();
+}
+
 public Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	//Get values to pass around
@@ -48,7 +55,41 @@ public Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor,
 		}
 	}
 	
-	//Change values from param
+	//Change damagetype values from params
+	Action action = Plugin_Continue;
+	ArrayList aDamageType = tParams.GetStringArray("damagetype");
+	if (aDamageType != null)
+	{
+		int iLength = aDamageType.Length;
+		int iBlockSize = aDamageType.BlockSize;
+		for (int i = 0; i < iLength; i++)
+		{
+			//Get damagetype string name, then convert to int
+			char[] sBuffer = new char[iBlockSize];
+			aDamageType.GetString(i, sBuffer, iBlockSize);
+			int iDamageType = TagsDamage_GetType(sBuffer);
+			
+			if (iDamageType > 0)
+				damagetype |= iDamageType;
+			else if (iDamageType < 0)
+				damagetype &= ~iDamageType;
+		}
+		
+		delete aDamageType;
+		action = Plugin_Changed;
+	}
+	
+	tParams.CopyData(g_tOngoingParams);
+	delete tParams;
+	return action;
+}
+
+public Action TagsDamage_OnTakeDamageAlive(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+{
+	TagsParams tParams = new TagsParams();
+	g_tOngoingParams.CopyData(tParams);
+	
+	//Change damage values from params
 	Action action = Plugin_Continue;
 	float flValue;
 	
@@ -82,28 +123,7 @@ public Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor,
 		action = Plugin_Changed;
 	}
 	
-	ArrayList aDamageType = tParams.GetStringArray("damagetype");
-	if (aDamageType != null)
-	{
-		int iLength = aDamageType.Length;
-		int iBlockSize = aDamageType.BlockSize;
-		for (int i = 0; i < iLength; i++)
-		{
-			//Get damagetype string name, then convert to int
-			char[] sBuffer = new char[iBlockSize];
-			aDamageType.GetString(i, sBuffer, iBlockSize);
-			int iDamageType = TagsDamage_GetType(sBuffer);
-			
-			if (iDamageType > 0)
-				damagetype |= iDamageType;
-			else if (iDamageType < 0)
-				damagetype &= ~iDamageType;
-		}
-		
-		delete aDamageType;
-		action = Plugin_Changed;
-	}
-	
+	g_tOngoingParams.Clear();
 	delete tParams;
 	return action;
 }

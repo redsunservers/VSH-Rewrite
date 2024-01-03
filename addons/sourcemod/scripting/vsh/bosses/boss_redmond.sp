@@ -80,7 +80,7 @@ public void Redmond_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length)
 	StrCat(sInfo, length, "\n- 200%% Rage: Grants 3 MONOCULUS! spells");
 }
 
-public Action Redmond_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action Redmond_OnAttackDamageAlive(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	//Monos spell damage sucks, buff it
 	if (weapon > MaxClients)

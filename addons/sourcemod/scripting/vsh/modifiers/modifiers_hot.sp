@@ -45,7 +45,7 @@ public void ModifiersHot_OnThink(SaxtonHaleBase boss)
 	}
 }
 
-public Action ModifiersHot_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action ModifiersHot_OnAttackDamageAlive(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if (damagetype & DMG_BURN)
 	{

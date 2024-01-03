@@ -95,7 +95,7 @@ public Action ModifiersIce_OnTakeDamage(SaxtonHaleBase boss, int &attacker, int 
 	return Plugin_Stop;
 }
 
-public Action ModifiersIce_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action ModifiersIce_OnAttackDamageAlive(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if (damagecustom == TF_CUSTOM_BOOTS_STOMP)
 		return Plugin_Stop;

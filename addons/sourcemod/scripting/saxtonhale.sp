@@ -516,6 +516,7 @@ public void OnPluginStart()
 	SDK_Init();
 	TagsCall_Init();
 	TagsCore_Init();
+	TagsDamage_Init();
 	TagsName_Init();
 	
 	SaxtonHaleFunction func;
@@ -583,6 +584,14 @@ public void OnPluginStart()
 	func.SetParam(7, Param_Array, VSHArrayType_Static, 3);
 	
 	func = SaxtonHaleFunction("OnTakeDamage", ET_Hook, Param_CellByRef, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array, Param_Cell);
+	func.SetParam(6, Param_Array, VSHArrayType_Static, 3);
+	func.SetParam(7, Param_Array, VSHArrayType_Static, 3);
+	
+	func = SaxtonHaleFunction("OnAttackDamageAlive", ET_Hook, Param_Cell, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array, Param_Cell);
+	func.SetParam(6, Param_Array, VSHArrayType_Static, 3);
+	func.SetParam(7, Param_Array, VSHArrayType_Static, 3);
+	
+	func = SaxtonHaleFunction("OnTakeDamageAlive", ET_Hook, Param_CellByRef, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array, Param_Cell);
 	func.SetParam(6, Param_Array, VSHArrayType_Static, 3);
 	func.SetParam(7, Param_Array, VSHArrayType_Static, 3);
 	
@@ -1367,14 +1376,14 @@ public Action Client_OnTakeDamageAlive(int victim, int &attacker, int &inflictor
 		
 		if (bossVictim.bValid)
 		{
-			action = bossVictim.CallFunction("OnTakeDamage", attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
+			action = bossVictim.CallFunction("OnTakeDamageAlive", attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
 			if (action > finalAction)
 				finalAction = action;
 		}
 		
 		if (0 < attacker <= MaxClients && victim != attacker && bossAttacker.bValid)
 		{
-			action = bossAttacker.CallFunction("OnAttackDamage", victim, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
+			action = bossAttacker.CallFunction("OnAttackDamageAlive", victim, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
 			if (action > finalAction)
 				finalAction = action;
 		}
@@ -1424,9 +1433,8 @@ public Action Client_OnTakeDamageAlive(int victim, int &attacker, int &inflictor
 				}
 			}
 		}
-		
 		//Call damage tags
-		action = TagsDamage_OnTakeDamage(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
+		action = TagsDamage_OnTakeDamageAlive(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
 		if (action > finalAction)
 			finalAction = action;
 		
@@ -1441,6 +1449,35 @@ public Action Client_OnTakeDamage(int victim, int &attacker, int &inflictor, flo
 {
 	if (!g_bEnabled) return Plugin_Continue;
 	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
+	
+	Action finalAction = Plugin_Continue;
+	
+	if (0 < victim <= MaxClients && IsClientInGame(victim) && GetClientTeam(victim) > 1)
+	{
+		SaxtonHaleBase bossVictim = SaxtonHaleBase(victim);
+		SaxtonHaleBase bossAttacker = SaxtonHaleBase(attacker);
+		
+		Action action = Plugin_Continue;
+		
+		if (bossVictim.bValid)
+		{
+			action = bossVictim.CallFunction("OnTakeDamage", attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
+			if (action > finalAction)
+				finalAction = action;
+		}
+		
+		if (0 < attacker <= MaxClients && victim != attacker && bossAttacker.bValid)
+		{
+			action = bossAttacker.CallFunction("OnAttackDamage", victim, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
+			if (action > finalAction)
+				finalAction = action;
+		}
+		
+		//Call damage tags
+		action = TagsDamage_OnTakeDamage(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
+		if (action > finalAction)
+			finalAction = action;
+	}
 	
 	if (victim != attacker && SaxtonHale_IsValidAttack(attacker) && weapon != INVALID_ENT_REFERENCE && HasEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"))
 	{
@@ -1459,7 +1496,7 @@ public Action Client_OnTakeDamage(int victim, int &attacker, int &inflictor, flo
 		}
 	}
 	
-	return Plugin_Continue;
+	return finalAction;
 }
 
 public void Client_OnTakeDamagePost(int victim, int attacker, int inflictor, float damage, int damagetype, int weapon, const float damageForce[3], const float damagePosition[3], int damagecustom)

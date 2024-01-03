@@ -46,7 +46,7 @@ public void Zombie_OnThink(SaxtonHaleBase boss)
 		TF2_MakeBleed(iClient, iClient, 99999.0);
 }
 
-public Action Zombie_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action Zombie_OnAttackDamageAlive(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if (boss.iClient != victim && GetClientTeam(boss.iClient) != GetClientTeam(victim))
 	{
