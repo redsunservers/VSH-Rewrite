@@ -318,6 +318,7 @@ Handle g_hTimerBossMusic;
 char g_sBossMusic[PLATFORM_MAX_PATH];
 int g_iHealthBarHealth;
 int g_iHealthBarMaxHealth;
+int g_iTelefragBuilder;
 
 //Player data
 int g_iPlayerLastButtons[MAXPLAYERS];
@@ -1360,92 +1361,6 @@ public void Client_OnThink(int iClient)
 	Hud_Think(iClient);
 }
 
-public Action Client_OnTakeDamageAlive(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
-{
-	if (!g_bEnabled) return Plugin_Continue;
-	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
-	
-	Action finalAction = Plugin_Continue;
-	
-	if (0 < victim <= MaxClients && IsClientInGame(victim) && GetClientTeam(victim) > 1)
-	{
-		SaxtonHaleBase bossVictim = SaxtonHaleBase(victim);
-		SaxtonHaleBase bossAttacker = SaxtonHaleBase(attacker);
-		
-		Action action = Plugin_Continue;
-		
-		if (bossVictim.bValid)
-		{
-			action = bossVictim.CallFunction("OnTakeDamageAlive", attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
-			if (action > finalAction)
-				finalAction = action;
-		}
-		
-		if (0 < attacker <= MaxClients && victim != attacker && bossAttacker.bValid)
-		{
-			action = bossAttacker.CallFunction("OnAttackDamageAlive", victim, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
-			if (action > finalAction)
-				finalAction = action;
-		}
-		
-		//Stop immediately if returning Plugin_Stop
-		if (finalAction == Plugin_Stop)
-			return finalAction;
-		
-		int iBuilder;
-		if (0 < attacker <= MaxClients && IsClientInGame(attacker))
-		{
-			if (!bossAttacker.bValid)
-			{
-				if (bossVictim.bValid && !bossVictim.bMinion)
-				{
-					if (damagecustom == TF_CUSTOM_TELEFRAG && !TF2_IsUbercharged(victim))
-					{
-						int iTelefragDamage = g_ConfigConvar.LookupInt("vsh_telefrag_damage");
-						damage = float(iTelefragDamage);
-						PrintCenterText(attacker, "TELEFRAG! You are a pro.");
-						PrintCenterText(victim, "TELEFRAG! Be careful around quantum tunneling devices!");
-						
-						//Try to retrieve the entity under the player, and hopefully this is the teleporter
-						int iGroundEntity = GetEntPropEnt(attacker, Prop_Send, "m_hGroundEntity");
-						if (iGroundEntity > MaxClients)
-						{
-							char strGroundEntity[32];
-							GetEdictClassname(iGroundEntity, strGroundEntity, sizeof(strGroundEntity));
-							if (strcmp(strGroundEntity, "obj_teleporter") == 0)
-							{
-								iBuilder = GetEntPropEnt(iGroundEntity, Prop_Send, "m_hBuilder");
-								if (0 < iBuilder <= MaxClients && IsClientInGame(iBuilder))
-								{
-									if (attacker == iBuilder)
-										iBuilder = 0;
-								}
-								else
-								{
-									iBuilder = 0;
-								}
-							}
-						}
-
-						Forward_TeleportDamage(victim, attacker, iBuilder);
-						finalAction = Plugin_Changed;
-					}
-				}
-			}
-		}
-		//Call damage tags
-		action = TagsDamage_OnTakeDamageAlive(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
-		if (action > finalAction)
-			finalAction = action;
-		
-		// Give telefrag assists after tags modified it
-		if (iBuilder)
-			g_iPlayerAssistDamage[iBuilder] = RoundToNearest(damage);
-	}
-	
-	return finalAction;
-}
-
 public Action Client_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if (!g_bEnabled) return Plugin_Continue;
@@ -1472,6 +1387,56 @@ public Action Client_OnTakeDamage(int victim, int &attacker, int &inflictor, flo
 			action = bossAttacker.CallFunction("OnAttackDamage", victim, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
 			if (action > finalAction)
 				finalAction = action;
+		}
+		
+		//Stop immediately if returning Plugin_Stop
+		if (finalAction == Plugin_Stop)
+			return finalAction;
+		
+		g_iTelefragBuilder = 0;
+		int iBuilder;
+		if (0 < attacker <= MaxClients && IsClientInGame(attacker))
+		{
+			if (!bossAttacker.bValid)
+			{
+				if (bossVictim.bValid && !bossVictim.bMinion)
+				{
+					if (damagecustom == TF_CUSTOM_TELEFRAG && !TF2_IsUbercharged(victim))
+					{
+						int iTelefragDamage = g_ConfigConvar.LookupInt("vsh_telefrag_damage");
+						damage = float(iTelefragDamage);
+						damagetype &= ~DMG_CRIT;
+						
+						PrintCenterText(attacker, "TELEFRAG! You are a pro.");
+						PrintCenterText(victim, "TELEFRAG! Be careful around quantum tunneling devices!");
+						
+						//Try to retrieve the entity under the player, and hopefully this is the teleporter
+						int iGroundEntity = GetEntPropEnt(attacker, Prop_Send, "m_hGroundEntity");
+						if (iGroundEntity > MaxClients)
+						{
+							char strGroundEntity[32];
+							GetEdictClassname(iGroundEntity, strGroundEntity, sizeof(strGroundEntity));
+							if (strcmp(strGroundEntity, "obj_teleporter") == 0)
+							{
+								iBuilder = GetEntPropEnt(iGroundEntity, Prop_Send, "m_hBuilder");
+								if (0 < iBuilder <= MaxClients && IsClientInGame(iBuilder))
+								{
+									if (attacker == iBuilder)
+										iBuilder = 0;
+								}
+								else
+								{
+									iBuilder = 0;
+								}
+							}
+						}
+						
+						Forward_TeleportDamage(victim, attacker, iBuilder);
+						g_iTelefragBuilder = iBuilder;
+						finalAction = Plugin_Changed;
+					}
+				}
+			}
 		}
 		
 		//Call damage tags
@@ -1521,6 +1486,55 @@ public void Client_OnTakeDamagePost(int victim, int attacker, int inflictor, flo
 				TF2_RemoveCondition(attacker, TFCond_RunePrecision);
 		}
 	}
+}
+
+public Action Client_OnTakeDamageAlive(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
+	
+	Action finalAction = Plugin_Continue;
+	
+	if (0 < victim <= MaxClients && IsClientInGame(victim) && GetClientTeam(victim) > 1)
+	{
+		SaxtonHaleBase bossVictim = SaxtonHaleBase(victim);
+		SaxtonHaleBase bossAttacker = SaxtonHaleBase(attacker);
+		
+		Action action = Plugin_Continue;
+		
+		if (bossVictim.bValid)
+		{
+			action = bossVictim.CallFunction("OnTakeDamageAlive", attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
+			if (action > finalAction)
+				finalAction = action;
+		}
+		
+		if (0 < attacker <= MaxClients && victim != attacker && bossAttacker.bValid)
+		{
+			action = bossAttacker.CallFunction("OnAttackDamageAlive", victim, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
+			if (action > finalAction)
+				finalAction = action;
+		}
+		
+		//Stop immediately if returning Plugin_Stop
+		if (finalAction == Plugin_Stop)
+			return finalAction;
+		
+		//Call damage tags
+		action = TagsDamage_OnTakeDamageAlive(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
+		if (action > finalAction)
+			finalAction = action;
+		
+		// Give telefrag assists after tags modified it
+		if (damagecustom == TF_CUSTOM_TELEFRAG)
+		{
+			int iBuilder = g_iTelefragBuilder;
+			if (iBuilder)
+				g_iPlayerAssistDamage[iBuilder] = RoundToNearest(damage);
+		}
+	}
+	
+	return finalAction;
 }
 
 public Action Client_OnStartTouch(int iClient, int iToucher)
