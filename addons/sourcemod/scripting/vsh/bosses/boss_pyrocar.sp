@@ -255,7 +255,7 @@ public void PyroCar_GetHudInfo(SaxtonHaleBase boss, char[] sMessage, int iLength
 	}
 }
 
-public Action PyroCar_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action PyroCar_OnAttackDamageAlive(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if (TF2_IsUbercharged(victim))
 		return Plugin_Continue;
