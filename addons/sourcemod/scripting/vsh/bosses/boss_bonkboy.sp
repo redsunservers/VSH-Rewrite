@@ -177,7 +177,7 @@ public void BonkBoy_OnThink(SaxtonHaleBase boss)
 	}
 }
 
-public Action BonkBoy_OnAttackDamageAlive(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action BonkBoy_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	if (g_bBonkBoyRage[boss.iClient] && weapon > MaxClients && TF2_GetItemInSlot(boss.iClient, WeaponSlot_Melee) == weapon && damagecustom == 0)
 	{

@@ -56,7 +56,7 @@ public void SeeMan_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length)
 	StrCat(sInfo, length, "\n- 200%% Rage: instakill nuke at end of rage");
 }
 
-public Action SeeMan_OnTakeDamageAlive(SaxtonHaleBase boss, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action SeeMan_OnTakeDamage(SaxtonHaleBase boss, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	char sWeaponClassName[32];
 	if (inflictor >= 0) GetEdictClassname(inflictor, sWeaponClassName, sizeof(sWeaponClassName));
