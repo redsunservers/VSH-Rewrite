@@ -585,3 +585,25 @@ bool Dome_IsDomeProp(int iProp)
 			
 	return StrEqual(sModel, "models/props_gameplay/cap_point_base.mdl") || StrEqual(sModel, "models/props_doomsday/cap_point_small.mdl");
 }
+
+bool Dome_IsEntityOutside(int iEntity, bool bIsGettingHurt = false)
+{
+	if (bIsGettingHurt)
+	{
+		if (0 < iEntity <= MaxClients)
+		{
+			return g_bDomePlayerOutside[iEntity];
+		}
+		else
+		{
+			return (g_flDomeStart > 0.0 && Dome_GetTeam() != view_as<TFTeam>(GetEntProp(iEntity, Prop_Send, "m_iTeamNum")) && Dome_GetDistance(iEntity) > g_flDomeRadius)
+		}
+	}
+	
+	return g_flDomeStart > 0.0 && Dome_GetDistance(iEntity) > g_flDomeRadius;
+}
+
+TFTeam Dome_GetTeam()
+{
+	return g_nDomeTeamOwner;
+}

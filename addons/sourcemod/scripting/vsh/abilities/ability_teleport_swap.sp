@@ -73,20 +73,6 @@ public void TeleportSwap_OnButtonRelease(SaxtonHaleBase boss, int button)
 	{
 		g_bTeleportSwapHoldingChargeButton[boss.iClient] = false;
 		
-		// Deny teleporting when stunned
-		if (TF2_IsPlayerInCondition(boss.iClient, TFCond_Dazed))
-		{
-			PrintHintText(boss.iClient, "Can't teleport-swap when stunned.");
-			return;
-		}
-		
-		// Deny teleporting when airborne
-		if (!(GetEntityFlags(boss.iClient) & FL_ONGROUND))
-		{
-			PrintHintText(boss.iClient, "Can't teleport-swap when airborne.");
-			return;
-		}
-		
 		if (g_flTeleportSwapCooldownWait[boss.iClient] > GetGameTime()) return;
 		
 		float vecAng[3];
@@ -94,7 +80,28 @@ public void TeleportSwap_OnButtonRelease(SaxtonHaleBase boss, int button)
 		
 		if ((vecAng[0] <= boss.GetPropFloat("TeleportSwap", "EyeAngleRequirement")) && (boss.GetPropInt("TeleportSwap", "Charge") >= boss.GetPropInt("TeleportSwap", "MaxCharge")))
 		{
-			//get random valid attack player
+			// Deny teleporting when stunned
+			if (TF2_IsPlayerInCondition(boss.iClient, TFCond_Dazed))
+			{
+				PrintHintText(boss.iClient, "Can't teleport-swap when stunned.");
+				return;
+			}
+			
+			// Deny teleporting when airborne
+			if (!(GetEntityFlags(boss.iClient) & FL_ONGROUND))
+			{
+				PrintHintText(boss.iClient, "Can't teleport-swap when airborne.");
+				return;
+			}
+			
+			// Deny teleporting when out of the dome
+			if (Dome_IsEntityOutside(boss.iClient))
+			{
+				PrintHintText(boss.iClient, "Can't teleport-swap when outside of the dome.");
+				return;
+			}
+			
+			// Get a list of valid attackers
 			ArrayList aClients = new ArrayList();
 			for (int i = 1; i <= MaxClients; i++)
 				if (SaxtonHale_IsValidAttack(i) && IsPlayerAlive(i))
@@ -109,11 +116,28 @@ public void TeleportSwap_OnButtonRelease(SaxtonHaleBase boss, int button)
 			
 			aClients.Sort(Sort_Random, Sort_Integer);
 			
+			// Avoid teleporting to potential targets who are out of the dome
 			int iClient[2];
-			
 			iClient[0] = boss.iClient;
-			iClient[1] = aClients.Get(0);
+			
+			for (int i = 0; i < aClients.Length; i++)
+			{
+				int iTarget = aClients.Get(i);
+				if (Dome_IsEntityOutside(iTarget))
+					continue;
+				
+				iClient[1] = iTarget;
+				break;
+			}
+			
 			delete aClients;
+			
+			// Deny teleporting if every target found is out of the dome
+			if (!iClient[1])
+			{
+				PrintHintText(boss.iClient, "Can't teleport-swap, all possible targets are outside of the dome.");
+				return;
+			}
 			
 			TF2_TeleportSwap(iClient);
 			
