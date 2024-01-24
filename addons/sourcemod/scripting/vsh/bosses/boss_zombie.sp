@@ -48,13 +48,11 @@ public void Zombie_OnThink(SaxtonHaleBase boss)
 
 public Action Zombie_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-	if (boss.iClient != victim && GetClientTeam(boss.iClient) != GetClientTeam(victim))
-	{
-		int iHeal = RoundToNearest(damage);
-		if (iHeal > 20) iHeal = 20;
-		
-		Client_AddHealth(boss.iClient, iHeal, 0);
-	}
+	int iClient = boss.iClient;
+	
+	//Reset the last-hurt timer on hit
+	if (iClient != victim && GetClientTeam(iClient) != GetClientTeam(victim))
+		g_flZombieLastDamage[iClient] = GetGameTime();
 	
 	return Plugin_Continue;
 }
@@ -66,6 +64,18 @@ public Action Zombie_OnVoiceCommand(SaxtonHaleBase boss, char sCmd1[8], char sCm
 		//Since zombie scout cant get healed from medic, dont allow him to call medic
 		PrintHintText(boss.iClient, "You can't heal as zombie!");
 		return Plugin_Handled;
+	}
+	
+	return Plugin_Continue;
+}
+
+public Action Zombie_CanHealTarget(SaxtonHaleBase boss, int iTarget, bool &bResult)
+{
+	//Don't heal other bosses
+	if (SaxtonHale_IsValidBoss(iTarget))
+	{
+		bResult = false;
+		return Plugin_Changed;
 	}
 	
 	return Plugin_Continue;

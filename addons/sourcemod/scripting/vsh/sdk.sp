@@ -384,13 +384,13 @@ public MRESReturn Hook_CouldHealTarget(int iDispenser, Handle hReturn, Handle hP
 			
 			return MRES_Ignored;
 		}
-		
-		if (SaxtonHale_IsValidBoss(iHealTarget))
-		{
-			//Never allow heal boss from any other sources
-			DHookSetReturn(hReturn, false);
-			return MRES_Supercede;
-		}
+	}
+	
+	if (SaxtonHale_IsValidBoss(iHealTarget))
+	{
+		//Never allow heal boss from any other sources
+		DHookSetReturn(hReturn, false);
+		return MRES_Supercede;
 	}
 	
 	return MRES_Ignored;
