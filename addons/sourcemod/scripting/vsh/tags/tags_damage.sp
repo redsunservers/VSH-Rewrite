@@ -119,7 +119,7 @@ void TagsDamage_CallFunctions(TagsParams tParams, int victim, int &attacker, int
 	}
 	
 	//Call attackdamage function
-	if (victim != attacker && SaxtonHale_IsValidAttack(attacker))
+	if (victim != attacker && SaxtonHale_IsValidAttack(attacker) && TF2_GetClientTeam(victim) != TF2_GetClientTeam(attacker))
 	{
 		for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
 		{
