@@ -98,8 +98,16 @@ void TagsDamage_CallFunctions(TagsParams tParams, int victim, int &attacker, int
 	tParams.SetInt("weapon", weapon);
 	tParams.SetInt("filter_damagecustom", damagecustom);
 	
+	TFTeam nVictimTeam = TF2_GetClientTeam(victim);
+	TFTeam nAttackerTeam
+	
+	if (0 < attacker <= MaxClients)
+		nAttackerTeam = TF2_GetClientTeam(attacker);
+	else
+		nAttackerTeam = TFTeam_Unassigned;
+	
 	//Call takedamage function
-	if (SaxtonHale_IsValidAttack(victim))
+	if (SaxtonHale_IsValidAttack(victim) && (nVictimTeam != nAttackerTeam || victim == attacker))
 	{
 		for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
 		{
@@ -119,7 +127,7 @@ void TagsDamage_CallFunctions(TagsParams tParams, int victim, int &attacker, int
 	}
 	
 	//Call attackdamage function
-	if (victim != attacker && SaxtonHale_IsValidAttack(attacker) && TF2_GetClientTeam(victim) != TF2_GetClientTeam(attacker))
+	if (SaxtonHale_IsValidAttack(attacker) && nVictimTeam != nAttackerTeam)
 	{
 		for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
 		{
@@ -172,6 +180,7 @@ int TagsDamage_GetCustom(const char[] sDamageCustom)
 		mDamageCustom.SetValue("backstab", TF_CUSTOM_BACKSTAB);
 		mDamageCustom.SetValue("stomp", TF_CUSTOM_BOOTS_STOMP);
 		mDamageCustom.SetValue("telefrag", TF_CUSTOM_TELEFRAG);
+		mDamageCustom.SetValue("caberexplosion", TF_CUSTOM_STICKBOMB_EXPLOSION);
 	}
 	
 	int iDamageCustom = 0;

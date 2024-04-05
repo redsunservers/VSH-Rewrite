@@ -896,6 +896,16 @@ public void Tags_IgnitePlayer(int iClient, int iTarget, TagsParams tParams)
 	TF2_IgnitePlayer(iTarget, iClient, tParams.GetFloat("duration"));
 }
 
+public void Tags_DelayNextAttack(int iClient, int iTarget, TagsParams tParams)
+{
+	if (iTarget <= 0 || !IsValidEdict(iTarget))
+		return;
+	
+	float flTime = GetGameTime() + tParams.GetFloat("seconds");
+	
+	SetEntPropFloat(iTarget, Prop_Send, "m_flNextPrimaryAttack", flTime);
+	SetEntPropFloat(iTarget, Prop_Send, "m_flNextSecondaryAttack", flTime);
+}
 //---------------------------
 
 public void Frame_AreaOfRange(DataPack data)
