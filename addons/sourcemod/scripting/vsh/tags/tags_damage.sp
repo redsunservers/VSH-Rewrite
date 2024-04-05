@@ -99,7 +99,7 @@ void TagsDamage_CallFunctions(TagsParams tParams, int victim, int &attacker, int
 	tParams.SetInt("filter_damagecustom", damagecustom);
 	
 	TFTeam nVictimTeam = TF2_GetClientTeam(victim);
-	TFTeam nAttackerTeam
+	TFTeam nAttackerTeam;
 	
 	if (0 < attacker <= MaxClients)
 		nAttackerTeam = TF2_GetClientTeam(attacker);
