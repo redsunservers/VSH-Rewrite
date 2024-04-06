@@ -104,11 +104,21 @@ void Tags_OnThink(int iClient)
 			int iHealTarget = GetEntPropEnt(iSecondary, Prop_Send, "m_hHealingTarget");
 			
 			if (iHealTarget > -1 && GetEntProp(iSecondary, Prop_Send, "m_bChargeRelease"))
+			{
 				g_flUberBeforeHealingBuilding[iClient] = 0.0;
+			}
 			else if (iHealTarget > MaxClients)
-				SetEntPropFloat(iSecondary, Prop_Send, "m_flChargeLevel", g_flUberBeforeHealingBuilding[iClient]);
+			{
+				float flChargeLevel = GetEntPropFloat(iSecondary, Prop_Send, "m_flChargeLevel");
+				if (flChargeLevel < g_flUberBeforeHealingBuilding[iClient])
+					g_flUberBeforeHealingBuilding[iClient] = flChargeLevel;
+				else
+					SetEntPropFloat(iSecondary, Prop_Send, "m_flChargeLevel", g_flUberBeforeHealingBuilding[iClient]);
+			}
 			else
+			{
 				g_flUberBeforeHealingBuilding[iClient] = GetEntPropFloat(iSecondary, Prop_Send, "m_flChargeLevel");
+			}
 		}
 	}
 	
