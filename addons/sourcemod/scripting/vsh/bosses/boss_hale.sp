@@ -115,7 +115,6 @@ static char g_strHaleBackStabbed[][] = {
 
 public void SaxtonHale_Create(SaxtonHaleBase boss)
 {
-	boss.CreateClass("WeaponFists");
 	boss.CreateClass("BraveJump");
 
 	boss.CreateClass("RageAttributes");
@@ -185,6 +184,30 @@ public void SaxtonHale_OnThink(SaxtonHaleBase boss)
 	{
 		g_bHaleSpeedRage[boss.iClient] = false;
 		boss.flSpeed /= 1.3;
+	}
+}
+
+public void SaxtonHale_OnPlayerKilled(SaxtonHaleBase boss, Event event, int iVictim)
+{
+	KillIconShared(boss, event, true);
+}
+
+public void SaxtonHale_OnDestroyObject(SaxtonHaleBase boss, Event event)
+{
+	KillIconShared(boss, event, false);
+}
+
+static void KillIconShared(SaxtonHaleBase boss, Event event, bool bLog)
+{
+	int iWeaponId = event.GetInt("weaponid");
+	
+	if (iWeaponId == TF_WEAPON_SHOVEL || iWeaponId == TF_WEAPON_BOTTLE)
+	{
+		if (bLog)
+			event.SetString("weapon_logclassname", g_bHaleSpeedRage[boss.iClient] ? "berserk" : "fists");
+		
+		event.SetString("weapon", g_bHaleSpeedRage[boss.iClient] ? "vehicle" : "fists");
+		event.SetInt("weaponid", TF_WEAPON_FISTS);
 	}
 }
 
