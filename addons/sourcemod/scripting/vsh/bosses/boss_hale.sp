@@ -180,7 +180,7 @@ public void SaxtonHale_OnRage(SaxtonHaleBase boss)
 
 public void SaxtonHale_OnThink(SaxtonHaleBase boss)
 {
-	if (g_bHaleSpeedRage[boss.iClient] && boss.flRageLastTime < GetGameTime() - (boss.bSuperRage ? 7.5 : 5.0))
+	if (g_bHaleSpeedRage[boss.iClient] && boss.flRageLastTime < GetGameTime() - (boss.bSuperRage ? 8.0 : 5.0))
 	{
 		g_bHaleSpeedRage[boss.iClient] = false;
 		boss.flSpeed /= 1.3;
