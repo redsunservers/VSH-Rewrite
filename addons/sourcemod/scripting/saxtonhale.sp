@@ -354,6 +354,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/abilities/ability_brave_jump.sp"
 #include "vsh/abilities/ability_dash_jump.sp"
 #include "vsh/abilities/ability_groundpound.sp"
+#include "vsh/abilities/ability_rage_attributes.sp"
 #include "vsh/abilities/ability_rage_bomb.sp"
 #include "vsh/abilities/ability_rage_bomb_projectile.sp"
 #include "vsh/abilities/ability_rage_conditions.sp"
@@ -683,6 +684,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("BraveJump", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("DashJump", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("GroundPound", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("RageAttributes", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("RageAddCond", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("RageFreeze", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("RageGas", VSHClassType_Ability);

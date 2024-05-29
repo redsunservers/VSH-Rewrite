@@ -1,5 +1,7 @@
 #define HALE_MODEL "models/player/saxton_hale_jungle_inferno/saxton_hale.mdl"
 
+static bool g_bHaleSpeedRage[MAXPLAYERS];
+
 static char g_strHaleRoundStart[][] = {
 	"vsh_rewrite/saxton_hale/saxton_hale_responce_start1.mp3",
 	"vsh_rewrite/saxton_hale/saxton_hale_responce_start2.mp3",
@@ -115,8 +117,18 @@ public void SaxtonHale_Create(SaxtonHaleBase boss)
 {
 	boss.CreateClass("WeaponFists");
 	boss.CreateClass("BraveJump");
-	boss.CreateClass("ScareRage");
-	boss.SetPropFloat("ScareRage", "Radius", 800.0);
+
+	boss.CreateClass("RageAttributes");
+	boss.SetPropFloat("RageAttributes", "RageAttribDuration", 5.0);
+	boss.SetPropFloat("RageAttributes", "RageAttribSuperRageMultiplier", 1.6);
+	RageAttributes_AddAttrib(boss, 2, 0.5, 0.75, false);	// Decreased damage (-50%, -25%)
+	RageAttributes_AddAttrib(boss, 6, 0.3, 0.3, false);		// Increased attack speed (+70%)
+
+	boss.CreateClass("RageAddCond");
+	boss.SetPropFloat("RageAddCond", "RageCondDuration", 5.0);
+	boss.SetPropFloat("RageAddCond", "RageCondSuperRageMultiplier", 1.6);
+	RageAddCond_AddCond(boss, TFCond_SpeedBuffAlly);	// Speed boost effect
+	RageAddCond_AddCond(boss, TFCond_MegaHeal);			// Knockback & stun immunity
 	
 	boss.iHealthPerPlayer = 600;
 	boss.flHealthExponential = 1.05;
@@ -138,8 +150,10 @@ public void SaxtonHale_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length
 	StrCat(sInfo, length, "\n ");
 	StrCat(sInfo, length, "\nRage");
 	StrCat(sInfo, length, "\n- Damage requirement: 2500");
-	StrCat(sInfo, length, "\n- Scares players at medium range for 5 seconds");
-	StrCat(sInfo, length, "\n- 200%% Rage: Longer range and extends duration to 7.5 seconds");
+	StrCat(sInfo, length, "\n- Faster attack speed but lower damage");
+	StrCat(sInfo, length, "\n- Faster movement speed");
+	StrCat(sInfo, length, "\n- Knockback and stun immunity");
+	StrCat(sInfo, length, "\n- 200%% Rage: Extends duration from 5 to 8 seconds and increased damage");
 }
 
 public void SaxtonHale_OnSpawn(SaxtonHaleBase boss)
@@ -157,6 +171,21 @@ public void SaxtonHale_OnSpawn(SaxtonHaleBase boss)
 	259: Deals 3x falling damage to the player you land on
 	214: kill_eater
 	*/
+}
+
+public void SaxtonHale_OnRage(SaxtonHaleBase boss)
+{
+	boss.flSpeed *= 1.3;
+	g_bHaleSpeedRage[boss.iClient] = true;
+}
+
+public void SaxtonHale_OnThink(SaxtonHaleBase boss)
+{
+	if (g_bHaleSpeedRage[boss.iClient] && boss.flRageLastTime < GetGameTime() - (boss.bSuperRage ? 7.5 : 5.0))
+	{
+		g_bHaleSpeedRage[boss.iClient] = false;
+		boss.flSpeed /= 1.3;
+	}
 }
 
 public void SaxtonHale_GetModel(SaxtonHaleBase boss, char[] sModel, int length)
