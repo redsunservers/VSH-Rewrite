@@ -827,7 +827,7 @@ stock int TF2_CreateLightEntity(float flRadius, int iColor[4], int iBrightness)
 		AcceptEntityInput(iGlow, "spotlight_radius");
 		
 		SetVariantFloat(flRadius);
-		AcceptEntityInput(iGlow, "flDistance");
+		AcceptEntityInput(iGlow, "distance");
 		
 		SetVariantInt(iBrightness);
 		AcceptEntityInput(iGlow, "brightness");
@@ -1045,7 +1045,7 @@ stock void CreateFade(int iClient, int iDuration = 2000, int iRed = 255, int iGr
 	EndMessage();
 }
 
-stock void ConstrainDistance(const float[] vecStart, float[] vecEnd, float flDistance, float flMaxDistance)
+stock void ConstrainDistance(const float vecStart[3], float vecEnd[3], float flDistance, float flMaxDistance)
 {
 	if (flDistance <= flMaxDistance)
 		return;

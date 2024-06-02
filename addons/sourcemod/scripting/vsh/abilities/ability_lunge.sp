@@ -208,10 +208,10 @@ public void AbilityLunge_OnThink(SaxtonHaleBase boss)
 				GetAngleVectors(vecAngles, vecVelocity, NULL_VECTOR, NULL_VECTOR);
 				ScaleVector(vecVelocity, flForce);
 				
-				if ((GetEntityFlags(iVictim) & FL_ONGROUND) != 0 && vecVelocity[2] < 300.0) // minimum Z, gives victims lift
+				if ((GetEntityFlags(iVictim) & FL_ONGROUND) != 0 && vecVelocity[2] < 300.0)
 					vecVelocity[2] = 300.0;
 				else if (vecVelocity[2] < 50.0)
-					vecVelocity[2] = 50.0; // if someone's jumping, keep them from falling too quickly and body blocking the hale
+					vecVelocity[2] = 50.0;
 				
 				TeleportEntity(iVictim, NULL_VECTOR, NULL_VECTOR, vecVelocity);
 
