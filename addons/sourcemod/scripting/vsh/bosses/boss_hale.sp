@@ -28,9 +28,12 @@ static char g_strHaleLose[][] = {
 
 static char g_strHaleRage[][] = {
 	"vsh_rewrite/saxton_hale/saxton_hale_responce_rage1.mp3",
-	"vsh_rewrite/saxton_hale/saxton_hale_responce_rage2.mp3",
 	"vsh_rewrite/saxton_hale/saxton_hale_responce_rage3.mp3",
 	"vsh_rewrite/saxton_hale/saxton_hale_responce_rage4.mp3"
+};
+
+static char g_strHaleLunge[][] = {
+	"vsh_rewrite/saxton_hale/saxton_hale_responce_rage2.mp3",
 };
 
 static char g_strHaleJump[][] = {
@@ -128,6 +131,8 @@ public void SaxtonHale_Create(SaxtonHaleBase boss)
 	boss.SetPropFloat("RageAddCond", "RageCondSuperRageMultiplier", 1.6);
 	RageAddCond_AddCond(boss, TFCond_SpeedBuffAlly);	// Speed boost effect
 	RageAddCond_AddCond(boss, TFCond_MegaHeal);			// Knockback & stun immunity
+
+	boss.CreateClass("AbilityLunge");
 	
 	boss.iHealthPerPlayer = 600;
 	boss.flHealthExponential = 1.05;
@@ -146,6 +151,7 @@ public void SaxtonHale_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length
 	StrCat(sInfo, length, "\n ");
 	StrCat(sInfo, length, "\nAbilities");
 	StrCat(sInfo, length, "\n- Brave Jump");
+	StrCat(sInfo, length, "\n- Lunge, reload to use");
 	StrCat(sInfo, length, "\n ");
 	StrCat(sInfo, length, "\nRage");
 	StrCat(sInfo, length, "\n- Damage requirement: 2500");
@@ -234,6 +240,9 @@ public void SaxtonHale_GetSoundAbility(SaxtonHaleBase boss, char[] sSound, int l
 {
 	if (strcmp(sType, "BraveJump") == 0)
 		strcopy(sSound, length, g_strHaleJump[GetRandomInt(0,sizeof(g_strHaleJump)-1)]);
+	
+	if (strcmp(sType, "AbilityLunge") == 0)
+		strcopy(sSound, length, g_strHaleLunge[GetRandomInt(0,sizeof(g_strHaleLunge)-1)]);
 }
 
 public void SaxtonHale_GetSoundKill(SaxtonHaleBase boss, char[] sSound, int length, TFClassType nClass)
@@ -272,6 +281,7 @@ public void SaxtonHale_Precache(SaxtonHaleBase boss)
 	for (int i = 0; i < sizeof(g_strHaleWin); i++) PrepareSound(g_strHaleWin[i]);
 	for (int i = 0; i < sizeof(g_strHaleLose); i++) PrepareSound(g_strHaleLose[i]);
 	for (int i = 0; i < sizeof(g_strHaleRage); i++) PrepareSound(g_strHaleRage[i]);
+	for (int i = 0; i < sizeof(g_strHaleLunge); i++) PrepareSound(g_strHaleLunge[i]);
 	for (int i = 0; i < sizeof(g_strHaleJump); i++) PrepareSound(g_strHaleJump[i]);
 	for (int i = 0; i < sizeof(g_strHaleKill); i++) PrepareSound(g_strHaleKill[i]);
 	for (int i = 0; i < sizeof(g_strHaleKillScout); i++) PrepareSound(g_strHaleKillScout[i]);
