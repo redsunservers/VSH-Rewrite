@@ -685,7 +685,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("BraveJump", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("DashJump", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("GroundPound", VSHClassType_Ability);
-	SaxtonHale_RegisterClass("AbilityLunge", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("Lunge", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("RageAttributes", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("RageAddCond", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("RageFreeze", VSHClassType_Ability);
