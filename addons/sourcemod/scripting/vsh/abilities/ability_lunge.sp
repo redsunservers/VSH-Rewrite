@@ -6,24 +6,25 @@ static float g_flLungeStartTime[MAXPLAYERS];
 static float g_flLungeNextPushAt[MAXPLAYERS];
 static float g_vecLungeInitialAngles[MAXPLAYERS][3];
 
-public void AbilityLunge_Create(SaxtonHaleBase boss)
+public void Lunge_Create(SaxtonHaleBase boss)
 {
 	g_flLungeCooldownWait[boss.iClient] = 0.0;
 	g_bLungeActive[boss.iClient] = false;
 	
-	boss.SetPropFloat("AbilityLunge", "Cooldown", 10.0);
-	boss.SetPropFloat("AbilityLunge", "RageCost", 20.0);
-	boss.SetPropFloat("AbilityLunge", "MaxDamage", 100.0);
-	boss.SetPropFloat("AbilityLunge", "MaxForce", 1100.0);
+	boss.SetPropFloat("Lunge", "Cooldown", 15.0);
+	boss.SetPropFloat("Lunge", "RageCost", 0.0);
+	boss.SetPropFloat("Lunge", "MaxDamage", 100.0);
+	boss.SetPropFloat("Lunge", "MaxForce", 1100.0);
+	boss.SetPropFloat("Lunge", "JumpCooldown", 3.0);
 }
 
-public void AbilityLunge_GetHudInfo(SaxtonHaleBase boss, char[] sMessage, int iLength, int iColor[4])
+public void Lunge_GetHudInfo(SaxtonHaleBase boss, char[] sMessage, int iLength, int iColor[4])
 {
-	float flPercentage = 1.0 - ((g_flLungeCooldownWait[boss.iClient]-GetGameTime()) / boss.GetPropFloat("AbilityLunge", "Cooldown"));
+	float flPercentage = 1.0 - ((g_flLungeCooldownWait[boss.iClient]-GetGameTime()) / boss.GetPropFloat("Lunge", "Cooldown"));
 	if (flPercentage > 1.0)
 		flPercentage = 1.0;
 
-	float flCost = boss.GetPropFloat("AbilityLunge", "RageCost");
+	float flCost = boss.GetPropFloat("Lunge", "RageCost");
 	
 	if (flCost > 0.0)
 	{
@@ -49,12 +50,12 @@ static bool CanLunge(SaxtonHaleBase boss)
 		GetEntityGravity(boss.iClient) < 6.0
 }
 
-public void AbilityLunge_OnPlayerKilled(SaxtonHaleBase boss, Event event, int iVictim)
+public void Lunge_OnPlayerKilled(SaxtonHaleBase boss, Event event, int iVictim)
 {
 	KillIconShared(boss, event, true);
 }
 
-public void AbilityLunge_OnDestroyObject(SaxtonHaleBase boss, Event event)
+public void Lunge_OnDestroyObject(SaxtonHaleBase boss, Event event)
 {
 	KillIconShared(boss, event, false);
 }
@@ -70,7 +71,7 @@ static void KillIconShared(SaxtonHaleBase boss, Event event, bool bLog)
 	}
 }
 
-public void AbilityLunge_OnButtonPress(SaxtonHaleBase boss, int iButton)
+public void Lunge_OnButtonPress(SaxtonHaleBase boss, int iButton)
 {
 	if (iButton == IN_RELOAD && GameRules_GetRoundState() != RoundState_Preround && CanLunge(boss))
 	{
@@ -78,15 +79,15 @@ public void AbilityLunge_OnButtonPress(SaxtonHaleBase boss, int iButton)
 			return;
 		
 		float flRage = (float(boss.iRageDamage) / float(boss.iMaxRageDamage)) * 100.0;
-		if (flRage < boss.GetPropFloat("AbilityLunge", "RageCost"))
+		if (flRage < boss.GetPropFloat("Lunge", "RageCost"))
 			return;
 		
-		boss.iRageDamage -= RoundFloat(boss.GetPropFloat("AbilityLunge", "RageCost") / 100.0 * float(boss.iMaxRageDamage));
-		g_flLungeCooldownWait[boss.iClient] = GetGameTime() + boss.GetPropFloat("AbilityLunge", "Cooldown");
-		boss.CallFunction("UpdateHudInfo", 0.0, boss.GetPropFloat("AbilityLunge", "Cooldown") * 2);
+		boss.iRageDamage -= RoundFloat(boss.GetPropFloat("Lunge", "RageCost") / 100.0 * float(boss.iMaxRageDamage));
+		g_flLungeCooldownWait[boss.iClient] = GetGameTime() + boss.GetPropFloat("Lunge", "Cooldown");
+		boss.CallFunction("UpdateHudInfo", 0.0, boss.GetPropFloat("Lunge", "Cooldown") * 2);
 		
 		char sSound[PLATFORM_MAX_PATH];
-		boss.CallFunction("GetSoundAbility", sSound, sizeof(sSound), "AbilityLunge");
+		boss.CallFunction("GetSoundAbility", sSound, sizeof(sSound), "Lunge");
 		if (!StrEmpty(sSound))
 			EmitSoundToAll(sSound, boss.iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
 		
@@ -98,7 +99,7 @@ public void AbilityLunge_OnButtonPress(SaxtonHaleBase boss, int iButton)
 				if (flCooldownWait < GetGameTime())
 					flCooldownWait = GetGameTime();
 				
-				boss.SetPropFloat("BraveJump", "CooldownWait", flCooldownWait + 1.0);
+				boss.SetPropFloat("BraveJump", "CooldownWait", flCooldownWait + boss.GetPropFloat("Lunge", "JumpCooldown"));
 			}
 		}
 		
@@ -140,7 +141,7 @@ public void AbilityLunge_OnButtonPress(SaxtonHaleBase boss, int iButton)
 
 		float vecVelocity[3];
 		GetAngleVectors(g_vecLungeInitialAngles[boss.iClient], vecVelocity, NULL_VECTOR, NULL_VECTOR);
-		ScaleVector(vecVelocity, boss.GetPropFloat("AbilityLunge", "MaxForce"));
+		ScaleVector(vecVelocity, boss.GetPropFloat("Lunge", "MaxForce"));
 
 		if ((GetEntityFlags(boss.iClient) & FL_ONGROUND) == 0)
 			vecVelocity[2] += 50.0;
@@ -151,7 +152,7 @@ public void AbilityLunge_OnButtonPress(SaxtonHaleBase boss, int iButton)
 	}
 }
 
-public void AbilityLunge_OnThink(SaxtonHaleBase boss)
+public void Lunge_OnThink(SaxtonHaleBase boss)
 {
 	if (g_bLungeActive[boss.iClient])
 	{
@@ -182,8 +183,8 @@ public void AbilityLunge_OnThink(SaxtonHaleBase boss)
 		
 		ConstrainDistance(vecBoss, vecHitPos, flDistance, flMaxDistance - 0.1);
 
-		float flDamage = boss.GetPropFloat("AbilityLunge", "MaxDamage");
-		float flForce = boss.GetPropFloat("AbilityLunge", "MaxForce") * 1.2;
+		float flDamage = boss.GetPropFloat("Lunge", "MaxDamage");
+		float flForce = boss.GetPropFloat("Lunge", "MaxForce") * 1.2;
 		
 		int iTeam = GetClientTeam(boss.iClient);
 		for (int iVictim = 1; iVictim <= MaxClients; iVictim++)

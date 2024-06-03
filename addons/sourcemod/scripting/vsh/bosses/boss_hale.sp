@@ -1,4 +1,4 @@
-#define HALE_MODEL "models/player/saxton_hale_jungle_inferno/saxton_hale.mdl"
+#define HALE_MODEL "models/player/saxton_hale_jungle_inferno/saxton_hale_3.mdl"
 
 static bool g_bHaleSpeedRage[MAXPLAYERS];
 
@@ -132,7 +132,7 @@ public void SaxtonHale_Create(SaxtonHaleBase boss)
 	RageAddCond_AddCond(boss, TFCond_SpeedBuffAlly);	// Speed boost effect
 	RageAddCond_AddCond(boss, TFCond_MegaHeal);			// Knockback & stun immunity
 
-	boss.CreateClass("AbilityLunge");
+	boss.CreateClass("Lunge");
 	
 	boss.iHealthPerPlayer = 600;
 	boss.flHealthExponential = 1.05;
@@ -180,8 +180,11 @@ public void SaxtonHale_OnSpawn(SaxtonHaleBase boss)
 
 public void SaxtonHale_OnRage(SaxtonHaleBase boss)
 {
-	boss.flSpeed *= 1.3;
-	g_bHaleSpeedRage[boss.iClient] = true;
+	if (!g_bHaleSpeedRage[boss.iClient])
+	{
+		boss.flSpeed *= 1.3;
+		g_bHaleSpeedRage[boss.iClient] = true;
+	}
 }
 
 public void SaxtonHale_OnThink(SaxtonHaleBase boss)
@@ -241,7 +244,7 @@ public void SaxtonHale_GetSoundAbility(SaxtonHaleBase boss, char[] sSound, int l
 	if (strcmp(sType, "BraveJump") == 0)
 		strcopy(sSound, length, g_strHaleJump[GetRandomInt(0,sizeof(g_strHaleJump)-1)]);
 	
-	if (strcmp(sType, "AbilityLunge") == 0)
+	if (strcmp(sType, "Lunge") == 0)
 		strcopy(sSound, length, g_strHaleLunge[GetRandomInt(0,sizeof(g_strHaleLunge)-1)]);
 }
 
@@ -330,10 +333,10 @@ public void SaxtonHale_Precache(SaxtonHaleBase boss)
 	AddFileToDownloadsTable("materials/models/player/hwm_saxton_hale/shades/inv.vmt");
 	AddFileToDownloadsTable("materials/models/player/hwm_saxton_hale/shades/null.vtf");
 	
-	AddFileToDownloadsTable("models/player/saxton_hale_jungle_inferno/saxton_hale.mdl");
-	AddFileToDownloadsTable("models/player/saxton_hale_jungle_inferno/saxton_hale.phy");
-	AddFileToDownloadsTable("models/player/saxton_hale_jungle_inferno/saxton_hale.vvd");
-	AddFileToDownloadsTable("models/player/saxton_hale_jungle_inferno/saxton_hale.dx80.vtx");
-	AddFileToDownloadsTable("models/player/saxton_hale_jungle_inferno/saxton_hale.dx90.vtx");
+	AddFileToDownloadsTable("models/player/saxton_hale_jungle_inferno/saxton_hale_3.mdl");
+	AddFileToDownloadsTable("models/player/saxton_hale_jungle_inferno/saxton_hale_3.phy");
+	AddFileToDownloadsTable("models/player/saxton_hale_jungle_inferno/saxton_hale_3.vvd");
+	AddFileToDownloadsTable("models/player/saxton_hale_jungle_inferno/saxton_hale_3.dx80.vtx");
+	AddFileToDownloadsTable("models/player/saxton_hale_jungle_inferno/saxton_hale_3.dx90.vtx");
 }
 
