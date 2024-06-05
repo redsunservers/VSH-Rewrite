@@ -51,6 +51,11 @@ stock bool IsPointsClear(const float vecPos1[3], const float vecPos2[3])
 	return !TR_DidHit();
 }
 
+stock bool TraceRay_HitWallOnly(int iEntity, int iMask, int iData)
+{
+	return false;
+}
+
 stock bool TraceRay_DontHitEntity(int iEntity, int iMask, int iData)
 {
 	return iEntity != iData;
@@ -1038,4 +1043,15 @@ stock void CreateFade(int iClient, int iDuration = 2000, int iRed = 255, int iGr
 	bf.WriteByte(iBlue);		//Blue
 	bf.WriteByte(iAlpha);		//Alpha
 	EndMessage();
+}
+
+stock void ConstrainDistance(const float vecStart[3], float vecEnd[3], float flDistance, float flMaxDistance)
+{
+	if (flDistance <= flMaxDistance)
+		return;
+		
+	float flFactor = flMaxDistance / flDistance;
+	vecEnd[0] = ((vecEnd[0] - vecStart[0]) * flFactor) + vecStart[0];
+	vecEnd[1] = ((vecEnd[1] - vecStart[1]) * flFactor) + vecStart[1];
+	vecEnd[2] = ((vecEnd[2] - vecStart[2]) * flFactor) + vecStart[2];
 }
