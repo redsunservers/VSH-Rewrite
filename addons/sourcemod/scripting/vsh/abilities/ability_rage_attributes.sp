@@ -6,6 +6,7 @@ enum struct AttribData
 	bool bAddition;		// If to add instead of multiply
 }
 
+static Handle g_hRevertTimer[MAXPLAYERS];
 static ArrayList g_aAttributes[MAXPLAYERS];
 
 public void RageAttributes_AddAttrib(SaxtonHaleBase boss, int iIndex, float flValue, float flSuperValue, bool bAddition)
@@ -31,6 +32,14 @@ public void RageAttributes_Create(SaxtonHaleBase boss)
 
 public void RageAttributes_OnRage(SaxtonHaleBase boss)
 {
+	if (g_hRevertTimer[boss.iClient])
+	{
+		// Prevent stacking on self
+		Handle timer = g_hRevertTimer[boss.iClient];
+		TriggerTimer(timer);
+		delete timer;
+	}
+	
 	int iLength = g_aAttributes[boss.iClient].Length;
 	
 	float flDuration = boss.GetPropFloat("RageAttributes", "RageAttribDuration");
@@ -73,9 +82,10 @@ public void RageAttributes_OnRage(SaxtonHaleBase boss)
 		TF2Attrib_ClearCache(iWeapon);
 
 		// Remember what we changed for that specific weapon
-		// This method allows stacking with itself & similar methods
+		// This method allows stacking with similar methods
 		DataPack hPack;
-		CreateDataTimer(flDuration, RevertAttributes, hPack);
+		g_hRevertTimer[boss.iClient] = CreateDataTimer(flDuration, RevertAttributes, hPack);
+		hPack.WriteCell(boss.iClient);
 		hPack.WriteCell(g_aAttributes[boss.iClient].Clone());
 		hPack.WriteCell(EntIndexToEntRef(iWeapon));
 		hPack.WriteCell(boss.bSuperRage);
@@ -85,6 +95,9 @@ public void RageAttributes_OnRage(SaxtonHaleBase boss)
 static Action RevertAttributes(Handle timer, DataPack hPack)
 {
 	hPack.Reset();
+	int iClient = hPack.ReadCell();
+	g_hRevertTimer[iClient] = null;
+
 	ArrayList aAttributes = hPack.ReadCell();
 	int iWeapon = EntRefToEntIndex(hPack.ReadCell());
 	if (iWeapon != INVALID_ENT_REFERENCE)
