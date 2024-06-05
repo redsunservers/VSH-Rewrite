@@ -35,9 +35,7 @@ public void RageAttributes_OnRage(SaxtonHaleBase boss)
 	if (g_hRevertTimer[boss.iClient])
 	{
 		// Prevent stacking on self
-		Handle timer = g_hRevertTimer[boss.iClient];
-		TriggerTimer(timer);
-		delete timer;
+		TriggerTimer(g_hRevertTimer[boss.iClient]);
 	}
 	
 	int iLength = g_aAttributes[boss.iClient].Length;
