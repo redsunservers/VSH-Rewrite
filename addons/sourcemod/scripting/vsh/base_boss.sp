@@ -1,3 +1,5 @@
+#define EFFECT_CLASSNAME		"info_particle_system"	// Any cheap ent that allows SetTransmit
+
 static char g_sClientBossRageMusic[MAXPLAYERS][255];
 
 static float g_flClientBossRageMusicVolume[MAXPLAYERS];
@@ -145,9 +147,8 @@ public void SaxtonHaleBoss_OnSpawn(SaxtonHaleBase boss)
 		boss.iHealth = iHealth;
 	}
 	
-	int iColor[4] = {255, 255, 255, 255};
-	boss.CallFunction("GetRenderColor", iColor);
-	SetEntityRenderColor(boss.iClient, iColor[0], iColor[1], iColor[2], iColor[3]);
+	ClearBossEffects(boss.iClient);
+	RequestFrame(ApplyBossEffects, boss.iClient);
 	
 	boss.CallFunction("UpdateHudInfo", 0.0, 0.01);	//Update after frame when boss have all weapons equipped
 }
@@ -355,7 +356,7 @@ public void SaxtonHaleBoss_UpdateHudInfo(SaxtonHaleBase boss, float flinterval, 
 
 public void SaxtonHaleBoss_Destroy(SaxtonHaleBase boss)
 {
-	SetEntityRenderColor(boss.iClient, 255, 255, 255, 255);
+	ClearBossEffects(boss.iClient);
 	
 	SetVariantString("");
 	AcceptEntityInput(boss.iClient, "SetCustomModel");
@@ -425,4 +426,107 @@ public Action Timer_BossRageMusic(Handle hTimer, SaxtonHaleBase boss)
 	}
 	
 	return Plugin_Continue;
+}
+
+Action AttachEnt_SetTransmit(int iAttachEnt, int iClient)
+{
+	int iOwner = GetEntPropEnt(iAttachEnt, Prop_Data, "m_pParent");
+	if (iOwner == INVALID_ENT_REFERENCE)
+		return Plugin_Stop;
+	
+	if (TF2_IsPlayerInCondition(iOwner, TFCond_Cloaked) || TF2_IsPlayerInCondition(iOwner, TFCond_Disguised) || TF2_IsPlayerInCondition(iOwner, TFCond_Stealthed))
+		return Plugin_Stop;
+	
+	if (iOwner != iClient || TF2_IsPlayerInCondition(iOwner, TFCond_Taunting))
+		return Plugin_Continue;
+	
+	return Plugin_Stop;
+}
+
+void ApplyBossEffects(SaxtonHaleBase boss)
+{
+	// TODO multiple effects
+	char sEffect[PLATFORM_MAX_PATH];
+	boss.CallFunction("GetParticleEffect", sEffect, sizeof(sEffect));
+	if (sEffect[0])
+	{
+		PrecacheParticleSystem(sEffect);	// TODO needed?
+		
+		float vecOrigin[3], vecAngles[3];
+		GetClientAbsOrigin(boss.iClient, vecOrigin);
+		GetClientAbsAngles(boss.iClient, vecAngles);
+		
+//		GetEntityAttachment(boss.iClient, LookupEntityAttachment(boss.iClient, "head"), vecOrigin, vecAngles);
+		
+//		vecOrigin[0] += 2.0;
+//		vecOrigin[2] -= 2.0;
+		
+		vecAngles[1] -= 90.0;
+		int iEntity = TF2_SpawnParticle(sEffect, .vecOrigin = vecOrigin, .vecAngles = vecAngles, .iEntity = boss.iClient, .sAttachmentOffset = "partyhat");
+		
+/*		int iEntity = CreateEntityByName(EFFECT_CLASSNAME);
+		// TeleportEntity(iEntity, vecPos, NULL_VECTOR, NULL_VECTOR);
+		
+		SetVariantString("!activator");
+		AcceptEntityInput(iEntity, "SetParent", boss.iClient);
+		SetVariantString("head");
+		AcceptEntityInput(iEntity, "SetParentAttachment");
+		//AcceptEntityInput(iEntity, "SetParentAttachmentMaintainOffset");
+		
+		DispatchSpawn(iEntity);
+		
+		// Always transmit so it can render properly
+		SetEdictFlags(iEntity, GetEdictFlags(iEntity)|FL_EDICT_ALWAYS);
+*/		
+/*		TE_Particle(.iParticleIndex = iParticleIndex,
+				//	.origin = vecPos,
+					.entindex = iEntity,
+					.attachtype = PATTACH_ABSORIGIN_FOLLOW,
+					.client = iClient							);
+*/		
+/*		TE_Start("TFParticleEffect");
+		TE_WriteFloat("m_vecOrigin[0]", origin[0]);
+		TE_WriteFloat("m_vecOrigin[1]", origin[1]);
+		TE_WriteFloat("m_vecOrigin[2]", origin[2]);
+		TE_WriteFloat("m_vecStart[0]", start[0]);
+		TE_WriteFloat("m_vecStart[1]", start[1]);
+		TE_WriteFloat("m_vecStart[2]", start[2]);
+		TE_WriteVector("m_vecAngles", angles);
+		TE_WriteNum("m_iParticleSystemIndex", iParticleIndex);
+		TE_WriteNum("entindex", entindex);
+		
+		if (attachtype != PATTACH_INVALID)
+		{
+			TE_WriteNum("m_iAttachType", view_as<int>(attachtype));
+		}
+		if (attachpoint != -1)
+		{
+			TE_WriteNum("m_iAttachmentPointIndex", attachpoint);
+		}
+		TE_WriteNum("m_bResetParticles", resetParticles ? 1 : 0);
+		TE_SendToAll();
+*/		
+		SDKHook(iEntity, SDKHook_SetTransmit, AttachEnt_SetTransmit);
+	}
+}
+
+void ClearBossEffects(int iClient)
+{
+	int iEntity = INVALID_ENT_REFERENCE;
+	while ((iEntity = FindEntityByClassname(iEntity, EFFECT_CLASSNAME)) != INVALID_ENT_REFERENCE)
+	{
+		if (GetEntPropEnt(iEntity, Prop_Data, "m_pParent") != iClient)
+			continue;
+		
+		SetVariantString("ParticleEffectStop");
+		AcceptEntityInput(iEntity, "DispatchEffect");
+		AcceptEntityInput(iEntity, "ClearParent");
+		
+		//Some particles don't get removed properly, teleport far away then delete it
+		const float flCrazyBigNumber = 8192.00; // 2^13
+		float vecPos[3] = {flCrazyBigNumber, flCrazyBigNumber, flCrazyBigNumber};
+		TeleportEntity(iEntity, vecPos);
+		
+		CreateTimer(0.5, Timer_EntityCleanup, EntIndexToEntRef(iEntity));	//Give enough time for effect to fade out before getting destroyed
+	}
 }

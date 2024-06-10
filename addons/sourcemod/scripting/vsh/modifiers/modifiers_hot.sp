@@ -23,6 +23,11 @@ public void ModifiersHot_GetRenderColor(SaxtonHaleBase boss, int iColor[4])
 	iColor[3] = 255;
 }
 
+public void ModifiersHot_GetParticleEffect(SaxtonHaleBase boss, char[] sEffect, int length)
+{
+	strcopy(sEffect, length, "unusual_firefly_teamcolor_red");
+}
+
 public void ModifiersHot_OnThink(SaxtonHaleBase boss)
 {
 	int iTeam = GetClientTeam(boss.iClient);

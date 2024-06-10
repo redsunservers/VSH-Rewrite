@@ -30,6 +30,11 @@ public void ModifiersIce_GetRenderColor(SaxtonHaleBase boss, int iColor[4])
 	iColor[3] = 255;
 }
 
+public void ModifiersIce_GetParticleEffect(SaxtonHaleBase boss, char[] sEffect, int length)
+{
+	strcopy(sEffect, length, "utaunt_ice_snowflakes");
+}
+
 public void ModifiersIce_OnDeath(SaxtonHaleBase boss, Event event)
 {
 	g_bIceRagdoll = true;

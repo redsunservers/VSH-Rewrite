@@ -623,6 +623,9 @@ public void OnPluginStart()
 	func = SaxtonHaleFunction("GetRenderColor", ET_Ignore, Param_Array);
 	func.SetParam(1, Param_Array, VSHArrayType_Static, 4);
 	
+	func = SaxtonHaleFunction("GetParticleEffect", ET_Ignore, Param_String, Param_Cell);
+	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
+	
 	func = SaxtonHaleFunction("GetMusicInfo", ET_Ignore, Param_String, Param_Cell, Param_FloatByRef);
 	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
 	

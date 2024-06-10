@@ -35,6 +35,11 @@ public void ModifiersVampire_GetRenderColor(SaxtonHaleBase boss, int iColor[4])
 	iColor[3] = 255;
 }
 
+public void ModifiersVampire_GetParticleEffect(SaxtonHaleBase boss, char[] sEffect, int length)
+{
+	strcopy(sEffect, length, "unusual_bats_flaming_proxy_purple");
+}
+
 public void ModifiersVampire_OnThink(SaxtonHaleBase boss)
 {
 	if (GameRules_GetRoundState() != RoundState_Preround && IsPlayerAlive(boss.iClient))

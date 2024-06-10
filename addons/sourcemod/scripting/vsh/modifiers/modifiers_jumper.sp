@@ -28,6 +28,11 @@ public void ModifiersJumper_GetRenderColor(SaxtonHaleBase boss, int iColor[4])
 	iColor[3] = 255;
 }
 
+public void ModifiersJumper_GetParticleEffect(SaxtonHaleBase boss, char[] sEffect, int length)
+{
+	strcopy(sEffect, length, "utaunt_snowring_icy_wind");
+}
+
 public void ModifiersJumper_OnButtonPress(SaxtonHaleBase boss, int iButton)
 {
 	if (GameRules_GetRoundState() == RoundState_Preround)

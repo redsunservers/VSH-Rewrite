@@ -710,10 +710,10 @@ stock void TF2_Shake(float vecOrigin[3], float flAmplitude, float flRadius, floa
 	}
 }
 
-stock int TF2_SpawnParticle(char[] sParticle, float vecOrigin[3] = NULL_VECTOR, float flAngles[3] = NULL_VECTOR, bool bActivate = true, int iEntity = 0, int iControlPoint = 0, const char[] sAttachment = "")
+stock int TF2_SpawnParticle(char[] sParticle, float vecOrigin[3] = NULL_VECTOR, float vecAngles[3] = NULL_VECTOR, bool bActivate = true, int iEntity = 0, int iControlPoint = 0, const char[] sAttachment = "", const char[] sAttachmentOffset = "")
 {
 	int iParticle = CreateEntityByName("info_particle_system");
-	TeleportEntity(iParticle, vecOrigin, flAngles, NULL_VECTOR);
+	TeleportEntity(iParticle, vecOrigin, vecAngles, NULL_VECTOR);
 	DispatchKeyValue(iParticle, "effect_name", sParticle);
 	DispatchSpawn(iParticle);
 	
@@ -726,6 +726,12 @@ stock int TF2_SpawnParticle(char[] sParticle, float vecOrigin[3] = NULL_VECTOR, 
 		{
 			SetVariantString(sAttachment);
 			AcceptEntityInput(iParticle, "SetParentAttachment", iParticle);
+		}
+		
+		if (sAttachmentOffset[0])
+		{
+			SetVariantString(sAttachmentOffset);
+			AcceptEntityInput(iParticle, "SetParentAttachmentMaintainOffset", iParticle);
 		}
 	}
 	
