@@ -430,6 +430,8 @@ public Action Timer_BossRageMusic(Handle hTimer, SaxtonHaleBase boss)
 
 Action AttachEnt_SetTransmit(int iAttachEnt, int iClient)
 {
+	SetEdictFlags(iAttachEnt, GetEdictFlags(iAttachEnt) &~ FL_EDICT_ALWAYS);
+
 	int iOwner = GetEntPropEnt(iAttachEnt, Prop_Data, "m_pParent");
 	if (iOwner == INVALID_ENT_REFERENCE)
 		return Plugin_Stop;
@@ -450,7 +452,7 @@ void ApplyBossEffects(SaxtonHaleBase boss)
 	boss.CallFunction("GetParticleEffect", sEffect, sizeof(sEffect));
 	if (sEffect[0])
 	{
-		PrecacheParticleSystem(sEffect);	// TODO needed?
+//		PrecacheParticleSystem(sEffect);
 		
 		float vecOrigin[3], vecAngles[3];
 		GetClientAbsOrigin(boss.iClient, vecOrigin);
@@ -506,6 +508,8 @@ void ApplyBossEffects(SaxtonHaleBase boss)
 		TE_WriteNum("m_bResetParticles", resetParticles ? 1 : 0);
 		TE_SendToAll();
 */		
+
+		SetEdictFlags(iEntity, GetEdictFlags(iEntity) &~ FL_EDICT_ALWAYS);
 		SDKHook(iEntity, SDKHook_SetTransmit, AttachEnt_SetTransmit);
 	}
 }
