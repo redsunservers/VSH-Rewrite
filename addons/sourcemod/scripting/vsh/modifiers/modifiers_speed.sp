@@ -25,3 +25,8 @@ public void ModifiersSpeed_GetRenderColor(SaxtonHaleBase boss, int iColor[4])
 	iColor[2] = 144;
 	iColor[3] = 255;
 }
+
+public void ModifiersSpeed_GetParticleEffect(SaxtonHaleBase boss, char[] sEffect, int length)
+{
+	strcopy(sEffect, length, "unusual_demonhorns_green_parent");
+}

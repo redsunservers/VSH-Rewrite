@@ -26,3 +26,8 @@ public void ModifiersOverload_GetRenderColor(SaxtonHaleBase boss, int iColor[4])
 	iColor[2] = 0;
 	iColor[3] = 255;
 }
+
+public void ModifiersOverload_GetParticleEffect(SaxtonHaleBase boss, char[] sEffect, int length)
+{
+	strcopy(sEffect, length, "unusual_circling_spell_orange_parent");
+}
