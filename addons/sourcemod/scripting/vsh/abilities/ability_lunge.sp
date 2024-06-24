@@ -11,11 +11,11 @@ public void Lunge_Create(SaxtonHaleBase boss)
 	g_flLungeCooldownWait[boss.iClient] = 0.0;
 	g_bLungeActive[boss.iClient] = false;
 	
-	boss.SetPropFloat("Lunge", "Cooldown", 15.0);
+	boss.SetPropFloat("Lunge", "Cooldown", 10.0);
 	boss.SetPropFloat("Lunge", "RageCost", 0.0);
 	boss.SetPropFloat("Lunge", "MaxDamage", 100.0);
 	boss.SetPropFloat("Lunge", "MaxForce", 1100.0);
-	boss.SetPropFloat("Lunge", "JumpCooldown", 3.0);
+	boss.SetPropFloat("Lunge", "JumpCooldown", 1.0);
 }
 
 public void Lunge_GetHudInfo(SaxtonHaleBase boss, char[] sMessage, int iLength, int iColor[4])
