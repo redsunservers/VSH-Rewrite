@@ -454,16 +454,12 @@ Action AttachEnt_SetTransmit(int iAttachEnt, int iClient)
 
 void ApplyBossEffects(SaxtonHaleBase boss)
 {
+	ClearBossEffects(boss.iClient);
+
 	char sEffect[64];
 	boss.CallFunction("GetParticleEffect", 0, sEffect, sizeof(sEffect));
 	if (sEffect[0])
 	{
-		float vecOrigin[3], vecAngles[3];
-		GetClientAbsOrigin(boss.iClient, vecOrigin);
-		GetClientAbsAngles(boss.iClient, vecAngles);
-		
-		vecAngles[1] -= 90.0;
-
 		int iEntity = TF2_AttachParticle(sEffect, boss.iClient);
 		SetEdictFlags(iEntity, GetEdictFlags(iEntity) &~ FL_EDICT_ALWAYS);
 		SDKHook(iEntity, SDKHook_SetTransmit, AttachEnt_SetTransmit);
