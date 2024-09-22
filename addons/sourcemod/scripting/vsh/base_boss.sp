@@ -457,7 +457,7 @@ void ApplyBossEffects(SaxtonHaleBase boss)
 		
 		vecAngles[1] -= 90.0;
 
-		int iEntity = TF2_SpawnParticle(sEffect, .vecOrigin = vecOrigin, .vecAngles = vecAngles, .iEntity = boss.iClient, .sAttachmentOffset = "partyhat");
+		int iEntity = TF2_AttachParticle(sEffect, boss.iClient);
 		SetEdictFlags(iEntity, GetEdictFlags(iEntity) &~ FL_EDICT_ALWAYS);
 		SDKHook(iEntity, SDKHook_SetTransmit, AttachEnt_SetTransmit);
 
@@ -468,7 +468,7 @@ void ApplyBossEffects(SaxtonHaleBase boss)
 			if (!sEffect[0])
 				break;
 			
-			iEntity = TF2_SpawnParticle(sEffect, .vecOrigin = vecOrigin, .vecAngles = vecAngles, .iEntity = boss.iClient, .sAttachmentOffset = "partyhat");
+			iEntity = TF2_AttachParticle(sEffect, boss.iClient);
 			SetEdictFlags(iEntity, GetEdictFlags(iEntity) &~ FL_EDICT_ALWAYS);
 			SDKHook(iEntity, SDKHook_SetTransmit, AttachEnt_SetTransmit);
 		}
