@@ -436,11 +436,18 @@ Action AttachEnt_SetTransmit(int iAttachEnt, int iClient)
 	if (iOwner == INVALID_ENT_REFERENCE)
 		return Plugin_Stop;
 	
+	if (iOwner != iClient)
+	{
+		if (GetEntPropEnt(iClient, Prop_Send, "m_hObserverTarget") == iOwner && GetEntProp(iClient, Prop_Send, "m_iObserverMode") == OBS_MODE_IN_EYE)
+		    return Plugin_Stop;
+	}
+	else if (TF2_IsPlayerInCondition(iOwner, TFCond_Taunting))
+	{
+		return Plugin_Continue;
+	}
+
 	if (TF2_IsPlayerInCondition(iOwner, TFCond_Cloaked) || TF2_IsPlayerInCondition(iOwner, TFCond_Disguised) || TF2_IsPlayerInCondition(iOwner, TFCond_Stealthed))
 		return Plugin_Stop;
-	
-	if (iOwner != iClient || TF2_IsPlayerInCondition(iOwner, TFCond_Taunting))
-		return Plugin_Continue;
 	
 	return Plugin_Stop;
 }
