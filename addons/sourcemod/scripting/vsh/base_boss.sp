@@ -457,24 +457,17 @@ void ApplyBossEffects(SaxtonHaleBase boss)
 	ClearBossEffects(boss.iClient);
 
 	char sEffect[64];
-	boss.CallFunction("GetParticleEffect", 0, sEffect, sizeof(sEffect));
-	if (sEffect[0])
+	for(int i = 0; ; i++)
 	{
+		boss.CallFunction("GetParticleEffect", i, sEffect, sizeof(sEffect));
+		if (!sEffect[0])
+			break;
+		
 		int iEntity = TF2_AttachParticle(sEffect, boss.iClient);
 		SetEdictFlags(iEntity, GetEdictFlags(iEntity) &~ FL_EDICT_ALWAYS);
 		SDKHook(iEntity, SDKHook_SetTransmit, AttachEnt_SetTransmit);
-
-		for(int i = 1; ; i++)
-		{
-			sEffect[0] = 0;
-			boss.CallFunction("GetParticleEffect", i, sEffect, sizeof(sEffect));
-			if (!sEffect[0])
-				break;
-			
-			iEntity = TF2_AttachParticle(sEffect, boss.iClient);
-			SetEdictFlags(iEntity, GetEdictFlags(iEntity) &~ FL_EDICT_ALWAYS);
-			SDKHook(iEntity, SDKHook_SetTransmit, AttachEnt_SetTransmit);
-		}
+		
+		sEffect[0] = 0;
 	}
 }
 
