@@ -447,10 +447,9 @@ Action AttachEnt_SetTransmit(int iAttachEnt, int iClient)
 
 void ApplyBossEffects(SaxtonHaleBase boss)
 {
-	// TODO multiple effects
-	char sEffect1[64], sEffect2[64], sEffect3[64];
-	boss.CallFunction("GetParticleEffect", sizeof(sEffect1), sEffect1, sEffect2, sEffect3);
-	if (sEffect1[0])
+	char sEffect[64];
+	boss.CallFunction("GetParticleEffect", 0, sEffect, sizeof(sEffect));
+	if (sEffect[0])
 	{
 		float vecOrigin[3], vecAngles[3];
 		GetClientAbsOrigin(boss.iClient, vecOrigin);
@@ -458,20 +457,18 @@ void ApplyBossEffects(SaxtonHaleBase boss)
 		
 		vecAngles[1] -= 90.0;
 
-		int iEntity = TF2_SpawnParticle(sEffect1, .vecOrigin = vecOrigin, .vecAngles = vecAngles, .iEntity = boss.iClient, .sAttachmentOffset = "partyhat");
+		int iEntity = TF2_SpawnParticle(sEffect, .vecOrigin = vecOrigin, .vecAngles = vecAngles, .iEntity = boss.iClient, .sAttachmentOffset = "partyhat");
 		SetEdictFlags(iEntity, GetEdictFlags(iEntity) &~ FL_EDICT_ALWAYS);
 		SDKHook(iEntity, SDKHook_SetTransmit, AttachEnt_SetTransmit);
 
-		if(sEffect2[0])
+		for(int i = 1; ; i++)
 		{
-			iEntity = TF2_SpawnParticle(sEffect2, .vecOrigin = vecOrigin, .vecAngles = vecAngles, .iEntity = boss.iClient, .sAttachmentOffset = "partyhat");
-			SetEdictFlags(iEntity, GetEdictFlags(iEntity) &~ FL_EDICT_ALWAYS);
-			SDKHook(iEntity, SDKHook_SetTransmit, AttachEnt_SetTransmit);
-		}
-
-		if(sEffect3[0])
-		{
-			iEntity = TF2_SpawnParticle(sEffect2, .vecOrigin = vecOrigin, .vecAngles = vecAngles, .iEntity = boss.iClient, .sAttachmentOffset = "partyhat");
+			sEffect[0] = 0;
+			boss.CallFunction("GetParticleEffect", i, sEffect, sizeof(sEffect));
+			if (!sEffect[0])
+				break;
+			
+			iEntity = TF2_SpawnParticle(sEffect, .vecOrigin = vecOrigin, .vecAngles = vecAngles, .iEntity = boss.iClient, .sAttachmentOffset = "partyhat");
 			SetEdictFlags(iEntity, GetEdictFlags(iEntity) &~ FL_EDICT_ALWAYS);
 			SDKHook(iEntity, SDKHook_SetTransmit, AttachEnt_SetTransmit);
 		}

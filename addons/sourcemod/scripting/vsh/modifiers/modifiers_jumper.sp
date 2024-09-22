@@ -28,10 +28,16 @@ public void ModifiersJumper_GetRenderColor(SaxtonHaleBase boss, int iColor[4])
 	iColor[3] = 255;
 }
 
-public void ModifiersJumper_GetParticleEffect(SaxtonHaleBase boss, int length, char[] sEffect1, char[] sEffect2, char[] sEffect3)
+public void ModifiersJumper_GetParticleEffect(SaxtonHaleBase boss, int index, char[] sEffect, int length)
 {
-	strcopy(sEffect1, length, "utaunt_pedalfly_blue_pedals2");
-	strcopy(sEffect2, length, "player_intel_trail_blue");
+	switch (index)
+	{
+		case 0:
+			strcopy(sEffect, length, "utaunt_pedalfly_blue_pedals2");
+		
+		case 1:
+			strcopy(sEffect, length, "player_intel_trail_blue");
+	}
 }
 
 public void ModifiersJumper_OnButtonPress(SaxtonHaleBase boss, int iButton)

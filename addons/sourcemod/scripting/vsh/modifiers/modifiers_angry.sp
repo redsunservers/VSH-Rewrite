@@ -28,9 +28,10 @@ public void ModifiersAngry_GetRenderColor(SaxtonHaleBase boss, int iColor[4])
 	iColor[3] = 255;
 }
 
-public void ModifiersAngry_GetParticleEffect(SaxtonHaleBase boss, int length, char[] sEffect1, char[] sEffect2, char[] sEffect3)
+public void ModifiersAngry_GetParticleEffect(SaxtonHaleBase boss, int index, char[] sEffect, int length)
 {
-	strcopy(sEffect1, length, "utaunt_storm_cloud_o");
+	if (index == 0)
+		strcopy(sEffect, length, "utaunt_storm_cloud_o");
 }
 
 public void ModifiersAngry_OnThink(SaxtonHaleBase boss)

@@ -35,10 +35,16 @@ public void ModifiersVampire_GetRenderColor(SaxtonHaleBase boss, int iColor[4])
 	iColor[3] = 255;
 }
 
-public void ModifiersVampire_GetParticleEffect(SaxtonHaleBase boss, int length, char[] sEffect1, char[] sEffect2, char[] sEffect3)
+public void ModifiersVampire_GetParticleEffect(SaxtonHaleBase boss, int index, char[] sEffect, int length)
 {
-	strcopy(sEffect1, length, "utaunt_hellpit_bats");
-	strcopy(sEffect2, length, "player_intel_trail_red");
+	switch (index)
+	{
+		case 0:
+			strcopy(sEffect, length, "utaunt_hellpit_bats");
+		
+		case 1:
+			strcopy(sEffect, length, "player_intel_trail_red");
+	}
 }
 
 public void ModifiersVampire_OnThink(SaxtonHaleBase boss)

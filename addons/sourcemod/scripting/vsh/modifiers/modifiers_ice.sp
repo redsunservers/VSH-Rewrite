@@ -30,11 +30,16 @@ public void ModifiersIce_GetRenderColor(SaxtonHaleBase boss, int iColor[4])
 	iColor[3] = 255;
 }
 
-public void ModifiersIce_GetParticleEffect(SaxtonHaleBase boss, int length, char[] sEffect1, char[] sEffect2, char[] sEffect3)
+public void ModifiersIce_GetParticleEffect(SaxtonHaleBase boss, int index, char[] sEffect, int length)
 {
-	strcopy(sEffect1, length, "utaunt_ice_bodyglow");
-	strcopy(sEffect2, length, "utaunt_festivelights_blue_lights1");
-	strcopy(sEffect3, length, "utaunt_festivelights_blue_lights1");
+	switch (index)
+	{
+		case 0:
+			strcopy(sEffect, length, "utaunt_ice_bodyglow");
+		
+		case 1, 2, 3, 4, 5:
+			strcopy(sEffect, length, "utaunt_festivelights_blue_lights1");
+	}
 }
 
 public void ModifiersIce_OnDeath(SaxtonHaleBase boss, Event event)

@@ -23,9 +23,10 @@ public void ModifiersHot_GetRenderColor(SaxtonHaleBase boss, int iColor[4])
 	iColor[3] = 255;
 }
 
-public void ModifiersHot_GetParticleEffect(SaxtonHaleBase boss, int length, char[] sEffect1, char[] sEffect2, char[] sEffect3)
+public void ModifiersHot_GetParticleEffect(SaxtonHaleBase boss, int index, char[] sEffect, int length)
 {
-	strcopy(sEffect1, length, "utaunt_glowyplayer_orange_parent");
+	if (index == 0)
+		strcopy(sEffect, length, "utaunt_glowyplayer_orange_parent");
 }
 
 public void ModifiersHot_OnThink(SaxtonHaleBase boss)
