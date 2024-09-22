@@ -617,8 +617,10 @@ public void OnPluginStart()
 	func = SaxtonHaleFunction("GetSoundKill", ET_Ignore, Param_String, Param_Cell, Param_Cell);
 	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
 	
-	func = SaxtonHaleFunction("GetSoundAbility", ET_Ignore, Param_String, Param_Cell, Param_String);
-	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
+	func = SaxtonHaleFunction("GetSoundAbility", ET_Ignore, Param_Cell, Param_String, Param_String, Param_String);
+	func.SetParam(2, Param_String, VSHArrayType_Dynamic, 1);
+	func.SetParam(3, Param_String, VSHArrayType_Dynamic, 1);
+	func.SetParam(4, Param_String, VSHArrayType_Dynamic, 1);
 	
 	func = SaxtonHaleFunction("GetRenderColor", ET_Ignore, Param_Array);
 	func.SetParam(1, Param_Array, VSHArrayType_Static, 4);

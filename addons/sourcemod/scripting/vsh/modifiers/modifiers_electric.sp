@@ -27,9 +27,10 @@ public void ModifiersElectric_GetRenderColor(SaxtonHaleBase boss, int iColor[4])
 	iColor[3] = 255;
 }
 
-public void ModifiersElectric_GetParticleEffect(SaxtonHaleBase boss, char[] sEffect, int length)
+public void ModifiersElectric_GetParticleEffect(SaxtonHaleBase boss, int length, char[] sEffect1, char[] sEffect2, char[] sEffect3)
 {
-	strcopy(sEffect, length, "utaunt_electricity_discharge");
+	strcopy(sEffect1, length, "utaunt_storm_lightning2_k");
+	strcopy(sEffect2, length, "utaunt_electricity_glow");
 }
 
 public Action ModifiersElectric_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)

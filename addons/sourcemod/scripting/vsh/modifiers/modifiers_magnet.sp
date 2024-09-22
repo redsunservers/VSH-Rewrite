@@ -27,9 +27,9 @@ public void ModifiersMagnet_GetRenderColor(SaxtonHaleBase boss, int iColor[4])
 	iColor[3] = 255;
 }
 
-public void ModifiersMagnet_GetParticleEffect(SaxtonHaleBase boss, char[] sEffect, int length)
+public void ModifiersMagnet_GetParticleEffect(SaxtonHaleBase boss, int length, char[] sEffect1, char[] sEffect2, char[] sEffect3)
 {
-	strcopy(sEffect, length, "");
+	strcopy(sEffect1, length, "utaunt_electricity_purple_glow");
 }
 
 public void ModifiersMagnet_OnThink(SaxtonHaleBase boss)

@@ -448,69 +448,33 @@ Action AttachEnt_SetTransmit(int iAttachEnt, int iClient)
 void ApplyBossEffects(SaxtonHaleBase boss)
 {
 	// TODO multiple effects
-	char sEffect[PLATFORM_MAX_PATH];
-	boss.CallFunction("GetParticleEffect", sEffect, sizeof(sEffect));
-	if (sEffect[0])
+	char sEffect1[64], sEffect2[64], sEffect3[64];
+	boss.CallFunction("GetParticleEffect", sizeof(sEffect1), sEffect1, sEffect2, sEffect3);
+	if (sEffect1[0])
 	{
-//		PrecacheParticleSystem(sEffect);
-		
 		float vecOrigin[3], vecAngles[3];
 		GetClientAbsOrigin(boss.iClient, vecOrigin);
 		GetClientAbsAngles(boss.iClient, vecAngles);
 		
-//		GetEntityAttachment(boss.iClient, LookupEntityAttachment(boss.iClient, "head"), vecOrigin, vecAngles);
-		
-//		vecOrigin[0] += 2.0;
-//		vecOrigin[2] -= 2.0;
-		
 		vecAngles[1] -= 90.0;
-		int iEntity = TF2_SpawnParticle(sEffect, .vecOrigin = vecOrigin, .vecAngles = vecAngles, .iEntity = boss.iClient, .sAttachmentOffset = "partyhat");
-		
-/*		int iEntity = CreateEntityByName(EFFECT_CLASSNAME);
-		// TeleportEntity(iEntity, vecPos, NULL_VECTOR, NULL_VECTOR);
-		
-		SetVariantString("!activator");
-		AcceptEntityInput(iEntity, "SetParent", boss.iClient);
-		SetVariantString("head");
-		AcceptEntityInput(iEntity, "SetParentAttachment");
-		//AcceptEntityInput(iEntity, "SetParentAttachmentMaintainOffset");
-		
-		DispatchSpawn(iEntity);
-		
-		// Always transmit so it can render properly
-		SetEdictFlags(iEntity, GetEdictFlags(iEntity)|FL_EDICT_ALWAYS);
-*/		
-/*		TE_Particle(.iParticleIndex = iParticleIndex,
-				//	.origin = vecPos,
-					.entindex = iEntity,
-					.attachtype = PATTACH_ABSORIGIN_FOLLOW,
-					.client = iClient							);
-*/		
-/*		TE_Start("TFParticleEffect");
-		TE_WriteFloat("m_vecOrigin[0]", origin[0]);
-		TE_WriteFloat("m_vecOrigin[1]", origin[1]);
-		TE_WriteFloat("m_vecOrigin[2]", origin[2]);
-		TE_WriteFloat("m_vecStart[0]", start[0]);
-		TE_WriteFloat("m_vecStart[1]", start[1]);
-		TE_WriteFloat("m_vecStart[2]", start[2]);
-		TE_WriteVector("m_vecAngles", angles);
-		TE_WriteNum("m_iParticleSystemIndex", iParticleIndex);
-		TE_WriteNum("entindex", entindex);
-		
-		if (attachtype != PATTACH_INVALID)
-		{
-			TE_WriteNum("m_iAttachType", view_as<int>(attachtype));
-		}
-		if (attachpoint != -1)
-		{
-			TE_WriteNum("m_iAttachmentPointIndex", attachpoint);
-		}
-		TE_WriteNum("m_bResetParticles", resetParticles ? 1 : 0);
-		TE_SendToAll();
-*/		
 
+		int iEntity = TF2_SpawnParticle(sEffect1, .vecOrigin = vecOrigin, .vecAngles = vecAngles, .iEntity = boss.iClient, .sAttachmentOffset = "partyhat");
 		SetEdictFlags(iEntity, GetEdictFlags(iEntity) &~ FL_EDICT_ALWAYS);
 		SDKHook(iEntity, SDKHook_SetTransmit, AttachEnt_SetTransmit);
+
+		if(sEffect2[0])
+		{
+			iEntity = TF2_SpawnParticle(sEffect2, .vecOrigin = vecOrigin, .vecAngles = vecAngles, .iEntity = boss.iClient, .sAttachmentOffset = "partyhat");
+			SetEdictFlags(iEntity, GetEdictFlags(iEntity) &~ FL_EDICT_ALWAYS);
+			SDKHook(iEntity, SDKHook_SetTransmit, AttachEnt_SetTransmit);
+		}
+
+		if(sEffect3[0])
+		{
+			iEntity = TF2_SpawnParticle(sEffect2, .vecOrigin = vecOrigin, .vecAngles = vecAngles, .iEntity = boss.iClient, .sAttachmentOffset = "partyhat");
+			SetEdictFlags(iEntity, GetEdictFlags(iEntity) &~ FL_EDICT_ALWAYS);
+			SDKHook(iEntity, SDKHook_SetTransmit, AttachEnt_SetTransmit);
+		}
 	}
 }
 
