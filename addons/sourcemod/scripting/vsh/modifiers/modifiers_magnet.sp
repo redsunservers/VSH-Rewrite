@@ -27,6 +27,12 @@ public void ModifiersMagnet_GetRenderColor(SaxtonHaleBase boss, int iColor[4])
 	iColor[3] = 255;
 }
 
+public void ModifiersMagnet_GetParticleEffect(SaxtonHaleBase boss, int index, char[] sEffect, int length)
+{
+	if (index == 0)
+		strcopy(sEffect, length, "utaunt_electricity_purple_glow");
+}
+
 public void ModifiersMagnet_OnThink(SaxtonHaleBase boss)
 {
 	if (!IsPlayerAlive(boss.iClient))

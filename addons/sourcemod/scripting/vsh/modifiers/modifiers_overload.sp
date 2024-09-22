@@ -26,3 +26,15 @@ public void ModifiersOverload_GetRenderColor(SaxtonHaleBase boss, int iColor[4])
 	iColor[2] = 0;
 	iColor[3] = 255;
 }
+
+public void ModifiersOverload_GetParticleEffect(SaxtonHaleBase boss, int index, char[] sEffect, int length)
+{
+	switch (index)
+	{
+		case 0:
+			strcopy(sEffect, length, "utaunt_god_gold_beam_cp");
+		
+		case 1:
+			strcopy(sEffect, length, "utaunt_twinkling_goldsilver_glow01");
+	}
+}

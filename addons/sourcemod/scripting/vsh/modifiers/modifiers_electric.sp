@@ -27,6 +27,18 @@ public void ModifiersElectric_GetRenderColor(SaxtonHaleBase boss, int iColor[4])
 	iColor[3] = 255;
 }
 
+public void ModifiersElectric_GetParticleEffect(SaxtonHaleBase boss, int index, char[] sEffect, int length)
+{
+	switch (index)
+	{
+		case 0:
+			strcopy(sEffect, length, "utaunt_storm_lightning2_k");
+		
+		case 1:
+			strcopy(sEffect, length, "utaunt_electricity_glow");
+	}
+}
+
 public Action ModifiersElectric_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {		
 	if (damage < 3.0 || g_bElectricDamage[victim] || TF2_IsUbercharged(victim))

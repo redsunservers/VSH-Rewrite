@@ -343,7 +343,12 @@ public void Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcast)
 			if (!StrEmpty(g_sBossMusic))
 				StopSound(iClient, SNDCHAN_STATIC, g_sBossMusic);
 			
-			if (GetClientTeam(iClient) > 1 && (!SaxtonHale_IsValidBoss(iClient, false)))
+			if (SaxtonHale_IsValidBoss(iClient, false))
+			{
+				//Clean up now to avoid stray particles
+				ClearBossEffects(iClient);
+			}
+			else if (GetClientTeam(iClient) > 1)
 			{				
 				aPlayersList.Push(iClient);
 				

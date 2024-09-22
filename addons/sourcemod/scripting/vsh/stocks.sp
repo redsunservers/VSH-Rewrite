@@ -715,10 +715,10 @@ stock void TF2_Shake(float vecOrigin[3], float flAmplitude, float flRadius, floa
 	}
 }
 
-stock int TF2_SpawnParticle(char[] sParticle, float vecOrigin[3] = NULL_VECTOR, float flAngles[3] = NULL_VECTOR, bool bActivate = true, int iEntity = 0, int iControlPoint = 0, const char[] sAttachment = "")
+stock int TF2_SpawnParticle(char[] sParticle, float vecOrigin[3] = NULL_VECTOR, float vecAngles[3] = NULL_VECTOR, bool bActivate = true, int iEntity = 0, int iControlPoint = 0, const char[] sAttachment = "", const char[] sAttachmentOffset = "")
 {
 	int iParticle = CreateEntityByName("info_particle_system");
-	TeleportEntity(iParticle, vecOrigin, flAngles, NULL_VECTOR);
+	TeleportEntity(iParticle, vecOrigin, vecAngles, NULL_VECTOR);
 	DispatchKeyValue(iParticle, "effect_name", sParticle);
 	DispatchSpawn(iParticle);
 	
@@ -731,6 +731,12 @@ stock int TF2_SpawnParticle(char[] sParticle, float vecOrigin[3] = NULL_VECTOR, 
 		{
 			SetVariantString(sAttachment);
 			AcceptEntityInput(iParticle, "SetParentAttachment", iParticle);
+		}
+		
+		if (sAttachmentOffset[0])
+		{
+			SetVariantString(sAttachmentOffset);
+			AcceptEntityInput(iParticle, "SetParentAttachmentMaintainOffset", iParticle);
 		}
 	}
 	
@@ -749,6 +755,64 @@ stock int TF2_SpawnParticle(char[] sParticle, float vecOrigin[3] = NULL_VECTOR, 
 	
 	//Return ref of entity
 	return EntIndexToEntRef(iParticle);
+}
+
+stock int TF2_AttachParticle(char[] sParticle, int iClient)
+{
+	char model[PLATFORM_MAX_PATH];
+	GetClientModel(iClient, model, sizeof(model));
+
+	int iProp = CreateEntityByName("tf_taunt_prop");
+	DispatchSpawn(iProp);
+	ActivateEntity(iProp);
+	SetEntityModel(iProp, model);
+	
+	SetEntityRenderColor(iProp, 0, 0, 0, 0);
+	SetEntityRenderMode(iProp, RENDER_TRANSALPHA);
+
+	SetEntProp(iProp, Prop_Send, "m_fEffects", GetEntProp(iProp, Prop_Send, "m_fEffects")|EF_BONEMERGE|EF_NOSHADOW|EF_NORECEIVESHADOW);
+	SetEntPropEnt(iProp, Prop_Data, "m_hEffectEntity", iClient);
+
+	SetVariantString("!activator");
+	AcceptEntityInput(iProp, "SetParent", iClient);
+
+	// find string table
+	int iTable = FindStringTable("ParticleEffectNames");
+	if (iTable != INVALID_STRING_TABLE)
+	{
+		// find particle index
+		char sBuffer[256];
+		int iCount = GetStringTableNumStrings(iTable);
+		int iIndex = INVALID_STRING_INDEX;
+		for (int i; i < iCount; i++)
+		{
+			ReadStringTable(iTable, i, sBuffer, sizeof(sBuffer));
+			if(StrEqual(sBuffer, sParticle, false))
+			{
+				iIndex = i;
+				break;
+			}
+		}
+
+		if (iIndex != INVALID_STRING_INDEX)
+		{
+			TE_Start("TFParticleEffect");
+			TE_WriteFloat("m_vecOrigin[0]", 100000.0);
+			TE_WriteFloat("m_vecOrigin[1]", 100000.0);
+			TE_WriteFloat("m_vecOrigin[2]", 100000.0);
+			TE_WriteNum("m_iParticleSystemIndex", iIndex);
+
+			TE_WriteNum("entindex", iProp);
+			TE_WriteNum("m_iAttachType", -1);
+			TE_WriteNum("m_iAttachmentPointIndex", 6);
+			TE_WriteNum("m_bResetParticles", false);
+
+			TE_SendToAll(0.0);
+		}
+	}
+
+	//Return ref of entity
+	return EntIndexToEntRef(iProp);
 }
 
 stock void TF2_TeleportToClient(int iClient, int iTarget)

@@ -28,6 +28,12 @@ public void ModifiersAngry_GetRenderColor(SaxtonHaleBase boss, int iColor[4])
 	iColor[3] = 255;
 }
 
+public void ModifiersAngry_GetParticleEffect(SaxtonHaleBase boss, int index, char[] sEffect, int length)
+{
+	if (index == 0)
+		strcopy(sEffect, length, "utaunt_storm_cloud_o");
+}
+
 public void ModifiersAngry_OnThink(SaxtonHaleBase boss)
 {
 	if (g_flClientAngryLastTime[boss.iClient] <= GetGameTime() - 0.02)	//50 dmg per second

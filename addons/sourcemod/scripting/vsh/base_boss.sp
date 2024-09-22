@@ -1,3 +1,5 @@
+#define EFFECT_CLASSNAME		"info_particle_system"	// Any cheap ent that allows SetTransmit
+
 static char g_sClientBossRageMusic[MAXPLAYERS][255];
 
 static float g_flClientBossRageMusicVolume[MAXPLAYERS];
@@ -145,9 +147,8 @@ public void SaxtonHaleBoss_OnSpawn(SaxtonHaleBase boss)
 		boss.iHealth = iHealth;
 	}
 	
-	int iColor[4] = {255, 255, 255, 255};
-	boss.CallFunction("GetRenderColor", iColor);
-	SetEntityRenderColor(boss.iClient, iColor[0], iColor[1], iColor[2], iColor[3]);
+	ClearBossEffects(boss.iClient);
+	RequestFrame(ApplyBossEffects, boss.iClient);
 	
 	boss.CallFunction("UpdateHudInfo", 0.0, 0.01);	//Update after frame when boss have all weapons equipped
 }
@@ -355,7 +356,7 @@ public void SaxtonHaleBoss_UpdateHudInfo(SaxtonHaleBase boss, float flinterval, 
 
 public void SaxtonHaleBoss_Destroy(SaxtonHaleBase boss)
 {
-	SetEntityRenderColor(boss.iClient, 255, 255, 255, 255);
+	ClearBossEffects(boss.iClient);
 	
 	SetVariantString("");
 	AcceptEntityInput(boss.iClient, "SetCustomModel");
@@ -425,4 +426,68 @@ public Action Timer_BossRageMusic(Handle hTimer, SaxtonHaleBase boss)
 	}
 	
 	return Plugin_Continue;
+}
+
+Action AttachEnt_SetTransmit(int iAttachEnt, int iClient)
+{
+	SetEdictFlags(iAttachEnt, GetEdictFlags(iAttachEnt) &~ FL_EDICT_ALWAYS);
+
+	int iOwner = GetEntPropEnt(iAttachEnt, Prop_Data, "m_pParent");
+	if (iOwner == INVALID_ENT_REFERENCE)
+		return Plugin_Stop;
+	
+	if (iOwner != iClient)
+	{
+		if (GetEntPropEnt(iClient, Prop_Send, "m_hObserverTarget") == iOwner && GetEntProp(iClient, Prop_Send, "m_iObserverMode") == OBS_MODE_IN_EYE)
+		    return Plugin_Stop;
+	}
+	else if (TF2_IsPlayerInCondition(iOwner, TFCond_Taunting))
+	{
+		return Plugin_Continue;
+	}
+
+	if (TF2_IsPlayerInCondition(iOwner, TFCond_Cloaked) || TF2_IsPlayerInCondition(iOwner, TFCond_Disguised) || TF2_IsPlayerInCondition(iOwner, TFCond_Stealthed))
+		return Plugin_Stop;
+	
+	return Plugin_Stop;
+}
+
+void ApplyBossEffects(SaxtonHaleBase boss)
+{
+	ClearBossEffects(boss.iClient);
+
+	char sEffect[64];
+	for(int i = 0; ; i++)
+	{
+		boss.CallFunction("GetParticleEffect", i, sEffect, sizeof(sEffect));
+		if (!sEffect[0])
+			break;
+		
+		int iEntity = TF2_AttachParticle(sEffect, boss.iClient);
+		SetEdictFlags(iEntity, GetEdictFlags(iEntity) &~ FL_EDICT_ALWAYS);
+		SDKHook(iEntity, SDKHook_SetTransmit, AttachEnt_SetTransmit);
+		
+		sEffect[0] = 0;
+	}
+}
+
+void ClearBossEffects(int iClient)
+{
+	int iEntity = INVALID_ENT_REFERENCE;
+	while ((iEntity = FindEntityByClassname(iEntity, EFFECT_CLASSNAME)) != INVALID_ENT_REFERENCE)
+	{
+		if (GetEntPropEnt(iEntity, Prop_Data, "m_pParent") != iClient)
+			continue;
+		
+		SetVariantString("ParticleEffectStop");
+		AcceptEntityInput(iEntity, "DispatchEffect");
+		AcceptEntityInput(iEntity, "ClearParent");
+		
+		//Some particles don't get removed properly, teleport far away then delete it
+		const float flCrazyBigNumber = 8192.00; // 2^13
+		float vecPos[3] = {flCrazyBigNumber, flCrazyBigNumber, flCrazyBigNumber};
+		TeleportEntity(iEntity, vecPos);
+		
+		CreateTimer(0.5, Timer_EntityCleanup, EntIndexToEntRef(iEntity));	//Give enough time for effect to fade out before getting destroyed
+	}
 }
