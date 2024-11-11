@@ -173,7 +173,7 @@ public void Announcer_OnRage(SaxtonHaleBase boss)
 		if (iClip > 8) iClip = 8;
 		
 		SetEntProp(iPrimaryWep, Prop_Send, "m_iClip1", iClip);
-		SetEntPropEnt(boss.iClient, Prop_Send, "m_hActiveWeapon", iPrimaryWep);
+		TF2_SwitchToWeapon(boss.iClient, iPrimaryWep);
 	}
 }
 
@@ -273,16 +273,6 @@ public void Announcer_Precache(SaxtonHaleBase boss)
 	AddFileToDownloadsTable("models/player/kirillian/boss/sedisocks_administrator.mdl");
 	AddFileToDownloadsTable("models/player/kirillian/boss/sedisocks_administrator.phy");
 	AddFileToDownloadsTable("models/player/kirillian/boss/sedisocks_administrator.vvd");
-}
-
-Action Announcer_OnRageAmmoPackTouch(int iEntity, int iClient)
-{
-	int iOwner = GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity");
-	PrintToChatAll("touching ammo pack: client: %N owner: %N", iClient, iOwner);
-	if (iClient != iOwner)
-		return Plugin_Handled;
-	
-	return Plugin_Continue;
 }
 
 static Handle g_hAnnouncerMinionTimer[MAXPLAYERS];
@@ -467,7 +457,7 @@ public Action Timer_AnnouncerChangeTeam(Handle hTimer, int iClient)
 	//Refill ammo (jank)
 	int iAmmoPack = CreateEntityByName("item_ammopack_full");
 	SetEntityOwner(iAmmoPack, iClient);
-	SDKHook(iAmmoPack, SDKHook_Touch, Announcer_OnRageAmmoPackTouch);
+	SDKHook(iAmmoPack, SDKHook_Touch, AnnouncerMinion_OnRageAmmoPackTouch);
 	
 	DispatchSpawn(iAmmoPack);
 	SetEntityRenderMode(iAmmoPack, RENDER_NONE);
@@ -505,4 +495,13 @@ public void Announcer_ShowAnnotation(int iTarget, char[] sMessage, float flDurat
 		return;
 	
 	TF2_ShowAnnotation(iClients, iCount, iTarget, sMessage, flDuration);
+}
+
+Action AnnouncerMinion_OnRageAmmoPackTouch(int iEntity, int iClient)
+{
+	int iOwner = GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity");
+	if (iClient != iOwner)
+		return Plugin_Handled;
+	
+	return Plugin_Continue;
 }

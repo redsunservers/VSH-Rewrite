@@ -1094,7 +1094,7 @@ public Action ItemPack_OnTouch(int iEntity, int iToucher)
 	if (SaxtonHale_IsValidBoss(iToucher))
 	{
 		bool bResult;
-		bResult = SaxtonHaleBase(iToucher).CallFunction("OnPickupTouch", iEntity, bResult);
+		SaxtonHaleBase(iToucher).CallFunction("OnPickupTouch", iEntity, bResult);
 		
 		if (!bResult)
 			return Plugin_Handled;
