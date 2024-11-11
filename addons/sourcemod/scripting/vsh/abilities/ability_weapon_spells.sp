@@ -238,7 +238,7 @@ public void WeaponSpells_OnButtonPress(SaxtonHaleBase boss, int button)
 
 public void WeaponSpells_OnEntityCreated(SaxtonHaleBase boss, int iEntity, const char[] sClassname)
 {
-	if (IsValidEntity(iEntity) && StrEqual(sClassname, "eyeball_boss"))
+	if (StrEqual(sClassname, "eyeball_boss"))
 		SDKHook(iEntity, SDKHook_SpawnPost, WeaponSpells_OnMonoculusSpawnPost);
 }
 

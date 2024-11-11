@@ -793,7 +793,7 @@ public void OnPluginEnd()
 			boss.DestroyAllClass();
 		}
 		
-		if (!StrEmpty(g_sBossMusic))
+		if (IsClientInGame(iClient) && !StrEmpty(g_sBossMusic))
 			StopSound(iClient, SNDCHAN_STATIC, g_sBossMusic);
 		
 		RemoveClientGlowEnt(iClient);
