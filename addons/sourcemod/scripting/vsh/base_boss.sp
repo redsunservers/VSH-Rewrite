@@ -349,6 +349,11 @@ public Action SaxtonHaleBoss_OnTakeDamage(SaxtonHaleBase boss, int &attacker, in
 	return action;
 }
 
+public void SaxtonHaleBoss_OnPickupTouch(SaxtonHaleBase boss, int iEntity, bool &bResult)
+{
+	bResult = false;
+}
+
 public void SaxtonHaleBoss_UpdateHudInfo(SaxtonHaleBase boss, float flinterval, float flDuration)
 {
 	Hud_UpdateBossInfo(boss.iClient, flinterval, flDuration);

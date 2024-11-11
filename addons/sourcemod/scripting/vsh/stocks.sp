@@ -601,6 +601,13 @@ stock int TF2_CreateAndEquipWeapon(int iClient, int iIndex, char[] sClassnameTem
 		DispatchSpawn(iWeapon);
 		SetEntProp(iWeapon, Prop_Send, "m_bValidatedAttachedEntity", true);
 		
+		if (HasEntProp(iWeapon, Prop_Send, "m_hExtraWearable"))
+		{
+			int iExtraWearable = GetEntPropEnt(iWeapon, Prop_Send, "m_hExtraWearable");
+			if (iExtraWearable != INVALID_ENT_REFERENCE)
+				SetEntProp(iExtraWearable, Prop_Send, "m_bValidatedAttachedEntity", true);
+		}
+		
 		if (StrContains(sClassname, "tf_wearable") == 0)
 		{
 			SDK_EquipWearable(iClient, iWeapon);

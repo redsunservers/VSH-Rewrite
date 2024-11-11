@@ -579,6 +579,7 @@ public void OnPluginStart()
 	SaxtonHaleFunction("OnAttackCritical", ET_Hook, Param_Cell, Param_CellByRef);
 	SaxtonHaleFunction("OnVoiceCommand", ET_Hook, Param_String, Param_String);
 	SaxtonHaleFunction("OnStartTouch", ET_Hook, Param_Cell);
+	SaxtonHaleFunction("OnPickupTouch", ET_Ignore, Param_Cell, Param_CellByRef);
 	SaxtonHaleFunction("OnWeaponSwitchPost", ET_Ignore, Param_Cell);
 	SaxtonHaleFunction("OnConditionAdded", ET_Ignore, Param_Cell);
 	SaxtonHaleFunction("OnConditionRemoved", ET_Ignore, Param_Cell);
@@ -791,6 +792,9 @@ public void OnPluginEnd()
 			SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 			boss.DestroyAllClass();
 		}
+		
+		if (!StrEmpty(g_sBossMusic))
+			StopSound(iClient, SNDCHAN_STATIC, g_sBossMusic);
 		
 		RemoveClientGlowEnt(iClient);
 	}
@@ -1087,10 +1091,15 @@ public Action ItemPack_OnTouch(int iEntity, int iToucher)
 	if (!g_bEnabled) return Plugin_Continue;
 	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
 	
-	//Don't allow valid non-attack players pick health and ammo packs
-	if (!SaxtonHale_IsValidAttack(iToucher))
-		return Plugin_Handled;
-
+	if (SaxtonHale_IsValidBoss(iToucher))
+	{
+		bool bResult;
+		bResult = SaxtonHaleBase(iToucher).CallFunction("OnPickupTouch", iEntity, bResult);
+		
+		if (!bResult)
+			return Plugin_Handled;
+	}
+	
 	return Plugin_Continue;
 }
 

@@ -275,6 +275,16 @@ public void Announcer_Precache(SaxtonHaleBase boss)
 	AddFileToDownloadsTable("models/player/kirillian/boss/sedisocks_administrator.vvd");
 }
 
+Action Announcer_OnRageAmmoPackTouch(int iEntity, int iClient)
+{
+	int iOwner = GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity");
+	PrintToChatAll("touching ammo pack: client: %N owner: %N", iClient, iOwner);
+	if (iClient != iOwner)
+		return Plugin_Handled;
+	
+	return Plugin_Continue;
+}
+
 static Handle g_hAnnouncerMinionTimer[MAXPLAYERS];
 static int g_iAnnouncerMinionTimeLeft[MAXPLAYERS];
 
@@ -372,6 +382,12 @@ public void AnnouncerMinion_OnPlayerKilled(SaxtonHaleBase boss, Event eventInfo,
 	}
 }
 
+public void AnnouncerMinion_OnPickupTouch(SaxtonHaleBase boss, int iEntity, bool &bResult)
+{
+	// Allow minions to pick up healthkits/ammopacks
+	bResult = true;
+}
+
 public void AnnouncerMinion_Destroy(SaxtonHaleBase boss)
 {
 	g_hAnnouncerMinionTimer[boss.iClient] = null;
@@ -447,6 +463,19 @@ public Action Timer_AnnouncerChangeTeam(Handle hTimer, int iClient)
 	
 	//Refill health
 	SetEntProp(iClient, Prop_Send, "m_iHealth", SDK_GetMaxHealth(iClient));
+	
+	//Refill ammo (jank)
+	int iAmmoPack = CreateEntityByName("item_ammopack_full");
+	SetEntityOwner(iAmmoPack, iClient);
+	SDKHook(iAmmoPack, SDKHook_Touch, Announcer_OnRageAmmoPackTouch);
+	
+	DispatchSpawn(iAmmoPack);
+	SetEntityRenderMode(iAmmoPack, RENDER_NONE);
+	
+	float vecClientPos[3];
+	GetClientAbsOrigin(iClient, vecClientPos);
+	TeleportEntity(iAmmoPack, vecClientPos, NULL_VECTOR, NULL_VECTOR);
+	CreateTimer(0.1, Timer_EntityCleanup, EntIndexToEntRef(iAmmoPack));
 	
 	//Allow sentries to target this fella from now on
 	SetEntityFlags(iClient, (GetEntityFlags(iClient) & ~FL_NOTARGET));
