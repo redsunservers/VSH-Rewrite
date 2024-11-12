@@ -616,6 +616,10 @@ stock int TF2_CreateAndEquipWeapon(int iClient, int iIndex, char[] sClassnameTem
 				TF2_SetAmmo(iClient, iAmmoType, 0);
 				GivePlayerAmmo(iClient, 9999, iAmmoType, true);
 			}
+			
+			int iExtraWearable = GetEntPropEnt(iWeapon, Prop_Send, "m_hExtraWearable");
+			if (iExtraWearable != INVALID_ENT_REFERENCE)
+				SetEntProp(iExtraWearable, Prop_Send, "m_bValidatedAttachedEntity", true);
 		}
 		
 		char atts[32][32];
