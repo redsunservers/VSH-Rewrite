@@ -167,7 +167,7 @@ static void SpawnRocket(SaxtonHaleBase boss)
 			{
 				foundValidPoint = true;
 				ConstrainDistance(vecBossOrigin, vecSpawnPos, traceDistance, minDistance);
-				break;	// TODO: Test add this
+				break;
 			}
 		}
 		
