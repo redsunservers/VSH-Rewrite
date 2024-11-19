@@ -45,7 +45,10 @@ static char g_strYetiFootsteps[][] =  {
 public void Yeti_Create(SaxtonHaleBase boss)
 {
 	boss.CreateClass("BraveJump");
+	boss.CreateClass("GroundPound");
 	boss.CreateClass("RageMeteor");
+
+	boss.SetPropFloat("GroundPound", "JumpCooldown", 0.0);
 	
 	boss.iHealthPerPlayer = 650;
 	boss.flHealthExponential = 1.05;
@@ -63,7 +66,7 @@ public void Yeti_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length)
 	StrCat(sInfo, length, "\nHealth: Medium");
 	StrCat(sInfo, length, "\n ");
 	StrCat(sInfo, length, "\nAbilities");
-	StrCat(sInfo, length, "\n- Brave Jump");
+	StrCat(sInfo, length, "\n- Brave Jump (Not Reduced by Ground Pound)");
 	StrCat(sInfo, length, "\n ");
 	StrCat(sInfo, length, "\nRage");
 	StrCat(sInfo, length, "\n- Damage requirement: 2500");
@@ -104,15 +107,15 @@ public void Yeti_OnRage(SaxtonHaleBase boss)
 
 public void Yeti_OnPlayerKilled(SaxtonHaleBase boss, Event event, int iVictim)
 {
-	KillIconShared(boss, event, true);
+	KillIconShared(event, true);
 }
 
 public void Yeti_OnDestroyObject(SaxtonHaleBase boss, Event event)
 {
-	KillIconShared(boss, event, false);
+	KillIconShared(event, false);
 }
 
-static void KillIconShared(SaxtonHaleBase boss, Event event, bool bLog)
+static void KillIconShared(Event event, bool bLog)
 {
 	int iWeaponId = event.GetInt("weaponid");
 	
