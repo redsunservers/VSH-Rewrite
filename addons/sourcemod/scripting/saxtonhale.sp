@@ -1159,11 +1159,18 @@ public void TF2_OnConditionAdded(int iClient, TFCond nCond)
 	if (SaxtonHale_IsValidBoss(iClient))
 	{
 		SaxtonHaleBase(iClient).CallFunction("OnConditionAdded", nCond);
-		
-		if (nCond == TFCond_Milked)
+
+		switch (nCond)
 		{
-			EmitSoundToClient(iClient, SOUND_JAR_EXPLODE);
-			PrintCenterText(iClient, "You were milked!");
+			case TFCond_Cloaked, TFCond_Disguised, TFCond_Stealthed:
+			{
+				ClearBossEffects(iClient);
+			}
+			case TFCond_Milked:
+			{
+				EmitSoundToClient(iClient, SOUND_JAR_EXPLODE);
+				PrintCenterText(iClient, "You were milked!");
+			}
 		}
 	}
 	
@@ -1183,7 +1190,17 @@ public void TF2_OnConditionRemoved(int iClient, TFCond nCond)
 	if (g_iTotalRoundPlayed <= 0) return;
 	
 	if (SaxtonHale_IsValidBoss(iClient))
+	{
 		SaxtonHaleBase(iClient).CallFunction("OnConditionRemoved", nCond);
+
+		switch (nCond)
+		{
+			case TFCond_Cloaked, TFCond_Disguised, TFCond_Stealthed:
+			{
+				ApplyBossEffects(SaxtonHaleBase(iClient));
+			}
+		}
+	}
 	
 	if (nCond == TFCond_Disguising || nCond == TFCond_Disguised)
 		UpdateClientGlowEnt(iClient);
