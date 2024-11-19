@@ -377,6 +377,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/abilities/ability_rage_gas.sp"
 #include "vsh/abilities/ability_rage_ghost.sp"
 #include "vsh/abilities/ability_rage_light.sp"
+#include "vsh/abilities/ability_rage_meteor.sp"
 #include "vsh/abilities/ability_rage_scare.sp"
 #include "vsh/abilities/ability_teleport_swap.sp"
 #include "vsh/abilities/ability_teleport_view.sp"
@@ -710,6 +711,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("RageGas", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("RageGhost", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("LightRage", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("RageMeteor", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("ScareRage", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("TeleportSwap", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("TeleportView", VSHClassType_Ability);

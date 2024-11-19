@@ -45,14 +45,7 @@ static char g_strYetiFootsteps[][] =  {
 public void Yeti_Create(SaxtonHaleBase boss)
 {
 	boss.CreateClass("BraveJump");
-	boss.CreateClass("GroundPound");
-	boss.CreateClass("RageFreeze");
-	
-	//CRageAddCond should last as long as slow + freeze
-	boss.CreateClass("RageAddCond");
-	RageAddCond_AddCond(boss, TFCond_RuneHaste);
-	boss.SetPropFloat("RageAddCond", "RageCondDuration", boss.GetPropFloat("RageFreeze", "SlowDuration") + boss.GetPropFloat("RageFreeze", "FreezeDuration"));
-	boss.SetPropFloat("RageAddCond", "RageCondSuperRageMultiplier", boss.GetPropFloat("RageFreeze", "RageFreezeSuperRageMultiplier"));
+	boss.CreateClass("RageMeteor");
 	
 	boss.iHealthPerPlayer = 650;
 	boss.flHealthExponential = 1.05;
@@ -67,26 +60,26 @@ public void Yeti_GetBossName(SaxtonHaleBase boss, char[] sName, int length)
 
 public void Yeti_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length)
 {
-	StrCat(sInfo, length, "\nHealth: High");
+	StrCat(sInfo, length, "\nHealth: Medium");
 	StrCat(sInfo, length, "\n ");
 	StrCat(sInfo, length, "\nAbilities");
 	StrCat(sInfo, length, "\n- Brave Jump");
-	StrCat(sInfo, length, "\n- Ground Pound (Passive)");
 	StrCat(sInfo, length, "\n ");
 	StrCat(sInfo, length, "\nRage");
 	StrCat(sInfo, length, "\n- Damage requirement: 2500");
-	StrCat(sInfo, length, "\n- Slows players at medium range for 3 seconds");
-	StrCat(sInfo, length, "\n- Affected players get frozen for 4 seconds");
-	StrCat(sInfo, length, "\n- 200%% Rage: Extended range and freeze duration increased to 6 seconds");
+	StrCat(sInfo, length, "\n- Rains hail down on to players around you");
+	StrCat(sInfo, length, "\n- Players hit will get frozen for 3 seconds");
+	StrCat(sInfo, length, "\n- 200%% Rage: Increased projectile count and spawn rate");
 }
 
 public void Yeti_OnSpawn(SaxtonHaleBase boss)
 {
-	char attribs[128];
-	Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 214 ; %d", GetRandomInt(7500, 7615));
-	int iWeapon = boss.CallFunction("CreateWeapon", 195, NULL_STRING, 100, TFQual_Strange, attribs);
+	int iWeapon = boss.CallFunction("CreateWeapon", 195, NULL_STRING, 100, TFQual_Strange, "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0");
 	if (iWeapon > MaxClients)
+	{
+		TF2Attrib_SetByDefIndex(iWeapon, 214, view_as<float>(GetRandomInt(7500, 7615)));
 		SetEntPropEnt(boss.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
+	}
 	/*
 	Fist attributes:
 	
@@ -107,6 +100,29 @@ public void Yeti_OnThink(SaxtonHaleBase boss)
 public void Yeti_OnRage(SaxtonHaleBase boss)
 {
 	FakeClientCommand(boss.iClient, "voicemenu 2 1");
+}
+
+public void Yeti_OnPlayerKilled(SaxtonHaleBase boss, Event event, int iVictim)
+{
+	KillIconShared(boss, event, true);
+}
+
+public void Yeti_OnDestroyObject(SaxtonHaleBase boss, Event event)
+{
+	KillIconShared(boss, event, false);
+}
+
+static void KillIconShared(SaxtonHaleBase boss, Event event, bool bLog)
+{
+	int iWeaponId = event.GetInt("weaponid");
+	
+	if (iWeaponId == TF_WEAPON_ROCKETLAUNCHER)
+	{
+		if (bLog)
+			event.SetString("weapon_logclassname", "meteor");
+		
+		event.SetString("weapon", "krampus_ranged");
+	}
 }
 
 public void Yeti_GetModel(SaxtonHaleBase boss, char[] sModel, int length)
@@ -196,9 +212,3 @@ public void Yeti_Precache(SaxtonHaleBase boss)
 	AddFileToDownloadsTable("models/player/kirillian/boss/yeti_modded.phy");
 	AddFileToDownloadsTable("models/player/kirillian/boss/yeti_modded.vvd");
 }
-
-public bool Yeti_IsBossHidden(SaxtonHaleBase boss)
-{
-	return true;
-}
-
