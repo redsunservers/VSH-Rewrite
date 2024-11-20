@@ -29,7 +29,7 @@ public void RageMeteor_Create(SaxtonHaleBase boss)
 
 	boss.SetPropFloat("RageMeteor", "Damage", 50.0);
 	boss.SetPropFloat("RageMeteor", "Speed", 550.0);
-	boss.SetPropFloat("RageMeteor", "SpawnRadius", 800.0);
+	boss.SetPropFloat("RageMeteor", "SpawnRadius", 400.0);
 	boss.SetPropFloat("RageMeteor", "MinAngle", 45.0);
 	boss.SetPropFloat("RageMeteor", "FreezeTime", 4.0);
 	boss.SetPropFloat("RageMeteor", "SpawnDelay", 0.094);
@@ -144,9 +144,30 @@ static void SpawnRocket(SaxtonHaleBase boss)
 	float vecBossOrigin[3];
 	GetEntPropVector(boss.iClient, Prop_Send, "m_vecOrigin", vecBossOrigin);
 	vecBossOrigin[2] += 41.5;
+
+	float vecTargetOrigin[3], vecAngles[3];
+	GetClientEyePosition(boss.iClient, vecTargetOrigin);
+	GetClientEyeAngles(boss.iClient, vecAngles);
+	
+	// Take crosshair location
+	TR_TraceRayFilter(vecTargetOrigin, vecAngles, MASK_PLAYERSOLID, RayType_Infinite, TraceRay_DontHitEntity, boss.iClient);
+	if(TR_DidHit())
+	{
+		TR_GetEndPosition(vecTargetOrigin);
+		vecTargetOrigin[2] += 20.0;
+	}
+	else
+	{
+		vecTargetOrigin = vecBossOrigin;
+	}
+
+	// Stay close to the boss
+	float flDistance = GetVectorDistance(vecTargetOrigin, vecBossOrigin);
+	if (flDistance > 500.0)
+		ConstrainDistance(vecBossOrigin, vecTargetOrigin, flDistance, 500.0);
 	
 	// Find any valid spots
-	float vecSpawnPos[3], vecAngles[3];
+	float vecSpawnPos[3];
 	float radius = boss.GetPropFloat("RageMeteor", "SpawnRadius");
 	bool foundValidPoint = false;
 	for (int a = 0; a < 5; a++)
@@ -158,15 +179,15 @@ static void SpawnRocket(SaxtonHaleBase boss)
 			static const float Angles[] = { 0.0, 25.0, -25.0 };
 			vecAngles[0] = Angles[b];
 			
-			Handle trace = TR_TraceRayFilterEx(vecBossOrigin, vecAngles, (CONTENTS_SOLID|CONTENTS_WINDOW|CONTENTS_GRATE), RayType_Infinite, TraceRay_HitWallOnly);
+			Handle trace = TR_TraceRayFilterEx(vecTargetOrigin, vecAngles, (CONTENTS_SOLID|CONTENTS_WINDOW|CONTENTS_GRATE), RayType_Infinite, TraceRay_HitWallOnly);
 			TR_GetEndPosition(vecSpawnPos, trace);
 			delete trace;
 
-			float traceDistance = GetVectorDistance(vecBossOrigin, vecSpawnPos);
-			if (traceDistance >= minDistance)
+			flDistance = GetVectorDistance(vecTargetOrigin, vecSpawnPos);
+			if (flDistance >= minDistance)
 			{
 				foundValidPoint = true;
-				ConstrainDistance(vecBossOrigin, vecSpawnPos, traceDistance, minDistance);
+				ConstrainDistance(vecTargetOrigin, vecSpawnPos, flDistance, minDistance);
 				break;
 			}
 		}
@@ -187,8 +208,8 @@ static void SpawnRocket(SaxtonHaleBase boss)
 	vecSpawnPos[2] -= 20.0;
 	
 	// TOO high up
-	if(vecSpawnPos[2] > (vecBossOrigin[2] + 1500.0))
-		vecSpawnPos[2] = vecBossOrigin[2] + 1500.0;
+	if(vecSpawnPos[2] > (vecTargetOrigin[2] + 1500.0))
+		vecSpawnPos[2] = vecTargetOrigin[2] + 1500.0;
 	
 	vecAngles[0] = GetRandomFloat(boss.GetPropFloat("RageMeteor", "MinAngle"), 89.9);
 	vecAngles[1] = GetRandomFloat(-179.9, 179.9);

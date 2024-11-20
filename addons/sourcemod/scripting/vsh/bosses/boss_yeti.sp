@@ -23,6 +23,8 @@ static char g_strYetiKill[][] =  {
 	"player/taunt_yeti_roar_beginning.wav"
 };
 
+static char g_strYetiRage[] = "ambient/atmosphere/terrain_rumble1.wav";
+
 static char g_strYetiLastMan[][] =  {
 	"ambient_mp3/lair/animal_call_yeti2.mp3", 
 };
@@ -70,8 +72,8 @@ public void Yeti_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length)
 	StrCat(sInfo, length, "\n ");
 	StrCat(sInfo, length, "\nRage");
 	StrCat(sInfo, length, "\n- Damage requirement: 2500");
-	StrCat(sInfo, length, "\n- Rains hail down on to players around you");
-	StrCat(sInfo, length, "\n- Players hit will get frozen for 3 seconds");
+	StrCat(sInfo, length, "\n- Rains hail down on to players in front of you");
+	StrCat(sInfo, length, "\n- Players hit will get frozen for 4 seconds");
 	StrCat(sInfo, length, "\n- 200%% Rage: Increased projectile count and spawn rate");
 }
 
@@ -103,6 +105,9 @@ public void Yeti_OnThink(SaxtonHaleBase boss)
 public void Yeti_OnRage(SaxtonHaleBase boss)
 {
 	FakeClientCommand(boss.iClient, "voicemenu 2 1");
+	
+	EmitSoundToAll(g_strYetiRage);
+	EmitSoundToAll(g_strYetiRage);
 }
 
 public void Yeti_OnPlayerKilled(SaxtonHaleBase boss, Event event, int iVictim)
@@ -193,6 +198,7 @@ public void Yeti_Precache(SaxtonHaleBase boss)
 	PrecacheModel(YETI_MODEL);
 	
 	PrepareMusic(YETI_THEME, false);
+	PrecacheSound(g_strYetiRage);
 	
 	for (int i = 0; i < sizeof(g_strYetiRoundStart); i++)PrecacheSound(g_strYetiRoundStart[i]);
 	for (int i = 0; i < sizeof(g_strYetiWin); i++)PrecacheSound(g_strYetiWin[i]);
