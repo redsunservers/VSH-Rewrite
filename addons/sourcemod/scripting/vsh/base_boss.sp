@@ -435,8 +435,6 @@ public Action Timer_BossRageMusic(Handle hTimer, SaxtonHaleBase boss)
 
 Action AttachEnt_SetTransmit(int iAttachEnt, int iClient)
 {
-	SetEdictFlags(iAttachEnt, GetEdictFlags(iAttachEnt) &~ FL_EDICT_ALWAYS);
-
 	int iOwner = GetEntPropEnt(iAttachEnt, Prop_Data, "m_pParent");
 	if (iOwner == INVALID_ENT_REFERENCE)
 		return Plugin_Stop;
@@ -446,15 +444,15 @@ Action AttachEnt_SetTransmit(int iAttachEnt, int iClient)
 		if (GetEntPropEnt(iClient, Prop_Send, "m_hObserverTarget") == iOwner && GetEntProp(iClient, Prop_Send, "m_iObserverMode") == OBS_MODE_IN_EYE)
 		    return Plugin_Stop;
 	}
-	else if (TF2_IsPlayerInCondition(iOwner, TFCond_Taunting))
+	else if (!TF2_IsPlayerInCondition(iOwner, TFCond_Taunting))
 	{
-		return Plugin_Continue;
+		return Plugin_Stop;
 	}
 
 	if (TF2_IsPlayerInCondition(iOwner, TFCond_Cloaked) || TF2_IsPlayerInCondition(iOwner, TFCond_Disguised) || TF2_IsPlayerInCondition(iOwner, TFCond_Stealthed))
 		return Plugin_Stop;
 	
-	return Plugin_Stop;
+	return Plugin_Continue;
 }
 
 void ApplyBossEffects(SaxtonHaleBase boss)
@@ -469,11 +467,23 @@ void ApplyBossEffects(SaxtonHaleBase boss)
 			break;
 		
 		int iEntity = TF2_AttachParticle(sEffect, boss.iClient);
-		SetEdictFlags(iEntity, GetEdictFlags(iEntity) &~ FL_EDICT_ALWAYS);
-		SDKHook(iEntity, SDKHook_SetTransmit, AttachEnt_SetTransmit);
+		SetEdictFlags(iEntity, GetEdictFlags(iEntity) | FL_EDICT_ALWAYS);
+		CreateTimer(0.2, Timer_ApplySetTransmit, iEntity, TIMER_FLAG_NO_MAPCHANGE);
 		
 		sEffect[0] = 0;
 	}
+}
+
+static Action Timer_ApplySetTransmit(Handle hTimer, int iEntity)
+{
+	// Entity reference here
+	if(IsValidEntity(iEntity))
+	{
+		SetEdictFlags(iEntity, GetEdictFlags(iEntity) &~ FL_EDICT_ALWAYS);
+		SDKHook(iEntity, SDKHook_SetTransmit, AttachEnt_SetTransmit);
+	}
+	
+	return Plugin_Continue;
 }
 
 void ClearBossEffects(int iClient)
