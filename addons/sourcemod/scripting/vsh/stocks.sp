@@ -1,5 +1,3 @@
-#define ATTRIB_LESSHEALING				734
-
 stock void Client_AddHealth(int iClient, int iAdditionalHeal, int iMaxOverHeal=0)
 {
 	int iMaxHealth = SDK_GetMaxHealth(iClient);

@@ -36,6 +36,7 @@
 #define ATTRIB_MELEE_RANGE_MULTIPLIER	264
 #define ATTRIB_BIDERECTIONAL			276
 #define ATTRIB_JUMP_HEIGHT				326
+#define ATTRIB_LESSHEALING				734
 
 #define ITEM_ROCK_PAPER_SCISSORS		1110
 
@@ -47,17 +48,6 @@
 #define SOUND_NULL			"vo/null.mp3"
 
 #define PARTICLE_GHOST 		"ghost_appearation"
-
-#define FL_EDICT_CHANGED	(1<<0)	// Game DLL sets this when the entity state changes
-									// Mutually exclusive with FL_EDICT_PARTIAL_CHANGE.
-
-#define FL_EDICT_FREE		(1<<1)	// this edict if free for reuse
-#define FL_EDICT_FULL		(1<<2)	// this is a full server entity
-
-#define FL_EDICT_FULLCHECK	(0<<0)  // call ShouldTransmit() each time, this is a fake flag
-#define FL_EDICT_ALWAYS		(1<<3)	// always transmit this entity
-#define FL_EDICT_DONTSEND	(1<<4)	// don't transmit this entity
-#define FL_EDICT_PVSCHECK	(1<<5)	// always transmit entity, but cull against PVS
 
 #define TEXT_TAG			"\x07E19300[\x07E17100VSH REWRITE\x07E19300]\x01"
 #define TEXT_COLOR			"\x07E19F00"
