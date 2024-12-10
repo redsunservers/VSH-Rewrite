@@ -168,7 +168,9 @@ public Action Horsemann_OnSoundPlayed(SaxtonHaleBase boss, int clients[MAXPLAYER
 		
 	if (StrContains(sample, "player/footsteps/", false) == 0)
 	{
-		EmitSoundToAll(g_strHorsemannFootsteps[GetRandomInt(0, sizeof(g_strHorsemannFootsteps)-1)], boss.iClient, _, _, _, 0.4, GetRandomInt(90, 100));
+		if (!TF2_IsPlayerInCondition(boss.iClient, TFCond_SwimmingNoEffects))
+			EmitSoundToAll(g_strHorsemannFootsteps[GetRandomInt(0, sizeof(g_strHorsemannFootsteps)-1)], boss.iClient, _, _, _, 0.4, GetRandomInt(90, 100));
+		
 		return Plugin_Handled;
 	}
 	
