@@ -1,7 +1,6 @@
 #define GHOST_MODEL	"models/props_halloween/ghost.mdl"
 
-#define PARTICLE_BEAM_BLU	"medicgun_beam_blue"
-#define PARTICLE_BEAM_RED	"medicgun_beam_red"
+#define PARTICLE_BEAM	"passtime_beam"
 
 static float g_flGhostHealStartTime[MAXPLAYERS][2048];
 static int g_iGhostHealStealCount[MAXPLAYERS][2048];
@@ -62,8 +61,10 @@ public void RageGhost_OnRage(SaxtonHaleBase boss)
 	g_iGhostParticleCentre[iClient] = TF2_SpawnParticle("", vecOrigin, vecAngles, false, iClient);
 	
 	//Stun and Fly
-	TF2_StunPlayer(iClient, boss.GetPropFloat("RageGhost", "Duration"), 0.0, TF_STUNFLAG_GHOSTEFFECT|TF_STUNFLAG_NOSOUNDOREFFECT, 0);
-	TF2_AddCondition(iClient, TFCond_SwimmingNoEffects, boss.GetPropFloat("RageGhost", "Duration"));
+	float flDuration = boss.GetPropFloat("RageGhost", "Duration");
+	TF2_StunPlayer(iClient, flDuration, 0.0, TF_STUNFLAG_GHOSTEFFECT|TF_STUNFLAG_NOSOUNDOREFFECT, 0)
+	TF2_AddCondition(iClient, TFCond_SwimmingNoEffects, flDuration);
+	TF2_AddCondition(iClient, TFCond_ImmuneToPushback, flDuration);
 	
 	//Get active weapon and dont render
 	int iWeapon = GetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon");
@@ -88,14 +89,6 @@ public void RageGhost_OnThink(SaxtonHaleBase boss)
 		float vecOrigin[3];
 		GetClientAbsOrigin(iClient, vecOrigin);
 		vecOrigin[2] += 42.0;
-		
-		int iTeam = GetClientTeam(iClient);
-		static char sParticle[][] = {
-			"",
-			"",
-			PARTICLE_BEAM_RED,
-			PARTICLE_BEAM_BLU,
-		};
 		
 		//Arrays of spooked clients
 		int[] iSpooked = new int[MaxClients];
@@ -148,7 +141,7 @@ public void RageGhost_OnThink(SaxtonHaleBase boss)
 						
 						float vecTargetAngles[3];
 						GetClientAbsAngles(iClient, vecTargetAngles);
-						g_iGhostParticleBeam[iClient][iVictim] = TF2_SpawnParticle(sParticle[iTeam], vecTargetOrigin, vecTargetAngles, true, iVictim, EntRefToEntIndex(g_iGhostParticleCentre[iClient]));
+						g_iGhostParticleBeam[iClient][iVictim] = TF2_SpawnParticle(PARTICLE_BEAM, vecTargetOrigin, vecTargetAngles, true, iVictim, EntRefToEntIndex(g_iGhostParticleCentre[iClient]));
 					}
 					
 					//Calculate on heal steal
@@ -204,7 +197,7 @@ public void RageGhost_OnThink(SaxtonHaleBase boss)
 			while ((iBuilding = FindEntityByClassname(iBuilding, "obj_*")) > MaxClients)
 			{
 				bool bLinked = false;
-				if (GetEntProp(iBuilding, Prop_Send, "m_iTeamNum") != iTeam)
+				if (GetEntProp(iBuilding, Prop_Send, "m_iTeamNum") != GetClientTeam(iClient))
 				{
 					float vecTargetOrigin[3];
 					GetEntPropVector(iBuilding, Prop_Send, "m_vecOrigin", vecTargetOrigin);
@@ -226,7 +219,7 @@ public void RageGhost_OnThink(SaxtonHaleBase boss)
 							
 							float vecTargetAngles[3];
 							GetClientAbsAngles(iClient, vecTargetAngles);
-							g_iGhostParticleBeam[iClient][iBuilding] = TF2_SpawnParticle(sParticle[iTeam], vecTargetOrigin, vecTargetAngles, true, iBuilding, EntRefToEntIndex(g_iGhostParticleCentre[iClient]));
+							g_iGhostParticleBeam[iClient][iBuilding] = TF2_SpawnParticle(PARTICLE_BEAM, vecTargetOrigin, vecTargetAngles, true, iBuilding, EntRefToEntIndex(g_iGhostParticleCentre[iClient]));
 						}
 							
 						float flTimeGap = GetGameTime() - g_flGhostHealStartTime[iClient][iBuilding];
@@ -383,7 +376,6 @@ public void RageGhost_Destroy(SaxtonHaleBase boss)
 public void RageGhost_Precache(SaxtonHaleBase boss)
 {
 	PrecacheModel(GHOST_MODEL);
-	PrecacheParticleSystem(PARTICLE_BEAM_RED);
-	PrecacheParticleSystem(PARTICLE_BEAM_BLU);
+	PrecacheParticleSystem(PARTICLE_BEAM);
 }
 
