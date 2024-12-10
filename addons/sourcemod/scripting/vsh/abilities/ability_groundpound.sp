@@ -12,6 +12,7 @@ public void GroundPound_Create(SaxtonHaleBase boss)
 	
 	boss.SetPropFloat("GroundPound", "StartTimer", 2.8);
 	boss.SetPropFloat("GroundPound", "GravityMultiplier", 8.0);
+	boss.SetPropFloat("GroundPound", "JumpCooldown", 5.0);
 	
 	boss.SetPropFloat("GroundPound", "ImpactPush", 500.0);
 	boss.SetPropFloat("GroundPound", "ImpactVelocity", 750.0);
@@ -100,15 +101,17 @@ public void GroundPound_OnButton(SaxtonHaleBase boss, int &buttons)
 			g_flClientBossWeighDownTimer[boss.iClient] = 0.0;
 			SetEntityGravity(boss.iClient, GetEntityGravity(boss.iClient) * boss.GetPropFloat("GroundPound", "GravityMultiplier"));
 			TF2_AddCondition(boss.iClient, TFCond_SpeedBuffAlly, TFCondDuration_Infinite);
+
+			float flJumpCooldown = boss.GetPropFloat("GroundPound", "JumpCooldown");
 			
 			// Add brave jump cooldown to it
-			if (boss.HasClass("BraveJump"))
+			if (flJumpCooldown > 0.0 && boss.HasClass("BraveJump"))
 			{
 				float flCooldownWait = boss.GetPropFloat("BraveJump", "CooldownWait");
 				if (flCooldownWait)
 				{
-					boss.SetPropFloat("BraveJump", "CooldownWait", flCooldownWait + 5.0);
-					boss.CallFunction("UpdateHudInfo", 1.0, flCooldownWait + 5.0);	//Update every second for cooldown duration
+					boss.SetPropFloat("BraveJump", "CooldownWait", flCooldownWait + flJumpCooldown);
+					boss.CallFunction("UpdateHudInfo", 1.0, flCooldownWait + flJumpCooldown);	//Update every second for cooldown duration
 				}
 			}
 		}
