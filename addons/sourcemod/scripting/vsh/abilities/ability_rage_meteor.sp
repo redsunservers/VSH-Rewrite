@@ -31,7 +31,7 @@ public void RageMeteor_Create(SaxtonHaleBase boss)
 	boss.SetPropFloat("RageMeteor", "Speed", 300.0);
 	boss.SetPropFloat("RageMeteor", "SpawnRadius", 250.0);
 	boss.SetPropFloat("RageMeteor", "MinAngle", 45.0);
-	boss.SetPropFloat("RageMeteor", "FreezeTime", 1);
+	boss.SetPropFloat("RageMeteor", "FreezeTime", 1.0);
 	boss.SetPropFloat("RageMeteor", "SpawnDelay", 0.094);
 	boss.SetPropFloat("RageMeteor", "SpawnDelaySuper", 0.077);
 	boss.SetPropInt("RageMeteor", "SpawnCount", 70);
