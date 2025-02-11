@@ -55,7 +55,7 @@ public void Yeti_Create(SaxtonHaleBase boss)
 	boss.iHealthPerPlayer = 650;
 	boss.flHealthExponential = 1.05;
 	boss.nClass = TFClass_Heavy;
-	boss.iMaxRageDamage = 2500;
+	boss.iMaxRageDamage = 3000;
 }
 
 public void Yeti_GetBossName(SaxtonHaleBase boss, char[] sName, int length)
@@ -71,9 +71,9 @@ public void Yeti_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length)
 	StrCat(sInfo, length, "\n- Brave Jump (Not Reduced by Ground Pound)");
 	StrCat(sInfo, length, "\n ");
 	StrCat(sInfo, length, "\nRage");
-	StrCat(sInfo, length, "\n- Damage requirement: 2500");
+	StrCat(sInfo, length, "\n- Damage requirement: 3000");
 	StrCat(sInfo, length, "\n- Rains hail down on to players in front of you");
-	StrCat(sInfo, length, "\n- Players hit will get frozen for 4 seconds");
+	StrCat(sInfo, length, "\n- Players hit will get frozen for 1 second");
 	StrCat(sInfo, length, "\n- 200%% Rage: Increased projectile count and spawn rate");
 }
 
