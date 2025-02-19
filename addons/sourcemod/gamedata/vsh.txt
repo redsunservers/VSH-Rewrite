@@ -76,8 +76,8 @@
 		{
 			"CTFGameRules::GetCaptureValueForPlayer"
 			{
-				"linux"		"158"
-				"windows"	"157"
+				"linux"		"159"
+				"windows"	"158"
 			}
 			"CBaseEntity::ShouldTransmit"
 			{
