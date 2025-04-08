@@ -955,6 +955,7 @@ public void OnMapStart()
 		g_iSpritesGlow = PrecacheModel("materials/sprites/glow01.vmt", true);
 		
 		Dome_MapStart();
+		Teuton_MapStart();
 		
 		CreateTimer(60.0, Timer_WelcomeMessage);
 		CreateTimer(240.0, Timer_WelcomeMessage, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
