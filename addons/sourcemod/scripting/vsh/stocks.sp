@@ -105,11 +105,18 @@ stock ArrayList GetValidSummonableClients(bool bAllowBoss = false)
 			&& Preferences_Get(iClient, VSHPreferences_Revival)
 			&& !Client_HasFlag(iClient, ClientFlags_Punishment))
 		{
+			// Minions ignore alive check
 			if (!SaxtonHale_IsValidBoss(iClient, false) || !SaxtonHaleBase(iClient).bMinion)
-				if (!IsPlayerAlive(iClient)) continue;
+			{
+				if (!IsPlayerAlive(iClient))
+					continue;
+			}
 
 			if (!bAllowBoss)
-				if (SaxtonHale_IsValidBoss(iClient, false)) continue;
+			{
+				if (SaxtonHale_IsValidBoss(iClient, false))
+					continue;
+			}
 				
 			aClients.Push(iClient);
 		}

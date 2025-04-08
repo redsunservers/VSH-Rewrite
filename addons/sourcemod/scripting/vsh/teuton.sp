@@ -24,13 +24,13 @@ void Teuton_PlayerDeath(int iVictim)
 	if (!g_ConfigConvar.LookupBool("vsh_teuton_enable") || SaxtonHale_IsValidBoss(iVictim, false))
 		return;
 	
-	CreateTimer(4.0, Teuton_SpawnTimer, GetClientUserId(iVictim), TIMER_FLAG_NO_MAPCHANGE);
+	CreateTimer(6.0, Teuton_SpawnTimer, GetClientUserId(iVictim), TIMER_FLAG_NO_MAPCHANGE);
 }
 
 static Action Teuton_SpawnTimer(Handle timer, int iUserID)
 {
 	int iClient = GetClientOfUserId(iUserID);
-	if (iClient && !IsPlayerAlive(iClient) && TF2_GetClientTeam(iClient) > TFTeam_Spectator)
+	if (iClient && g_bRoundStarted && !IsPlayerAlive(iClient) && TF2_GetClientTeam(iClient) > TFTeam_Spectator)
 	{
 		SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 		if (boss.bValid)
