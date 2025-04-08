@@ -397,6 +397,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/bosses/boss_yeti.sp"
 #include "vsh/bosses/boss_zombie.sp"
 #include "vsh/bosses/boss_merasmus.sp"
+#include "vsh/bosses/boss_teuton.sp"
 
 #include "vsh/bossesmulti/bossmulti_mannbrothers.sp"
 #include "vsh/bossesmulti/bossmulti_seemanseeldier.sp"
@@ -451,6 +452,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/queue.sp"
 #include "vsh/sdk.sp"
 #include "vsh/stocks.sp"
+#include "vsh/teuton.sp"
 
 public Plugin myinfo =
 {
@@ -526,6 +528,7 @@ public void OnPluginStart()
 	TagsCore_Init();
 	TagsDamage_Init();
 	TagsName_Init();
+	Teuton_Init();
 	
 	SaxtonHaleFunction func;
 	
@@ -686,6 +689,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("AnnouncerMinion", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("MinionRanger", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("Zombie", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("Teuton", VSHClassType_Boss);
 	
 	//Register ability
 	SaxtonHale_RegisterClass("BodyEat", VSHClassType_Ability);
