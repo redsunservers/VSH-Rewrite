@@ -137,7 +137,7 @@ public void SaxtonHale_Create(SaxtonHaleBase boss)
 	boss.iHealthPerPlayer = 600;
 	boss.flHealthExponential = 1.05;
 	boss.nClass = TFClass_Soldier;
-	boss.iMaxRageDamage = 2500;
+	boss.iMaxRageDamage = 3000;
 }
 
 public void SaxtonHale_GetBossName(SaxtonHaleBase boss, char[] sName, int length)
@@ -154,7 +154,7 @@ public void SaxtonHale_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length
 	StrCat(sInfo, length, "\n- Lunge, reload to use");
 	StrCat(sInfo, length, "\n ");
 	StrCat(sInfo, length, "\nRage");
-	StrCat(sInfo, length, "\n- Damage requirement: 2500");
+	StrCat(sInfo, length, "\n- Damage requirement: 3000");
 	StrCat(sInfo, length, "\n- Faster attack and movement speed");
 	StrCat(sInfo, length, "\n- Knockback and stun immunity");
 	StrCat(sInfo, length, "\n- Damage resistance and crits immunity");
