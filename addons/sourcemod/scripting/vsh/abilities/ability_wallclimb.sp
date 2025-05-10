@@ -59,6 +59,9 @@ public Action WallClimb_OnAttackCritical(SaxtonHaleBase boss, int iWeapon, bool 
 	vecVelocity[2] = boss.GetPropFloat("WallClimb", "MaxHeight");
 	
 	TeleportEntity(iClient, NULL_VECTOR, NULL_VECTOR, vecVelocity);
+	
+	TF2_AddCondition(boss.iClient, TFCond_BlastJumping);
+	
 	return Plugin_Continue;
 }
 
