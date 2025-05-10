@@ -385,6 +385,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/bosses/boss_demopan.sp"
 #include "vsh/bosses/boss_demorobot.sp"
 #include "vsh/bosses/boss_gentlespy.sp"
+#include "vsh/bosses/boss_graymann.sp"
 #include "vsh/bosses/boss_hale.sp"
 #include "vsh/bosses/boss_horsemann.sp"
 #include "vsh/bosses/boss_painiscupcakes.sp"
@@ -666,6 +667,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("DemoPan", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("DemoRobot", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("GentleSpy", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("Graymann", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("Horsemann", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("Merasmus", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("PainisCupcake", VSHClassType_Boss);
@@ -685,6 +687,9 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("SeeldierMinion", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("AnnouncerMinion", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("MinionRanger", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("GrayMannSoldierMinion", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("GrayMannDemomanMinion", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("GrayMannPyroMinion", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("Zombie", VSHClassType_Boss);
 	
 	//Register ability
