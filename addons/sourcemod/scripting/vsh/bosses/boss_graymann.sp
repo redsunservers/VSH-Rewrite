@@ -110,6 +110,8 @@ static char g_strPyroLoop[][] = {
 	"mvm/giant_pyro/giant_pyro_loop.wav"
 }
 
+//There's probably a better way to write this code but I'm dogshit at coding, what you see is what you get
+
 public void Graymann_Create(SaxtonHaleBase boss)
 {	
 	boss.CreateClass("RageAddCond");
@@ -185,7 +187,7 @@ public void Graymann_OnSpawn(SaxtonHaleBase boss)
 		SetEntPropEnt(boss.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
 	}
 	/*
-	Fist attributes:
+	wrench attributes:
 	
 	2: damage bonus
 	252: reduction in push force taken from damage
@@ -234,7 +236,7 @@ public void Graymann_GetMusicInfo(SaxtonHaleBase boss, char[] sSound, int length
 	time = 214.0;
 }
 
-public void Graymann_Precache(SaxtonHaleBase boss)
+public void Graymann_Precache(SaxtonHaleBase boss) //not sure if custom sounds have to be in the downloadstable but I added them anyway
 {
 	PrecacheModel(GRAYMANN_MODEL);
 	PrepareMusic(GRAYMANN_THEME, false);
@@ -301,7 +303,7 @@ public void Graymann_Precache(SaxtonHaleBase boss)
 	AddFileToDownloadsTable("sound/vsh_rewrite/graymann/win.mp3");
 }
 
-public void GrayMannSoldierMinion_Create(SaxtonHaleBase boss)
+public void GrayMannSoldierMinion_Create(SaxtonHaleBase boss) //Giant Soldier Stats
 {
 	boss.iBaseHealth = 2500;
 	boss.iHealthPerPlayer = 25;
@@ -316,7 +318,7 @@ public void GrayMannSoldierMinion_Create(SaxtonHaleBase boss)
 	EmitSoundToClient(boss.iClient, SOUND_ALERT);			//Alert player as they (re)spawned
 }
 
-public void GrayMannDemomanMinion_Create(SaxtonHaleBase boss)
+public void GrayMannDemomanMinion_Create(SaxtonHaleBase boss) //Giant Demoman Stats
 {
 	boss.iBaseHealth = 2500;
 	boss.iHealthPerPlayer = 25;
@@ -331,7 +333,7 @@ public void GrayMannDemomanMinion_Create(SaxtonHaleBase boss)
 	EmitSoundToClient(boss.iClient, SOUND_ALERT);
 }
 
-public void GrayMannPyroMinion_Create(SaxtonHaleBase boss)
+public void GrayMannPyroMinion_Create(SaxtonHaleBase boss) //Giant Pyro Stats
 {
 	boss.iBaseHealth = 1500;
 	boss.iHealthPerPlayer = 30;
@@ -361,7 +363,7 @@ public bool GrayMannPyroMinion_IsBossHidden(SaxtonHaleBase boss)
 	return true;
 }
 
-public void GrayMannSoldierMinion_OnSpawn(SaxtonHaleBase boss)
+public void GrayMannSoldierMinion_OnSpawn(SaxtonHaleBase boss) //Soldier's Attributes
 {
 	char sAttribs[64];
 	strcopy(sAttribs, sizeof(sAttribs), "1 ; 0.5 ; 4 ; 2.0 ; 5 ; 2.0 ; 97 ; 0.5 ; 252 ; 0.5 ; 259 ; 1.0");
@@ -396,7 +398,7 @@ public void GrayMannSoldierMinion_OnSpawn(SaxtonHaleBase boss)
 	g_hGrayMannMinionAFKTimer[boss.iClient] = CreateTimer(0.0, Timer_GrayMann_ReplaceMinion, boss.iClient);
 }
 
-public void GrayMannDemomanMinion_OnSpawn(SaxtonHaleBase boss)
+public void GrayMannDemomanMinion_OnSpawn(SaxtonHaleBase boss) //Demo's Attributes
 {
 	char sAttribs[64];
 	strcopy(sAttribs, sizeof(sAttribs), "1 ; 0.5 ; 4 ; 2.0 ; 5 ; 2.0 ; 97 ; 3.0 ; 252 ; 0.5 ; 259 ; 1.0");
@@ -428,22 +430,30 @@ public void GrayMannDemomanMinion_OnSpawn(SaxtonHaleBase boss)
 	g_hGrayMannMinionAFKTimer[boss.iClient] = CreateTimer(0.0, Timer_GrayMann_ReplaceMinion, boss.iClient);
 }
 
-public void GrayMannPyroMinion_OnSpawn(SaxtonHaleBase boss)
+public void GrayMannPyroMinion_OnSpawn(SaxtonHaleBase boss) //Pyro's Attributes. Don't touch it. Don't even blink. Don't do fucking ANYTHING.
 {
 	char sAttribs[64];
-	strcopy(sAttribs, sizeof(sAttribs), "1 ; 0.5 ; 4 ; 2.0 ; 164 ; 1.5 ; 356 ; 1.0 ; 252 ; 0.5 ; 259 ; 1.0");
-	int iWeapon = boss.CallFunction("CreateWeapon", 208, "tf_weapon_flamethrower", 10, TFQual_Collectors, sAttribs);
+	strcopy(sAttribs, sizeof(sAttribs), "823 ; 1 ; 844 ; 1850.0 ; 841 ; 0 ; 843 ; 10 ; 862 ; 0.50 ; 1 ; 0.5 ; 4 ; 2.0 ; 356 ; 1.0 ; 252 ; 0.5 ; 259 ; 1.0");
+	int iWeapon = boss.CallFunction("CreateWeapon", 208, "tf_weapon_flamethrower", 100, TFQual_Collectors, sAttribs);
 	TF2_SetAmmo(boss.iClient, TF_AMMO_PRIMARY, 99999);
 	if (iWeapon > MaxClients)
 		SetEntPropEnt(boss.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
 	
 	/*
 	Flammenwerfer attributes:
-	
+	// DO NOT USE FLAME_SPEED UNDER ANY CIRCUMSTANCES, FOR SOME REASON IT COMPLETELY FUCKS WITH AIRBLAST DISABLED, FUCK YOU!!!!
+	// https://www.youtube.com/watch?v=_4qEz5ONk5c&ab_channel=1995Berserk this is me after working with pyro attributes btw
+
+	823: airblast_pushback_disabled
+	844: flame speed UNFORTUFUCKINGNATELY
+	841: flame gravity
+	843: flame drag
+	862: flame lifetime
 	1: damage penalty
 	4: clip size bonus
 	164: flame life bonus
-	356: airblast disabled
+	162: flame size
+	356: airblast disabled (doesn't work because flame speed is used, see 823 attribute)
 	252: reduction in push force taken from damage
 	259: Deals 3x falling damage to the player you land on
 	*/
@@ -497,7 +507,7 @@ public void GrayMannPyroMinion_OnButtonPress(SaxtonHaleBase boss, int button)
 	}
 }
 
-public void Graymann_GetModel(SaxtonHaleBase boss, char[] sModel, int length)
+public void Graymann_GetModel(SaxtonHaleBase boss, char[] sModel, int length) //Models are grabbed here, duh
 {
 	strcopy(sModel, length, GRAYMANN_MODEL);
 }
@@ -516,6 +526,8 @@ public void GrayMannPyroMinion_GetModel(SaxtonHaleBase boss, char[] sModel, int 
 {
 	strcopy(sModel, length, GRAYMANN_PYROMINION);
 }
+
+// Added footsteps for giants here and blocked their voicelines at the same time
 
 public Action GrayMannSoldierMinion_OnSoundPlayed(SaxtonHaleBase boss, int clients[MAXPLAYERS], int &numClients, char sample[PLATFORM_MAX_PATH], int &channel, float &volume, int &level, int &pitch, int &flags, char soundEntry[PLATFORM_MAX_PATH], int &seed)
 {
@@ -646,7 +658,7 @@ public int GrayMann_SpawnBestPlayer(ArrayList aClients)
 		SaxtonHaleBase boss = SaxtonHaleBase(iBestClientIndex);
 		if (boss.bValid)
 			boss.DestroyAllClass();
-		switch(GetRandomInt(0,2))
+		switch(GetRandomInt(0,2)) //Picks one of these Minions at random
 		{
 			case 0:
 			{
@@ -689,6 +701,7 @@ public Action Timer_GrayMann_ReplaceMinion(Handle hTimer, int iClient)
 	}
 	
 	//Snap the AFK player. Note that there's no point in killing them if they're the only acceptable client available
+	//Some unused StopSounds here, the bots were meant to make a looping sound whilst alive akin to MvM, but it caused issues after the round would end and the sound wouldn't stop for some reason
 	ArrayList aValidMinions = GetValidSummonableClients();
 	int iLength = aValidMinions.Length;
 	
