@@ -149,6 +149,10 @@ public void Lunge_OnButtonPress(SaxtonHaleBase boss, int iButton)
 			vecVelocity[2] = 310.0;
 		
 		TeleportEntity(boss.iClient, NULL_VECTOR, NULL_VECTOR, vecVelocity);
+		
+		SetEntProp(boss.iClient, Prop_Send, "m_bJumping", true);
+		SetEntityFlags(boss.iClient, GetEntityFlags(boss.iClient) & ~FL_ONGROUND);
+		TF2_AddCondition(boss.iClient, TFCond_BlastJumping);
 	}
 }
 

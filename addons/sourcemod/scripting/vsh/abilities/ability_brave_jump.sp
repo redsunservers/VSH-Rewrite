@@ -101,6 +101,7 @@ public void BraveJump_OnButtonRelease(SaxtonHaleBase boss, int button)
 			
 			SetEntProp(boss.iClient, Prop_Send, "m_bJumping", true);
 			SetEntityFlags(boss.iClient, GetEntityFlags(boss.iClient) & ~FL_ONGROUND);
+			TF2_AddCondition(boss.iClient, TFCond_BlastJumping);
 			
 			float flCooldownTime = (boss.GetPropFloat("BraveJump", "Cooldown")*(float(boss.GetPropInt("BraveJump", "JumpCharge"))/float(boss.GetPropInt("BraveJump", "MaxJumpCharge"))));
 			if (flCooldownTime < boss.GetPropFloat("BraveJump", "MinCooldown"))

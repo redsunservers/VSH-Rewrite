@@ -61,6 +61,9 @@ public void SaxtonHaleBoss_OnThink(SaxtonHaleBase boss)
 	bool bGlow = (boss.flGlowTime == -1.0 || boss.flGlowTime >= GetGameTime());
 	SetEntProp(boss.iClient, Prop_Send, "m_bGlowEnabled", bGlow);
 	
+	if ((GetEntityFlags(boss.iClient) & FL_ONGROUND) && TF2_IsPlayerInCondition(boss.iClient, TFCond_BlastJumping))
+		TF2_RemoveCondition(boss.iClient, TFCond_BlastJumping);
+	
 	//Dont modify his speed during setup time or when taunting
 	if (boss.flSpeed >= 0.0 && GameRules_GetRoundState() != RoundState_Preround && !TF2_IsPlayerInCondition(boss.iClient, TFCond_Taunting))
 	{
