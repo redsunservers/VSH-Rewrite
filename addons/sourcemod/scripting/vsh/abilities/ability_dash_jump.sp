@@ -53,6 +53,7 @@ public void DashJump_OnButtonPress(SaxtonHaleBase boss, int iButton)
 		TeleportEntity(boss.iClient, NULL_VECTOR, NULL_VECTOR, vecVel);
 		
 		SetEntProp(boss.iClient, Prop_Send, "m_bJumping", true);
+		SetEntityFlags(boss.iClient, GetEntityFlags(boss.iClient) & ~FL_ONGROUND);
 		TF2_AddCondition(boss.iClient, TFCond_BlastJumping);
 		
 		g_flDashJumpCooldownWait[boss.iClient] += boss.GetPropFloat("DashJump", "Cooldown");
