@@ -11,64 +11,64 @@ static bool g_bGrayMannPlayerWasSummoned[MAXPLAYERS];
 static bool g_bGrayMannMinionHasMoved[MAXPLAYERS];
 
 static char g_strGrayMannRoundStart[][] = {
-	"vsh_rewrite/grayman/intro1.mp3",
-	"vsh_rewrite/grayman/intro2.mp3",
-	"vsh_rewrite/grayman/intro3.mp3"
+	"vsh_rewrite/graymann/intro1.mp3",
+	"vsh_rewrite/graymann/intro2.mp3",
+	"vsh_rewrite/graymann/intro3.mp3"
 };
 
 static char g_strGrayMannWin[][] = {
-	"vsh_rewrite/grayman/win.mp3"
+	"vsh_rewrite/graymann/win.mp3"
 };
 
 static char g_strGrayMannLose[][] = {
-	"vsh_rewrite/grayman/lose.mp3"
+	"vsh_rewrite/graymann/lose.mp3"
 };
 
 static char g_strGrayMannRage[][] = {
-	"vsh_rewrite/grayman/rage1.mp3",
-	"vsh_rewrite/grayman/rage2.mp3",
-	"vsh_rewrite/grayman/rage3.mp3"
+	"vsh_rewrite/graymann/rage1.mp3",
+	"vsh_rewrite/graymann/rage2.mp3",
+	"vsh_rewrite/graymann/rage3.mp3"
 };
 
 static char g_strGrayMannKillScout[][] = {
-	"vsh_rewrite/grayman/laugh1.mp3",
-	"vsh_rewrite/grayman/laugh2.mp3",
-	"vsh_rewrite/grayman/laugh3.mp3"
+	"vsh_rewrite/graymann/laugh1.mp3",
+	"vsh_rewrite/graymann/laugh2.mp3",
+	"vsh_rewrite/graymann/laugh3.mp3"
 };
 
 static char g_strGrayMannKillSniper[][] = {
-	"vsh_rewrite/grayman/laugh1.mp3",
-	"vsh_rewrite/grayman/laugh2.mp3",
-	"vsh_rewrite/grayman/laugh3.mp3"
+	"vsh_rewrite/graymann/laugh1.mp3",
+	"vsh_rewrite/graymann/laugh2.mp3",
+	"vsh_rewrite/graymann/laugh3.mp3"
 };
 
 static char g_strGrayMannKillDemoMan[][] = {
-	"vsh_rewrite/grayman/laugh1.mp3",
-	"vsh_rewrite/grayman/laugh2.mp3",
-	"vsh_rewrite/grayman/laugh3.mp3"
+	"vsh_rewrite/graymann/laugh1.mp3",
+	"vsh_rewrite/graymann/laugh2.mp3",
+	"vsh_rewrite/graymann/laugh3.mp3"
 };
 
 static char g_strGrayMannKillMedic[][] = {
-	"vsh_rewrite/grayman/laugh1.mp3",
-	"vsh_rewrite/grayman/laugh2.mp3",
-	"vsh_rewrite/grayman/laugh3.mp3"
+	"vsh_rewrite/graymann/laugh1.mp3",
+	"vsh_rewrite/graymann/laugh2.mp3",
+	"vsh_rewrite/graymann/laugh3.mp3"
 };
 
 static char g_strGrayMannKillSpy[][] = {
-	"vsh_rewrite/grayman/laugh1.mp3",
-	"vsh_rewrite/grayman/laugh2.mp3",
-	"vsh_rewrite/grayman/laugh3.mp3"
+	"vsh_rewrite/graymann/laugh1.mp3",
+	"vsh_rewrite/graymann/laugh2.mp3",
+	"vsh_rewrite/graymann/laugh3.mp3"
 };
 
 static char g_strGrayMannKillEngie[][] = {
-	"vsh_rewrite/grayman/laugh1.mp3",
-	"vsh_rewrite/grayman/laugh2.mp3",
-	"vsh_rewrite/grayman/laugh3.mp3"
+	"vsh_rewrite/graymann/laugh1.mp3",
+	"vsh_rewrite/graymann/laugh2.mp3",
+	"vsh_rewrite/graymann/laugh3.mp3"
 };
 
 static char g_strGrayMannLastMan[][] = {
-	"vsh_rewrite/grayman/lastman1.mp3",
-	"vsh_rewrite/grayman/lastman2.mp3"
+	"vsh_rewrite/graymann/lastman1.mp3",
+	"vsh_rewrite/graymann/lastman2.mp3"
 };
 
 static char g_strGrayMannBackStabbed[][] = {
@@ -112,7 +112,7 @@ static char g_strPyroLoop[][] = {
 
 //There's probably a better way to write this code but I'm dogshit at coding, what you see is what you get
 
-public void Graymann_Create(SaxtonHaleBase boss)
+public void GrayMann_Create(SaxtonHaleBase boss)
 {	
 	boss.CreateClass("RageAddCond");
 	boss.SetPropFloat("RageAddCond", "RageCondDuration", 8.0);
@@ -126,12 +126,12 @@ public void Graymann_Create(SaxtonHaleBase boss)
 	boss.iMaxRageDamage = 3000;
 }
 
-public void Graymann_GetBossName(SaxtonHaleBase boss, char[] sName, int length)
+public void GrayMann_GetBossName(SaxtonHaleBase boss, char[] sName, int length)
 {
 	strcopy(sName, length, "Gray Mann");
 }
 
-public void Graymann_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length)
+public void GrayMann_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length)
 {
 	StrCat(sInfo, length, "\nHealth: Low");
 	StrCat(sInfo, length, "\n ");
@@ -144,10 +144,10 @@ public void Graymann_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length)
 	StrCat(sInfo, length, "\n- 200%% Rage: Spawn 2 random giant robots");
 }
 
-public void Graymann_OnRage(SaxtonHaleBase boss)
+public void GrayMann_OnRage(SaxtonHaleBase boss)
 {
 	int iTotalSummons = 1;
-	if (boss.bSuperRage) iTotalSummons = 3;
+	if (boss.bSuperRage) iTotalSummons = 2;
 	
 	//Create a lil effect
 	float vecBossPos[3];
@@ -176,7 +176,7 @@ public void Graymann_OnRage(SaxtonHaleBase boss)
 	delete aValidMinions;
 }
 
-public void Graymann_OnSpawn(SaxtonHaleBase boss)
+public void GrayMann_OnSpawn(SaxtonHaleBase boss)
 {
 	int iWeapon;
 	char attribs[128];
@@ -197,7 +197,7 @@ public void Graymann_OnSpawn(SaxtonHaleBase boss)
 	*/
 }
 
-public void Graymann_GetSound(SaxtonHaleBase boss, char[] sSound, int length, SaxtonHaleSound iSoundType)
+public void GrayMann_GetSound(SaxtonHaleBase boss, char[] sSound, int length, SaxtonHaleSound iSoundType)
 {
 	switch (iSoundType)
 	{
@@ -210,7 +210,7 @@ public void Graymann_GetSound(SaxtonHaleBase boss, char[] sSound, int length, Sa
 	}
 }
 
-public void Graymann_GetSoundKill(SaxtonHaleBase boss, char[] sSound, int length, TFClassType nClass)
+public void GrayMann_GetSoundKill(SaxtonHaleBase boss, char[] sSound, int length, TFClassType nClass)
 {
 	switch (nClass)
 	{
@@ -223,20 +223,20 @@ public void Graymann_GetSoundKill(SaxtonHaleBase boss, char[] sSound, int length
 	}
 }
 
-public Action Graymann_OnSoundPlayed(SaxtonHaleBase boss, int clients[MAXPLAYERS], int &numClients, char sample[PLATFORM_MAX_PATH], int &channel, float &volume, int &level, int &pitch, int &flags, char soundEntry[PLATFORM_MAX_PATH], int &seed)
+public Action GrayMann_OnSoundPlayed(SaxtonHaleBase boss, int clients[MAXPLAYERS], int &numClients, char sample[PLATFORM_MAX_PATH], int &channel, float &volume, int &level, int &pitch, int &flags, char soundEntry[PLATFORM_MAX_PATH], int &seed)
 {
 	if (strncmp(sample, "vo/", 3) == 0)//Block voicelines
 		return Plugin_Handled;
 	return Plugin_Continue;
 }
 
-public void Graymann_GetMusicInfo(SaxtonHaleBase boss, char[] sSound, int length, float &time)
+public void GrayMann_GetMusicInfo(SaxtonHaleBase boss, char[] sSound, int length, float &time)
 {
 	strcopy(sSound, length, GRAYMANN_THEME);
 	time = 214.0;
 }
 
-public void Graymann_Precache(SaxtonHaleBase boss) //not sure if custom sounds have to be in the downloadstable but I added them anyway
+public void GrayMann_Precache(SaxtonHaleBase boss) //not sure if custom sounds have to be in the downloadstable but I added them anyway
 {
 	PrecacheModel(GRAYMANN_MODEL);
 	PrepareMusic(GRAYMANN_THEME, false);
@@ -286,21 +286,6 @@ public void Graymann_Precache(SaxtonHaleBase boss) //not sure if custom sounds h
 	AddFileToDownloadsTable("models/player/vsh_rewrite/graymann/graymann.phy");
 	AddFileToDownloadsTable("models/player/vsh_rewrite/graymann/graymann.dx80.vtx");
 	AddFileToDownloadsTable("models/player/vsh_rewrite/graymann/graymann.dx90.vtx");
-
-	//Sounds
-	AddFileToDownloadsTable("sound/vsh_rewrite/graymann/intro1.mp3");
-	AddFileToDownloadsTable("sound/vsh_rewrite/graymann/intro2.mp3");
-	AddFileToDownloadsTable("sound/vsh_rewrite/graymann/intro3.mp3");
-	AddFileToDownloadsTable("sound/vsh_rewrite/graymann/lastman1.mp3");
-	AddFileToDownloadsTable("sound/vsh_rewrite/graymann/lastman2.mp3");
-	AddFileToDownloadsTable("sound/vsh_rewrite/graymann/laugh1.mp3");
-	AddFileToDownloadsTable("sound/vsh_rewrite/graymann/laugh2.mp3");
-	AddFileToDownloadsTable("sound/vsh_rewrite/graymann/laugh3.mp3");
-	AddFileToDownloadsTable("sound/vsh_rewrite/graymann/rage1.mp3");
-	AddFileToDownloadsTable("sound/vsh_rewrite/graymann/rage2.mp3");
-	AddFileToDownloadsTable("sound/vsh_rewrite/graymann/rage3.mp3");
-	AddFileToDownloadsTable("sound/vsh_rewrite/graymann/lose.mp3");
-	AddFileToDownloadsTable("sound/vsh_rewrite/graymann/win.mp3");
 }
 
 public void GrayMannSoldierMinion_Create(SaxtonHaleBase boss) //Giant Soldier Stats
@@ -507,7 +492,7 @@ public void GrayMannPyroMinion_OnButtonPress(SaxtonHaleBase boss, int button)
 	}
 }
 
-public void Graymann_GetModel(SaxtonHaleBase boss, char[] sModel, int length) //Models are grabbed here, duh
+public void GrayMann_GetModel(SaxtonHaleBase boss, char[] sModel, int length) //Models are grabbed here, duh
 {
 	strcopy(sModel, length, GRAYMANN_MODEL);
 }

@@ -667,7 +667,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("DemoPan", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("DemoRobot", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("GentleSpy", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("Graymann", VSHClassType_Boss);
+	SaxtonHale_RegisterClass("GrayMann", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("Horsemann", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("Merasmus", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("PainisCupcake", VSHClassType_Boss);
