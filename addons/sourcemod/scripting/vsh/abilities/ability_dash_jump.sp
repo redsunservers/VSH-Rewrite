@@ -50,9 +50,11 @@ public void DashJump_OnButtonPress(SaxtonHaleBase boss, int iButton)
 		vecVel[1] = Cosine(DegToRad(vecAng[0])) * Sine(DegToRad(vecAng[1])) * boss.GetPropFloat("DashJump", "MaxForce");
 		vecVel[2] = (((-vecAng[0]) * 1.5) + 90.0) * 3.0;
 		
-		SetEntProp(boss.iClient, Prop_Send, "m_bJumping", true);
-		
 		TeleportEntity(boss.iClient, NULL_VECTOR, NULL_VECTOR, vecVel);
+		
+		SetEntProp(boss.iClient, Prop_Send, "m_bJumping", true);
+		SetEntityFlags(boss.iClient, GetEntityFlags(boss.iClient) & ~FL_ONGROUND);
+		TF2_AddCondition(boss.iClient, TFCond_BlastJumping);
 		
 		g_flDashJumpCooldownWait[boss.iClient] += boss.GetPropFloat("DashJump", "Cooldown");
 		boss.CallFunction("UpdateHudInfo", 0.0, boss.GetPropFloat("DashJump", "Cooldown") * 2);	//Update every frame for cooldown * 2
