@@ -138,7 +138,8 @@ public void SaxtonHaleBoss_OnSpawn(SaxtonHaleBase boss)
 			Call_PushCell(TFClass_Scout);	//Class to set
 			Call_PushFloat(400.0);	//Radius, halfed of hale
 			Call_PushFloat(5.0);	//Duration (using default)
-			Call_PushCell(TF_STUNFLAGS_SMALLBONK);	//Stunflags
+			Call_PushCell(TF_STUNFLAG_SLOWDOWN | TF_STUNFLAG_GHOSTEFFECT);	//Stunflags
+			Call_PushFloat(0.25);	//Slowdown (using default)
 			Call_Finish();
 		}
 	}
