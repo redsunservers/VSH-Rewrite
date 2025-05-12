@@ -1,12 +1,14 @@
 static float g_flScareRadiusClass[MAXPLAYERS][10];
 static float g_flScareDurationClass[MAXPLAYERS][10];
 static int g_iScareStunFlagsClass[MAXPLAYERS][10];
+static float g_flScareSlowdownClass[MAXPLAYERS][10];
 
-public void ScareRage_SetClass(SaxtonHaleBase boss, TFClassType nClass, float flRadius, float flDuration, int iStunFlags)
+public void ScareRage_SetClass(SaxtonHaleBase boss, TFClassType nClass, float flRadius, float flDuration, int iStunFlags, float flSlowdown)
 {
 	g_flScareRadiusClass[boss.iClient][nClass] = flRadius;
 	g_flScareDurationClass[boss.iClient][nClass] = flDuration;
 	g_iScareStunFlagsClass[boss.iClient][nClass] = iStunFlags;
+	g_flScareSlowdownClass[boss.iClient][nClass] = flSlowdown;
 }
 
 public void ScareRage_Create(SaxtonHaleBase boss)
@@ -15,12 +17,14 @@ public void ScareRage_Create(SaxtonHaleBase boss)
 	boss.SetPropFloat("ScareRage", "Radius", -1.0);
 	boss.SetPropFloat("ScareRage", "Duration", 5.0);
 	boss.SetPropInt("ScareRage", "StunFlags", TF_STUNFLAGS_GHOSTSCARE);
+	boss.SetPropFloat("ScareRage", "Slowdown", 0.0);
 	
 	for (TFClassType nClass = TFClass_Scout; nClass <= TFClass_Engineer; nClass++)
 	{
 		g_flScareRadiusClass[boss.iClient][nClass] = -1.0;
 		g_flScareDurationClass[boss.iClient][nClass] = -1.0;
 		g_iScareStunFlagsClass[boss.iClient][nClass] = -1;
+		g_flScareSlowdownClass[boss.iClient][nClass] = -1.0;
 	}
 }
 
@@ -47,6 +51,7 @@ public void ScareRage_OnRage(SaxtonHaleBase boss)
 			
 			// Use whichever radius is the smallest
 			float flDuration = 0.0;
+			float flSlowdown = 0.0;
 			int iStunFlags = 0;
 			
 			if (flDistance <= boss.GetPropFloat("ScareRage", "Radius") * flMultiplier <= flMinDistance)
@@ -54,6 +59,7 @@ public void ScareRage_OnRage(SaxtonHaleBase boss)
 				flMinDistance = boss.GetPropFloat("ScareRage", "Radius") * flMultiplier;
 				flDuration = boss.GetPropFloat("ScareRage", "Duration");
 				iStunFlags = boss.GetPropInt("ScareRage", "StunFlags");
+				flSlowdown = boss.GetPropFloat("ScareRage", "Slowdown");
 			}
 			
 			if (flDistance <= g_flScareRadiusClass[boss.iClient][nClass] * flMultiplier <= flMinDistance)
@@ -61,6 +67,7 @@ public void ScareRage_OnRage(SaxtonHaleBase boss)
 				flMinDistance = g_flScareRadiusClass[boss.iClient][nClass] * flMultiplier;
 				flDuration = g_flScareDurationClass[boss.iClient][nClass];
 				iStunFlags = g_iScareStunFlagsClass[boss.iClient][nClass];
+				flSlowdown = g_flScareSlowdownClass[boss.iClient][nClass];
 			}
 			
 			flDuration *= flMultiplier;
@@ -70,7 +77,27 @@ public void ScareRage_OnRage(SaxtonHaleBase boss)
 				if (TF2_IsPlayerInCondition(iVictim, TFCond_Dazed))
 					TF2_RemoveCondition(iVictim, TFCond_Dazed);
 				
-				TF2_StunPlayer(iVictim, flDuration, 0.0, iStunFlags, 0);
+				// If we're ONLY slowing players down, use an attribute instead, since this flag doesn't work too well if the player isn't "scared"
+				if (iStunFlags & TF_STUNFLAG_SLOWDOWN && !(iStunFlags & TF_STUNFLAG_THIRDPERSON) && !(iStunFlags & TF_STUNFLAG_BONKSTUCK))
+				{
+					// The slowdown parameter in stuns is an inverted multiplier, unlike the regular speed multiplier used in attributes
+					flSlowdown = 1.0 - flSlowdown;
+					if (flSlowdown < 0.0)
+						flSlowdown = 0.0;
+					
+					TF2Attrib_AddCustomPlayerAttribute(iVictim, "no double jump", 1.0, flDuration);
+					TF2Attrib_AddCustomPlayerAttribute(iVictim, "SET BONUS: move speed set bonus", flSlowdown, flDuration);
+					
+					if (iStunFlags & TF_STUNFLAG_GHOSTEFFECT)
+						EmitGameSoundToAll("Halloween.PlayerScream", iVictim);
+						
+					// Give players a useless stun for the sake of having the icon in the HUD
+					TF2_StunPlayer(iVictim, flDuration, 0.0, iStunFlags, 0);
+				}
+				else
+				{
+					TF2_StunPlayer(iVictim, flDuration, flSlowdown, iStunFlags, 0);
+				}
 			}
 		}
 	}
