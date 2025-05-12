@@ -30,8 +30,8 @@ void Dome_Init()
 	g_ConfigConvar.Create("vsh_dome_enable", "1", "Enable dome?", _, true, 0.0, true, 1.0);
 	g_ConfigConvar.Create("vsh_dome_centre", "", "Map centre pos for Dome/CP (blank for CP's default centre)");
 	g_ConfigConvar.Create("vsh_dome_cp_radius", "250", "If vsh_dome_centre specified, new radius from CP to capture");
-	g_ConfigConvar.Create("vsh_dome_cp_unlock", "60", "Time in second to unlock CP on round start", _, true, 0.0);
-	g_ConfigConvar.Create("vsh_dome_cp_unlockplayer", "5", "Time in second to add on every player to unlock CP on round start", _, true, 0.0);
+	g_ConfigConvar.Create("vsh_dome_cp_unlock", "180", "Time in second to unlock CP on round start", _, true, 0.0);
+	g_ConfigConvar.Create("vsh_dome_cp_unlockplayer", "10", "Time in second to add on every player to unlock CP on round start", _, true, 0.0);
 	g_ConfigConvar.Create("vsh_dome_cp_captime", "15", "How long to capture CP", _, true, 0.0);
 	g_ConfigConvar.Create("vsh_dome_cp_bossrate", "3", "Capture value for boss", _, true, 1.0);
 	g_ConfigConvar.Create("vsh_dome_color_neu", "192 192 192 255", "Color of dome in RGBA if nobody owns the capture point");
