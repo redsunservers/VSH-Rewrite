@@ -17,7 +17,7 @@ public void ScareRage_Create(SaxtonHaleBase boss)
 	boss.SetPropFloat("ScareRage", "Radius", -1.0);
 	boss.SetPropFloat("ScareRage", "Duration", 5.0);
 	boss.SetPropInt("ScareRage", "StunFlags", TF_STUNFLAGS_GHOSTSCARE);
-	boss.SetPropFloat("ScareRage", "Slowdown", 0.25);
+	boss.SetPropFloat("ScareRage", "Slowdown", 0.0);
 	
 	for (TFClassType nClass = TFClass_Scout; nClass <= TFClass_Engineer; nClass++)
 	{
