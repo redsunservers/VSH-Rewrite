@@ -350,7 +350,7 @@ public bool GrayMannPyroMinion_IsBossHidden(SaxtonHaleBase boss)
 public void GrayMannSoldierMinion_OnSpawn(SaxtonHaleBase boss) //Soldier's Attributes
 {
 	char sAttribs[256];
-	strcopy(sAttribs, sizeof(sAttribs), "1 ; 0.5 ; 4 ; 2.0 ; 5 ; 2.0 ; 97 ; 0.5 ; 252 ; 0.5 ; 259 ; 1.0 ; 330 ; 3.0");
+	strcopy(sAttribs, sizeof(sAttribs), "4 ; 2.0 ; 97 ; 0.5 ; 252 ; 0.5 ; 259 ; 1.0 ; 330 ; 3.0");
 	int iWeapon = boss.CallFunction("CreateWeapon", 205, "tf_weapon_rocketlauncher", 10, TFQual_Collectors, sAttribs);
 	TF2_SetAmmo(boss.iClient, TF_AMMO_PRIMARY, 99999);
 	if (iWeapon > MaxClients)
@@ -359,9 +359,7 @@ public void GrayMannSoldierMinion_OnSpawn(SaxtonHaleBase boss) //Soldier's Attri
 	/*
 	Rocket Launcher attributes:
 	
-	1: damage penalty
 	4: clip size bonus
-	5: slower firing speed
 	97: reload time decreased
 	252: reduction in push force taken from damage
 	259: Deals 3x falling damage to the player you land on
@@ -377,7 +375,7 @@ public void GrayMannSoldierMinion_OnSpawn(SaxtonHaleBase boss) //Soldier's Attri
 public void GrayMannDemomanMinion_OnSpawn(SaxtonHaleBase boss) //Demo's Attributes
 {
 	char sAttribs[256];
-	strcopy(sAttribs, sizeof(sAttribs), "1 ; 0.5 ; 4 ; 2.0 ; 5 ; 2.0 ; 97 ; 3.0 ; 252 ; 0.5 ; 259 ; 1.0 ; 330 ; 4.0");
+	strcopy(sAttribs, sizeof(sAttribs), "4 ; 2.0 ; 97 ; 3.0 ; 252 ; 0.5 ; 259 ; 1.0 ; 330 ; 4.0");
 	int iWeapon = boss.CallFunction("CreateWeapon", 206, "tf_weapon_grenadelauncher", 10, TFQual_Collectors, sAttribs);
 	TF2_SetAmmo(boss.iClient, TF_AMMO_PRIMARY, 99999);
 	if (iWeapon > MaxClients)
@@ -386,9 +384,7 @@ public void GrayMannDemomanMinion_OnSpawn(SaxtonHaleBase boss) //Demo's Attribut
 	/*
 	Grenade Launcher attributes:
 	
-	1: damage penalty
 	4: clip size bonus
-	5: slower firing speed
 	97: reload time decreased
 	252: reduction in push force taken from damage
 	259: Deals 3x falling damage to the player you land on
