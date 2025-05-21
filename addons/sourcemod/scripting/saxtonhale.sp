@@ -207,6 +207,16 @@ enum
 	NUM_OBSERVER_MODES,
 };
 
+enum
+{
+	DONT_BLEED = -1,
+	
+	BLOOD_COLOR_RED = 0,
+	BLOOD_COLOR_YELLOW,
+	BLOOD_COLOR_GREEN,
+	BLOOD_COLOR_MECH,
+};
+
 char g_strPreferencesName[][] = {
 	"Boss Selection",
 	"",
