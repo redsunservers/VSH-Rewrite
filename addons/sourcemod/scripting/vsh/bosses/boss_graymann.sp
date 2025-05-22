@@ -31,6 +31,7 @@ static int g_iGrayMannMinionAFKTimeLeft[MAXPLAYERS + 1];
 static Handle g_hGrayMannMinionAFKTimer[MAXPLAYERS + 1];
 static bool g_bGrayMannPlayerWasSummoned[MAXPLAYERS + 1];
 static bool g_bGrayMannMinionHasMoved[MAXPLAYERS + 1];
+static bool g_bGrayMannMinionIsPlayingSoundLoop[MAXPLAYERS + 1];
 
 static bool g_bGrayMannMinionBlockRagdoll;
 
@@ -71,6 +72,20 @@ static char g_strGrayMannBackStabbed[][] = {
 	"weapons/fx/rics/arrow_impact_metal4.wav"
 };
 
+static char g_strGrayMannSoundGiantLoop[][] = {
+	"", // Unknown
+	"", // Scout
+	"", // Sniper
+	"MVM.GiantSoldierLoop",
+	"MVM.GiantDemomanLoop",
+	"", // Medic
+	"", // Heavy
+	"MVM.GiantPyroLoop",
+	"", // Spy
+	""  // Engineer
+};
+
+
 // Gibs: heads are always the first item in the arrays
 
 static char g_strGrayMannSoldierGibs[][] = {
@@ -104,7 +119,11 @@ static char g_strGrayMannDemomanGibs[][] = {
 	"models/bots/gibs/demobot_gib_boss_pelvis.mdl"
 };
 
-//There's probably a better way to write this code but I'm dogshit at coding, what you see is what you get
+////////////////////////////////////////////////////////
+//
+// GRAY MANN
+//
+////////////////////////////////////////////////////////
 
 public void GrayMann_Create(SaxtonHaleBase boss)
 {	
@@ -210,6 +229,7 @@ public Action GrayMann_OnSoundPlayed(SaxtonHaleBase boss, int clients[MAXPLAYERS
 {
 	if (strncmp(sample, "vo/", 3) == 0)//Block voicelines
 		return Plugin_Handled;
+	
 	return Plugin_Continue;
 }
 
@@ -228,7 +248,7 @@ public void GrayMann_GetHudInfo(SaxtonHaleBase boss, char[] sMessage, int iLengt
 		
 		switch (g_iGrayMannQueueReason[boss.iClient])
 		{
-			case GRAYMANN_QUEUE_NO_CANDIDATES: Format(sMessage, iLength, "%s\nThere are no candidates available to summon.", sMessage);
+			case GRAYMANN_QUEUE_NO_CANDIDATES: Format(sMessage, iLength, "%s\nThere are no players available to summon.", sMessage);
 			case GRAYMANN_QUEUE_NO_SPACE: Format(sMessage, iLength, "%s\nThere is not enough space around you to fit a giant robot.", sMessage);
 		}
 	}
@@ -286,6 +306,12 @@ public void GrayMann_Destroy(SaxtonHaleBase boss)
 {
 	g_hGrayMannSpawnQueuedMinionTimer[boss.iClient] = null;
 }
+
+////////////////////////////////////////////////////////
+//
+// GIANT ROBOT MINIONS
+//
+////////////////////////////////////////////////////////
 
 public void GrayMannSoldierMinion_Create(SaxtonHaleBase boss) //Giant Soldier Stats
 {
@@ -350,61 +376,47 @@ public bool GrayMannPyroMinion_IsBossHidden(SaxtonHaleBase boss)
 public void GrayMannSoldierMinion_OnSpawn(SaxtonHaleBase boss) //Soldier's Attributes
 {
 	char sAttribs[256];
-	strcopy(sAttribs, sizeof(sAttribs), "4 ; 2.0 ; 97 ; 0.5 ; 252 ; 0.5 ; 259 ; 1.0 ; 330 ; 3.0");
+	strcopy(sAttribs, sizeof(sAttribs), "4 ; 2.0 ; 6 ; 0.75 ; 97 ; 0.5 ; 252 ; 0.5 ; 259 ; 1.0 ; 330 ; 3.0");
 	int iWeapon = boss.CallFunction("CreateWeapon", 205, "tf_weapon_rocketlauncher", 10, TFQual_Collectors, sAttribs);
-	TF2_SetAmmo(boss.iClient, TF_AMMO_PRIMARY, 99999);
-	if (iWeapon > MaxClients)
-		SetEntPropEnt(boss.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
 	
 	/*
 	Rocket Launcher attributes:
 	
 	4: clip size bonus
+	6: fire rate bonus
 	97: reload time decreased
 	252: reduction in push force taken from damage
 	259: Deals 3x falling damage to the player you land on
 	330: override footstep sound set
 	*/
 	
-	SetEntPropFloat(boss.iClient, Prop_Send, "m_flModelScale", GRAYMANN_GIANT_ROBOT_SCALE);
-	SetEntProp(boss.iClient, Prop_Data, "m_bloodColor", DONT_BLEED);
-	
-	g_hGrayMannMinionAFKTimer[boss.iClient] = CreateTimer(0.0, Timer_GrayMann_ReplaceMinion, boss.iClient);
+	GrayMann_GiantCommon_OnSpawn(boss, iWeapon);
 }
 
 public void GrayMannDemomanMinion_OnSpawn(SaxtonHaleBase boss) //Demo's Attributes
 {
 	char sAttribs[256];
-	strcopy(sAttribs, sizeof(sAttribs), "4 ; 2.0 ; 97 ; 3.0 ; 252 ; 0.5 ; 259 ; 1.0 ; 330 ; 4.0");
-	int iWeapon = boss.CallFunction("CreateWeapon", 206, "tf_weapon_grenadelauncher", 10, TFQual_Collectors, sAttribs);
-	TF2_SetAmmo(boss.iClient, TF_AMMO_PRIMARY, 99999);
-	if (iWeapon > MaxClients)
-		SetEntPropEnt(boss.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
+	strcopy(sAttribs, sizeof(sAttribs), "4 ; 2.0 ; 6 ; 0.75 ; 252 ; 0.5 ; 259 ; 1.0 ; 330 ; 4.0");
+	int iWeapon = boss.CallFunction("CreateWeapon", 206, "tf_weapon_grenadelauncher", 100, TFQual_Collectors, sAttribs);
 	
 	/*
 	Grenade Launcher attributes:
 	
 	4: clip size bonus
-	97: reload time decreased
+	6: fire rate bonus
 	252: reduction in push force taken from damage
 	259: Deals 3x falling damage to the player you land on
 	330: override footstep sound set
 	*/
 	
-	SetEntPropFloat(boss.iClient, Prop_Send, "m_flModelScale", GRAYMANN_GIANT_ROBOT_SCALE);
-	SetEntProp(boss.iClient, Prop_Data, "m_bloodColor", DONT_BLEED);
-	
-	g_hGrayMannMinionAFKTimer[boss.iClient] = CreateTimer(0.0, Timer_GrayMann_ReplaceMinion, boss.iClient);
+	GrayMann_GiantCommon_OnSpawn(boss, iWeapon);
 }
 
 public void GrayMannPyroMinion_OnSpawn(SaxtonHaleBase boss) //Pyro's Attributes. Don't touch it. Don't even blink. Don't do fucking ANYTHING.
 {
 	char sAttribs[256];
-	strcopy(sAttribs, sizeof(sAttribs), "844 ; 1850.0 ; 841 ; 0.0 ; 843 ; 10.0 ; 862 ; 0.50 ; 1 ; 0.5 ; 4 ; 2.0 ; 356 ; 1.0 ; 252 ; 0.5 ; 259 ; 1.0 ; 330 ; 6.0");
+	strcopy(sAttribs, sizeof(sAttribs), "844 ; 1850.0 ; 841 ; 0.0 ; 843 ; 10.0 ; 862 ; 0.50 ; 4 ; 2.0 ; 356 ; 1.0 ; 252 ; 0.5 ; 259 ; 1.0 ; 330 ; 6.0 ; 164 ; 2.0");
 	int iWeapon = boss.CallFunction("CreateWeapon", 208, "tf_weapon_flamethrower", 100, TFQual_Collectors, sAttribs);
-	TF2_SetAmmo(boss.iClient, TF_AMMO_PRIMARY, 99999);
-	if (iWeapon > MaxClients)
-		SetEntPropEnt(boss.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
 	
 	/*
 	Flammenwerfer attributes:
@@ -416,55 +428,45 @@ public void GrayMannPyroMinion_OnSpawn(SaxtonHaleBase boss) //Pyro's Attributes.
 	841: flame gravity
 	843: flame drag
 	862: flame lifetime
-	1: damage penalty
 	4: clip size bonus
 	164: flame life bonus
-	162: flame size
 	356: airblast disabled
 	252: reduction in push force taken from damage
 	259: Deals 3x falling damage to the player you land on
 	330: override footstep sound set
 	*/
 	
-	SetEntPropFloat(boss.iClient, Prop_Send, "m_flModelScale", GRAYMANN_GIANT_ROBOT_SCALE);
-	SetEntProp(boss.iClient, Prop_Data, "m_bloodColor", DONT_BLEED);
-	
-	g_hGrayMannMinionAFKTimer[boss.iClient] = CreateTimer(0.0, Timer_GrayMann_ReplaceMinion, boss.iClient);
+	GrayMann_GiantCommon_OnSpawn(boss, iWeapon);
+}
+
+public void GrayMannSoldierMinion_OnThink(SaxtonHaleBase boss)
+{
+	GrayMann_GiantCommon_OnThink(boss);
+}
+
+public void GrayMannDemomanMinion_OnThink(SaxtonHaleBase boss)
+{
+	GrayMann_GiantCommon_OnThink(boss);
+}
+
+public void GrayMannPyroMinion_OnThink(SaxtonHaleBase boss)
+{
+	GrayMann_GiantCommon_OnThink(boss);
 }
 
 public void GrayMannSoldierMinion_OnButtonPress(SaxtonHaleBase boss, int button)
 {
-	//Check if the player presses anything, thus isn't AFK
-	if (!g_bGrayMannMinionHasMoved[boss.iClient])
-	{	
-		//Reset their über spawn protection
-		TF2_RemoveCondition(boss.iClient, TFCond_UberchargedCanteen);
-		TF2_AddCondition(boss.iClient, TFCond_UberchargedCanteen, 3.0);
-			
-		g_bGrayMannMinionHasMoved[boss.iClient] = true;
-	}
+	GrayMann_GiantCommon_OnButtonPress(boss);
 }
 
 public void GrayMannDemomanMinion_OnButtonPress(SaxtonHaleBase boss, int button)
 {
-	if (!g_bGrayMannMinionHasMoved[boss.iClient])
-	{	
-		TF2_RemoveCondition(boss.iClient, TFCond_UberchargedCanteen);
-		TF2_AddCondition(boss.iClient, TFCond_UberchargedCanteen, 3.0);
-			
-		g_bGrayMannMinionHasMoved[boss.iClient] = true;
-	}
+	GrayMann_GiantCommon_OnButtonPress(boss);
 }
 
 public void GrayMannPyroMinion_OnButtonPress(SaxtonHaleBase boss, int button)
 {
-	if (!g_bGrayMannMinionHasMoved[boss.iClient])
-	{	
-		TF2_RemoveCondition(boss.iClient, TFCond_UberchargedCanteen);
-		TF2_AddCondition(boss.iClient, TFCond_UberchargedCanteen, 3.0);
-			
-		g_bGrayMannMinionHasMoved[boss.iClient] = true;
-	}
+	GrayMann_GiantCommon_OnButtonPress(boss);
 }
 
 public void GrayMann_GetModel(SaxtonHaleBase boss, char[] sModel, int length) //Models are grabbed here, duh
@@ -510,11 +512,15 @@ public Action GrayMannSoldierMinion_OnSoundPlayed(SaxtonHaleBase boss, int clien
 	}
 	else if (strcmp(sample, ")weapons/rocket_shoot.wav") == 0)
 	{
-		EmitSoundToAll(GRAYMANN_GIANTROCKETSOUND, boss.iClient, SNDCHAN_WEAPON);
+		strcopy(sample, sizeof(sample), GRAYMANN_GIANTROCKETSOUND);
+		EmitSoundToClient(boss.iClient, sample, _, SNDCHAN_WEAPON);
+		return Plugin_Changed;
 	}
 	else if (strcmp(sample, ")weapons/rocket_shoot_crit.wav") == 0)
 	{
-		EmitSoundToAll(GRAYMANN_GIANTCRITROCKETSOUND, boss.iClient, SNDCHAN_WEAPON);
+		strcopy(sample, sizeof(sample), GRAYMANN_GIANTCRITROCKETSOUND);
+		EmitSoundToClient(boss.iClient, sample, _, SNDCHAN_WEAPON);
+		return Plugin_Changed;
 	}
 	
 	return Plugin_Continue;
@@ -543,7 +549,9 @@ public Action GrayMannDemomanMinion_OnSoundPlayed(SaxtonHaleBase boss, int clien
 	}
 	else if (strcmp(sample, ")weapons/grenade_launcher_shoot.wav") == 0 || strcmp(sample, ")weapons/grenade_launcher_shoot_crit.wav") == 0)
 	{
-		EmitSoundToAll(GRAYMANN_GIANTGRENADESOUND, boss.iClient, SNDCHAN_WEAPON);
+		strcopy(sample, sizeof(sample), GRAYMANN_GIANTGRENADESOUND);
+		EmitSoundToClient(boss.iClient, sample, _, SNDCHAN_WEAPON);
+		return Plugin_Changed;
 	}
 	
 	return Plugin_Continue;
@@ -576,9 +584,97 @@ public Action GrayMannPyroMinion_OnSoundPlayed(SaxtonHaleBase boss, int clients[
 
 public void GrayMannSoldierMinion_OnDeath(SaxtonHaleBase boss)
 {
+	GrayMann_GiantCommon_OnDeath(boss);
+}
+
+public void GrayMannDemomanMinion_OnDeath(SaxtonHaleBase boss)
+{
+	GrayMann_GiantCommon_OnDeath(boss);
+}
+
+public void GrayMannPyroMinion_OnDeath(SaxtonHaleBase boss)
+{
+	GrayMann_GiantCommon_OnDeath(boss);
+}
+
+public void GrayMannSoldierMinion_Destroy(SaxtonHaleBase boss)
+{
+	GrayMann_GiantCommon_Destroy(boss);
+}
+
+public void GrayMannDemomanMinion_Destroy(SaxtonHaleBase boss)
+{
+	GrayMann_GiantCommon_Destroy(boss);
+}
+
+public void GrayMannPyroMinion_Destroy(SaxtonHaleBase boss)
+{
+	GrayMann_GiantCommon_Destroy(boss);
+}
+
+////////////////////////////////////////////////////////
+//
+// COMMON GIANT ROBOT FUNCTIONS
+//
+////////////////////////////////////////////////////////
+
+void GrayMann_GiantCommon_OnSpawn(SaxtonHaleBase boss, int iWeapon)
+{
+	// SetModelScale errors out when using a float instead of a string, so it looks odd
+	char sScale[8];
+	FloatToString(GRAYMANN_GIANT_ROBOT_SCALE, sScale, sizeof(sScale));
+	
+	SetVariantString(sScale);
+	AcceptEntityInput(boss.iClient, "SetModelScale");
+	
+	SetEntProp(boss.iClient, Prop_Data, "m_bloodColor", DONT_BLEED);
+	
+	if (iWeapon > MaxClients)
+	{
+		TF2_SwitchToWeapon(boss.iClient, iWeapon);
+		SetEntProp(iWeapon, Prop_Send, "m_iClip1", SDK_GetMaxClip(iWeapon));
+		TF2_SetAmmo(boss.iClient, TF_AMMO_PRIMARY, 99999);
+	}
+	
+	if (GameRules_GetRoundState() != RoundState_TeamWin)
+	{
+		char sSoundLoop[PLATFORM_MAX_PATH];
+		strcopy(sSoundLoop, sizeof(sSoundLoop), g_strGrayMannSoundGiantLoop[boss.nClass]);
+		if (sSoundLoop[0])
+		{
+			EmitGameSoundToAll(sSoundLoop, boss.iClient);
+			g_bGrayMannMinionIsPlayingSoundLoop[boss.iClient] = true;
+		}
+	}
+	
+	g_hGrayMannMinionAFKTimer[boss.iClient] = CreateTimer(0.0, Timer_GrayMann_ReplaceMinion, boss.iClient);
+}
+
+void GrayMann_GiantCommon_OnThink(SaxtonHaleBase boss)
+{
+	if (GameRules_GetRoundState() == RoundState_TeamWin && g_bGrayMannMinionIsPlayingSoundLoop[boss.iClient])
+		GrayMann_GiantCommon_StopLoopingSound(boss);
+}
+
+void GrayMann_GiantCommon_OnButtonPress(SaxtonHaleBase boss)
+{
+	//Check if the player presses anything, thus isn't AFK
+	if (!g_bGrayMannMinionHasMoved[boss.iClient])
+	{	
+		//Reset their über spawn protection
+		TF2_RemoveCondition(boss.iClient, TFCond_UberchargedCanteen);
+		TF2_AddCondition(boss.iClient, TFCond_UberchargedCanteen, 3.0);
+			
+		g_bGrayMannMinionHasMoved[boss.iClient] = true;
+	}
+}
+
+void GrayMann_GiantCommon_OnDeath(SaxtonHaleBase boss)
+{
 	g_bGrayMannMinionBlockRagdoll = true;
 	GrayMann_CreateRobotGibs(boss.iClient);
 	EmitGameSoundToAll(GRAYMANN_GIANTDESTROYEDSOUND, boss.iClient);
+	GrayMann_GiantCommon_StopLoopingSound(boss);
 	
 	//This is called on death in case people suicide after getting summoned instead of disabling respawn
 	if (!g_bGrayMannMinionHasMoved[boss.iClient])
@@ -589,7 +685,7 @@ public void GrayMannSoldierMinion_OnDeath(SaxtonHaleBase boss)
 		int iBestClient = GrayMann_SelectBestPlayer(aValidMinions);
 		if (iBestClient > 0)
 		{
-			GrayMann_SpawnMinion(iBestClient, TFClass_Soldier);
+			GrayMann_SpawnMinion(iBestClient, boss.nClass);
 			TF2_TeleportToClient(iBestClient, boss.iClient);
 		}
 			
@@ -597,68 +693,32 @@ public void GrayMannSoldierMinion_OnDeath(SaxtonHaleBase boss)
 	}
 }
 
-public void GrayMannDemomanMinion_OnDeath(SaxtonHaleBase boss)
+void GrayMann_GiantCommon_Destroy(SaxtonHaleBase boss)
 {
-	g_bGrayMannMinionBlockRagdoll = true;
-	GrayMann_CreateRobotGibs(boss.iClient);
-	EmitGameSoundToAll(GRAYMANN_GIANTDESTROYEDSOUND, boss.iClient);
-	
-	if (!g_bGrayMannMinionHasMoved[boss.iClient])
-	{
-		ArrayList aValidMinions = GetValidSummonableClients();
-		
-		int iBestClient = GrayMann_SelectBestPlayer(aValidMinions);
-		if (iBestClient > 0)
-		{
-			GrayMann_SpawnMinion(iBestClient, TFClass_DemoMan);
-			TF2_TeleportToClient(iBestClient, boss.iClient);
-		}
-		
-		delete aValidMinions;
-	}
-}
-
-public void GrayMannPyroMinion_OnDeath(SaxtonHaleBase boss)
-{
-	g_bGrayMannMinionBlockRagdoll = true;
-	GrayMann_CreateRobotGibs(boss.iClient);
-	EmitGameSoundToAll(GRAYMANN_GIANTDESTROYEDSOUND, boss.iClient);
-	
-	if (!g_bGrayMannMinionHasMoved[boss.iClient])
-	{
-		ArrayList aValidMinions = GetValidSummonableClients();
-		
-		int iBestClient = GrayMann_SelectBestPlayer(aValidMinions);
-		if (iBestClient > 0)
-		{
-			GrayMann_SpawnMinion(iBestClient, TFClass_Pyro);
-			TF2_TeleportToClient(iBestClient, boss.iClient);
-		}
-			
-		delete aValidMinions;
-	}
-}
-
-public void GrayMannSoldierMinion_Destroy(SaxtonHaleBase boss)
-{
-	SetEntPropFloat(boss.iClient, Prop_Send, "m_flModelScale", 1.0);
+	// It errors out when using a float instead of a string, so it looks odd
+	SetVariantString("1.0");
+	AcceptEntityInput(boss.iClient, "SetModelScale");
 	
 	g_hGrayMannMinionAFKTimer[boss.iClient] = null;
+	
+	GrayMann_GiantCommon_StopLoopingSound(boss);
 }
 
-public void GrayMannDemomanMinion_Destroy(SaxtonHaleBase boss)
+void GrayMann_GiantCommon_StopLoopingSound(SaxtonHaleBase boss)
 {
-	SetEntPropFloat(boss.iClient, Prop_Send, "m_flModelScale", 1.0);
+	char sSoundLoop[PLATFORM_MAX_PATH];
+	strcopy(sSoundLoop, sizeof(sSoundLoop), g_strGrayMannSoundGiantLoop[boss.nClass]);
+	if (sSoundLoop[0])
+		EmitGameSoundToAll(sSoundLoop, boss.iClient, (SND_STOP | SND_STOPLOOPING));
 	
-	g_hGrayMannMinionAFKTimer[boss.iClient] = null;
+	g_bGrayMannMinionIsPlayingSoundLoop[boss.iClient] = false;
 }
 
-public void GrayMannPyroMinion_Destroy(SaxtonHaleBase boss)
-{
-	SetEntPropFloat(boss.iClient, Prop_Send, "m_flModelScale", 1.0);
-	
-	g_hGrayMannMinionAFKTimer[boss.iClient] = null;
-}
+////////////////////////////////////////////////////////
+//
+// MISC GRAY MANN-MINION INTERACTION FUNCTIONS
+//
+////////////////////////////////////////////////////////
 
 int GrayMann_SelectBestPlayer(ArrayList aClients)
 {
@@ -785,18 +845,15 @@ Action GrayMann_Timer_TryToSpawnQueuedMinion(Handle hTimer, int iUserID)
 	}
 	
 	// Check if there's enough space for the boss to spawn a giant
-	float flOriginalScale = GetEntPropFloat(iClient, Prop_Send, "m_flModelScale");
-	SetEntPropFloat(iClient, Prop_Send, "m_flModelScale", GRAYMANN_GIANT_ROBOT_SCALE); // This works! Laziness wins today
 	float vecPos[3], vecMaxs[3], vecMins[3];
 	GetClientAbsOrigin(iClient, vecPos);
-	GetClientMins(iClient, vecMins);
-	GetClientMaxs(iClient, vecMaxs);
 	
-	SetEntPropFloat(iClient, Prop_Send, "m_flModelScale", flOriginalScale);
+	// We don't want to get the client's bounding box, what if they're not at default scale? Use the known defaults instead
+	vecMins = { -24.0, -24.0, 0.0 };
+	vecMaxs = { 24.0, 24.0, 82.0 };
 	
-	float vecClientAdjustedMaxs[3], vecClientAdjustedMins[3];
-	AddVectors(vecMaxs, vecPos, vecClientAdjustedMaxs);
-	AddVectors(vecMins, vecPos, vecClientAdjustedMins);
+	ScaleVector(vecMins, GRAYMANN_GIANT_ROBOT_SCALE);
+	ScaleVector(vecMaxs, GRAYMANN_GIANT_ROBOT_SCALE);
 	
 	TR_TraceHullFilter(vecPos, vecPos, vecMins, vecMaxs, MASK_PLAYERSOLID, TraceRay_HitEnemyPlayersAndObjects, iClient);
 	
@@ -832,6 +889,7 @@ void GrayMann_CreateRobotGibs(int iClient)
 {
 	char sModel[PLATFORM_MAX_PATH];
 	
+	// Always spawn heads first
 	TFClassType nClass = TF2_GetPlayerClass(iClient);
 	switch (nClass)
 	{
@@ -843,31 +901,20 @@ void GrayMann_CreateRobotGibs(int iClient)
 	
 	int iSkin = GetClientTeam(iClient) - 2;
 	
-	float vecClientPos[3], vecClientAng[3], vecCenterPos[3], vecMins[3], vecMaxs[3];
+	float vecPos[3], vecAng[3], vecVel[3];
 	
-	GetClientAbsOrigin(iClient, vecClientPos);
-	GetClientEyeAngles(iClient, vecClientAng);
+	GetClientAbsOrigin(iClient, vecPos);
+	GetClientEyeAngles(iClient, vecAng);
 	
-	GetClientMins(iClient, vecMins);
-	GetClientMaxs(iClient, vecMaxs);
-	
-	vecCenterPos[0] = vecClientPos[0];
-	vecCenterPos[1] = vecClientPos[1];
-	vecCenterPos[2] = vecClientPos[2] + ((vecMaxs[2] - vecMins[2]) / 2.0);
-	
-	float vecGibPos[3], vecGibAng[3], vecGibVel[3];
-	
-	// Always spawn heads first
-	vecGibPos[0] = vecCenterPos[0];
-	vecGibPos[1] = vecCenterPos[1];
-	vecGibPos[2] = vecCenterPos[2] + 100.0;
-	
-	vecGibAng[1] = vecClientAng[1];
-	vecGibVel[2] = GetRandomFloat(300.0, 350.0);
+	// Shoot heads more straight up than other gibs
+	vecVel[0] = GetRandomFloat(-25.0, 25.0);
+	vecVel[1] = GetRandomFloat(-25.0, 25.0);
+	vecVel[2] = GetRandomFloat(300.0, 400.0);
 	
 	if (sModel[0])
-		GrayMann_InitRobotGib(sModel, vecGibPos, vecGibAng, vecGibVel, iSkin, true);
+		GrayMann_InitRobotGib(sModel, vecPos, vecAng, vecVel, iSkin, true);
 	
+	// Spawn other random gibs
 	for (int i = 1; i < GRAYMANN_MAX_GIANT_GIBS; i++)
 	{
 		switch (nClass)
@@ -877,15 +924,12 @@ void GrayMann_CreateRobotGibs(int iClient)
 			case TFClass_DemoMan: strcopy(sModel, sizeof(sModel), g_strGrayMannDemomanGibs[GetRandomInt(1, sizeof(g_strGrayMannDemomanGibs) - 1)]);
 		}
 		
-		for (int j = 0; j < 3; j++)
-			vecGibPos[j] = vecCenterPos[j] + GetRandomFloat(-50.0, 50.0);
-		
-		vecGibVel[0] = GetRandomFloat(-100.0, 100.0);
-		vecGibVel[1] = GetRandomFloat(-100.0, 100.0);
-		vecGibVel[2] = GetRandomFloat(300.0, 350.0);
+		vecVel[0] = GetRandomFloat(-100.0, 100.0);
+		vecVel[1] = GetRandomFloat(-100.0, 100.0);
+		vecVel[2] = GetRandomFloat(200.0, 350.0);
 		
 		if (sModel[0])
-			GrayMann_InitRobotGib(sModel, vecGibPos, vecGibAng, vecGibVel, iSkin, false);
+			GrayMann_InitRobotGib(sModel, vecPos, vecAng, vecVel, iSkin, false);
 	}
 }
 
@@ -900,9 +944,9 @@ void GrayMann_InitRobotGib(const char[] sModel, float vecPos[3], float vecAng[3]
 
 	DispatchSpawn(iEntity);
 
-	SetEntProp(iEntity, Prop_Send, "m_CollisionGroup", 1); // 24
-	SetEntProp(iEntity, Prop_Send, "m_usSolidFlags", 0); // 8
-	SetEntProp(iEntity, Prop_Send, "m_nSolidType", 2); // 6
+	SetEntProp(iEntity, Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS);
+	SetEntProp(iEntity, Prop_Send, "m_usSolidFlags", 0);
+	SetEntProp(iEntity, Prop_Send, "m_nSolidType", 2);
 	SetEntProp(iEntity, Prop_Send, "m_nSkin", iSkin);
 
 	int iEffects = (EF_NOSHADOW | EF_NORECEIVESHADOW);
