@@ -164,6 +164,11 @@ public void GrayMann_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length)
 	StrCat(sInfo, length, "\n- 200%% Rage: Spawn 2 random giant robots");
 }
 
+public void GrayMann_GetModel(SaxtonHaleBase boss, char[] sModel, int length)
+{
+	strcopy(sModel, length, GRAYMANN_MODEL);
+}
+
 public void GrayMann_OnRage(SaxtonHaleBase boss)
 {
 	int iTotalSummons = 1;
@@ -322,10 +327,8 @@ public void GrayMannSoldierMinion_Create(SaxtonHaleBase boss) //Giant Soldier St
 	boss.iMaxRageDamage = -1;
 	boss.bMinion = true;
 	boss.bHealthPerPlayerAlive = true;
-	g_bGrayMannMinionHasMoved[boss.iClient] = false;		//Will check if the player has moved to determine if they're AFK or not
-	g_iGrayMannMinionAFKTimeLeft[boss.iClient] = 6;		//The player has 6 seconds to move after being summoned, else they'll be taken as AFK and replaced by someone else
 	
-	EmitSoundToClient(boss.iClient, SOUND_ALERT);			//Alert player as they (re)spawned
+	GrayMann_GiantCommon_Create(boss);
 }
 
 public void GrayMannDemomanMinion_Create(SaxtonHaleBase boss) //Giant Demoman Stats
@@ -337,10 +340,8 @@ public void GrayMannDemomanMinion_Create(SaxtonHaleBase boss) //Giant Demoman St
 	boss.iMaxRageDamage = -1;
 	boss.bMinion = true;
 	boss.bHealthPerPlayerAlive = true;
-	g_bGrayMannMinionHasMoved[boss.iClient] = false;
-	g_iGrayMannMinionAFKTimeLeft[boss.iClient] = 6;	
 	
-	EmitSoundToClient(boss.iClient, SOUND_ALERT);
+	GrayMann_GiantCommon_Create(boss);
 }
 
 public void GrayMannPyroMinion_Create(SaxtonHaleBase boss) //Giant Pyro Stats
@@ -352,10 +353,23 @@ public void GrayMannPyroMinion_Create(SaxtonHaleBase boss) //Giant Pyro Stats
 	boss.iMaxRageDamage = -1;
 	boss.bMinion = true;
 	boss.bHealthPerPlayerAlive = true;
-	g_bGrayMannMinionHasMoved[boss.iClient] = false;	
-	g_iGrayMannMinionAFKTimeLeft[boss.iClient] = 6;	
 	
-	EmitSoundToClient(boss.iClient, SOUND_ALERT);
+	GrayMann_GiantCommon_Create(boss);
+}
+
+public void GrayMannSoldierMinion_GetModel(SaxtonHaleBase boss, char[] sModel, int length)
+{
+	strcopy(sModel, length, GRAYMANN_SOLDIERMINION);
+}
+
+public void GrayMannDemomanMinion_GetModel(SaxtonHaleBase boss, char[] sModel, int length)
+{
+	strcopy(sModel, length, GRAYMANN_DEMOMINION);
+}
+
+public void GrayMannPyroMinion_GetModel(SaxtonHaleBase boss, char[] sModel, int length)
+{
+	strcopy(sModel, length, GRAYMANN_PYROMINION);
 }
 
 public bool GrayMannSoldierMinion_IsBossHidden(SaxtonHaleBase boss)
@@ -467,26 +481,6 @@ public void GrayMannDemomanMinion_OnButtonPress(SaxtonHaleBase boss, int button)
 public void GrayMannPyroMinion_OnButtonPress(SaxtonHaleBase boss, int button)
 {
 	GrayMann_GiantCommon_OnButtonPress(boss);
-}
-
-public void GrayMann_GetModel(SaxtonHaleBase boss, char[] sModel, int length) //Models are grabbed here, duh
-{
-	strcopy(sModel, length, GRAYMANN_MODEL);
-}
-
-public void GrayMannSoldierMinion_GetModel(SaxtonHaleBase boss, char[] sModel, int length)
-{
-	strcopy(sModel, length, GRAYMANN_SOLDIERMINION);
-}
-
-public void GrayMannDemomanMinion_GetModel(SaxtonHaleBase boss, char[] sModel, int length)
-{
-	strcopy(sModel, length, GRAYMANN_DEMOMINION);
-}
-
-public void GrayMannPyroMinion_GetModel(SaxtonHaleBase boss, char[] sModel, int length)
-{
-	strcopy(sModel, length, GRAYMANN_PYROMINION);
 }
 
 public Action GrayMannSoldierMinion_OnSoundPlayed(SaxtonHaleBase boss, int clients[MAXPLAYERS], int &numClients, char sample[PLATFORM_MAX_PATH], int &channel, float &volume, int &level, int &pitch, int &flags, char soundEntry[PLATFORM_MAX_PATH], int &seed)
@@ -618,6 +612,14 @@ public void GrayMannPyroMinion_Destroy(SaxtonHaleBase boss)
 //
 ////////////////////////////////////////////////////////
 
+void GrayMann_GiantCommon_Create(SaxtonHaleBase boss)
+{
+	g_bGrayMannMinionHasMoved[boss.iClient] = false;	// Will check if the player has moved to determine if they're AFK or not
+	g_iGrayMannMinionAFKTimeLeft[boss.iClient] = 6;		// The player has 6 seconds to move after being summoned, else they'll be taken as AFK and replaced by someone else
+	
+	EmitSoundToClient(boss.iClient, SOUND_ALERT);		// Alert player as they (re)spawned
+}
+
 void GrayMann_GiantCommon_OnSpawn(SaxtonHaleBase boss, int iWeapon)
 {
 	// SetModelScale errors out when using a float instead of a string, so it looks odd
@@ -636,6 +638,10 @@ void GrayMann_GiantCommon_OnSpawn(SaxtonHaleBase boss, int iWeapon)
 		TF2_SetAmmo(boss.iClient, TF_AMMO_PRIMARY, 99999);
 	}
 	
+	// To ensure the looping sounds stop
+	SetEdictFlags(boss.iClient, GetEdictFlags(boss.iClient) | FL_EDICT_ALWAYS);
+	
+	// Looping sounds persist if they're stopped on round change, so we stop/don't play them after the round ends
 	if (GameRules_GetRoundState() != RoundState_TeamWin)
 	{
 		char sSoundLoop[PLATFORM_MAX_PATH];
@@ -702,6 +708,9 @@ void GrayMann_GiantCommon_Destroy(SaxtonHaleBase boss)
 	g_hGrayMannMinionAFKTimer[boss.iClient] = null;
 	
 	GrayMann_GiantCommon_StopLoopingSound(boss);
+	
+	SetEdictFlags(boss.iClient, GetEdictFlags(boss.iClient) & ~FL_EDICT_ALWAYS);
+	SetEntProp(boss.iClient, Prop_Send, "m_bIsMiniBoss", false);
 }
 
 void GrayMann_GiantCommon_StopLoopingSound(SaxtonHaleBase boss)
