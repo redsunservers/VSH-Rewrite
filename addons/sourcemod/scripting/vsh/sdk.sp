@@ -4,6 +4,7 @@ static Handle g_hHookShouldTransmit;
 static Handle g_hHookGiveNamedItem;
 static Handle g_hHookBallImpact;
 static Handle g_hHookShouldBallTouch;
+static Handle g_hHookFVisible;
 static Handle g_hSDKGetMaxHealth;
 static Handle g_hSDKSendWeaponAnim;
 static Handle g_hSDKPlaySpecificSequence;
@@ -166,6 +167,13 @@ void SDK_Init()
 	g_hHookShouldBallTouch = DHookCreate(iOffset, HookType_Entity, ReturnType_Bool, ThisPointer_CBaseEntity);
 	if (g_hHookShouldBallTouch == null)
 		LogMessage("Failed to create hook: CTFStunBall::ApplyBallImpactEffectOnVictim!");
+	else
+		DHookAddParam(g_hHookShouldBallTouch, HookParamType_CBaseEntity);
+	
+	iOffset = hGameData.GetOffset("CBaseEntity::FVisible");
+	g_hHookFVisible = DHookCreateFromConf(hGameData, "CBaseEntity::FVisible");
+	if (g_hHookFVisible == null)
+		LogMessage("Failed to create hook: CBaseEntity::FVisible!");
 	else
 		DHookAddParam(g_hHookShouldBallTouch, HookParamType_CBaseEntity);
 	
@@ -394,6 +402,19 @@ public MRESReturn Hook_CouldHealTarget(int iDispenser, Handle hReturn, Handle hP
 	}
 	
 	return MRES_Ignored;
+}
+
+void SDK_FVisible(int iEntity)
+{
+	if (g_hHookFVisible != null)
+		DHookEntity(g_hHookFVisible, false, iEntity, _, Hook_FVisible);
+}
+
+MRESReturn Hook_FVisible(int iEntity, DHookReturn ret)
+{
+	// This might fix weapons sometimes not being given out to players
+	ret.Value = true;
+	return MRES_Supercede;
 }
 
 void SDK_SendWeaponAnim(int weapon, int anim)

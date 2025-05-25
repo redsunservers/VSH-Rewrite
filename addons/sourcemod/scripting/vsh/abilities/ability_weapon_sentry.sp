@@ -79,7 +79,7 @@ public void WeaponSentry_OnThink(SaxtonHaleBase boss)
 				SetEntData(iSentry, FindSendPropInfo("CObjectSentrygun", "m_bServerOverridePlacement") + 28, true, 1);	//m_bForceQuickBuild
 			
 			if (GetEntPropFloat(iSentry, Prop_Send, "m_flModelScale") != 1.22)
-				SetEntPropFloat(iSentry, Prop_Send, "m_flModelScale", 1.22);
+				SetEntityModelScale(iSentry, 1.22);
 			
 			//m_iState: 0 is being carried or in the process of building, 1 is idle (can be either enabled or disabled), 2 is shooting at a target or being wrangled, 3 is in the process of upgrading
 			if (GetEntProp(iSentry, Prop_Send, "m_iState") > 0)
