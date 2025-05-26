@@ -71,6 +71,28 @@
 					}
 				}
 			}
+			"CBaseEntity::FVisible"
+			{
+				"offset"	"CBaseEntity::FVisible"
+				"hooktype"	"entity"
+				"return"	"bool"
+				"this"		"entity"
+				"arguments"
+				{
+					"entity"
+					{
+						"type"	"cbaseentity"
+					}
+					"mask"
+					{
+						"type"	"int"
+					}
+					"blocker"
+					{
+						"type"	"objectptr"
+					}
+				}				
+			}
 		}
 		"Offsets"
 		{
@@ -113,6 +135,13 @@
 			{
 				"linux"		"501"
 				"windows"	"494"
+			}
+			"CBaseEntity::FVisible"	
+			{
+				"windows"	"149"
+				"windows64"	"149"
+				"linux"		"149"
+				"linux64"	"149"
 			}
 		}
 	}

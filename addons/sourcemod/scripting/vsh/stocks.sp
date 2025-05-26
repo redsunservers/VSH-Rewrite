@@ -1121,3 +1121,20 @@ stock void ConstrainDistance(const float vecStart[3], float vecEnd[3], float flD
 	vecEnd[1] = ((vecEnd[1] - vecStart[1]) * flFactor) + vecStart[1];
 	vecEnd[2] = ((vecEnd[2] - vecStart[2]) * flFactor) + vecStart[2];
 }
+
+stock void SetEntityModelScale(int iEntity, float flScale, int iActivator = -1, int iCaller = -1)
+{
+	// SetModelScale errors out when using a float instead of a string, so it looks odd
+	char sScale[16];
+	FloatToString(flScale, sScale, sizeof(sScale));
+	
+	SetVariantString(sScale);
+	AcceptEntityInput(iEntity, "SetModelScale", iActivator, iCaller);
+}
+
+stock void DelayNextWeaponAttack(int iWeapon, float flDelay)
+{
+	float flNextAttack = GetGameTime() + flDelay;
+	SetEntPropFloat(iWeapon, Prop_Send, "m_flNextPrimaryAttack", flNextAttack);
+	SetEntPropFloat(iWeapon, Prop_Send, "m_flNextSecondaryAttack", flNextAttack);
+}

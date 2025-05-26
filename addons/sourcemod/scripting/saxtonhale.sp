@@ -128,6 +128,18 @@ enum
 	LAST_SHARED_COLLISION_GROUP
 };
 
+enum
+{
+	TF_COLLISIONGROUP_GRENADES = LAST_SHARED_COLLISION_GROUP,
+	TFCOLLISION_GROUP_OBJECT,
+	TFCOLLISION_GROUP_OBJECT_SOLIDTOPLAYERMOVEMENT,
+	TFCOLLISION_GROUP_COMBATOBJECT,
+	TFCOLLISION_GROUP_ROCKETS,		// Solid to players, but not player movement. ensures touch calls are originating from rocket
+	TFCOLLISION_GROUP_RESPAWNROOMS,
+	TFCOLLISION_GROUP_TANK,
+	TFCOLLISION_GROUP_ROCKET_BUT_NOT_WITH_OTHER_ROCKETS
+};
+
 // entity effects
 enum
 {
@@ -1011,6 +1023,10 @@ public void OnEntityCreated(int iEntity, const char[] sClassname)
 	if (StrContains(sClassname, "tf_projectile_") == 0)
 	{
 		SDKHook(iEntity, SDKHook_StartTouchPost, Tags_OnProjectileTouch);
+	}
+	else if (strncmp(sClassname, "tf_weapon", 9) == 0)
+	{
+		SDK_FVisible(iEntity);
 	}
 	else if (strncmp(sClassname, "item_healthkit_", 15) == 0
 		|| strncmp(sClassname, "item_ammopack_", 14) == 0

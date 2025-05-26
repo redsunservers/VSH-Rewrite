@@ -165,7 +165,7 @@ public void SeeldierMinion_OnSpawn(SaxtonHaleBase boss)
 	if (iWeapon > MaxClients)
 		SetEntPropEnt(boss.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
 	
-	SetEntPropFloat(boss.iClient, Prop_Send, "m_flModelScale", 0.75);
+	SetEntityModelScale(boss.iClient, 0.75);
 }
 
 public void SeeldierMinion_GetModel(SaxtonHaleBase boss, char[] sModel, int length)
@@ -194,5 +194,5 @@ public Action SeeldierMinion_OnSoundPlayed(SaxtonHaleBase boss, int clients[MAXP
 
 public void SeeldierMinion_Destroy(SaxtonHaleBase boss)
 {
-	SetEntPropFloat(boss.iClient, Prop_Send, "m_flModelScale", 1.0);
+	SetEntityModelScale(boss.iClient, 1.0);
 }
