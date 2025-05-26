@@ -174,8 +174,6 @@ void SDK_Init()
 	g_hHookFVisible = DHookCreateFromConf(hGameData, "CBaseEntity::FVisible");
 	if (g_hHookFVisible == null)
 		LogMessage("Failed to create hook: CBaseEntity::FVisible!");
-	else
-		DHookAddParam(g_hHookShouldBallTouch, HookParamType_CBaseEntity);
 	
 	// This hook allows to allow/block medigun heals
 	Handle hHook = DHookCreateFromConf(hGameData, "CWeaponMedigun::AllowedToHealTarget");
