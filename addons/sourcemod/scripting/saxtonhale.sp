@@ -1585,7 +1585,7 @@ public Action Client_OnTakeDamageAlive(int victim, int &attacker, int &inflictor
 		{
 			int iBuilder = g_iTelefragBuilder;
 			if (iBuilder)
-				g_iPlayerAssistDamage[iBuilder] = RoundToNearest(damage);
+				g_iPlayerAssistDamage[iBuilder] += RoundToNearest(damage);
 		}
 	}
 	
