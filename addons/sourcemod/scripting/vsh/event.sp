@@ -274,6 +274,7 @@ public void Event_RoundArenaStart(Event event, const char[] sName, bool bDontBro
 			Hud_Display(i, CHANNEL_INTRO, sMessage, flHUD, 5.0, iColor, 0, 0.0, flFade);
 
 	Dome_RoundArenaStart();
+	Teuton_RoundArenaStart();
 
 	//Display chat on who is next boss
 	int iNextPlayer = Queue_GetPlayerFromRank(1);
@@ -634,6 +635,9 @@ public Action Event_PlayerDeath(Event event, const char[] sName, bool bDontBroad
 		SetVariantInt(999999);
 		AcceptEntityInput(iSentry, "RemoveHealth");
 	}
+
+	if (!bDeadRinger && g_bRoundStarted)
+		Teuton_PlayerDeath(iVictim);
 	
 	if (bossVictim.bValid)
 	{
@@ -718,8 +722,13 @@ public Action Event_PlayerDeath(Event event, const char[] sName, bool bDontBroad
 		{
 			//Kill any minions that are still alive
 			for (int i = 1; i <= MaxClients; i++)
+			{
 				if (IsClientInGame(i) && IsPlayerAlive(i) && i != iVictim && GetClientTeam(i) == iVictimTeam)
+				{
 					SDKHooks_TakeDamage(i, 0, i, 99999.0);
+					ForcePlayerSuicide(i);
+				}
+			}
 		}
 	}
 	
