@@ -130,7 +130,6 @@ public void SaxtonHale_Create(SaxtonHaleBase boss)
 	boss.SetPropFloat("RageAddCond", "RageCondSuperRageMultiplier", 2.0);
 	RageAddCond_AddCond(boss, TFCond_SpeedBuffAlly);	// Speed boost effect
 	RageAddCond_AddCond(boss, TFCond_MegaHeal);			// Knockback & stun immunity
-	RageAddCond_AddCond(boss, TFCond_DefenseBuffed);	// Battalion's Resistance
 
 	boss.CreateClass("Lunge");
 	
