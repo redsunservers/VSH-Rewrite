@@ -127,6 +127,8 @@ static char g_strGrayMannDemomanGibs[][] = {
 
 public void GrayMann_Create(SaxtonHaleBase boss)
 {	
+	boss.CreateClass("BraveJump");
+	boss.SetPropFloat("BraveJump", "MaxHeight", boss.GetPropFloat("BraveJump", "MaxHeight") * 0.50);
 	boss.CreateClass("RageAddCond");
 	boss.SetPropFloat("RageAddCond", "RageCondDuration", 8.0);
 	RageAddCond_AddCond(boss, TFCond_DefenseBuffed);
