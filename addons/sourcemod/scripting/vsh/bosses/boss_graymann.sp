@@ -412,7 +412,7 @@ public void GrayMannSoldierMinion_OnSpawn(SaxtonHaleBase boss) //Soldier's Attri
 public void GrayMannDemomanMinion_OnSpawn(SaxtonHaleBase boss) //Demo's Attributes
 {
 	char sAttribs[256];
-	strcopy(sAttribs, sizeof(sAttribs), "4 ; 2.0 ; 6 ; 0.75 ; 252 ; 0.5 ; 259 ; 1.0 ; 330 ; 4.0");
+	strcopy(sAttribs, sizeof(sAttribs), "4 ; 2.0 ; 6 ; 0.50 ; 252 ; 0.5 ; 259 ; 1.0 ; 330 ; 4.0");
 	int iWeapon = boss.CallFunction("CreateWeapon", 206, "tf_weapon_grenadelauncher", 100, TFQual_Collectors, sAttribs);
 	
 	/*
