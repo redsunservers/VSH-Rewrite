@@ -1,0 +1,6 @@
+"Refract"
+{
+	"$basetexture" "models/player/vsh_rewrite/graymann/intro"
+	 "$translucent" 1
+	"$normalmap" "models/player/vsh_rewrite/graymann/intro"
+}
