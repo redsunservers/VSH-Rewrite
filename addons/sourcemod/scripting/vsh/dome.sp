@@ -502,7 +502,7 @@ public Action Dome_TimerBleed(Handle hTimer)
 				else
 				{
 					//Calculate damage, the longer the player is outside of the dome, the more damage it deals
-					flDamage = Pow(2.0, g_flDomePlayerTime[iClient]);
+					flDamage = Pow(1.1, g_flDomePlayerTime[iClient]);
 				}
 				
 				if (flDamage < 1.0)

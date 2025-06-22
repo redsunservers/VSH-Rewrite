@@ -1,8 +1,10 @@
 static TagsParams g_tOngoingParams;
+static float g_flLastFunctionCallTime;
 
 void TagsDamage_Init()
 {
 	g_tOngoingParams = new TagsParams();
+	g_flLastFunctionCallTime = 0.0;
 }
 
 public Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
@@ -45,9 +47,13 @@ public Action TagsDamage_OnTakeDamageAlive(int victim, int &attacker, int &infli
 	TagsParams tParams = new TagsParams();
 	g_tOngoingParams.CopyData(tParams);
 	
-	// SDKHooks_TakeDamage only goes through OnTakeDamageAlive, so if we didn't already get our params info, do so now
-	if (tParams.Size <= 0)
+	// Some things only go through OnTakeDamageAlive, like SDKHooks_TakeDamage and fall damage from stomping (to the stomper, not the victim!) so if we didn't already get our params info, do so now
+	// ...also check if the last known damage wasn't done this frame, since some things call OnTakeDamage but not OnTakeDamageAlive
+	if (tParams.Size <= 0 || g_flLastFunctionCallTime != GetGameTime())
 		TagsDamage_CallFunctions(tParams, victim, attacker, inflictor, damage, damagetype, weapon, damagecustom);
+	
+	// We don't need this anymore
+	g_tOngoingParams.Clear();
 	
 	//Change damage values from params
 	Action action = Plugin_Continue;
@@ -83,13 +89,15 @@ public Action TagsDamage_OnTakeDamageAlive(int victim, int &attacker, int &infli
 		action = Plugin_Changed;
 	}
 	
-	g_tOngoingParams.Clear();
 	delete tParams;
 	return action;
 }
 
 void TagsDamage_CallFunctions(TagsParams tParams, int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, int damagecustom)
 {
+	g_tOngoingParams.Clear();
+	g_flLastFunctionCallTime = GetGameTime();
+	
 	tParams.SetInt("victim", victim);
 	tParams.SetInt("attacker", attacker);
 	tParams.SetInt("inflictor", inflictor);

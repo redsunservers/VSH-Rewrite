@@ -127,6 +127,11 @@ public void Lunge_OnButtonPress(SaxtonHaleBase boss, int iButton)
 		TF2_AddCondition(boss.iClient, TFCond_HalloweenKartDash, -1.0);	// For animation
 		TF2_AddCondition(boss.iClient, TFCond_MegaHeal, -1.0);
 		
+		// Prevent the boss from swinging their melee
+		int iWeapon = GetPlayerWeaponSlot(boss.iClient, WeaponSlot_Melee);
+		if (iWeapon != INVALID_ENT_REFERENCE)
+			DelayNextWeaponAttack(iWeapon, 99999.0);
+		
 		GetClientEyeAngles(boss.iClient, g_vecLungeInitialAngles[boss.iClient]);
 		
 		// Restrict going heavily upwards/downwards
@@ -149,6 +154,10 @@ public void Lunge_OnButtonPress(SaxtonHaleBase boss, int iButton)
 			vecVelocity[2] = 310.0;
 		
 		TeleportEntity(boss.iClient, NULL_VECTOR, NULL_VECTOR, vecVelocity);
+		
+		SetEntProp(boss.iClient, Prop_Send, "m_bJumping", true);
+		SetEntityFlags(boss.iClient, GetEntityFlags(boss.iClient) & ~FL_ONGROUND);
+		TF2_AddCondition(boss.iClient, TFCond_BlastJumping);
 	}
 }
 
@@ -165,6 +174,12 @@ public void Lunge_OnThink(SaxtonHaleBase boss)
 				g_bLungeActive[boss.iClient] = false;
 				TF2_RemoveCondition(boss.iClient, TFCond_HalloweenKartDash);
 				TF2_RemoveCondition(boss.iClient, TFCond_MegaHeal);
+				
+				// Let the boss swing their melee again
+				int iWeapon = GetPlayerWeaponSlot(boss.iClient, WeaponSlot_Melee);
+				if (iWeapon != INVALID_ENT_REFERENCE)
+					DelayNextWeaponAttack(iWeapon, 0.0);
+				
 				return;
 			}
 		}

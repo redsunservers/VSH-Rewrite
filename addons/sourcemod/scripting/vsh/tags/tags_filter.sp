@@ -15,6 +15,7 @@ enum TagsFilterType			//List of possible filters
 	TagsFilterType_FeignDeath,
 	TagsFilterType_VictimUber,
 	TagsFilterType_SelfDamage,
+	TagsFilterType_VictimCond,
 }
 
 enum struct TagsFilterStruct
@@ -28,7 +29,7 @@ enum struct TagsFilterStruct
 		
 		switch (this.nType)
 		{
-			case TagsFilterType_Cond, TagsFilterType_HitFromBehind, TagsFilterType_BackstabCount, TagsFilterType_DamageMaximum, TagsFilterType_DamageMinimum:
+			case TagsFilterType_Cond, TagsFilterType_HitFromBehind, TagsFilterType_BackstabCount, TagsFilterType_DamageMaximum, TagsFilterType_DamageMinimum, TagsFilterType_VictimCond:
 			{
 				//Get number from string
 				return !!StringToIntEx(sValue, this.nValue);
@@ -178,6 +179,11 @@ enum struct TagsFilterStruct
 				bool bSelf = (iVictim == iAttacker);
 				return (this.nValue ? bSelf : !bSelf);
 			}
+			case TagsFilterType_VictimCond:
+			{
+				int iVictim = tParams.GetInt("victim");
+				return TF2_IsPlayerInCondition(iVictim, this.nValue);
+			}
 		}
 		
 		return false;
@@ -261,6 +267,7 @@ TagsFilterType TagsFilter_GetType(const char[] sTarget)
 		mFilterType.SetValue("feigndeath", TagsFilterType_FeignDeath);
 		mFilterType.SetValue("victimuber", TagsFilterType_VictimUber);
 		mFilterType.SetValue("selfdamage", TagsFilterType_SelfDamage);
+		mFilterType.SetValue("victimcond", TagsFilterType_VictimCond);
 	}
 	
 	TagsFilterType nFilterType = TagsFilterType_Invalid;
