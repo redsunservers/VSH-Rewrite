@@ -624,12 +624,7 @@ void GrayMann_GiantCommon_Create(SaxtonHaleBase boss)
 
 void GrayMann_GiantCommon_OnSpawn(SaxtonHaleBase boss, int iWeapon)
 {
-	// SetModelScale errors out when using a float instead of a string, so it looks odd
-	char sScale[8];
-	FloatToString(GRAYMANN_GIANT_ROBOT_SCALE, sScale, sizeof(sScale));
-	
-	SetVariantString(sScale);
-	AcceptEntityInput(boss.iClient, "SetModelScale");
+	SetEntityModelScale(boss.iClient, GRAYMANN_GIANT_ROBOT_SCALE);
 	
 	SetEntProp(boss.iClient, Prop_Data, "m_bloodColor", DONT_BLEED);
 	
@@ -644,7 +639,7 @@ void GrayMann_GiantCommon_OnSpawn(SaxtonHaleBase boss, int iWeapon)
 	SetEdictFlags(boss.iClient, GetEdictFlags(boss.iClient) | FL_EDICT_ALWAYS);
 	
 	// Looping sounds persist if they're stopped on round change, so we stop/don't play them after the round ends
-	if (GameRules_GetRoundState() != RoundState_TeamWin)
+	if (GameRules_GetRoundState() != RoundState_TeamWin && GameRules_GetRoundState() != RoundState_Preround)
 	{
 		char sSoundLoop[PLATFORM_MAX_PATH];
 		strcopy(sSoundLoop, sizeof(sSoundLoop), g_strGrayMannSoundGiantLoop[boss.nClass]);
@@ -856,7 +851,8 @@ Action GrayMann_Timer_TryToSpawnQueuedMinion(Handle hTimer, int iUserID)
 	}
 	
 	// Check if there's enough space for the boss to spawn a giant
-	float vecPos[3], vecMaxs[3], vecMins[3];
+	float vecPos[3], vecMaxs[3], vecMins[3], vecNewPos[3];
+	int iTries;
 	GetClientAbsOrigin(iClient, vecPos);
 	
 	// We don't want to get the client's bounding box, what if they're not at default scale? Use the known defaults instead
@@ -868,18 +864,32 @@ Action GrayMann_Timer_TryToSpawnQueuedMinion(Handle hTimer, int iUserID)
 	
 	TR_TraceHullFilter(vecPos, vecPos, vecMins, vecMaxs, MASK_PLAYERSOLID, TraceRay_HitEnemyPlayersAndObjects, iClient);
 	
-	// We hit something, there's no space... Try again in a few seconds
+	// We hit something, there's no space...
 	if (TR_DidHit())
 	{
-		g_iGrayMannQueueReason[iClient] = GRAYMANN_QUEUE_NO_SPACE;
-		boss.CallFunction("UpdateHudInfo", 0.0, 0.0);	// Update once
+		// Let's try again slightly higher up, in case we're on top of a displacement in a perfectly open area
+		iTries++;
+		vecNewPos[0] = vecPos[0];
+		vecNewPos[1] = vecPos[1];
+		vecNewPos[2] = vecPos[2] + 15.0;
 		
-		return Plugin_Continue;
+		TR_TraceHullFilter(vecNewPos, vecNewPos, vecMins, vecMaxs, MASK_PLAYERSOLID, TraceRay_HitEnemyPlayersAndObjects, iClient);
+		if (TR_DidHit())
+		{
+			// If we hit something, then there's no hope, try again later
+			g_iGrayMannQueueReason[iClient] = GRAYMANN_QUEUE_NO_SPACE;
+			boss.CallFunction("UpdateHudInfo", 0.0, 0.0);	// Update once
+			return Plugin_Continue;
+		}
 	}
 		
 	// From now on, we've confirmed we can spawn someone
 	GrayMann_SpawnMinion(iCandidate);
 	TF2_TeleportToClient(iCandidate, iClient);
+	
+	// Teleport them again. It's necessary to teleport them twice because TF2_TeleportToClient does a few extra things
+	if (iTries > 0)
+		TeleportEntity(iCandidate, vecNewPos, NULL_VECTOR, NULL_VECTOR);
 	
 	// Create a lil effect
 	CreateTimer(2.0, Timer_EntityCleanup, TF2_SpawnParticle(TF2_GetClientTeam(iClient) == TFTeam_Blue ? "teleportedin_blue" : "teleportedin_red", vecPos));
@@ -952,10 +962,12 @@ void GrayMann_InitRobotGib(const char[] sModel, float vecPos[3], float vecAng[3]
 	
 	DispatchKeyValue(iEntity, "model", sModel);
 	DispatchKeyValue(iEntity, "physicsmode", "2");
+	
+	TeleportEntity(iEntity, vecPos, vecAng, vecVel);
 
 	DispatchSpawn(iEntity);
 
-	SetEntProp(iEntity, Prop_Send, "m_CollisionGroup", COLLISION_GROUP_DEBRIS);
+	SetEntityCollisionGroup(iEntity, COLLISION_GROUP_DEBRIS);
 	SetEntProp(iEntity, Prop_Send, "m_usSolidFlags", 0);
 	SetEntProp(iEntity, Prop_Send, "m_nSolidType", 2);
 	SetEntProp(iEntity, Prop_Send, "m_nSkin", iSkin);
@@ -965,8 +977,6 @@ void GrayMann_InitRobotGib(const char[] sModel, float vecPos[3], float vecAng[3]
 		iEffects |= EF_ITEM_BLINK;
 	
 	SetEntProp(iEntity, Prop_Send, "m_fEffects", iEffects);
-
-	TeleportEntity(iEntity, vecPos, vecAng, vecVel);
 
 	CreateTimer(10.0, Timer_EntityCleanup, EntIndexToEntRef(iEntity), TIMER_FLAG_NO_MAPCHANGE);
 }
