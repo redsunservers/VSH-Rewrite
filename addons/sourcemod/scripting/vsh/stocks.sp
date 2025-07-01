@@ -1139,7 +1139,7 @@ stock void DelayNextWeaponAttack(int iWeapon, float flDelay)
 	SetEntPropFloat(iWeapon, Prop_Send, "m_flNextSecondaryAttack", flNextAttack);
 }
 
-stock void ShowTFGameTextToClient(int iClient, const char[] sMessage, const char[] sIcon = "", TFTeam nTeam = TFTeam_Unassigned, float flDuration = 3.0)
+stock void ShowTFGameTextToClient(int iClient, const char[] sMessage, const char[] sIcon = "", TFTeam nTeam = TFTeam_Unassigned)
 {
 	BfWrite bf = view_as<BfWrite>(StartMessageOne("HudNotifyCustom", iClient));
 	if (bf)
@@ -1147,7 +1147,6 @@ stock void ShowTFGameTextToClient(int iClient, const char[] sMessage, const char
 		bf.WriteString(sMessage);
 		bf.WriteString(sIcon);
 		bf.WriteByte(view_as<int>(nTeam));		// This is just the team color to show
-		bf.WriteFloat(flDuration);				// Doesn't actually do anything! It'll always last 3 seconds
 		
 		EndMessage();
 	}
