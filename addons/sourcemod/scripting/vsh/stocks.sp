@@ -1146,8 +1146,8 @@ stock void ShowTFGameTextToClient(int iClient, const char[] sMessage, const char
 	{
 		bf.WriteString(sMessage);
 		bf.WriteString(sIcon);
-		bf.WriteByte(nTeam);		// This is just the team color to show
-		bf.WriteFloat(flDuration);	// Doesn't actually do anything! It'll always last 3 seconds
+		bf.WriteByte(view_as<int>(nTeam));		// This is just the team color to show
+		bf.WriteFloat(flDuration);				// Doesn't actually do anything! It'll always last 3 seconds
 		
 		EndMessage();
 	}
