@@ -6,14 +6,17 @@
 #define GRAYMANN_DEMOMINION 			"models/bots/demo_boss/bot_demo_boss.mdl"
 #define GRAYMANN_PYROMINION				"models/bots/pyro_boss/bot_pyro_boss.mdl"
 
-#define GRAYMANN_GIANTROCKETSOUND		"mvm/giant_soldier/giant_soldier_rocket_shoot.wav"
-#define GRAYMANN_GIANTCRITROCKETSOUND 	"mvm/giant_soldier/giant_soldier_rocket_shoot_crit.wav"
-#define GRAYMANN_GIANTGRENADESOUND		"mvm/giant_demoman/giant_demoman_grenade_shoot.wav"
+#define GRAYMANN_GIANTROCKETSOUND		")mvm/giant_soldier/giant_soldier_rocket_shoot.wav"
+#define GRAYMANN_GIANTCRITROCKETSOUND 	")mvm/giant_soldier/giant_soldier_rocket_shoot_crit.wav"
+#define GRAYMANN_GIANTGRENADESOUND		")mvm/giant_demoman/giant_demoman_grenade_shoot.wav"
 
 #define GRAYMANN_GIANTDESTROYEDSOUND	"MVM.GiantCommonExplodes"
 
 #define GRAYMANN_MAX_GIANT_GIBS			4
 #define GRAYMANN_GIANT_ROBOT_SCALE		1.5
+
+#define GRAYMANN_RAGE_DURATION					8.0
+#define GRAYMANN_SUPERRAGE_DURATION_MULT		2.0
 
 enum
 {
@@ -34,6 +37,8 @@ static bool g_bGrayMannMinionHasMoved[MAXPLAYERS + 1];
 static bool g_bGrayMannMinionIsPlayingSoundLoop[MAXPLAYERS + 1];
 
 static bool g_bGrayMannMinionBlockRagdoll;
+
+static bool g_bGrayMannSpeedRage[MAXPLAYERS + 1];
 
 static char g_strGrayMannRoundStart[][] = {
 	"vsh_rewrite/graymann/intro1.mp3",
@@ -129,8 +134,11 @@ public void GrayMann_Create(SaxtonHaleBase boss)
 {	
 	boss.CreateClass("BraveJump");
 	boss.SetPropFloat("BraveJump", "MaxHeight", boss.GetPropFloat("BraveJump", "MaxHeight") * 0.50);
+	
 	boss.CreateClass("RageAddCond");
-	boss.SetPropFloat("RageAddCond", "RageCondDuration", 8.0);
+	boss.SetPropFloat("RageAddCond", "RageCondDuration", GRAYMANN_RAGE_DURATION);
+	boss.SetPropFloat("RageAddCond", "RageCondSuperRageMultiplier", GRAYMANN_SUPERRAGE_DURATION_MULT);
+	
 	RageAddCond_AddCond(boss, TFCond_DefenseBuffed);
 	RageAddCond_AddCond(boss, TFCond_SpeedBuffAlly);
 	
@@ -163,8 +171,12 @@ public void GrayMann_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length)
 	StrCat(sInfo, length, "\n ");
 	StrCat(sInfo, length, "\nRage");
 	StrCat(sInfo, length, "\n- Damage requirement: 3000");
+	StrCat(sInfo, length, "\n- Faster movement speed");
+	StrCat(sInfo, length, "\n- Damage resistance with crit immunity");
 	StrCat(sInfo, length, "\n- Spawn a random giant robot");
-	StrCat(sInfo, length, "\n- 200%% Rage: Spawn 2 random giant robots");
+	StrCat(sInfo, length, "\n- 200%% Rage:");
+	StrCat(sInfo, length, "\n   - Increases duration from 8 to 16 seconds");
+	StrCat(sInfo, length, "\n   - Spawn 2 random giant robots");
 }
 
 public void GrayMann_GetModel(SaxtonHaleBase boss, char[] sModel, int length)
@@ -174,6 +186,12 @@ public void GrayMann_GetModel(SaxtonHaleBase boss, char[] sModel, int length)
 
 public void GrayMann_OnRage(SaxtonHaleBase boss)
 {
+	if (!g_bGrayMannSpeedRage[boss.iClient])
+	{
+		boss.flSpeed *= 1.3;
+		g_bGrayMannSpeedRage[boss.iClient] = true;
+	}
+	
 	int iTotalSummons = 1;
 	if (boss.bSuperRage) iTotalSummons = 2;
 	
@@ -192,9 +210,8 @@ public void GrayMann_OnSpawn(SaxtonHaleBase boss)
 	Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 150 ; 1.0 ; 180 ; 250");
 	iWeapon = boss.CallFunction("CreateWeapon", 169, "tf_weapon_wrench", 100, TFQual_Unusual, attribs);
 	if (iWeapon > MaxClients)
-	{
 		SetEntPropEnt(boss.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
-	}
+	
 	/*
 	wrench attributes:
 	
@@ -204,6 +221,15 @@ public void GrayMann_OnSpawn(SaxtonHaleBase boss)
 	150: turn to gold
 	180: heal on kill
 	*/
+}
+
+public void GrayMann_OnThink(SaxtonHaleBase boss)
+{
+	if (g_bGrayMannSpeedRage[boss.iClient] && boss.flRageLastTime < GetGameTime() - (boss.bSuperRage ? GRAYMANN_RAGE_DURATION * GRAYMANN_SUPERRAGE_DURATION_MULT : GRAYMANN_RAGE_DURATION))
+	{
+		g_bGrayMannSpeedRage[boss.iClient] = false;
+		boss.flSpeed /= 1.3;
+	}
 }
 
 public void GrayMann_OnEntityCreated(SaxtonHaleBase boss, int iEntity, const char[] sClassname)
