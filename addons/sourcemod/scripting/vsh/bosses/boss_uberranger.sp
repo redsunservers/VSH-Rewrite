@@ -1,15 +1,19 @@
-#define RANGER_MODEL 		"models/player/vsh_rewrite/uber_ranger/uber_ranger_v2.mdl"
-#define RANGER_THEME 		"vsh_rewrite/uber_ranger/uberrangers_music.mp3"
-#define RANGER_RAGESOUND 	"mvm/mvm_tele_deliver.wav"
+#define RANGER_MODEL		"models/player/vsh_rewrite/uber_ranger/uber_ranger_v2.mdl"
+#define RANGER_THEME		"vsh_rewrite/uber_ranger/uberrangers_music.mp3"
 
-static int g_iUberRangerMinionAFKTimeLeft[MAXPLAYERS];
+#define RANGER_RAGESOUND				"player/taunt_medic_heroic.wav"
+#define RANGER_RAGESOUND_FAILED			"replay/replaydialog_warn.wav"
+
+static bool g_bUberRangerHasSwappedWeapons[MAXPLAYERS + 1];
+
+static int g_iUberRangerMinionAFKTimeLeft[MAXPLAYERS + 1];
 
 static ArrayList g_aUberRangerColorList;
 
-static Handle g_hUberRangerMinionAFKTimer[MAXPLAYERS];
+static Handle g_hUberRangerMinionAFKTimer[MAXPLAYERS + 1];
 
-static bool g_bUberRangerPlayerWasSummoned[MAXPLAYERS];
-static bool g_bUberRangerMinionHasMoved[MAXPLAYERS];
+static bool g_bUberRangerPlayerWasSummoned[MAXPLAYERS + 1];
+static bool g_bUberRangerMinionHasMoved[MAXPLAYERS + 1];
 
 static char g_strUberRangerRoundStart[][] = {
 	"vo/medic_battlecry05.mp3"
@@ -63,6 +67,8 @@ public void UberRanger_Create(SaxtonHaleBase boss)
 	boss.nClass = TFClass_Medic;
 	boss.iMaxRageDamage = 2500;
 	
+	g_bUberRangerHasSwappedWeapons[boss.iClient] = false;
+	
 	for (int i = 1; i <= MaxClients; i++)
 		g_bUberRangerPlayerWasSummoned[i] = false;
 	
@@ -94,7 +100,9 @@ public void UberRanger_OnSpawn(SaxtonHaleBase boss)
 {
 	char sAttribs[64];
 	strcopy(sAttribs, sizeof(sAttribs), "9 ; 0.4");
-	boss.CallFunction("CreateWeapon", 211, "tf_weapon_medigun", 100, TFQual_Collectors, sAttribs);
+	int iWeapon = boss.CallFunction("CreateWeapon", 211, "tf_weapon_medigun", 100, TFQual_Collectors, sAttribs);
+	if (iWeapon > MaxClients)
+		TF2_SwitchToWeapon(boss.iClient, iWeapon);
 	
 	/*
 	Medigun attribute:
@@ -103,9 +111,7 @@ public void UberRanger_OnSpawn(SaxtonHaleBase boss)
 	*/
 	
 	strcopy(sAttribs, sizeof(sAttribs), "2 ; 2.80 ; 17 ; 0.1 ; 69 ; 0.5 ; 252 ; 0.5 ; 259 ; 1.0");
-	int iWeapon = boss.CallFunction("CreateWeapon", 37, "tf_weapon_bonesaw", 100, TFQual_Collectors, sAttribs);
-	if (iWeapon > MaxClients)
-		SetEntPropEnt(boss.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
+	boss.CallFunction("CreateWeapon", 37, "tf_weapon_bonesaw", 100, TFQual_Collectors, sAttribs);
 	
 	/*
 	Ubersaw attributes:
@@ -131,33 +137,64 @@ public void UberRanger_GetModel(SaxtonHaleBase boss, char[] sModel, int length)
 	strcopy(sModel, length, RANGER_MODEL);
 }
 
+public void UberRanger_OnThink(SaxtonHaleBase boss)
+{
+	// Switch to melee when the round starts. This is to let players know that they have a medi gun
+	if (!g_bUberRangerHasSwappedWeapons[boss.iClient] && GameRules_GetRoundState() != RoundState_Preround)
+	{
+		g_bUberRangerHasSwappedWeapons[boss.iClient] = true;
+		int iMelee = GetPlayerWeaponSlot(boss.iClient, TFWeaponSlot_Melee);
+		if (iMelee != INVALID_ENT_REFERENCE && GetEntPropEnt(boss.iClient, Prop_Send, "m_hActiveWeapon") != iMelee)
+			TF2_SwitchToWeapon(boss.iClient, iMelee);
+	}
+}
+
 public void UberRanger_OnRage(SaxtonHaleBase boss)
 {
 	int iTotalSummons = 1;
-	if (boss.bSuperRage) iTotalSummons = 3;
-	
-	//Create a lil effect
-	float vecBossPos[3];
-	GetClientAbsOrigin(boss.iClient, vecBossPos);
-	CreateTimer(3.0, Timer_EntityCleanup, TF2_SpawnParticle(TF2_GetClientTeam(boss.iClient) == TFTeam_Blue ? "teleportedin_blue" : "teleportedin_red", vecBossPos));
-	EmitSoundToAll(RANGER_RAGESOUND, boss.iClient);
+	if (boss.bSuperRage)
+		iTotalSummons = 3;
 	
 	ArrayList aValidMinions = GetValidSummonableClients();
+	char sMessage[64];
+	int iSpawns;
 	
 	int iLength = aValidMinions.Length;
-	if (iLength < iTotalSummons)
-		iTotalSummons = iLength;
-	else
+	if (iLength > iTotalSummons)
 		iLength = iTotalSummons;
-		
-	//Give priority to players who have the highest scores
+	
+	// Give priority to players who have the highest scores
 	for (int iSelection = 0; iSelection < iLength; iSelection++)
 	{	
-		//Spawn and teleport the minion to the boss
+		// Spawn and teleport the minion to the boss
 		int iClient = UberRanger_SpawnBestPlayer(aValidMinions);
-		
-		if (iClient > 0)		
+		if (iClient > 0)
+		{
 			TF2_TeleportToClient(iClient, boss.iClient);
+			iSpawns++;
+		} 
+	}
+	
+	if (iSpawns > 0)
+	{
+		// Create a lil effect
+		float vecBossPos[3];
+		GetClientAbsOrigin(boss.iClient, vecBossPos);
+		CreateTimer(3.0, Timer_EntityCleanup, TF2_SpawnParticle(TF2_GetClientTeam(boss.iClient) == TFTeam_Blue ? "teleportedin_blue" : "teleportedin_red", vecBossPos));
+		EmitSoundToAll(RANGER_RAGESOUND, boss.iClient);
+		
+		FormatEx(sMessage, sizeof(sMessage), "Summoned %d Ranger%s.", iSpawns, iSpawns == 1 ? "" : "s");
+		ShowTFGameTextToClient(boss.iClient, sMessage, "leaderboard_dominated");
+	}
+	else
+	{
+		if (GetURandomFloat() >= 0.05)
+			sMessage = "No players could be summoned.";
+		else
+			sMessage = "But nobody came.";
+		
+		ShowTFGameTextToClient(boss.iClient, sMessage, "dneg_reddefend");
+		EmitSoundToClient(boss.iClient, RANGER_RAGESOUND_FAILED);
 	}
 		
 	delete aValidMinions;
@@ -190,7 +227,7 @@ public void UberRanger_GetMusicInfo(SaxtonHaleBase boss, char[] sSound, int leng
 
 public void UberRanger_GetHudInfo(SaxtonHaleBase boss, char[] sMessage, int iLength, int iColor[4])
 {		
-	StrCat(sMessage, iLength, "\nUse your Medigun to heal your companions!");
+	StrCat(sMessage, iLength, "\nUse your Medi Gun to heal your companions!");
 }
 
 public void UberRanger_Precache(SaxtonHaleBase boss)
@@ -198,6 +235,7 @@ public void UberRanger_Precache(SaxtonHaleBase boss)
 	PrecacheModel(RANGER_MODEL);
 	PrepareMusic(RANGER_THEME);
 	PrecacheSound(RANGER_RAGESOUND);
+	PrecacheSound(RANGER_RAGESOUND_FAILED);
 	
 	for (int i = 0; i < sizeof(g_strUberRangerRoundStart); i++) PrecacheSound(g_strUberRangerRoundStart[i]);
 	for (int i = 0; i < sizeof(g_strUberRangerWin); i++) PrecacheSound(g_strUberRangerWin[i]);
@@ -374,7 +412,6 @@ public void UberRanger_ResetColorList()
 	g_aUberRangerColorList.PushArray({ 255, 115, 200 }); 	// Pink as Hell (modified)
 	g_aUberRangerColorList.PushArray({ 105, 77, 58 }); 		// Radigan Conagher Brown (modified)
 	g_aUberRangerColorList.PushArray({ 88, 160, 187 }); 	// Team Spirit (BLU) (modified)
-	g_aUberRangerColorList.PushArray({ 210, 59, 59 }); 		// Team Spirit (RED) (modified)
 	g_aUberRangerColorList.PushArray({ 50, 205, 50 }); 		// The Bitter Taste of Defeat and Lime
 	g_aUberRangerColorList.PushArray({ 79, 100, 59 }); 		// Zepheniah's Greed (modified)
 
