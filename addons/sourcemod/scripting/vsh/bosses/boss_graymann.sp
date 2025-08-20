@@ -350,7 +350,7 @@ public void GrayMann_Destroy(SaxtonHaleBase boss)
 public void GrayMannSoldierMinion_Create(SaxtonHaleBase boss) //Giant Soldier Stats
 {
 	boss.iBaseHealth = 2500;
-	boss.iHealthPerPlayer = 25;
+	boss.iHealthPerPlayer = 75;
 	boss.flSpeed = 150.0;
 	boss.nClass = TFClass_Soldier;
 	boss.iMaxRageDamage = -1;
@@ -363,7 +363,7 @@ public void GrayMannSoldierMinion_Create(SaxtonHaleBase boss) //Giant Soldier St
 public void GrayMannDemomanMinion_Create(SaxtonHaleBase boss) //Giant Demoman Stats
 {
 	boss.iBaseHealth = 2500;
-	boss.iHealthPerPlayer = 25;
+	boss.iHealthPerPlayer = 75;
 	boss.flSpeed = 150.0;
 	boss.nClass = TFClass_DemoMan;
 	boss.iMaxRageDamage = -1;
@@ -376,7 +376,7 @@ public void GrayMannDemomanMinion_Create(SaxtonHaleBase boss) //Giant Demoman St
 public void GrayMannPyroMinion_Create(SaxtonHaleBase boss) //Giant Pyro Stats
 {
 	boss.iBaseHealth = 1500;
-	boss.iHealthPerPlayer = 30;
+	boss.iHealthPerPlayer = 60;
 	boss.flSpeed = 200.0;
 	boss.nClass = TFClass_Pyro;
 	boss.iMaxRageDamage = -1;
