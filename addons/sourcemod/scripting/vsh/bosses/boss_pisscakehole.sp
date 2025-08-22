@@ -274,12 +274,4 @@ public void PissCakehole_Precache(SaxtonHaleBase boss)
 	AddFileToDownloadsTable("models/player/vsh_rewrite/pisscakehole/pisscakehole.sw.vtx");
 	AddFileToDownloadsTable("models/player/vsh_rewrite/pisscakehole/pisscakehole.dx80.vtx");
 	AddFileToDownloadsTable("models/player/vsh_rewrite/pisscakehole/pisscakehole.dx90.vtx");
-
-	AddFileToDownloadsTable("sound/vsh_rewrite/pisscakehole/iampisscakehole.mp3");
-	AddFileToDownloadsTable("sound/vsh_rewrite/pisscakehole/piss_die1.mp3");
-	AddFileToDownloadsTable("sound/vsh_rewrite/pisscakehole/piss_die2.mp3");
-	AddFileToDownloadsTable("sound/vsh_rewrite/pisscakehole/piss_intro.mp3");
-	AddFileToDownloadsTable("sound/vsh_rewrite/pisscakehole/piss_rage.mp3");
-	AddFileToDownloadsTable("sound/vsh_rewrite/pisscakehole/piss_win.mp3");
-	AddFileToDownloadsTable("sound/vsh_rewrite/pisscakehole/piss_hitv2.mp3");
 }
