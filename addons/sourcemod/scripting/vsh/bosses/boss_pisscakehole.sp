@@ -91,21 +91,44 @@ public void PissCakehole_OnSpawn(SaxtonHaleBase boss)
 
 public void PissCakehole_OnPlayerKilled(SaxtonHaleBase boss, Event event, int iVictim)
 {
-	
+	int iPlayerCount = SaxtonHale_GetAliveAttackPlayers();
 	//Check if valid player, if yes, increase boss speed and decrease boss damage
 	if(SaxtonHale_IsValidAttack(iVictim))
 	{
-		boss.flSpeed += 5.0;
-		i_PlayerCounter[boss.iClient]++;
+		//Speed increase between (40) 32-24 players
+		if(iPlayerCount >= 24 && iPlayerCount <= 40 && iPlayerCount != 24)
+		{
+			boss.flSpeed += 7.5;
+			i_PlayerCounter[boss.iClient]++;
+		}
+		//Speed increase between 24-16 players
+		if(iPlayerCount >= 16 && iPlayerCount <= 24 && iPlayerCount != 16)
+		{
+			boss.flSpeed += 5.0;
+			i_PlayerCounter[boss.iClient]++;
+		}
+		//Speed increase between 16-8 players
+		if(iPlayerCount >= 8 && iPlayerCount <= 16 && iPlayerCount != 8)
+		{
+			boss.flSpeed += 3.0;
+			i_PlayerCounter[boss.iClient]++;
+		}
+		//Speed increase between 8-1 players
+		if(iPlayerCount >= 1 && iPlayerCount <= 8 && iPlayerCount != 1)
+		{
+			boss.flSpeed += 2.5;
+			i_PlayerCounter[boss.iClient]++;
+		}
 	}
 }
 
+//I think this is the gayest code I have ever written
 public void PissCakehole_OnThink(SaxtonHaleBase boss)
 {
 	int iClient = boss.iClient;
 	bool FUCK = false;
 	
-	if (g_flJesusChrist[iClient] != 0.0 && g_flJesusChrist[iClient] <= GetGameTime())
+	if(g_flJesusChrist[iClient] != 0.0 && g_flJesusChrist[iClient] <= GetGameTime())
 	{
 		g_flJesusChrist[iClient] = 0.0;
 		TF2Attrib_SetByDefIndex(iClient, 279, 0.0);
@@ -117,7 +140,7 @@ public void PissCakehole_OnThink(SaxtonHaleBase boss)
 			FUCK = true;
 			TF2_RemoveItemInSlot(iClient, WeaponSlot_Secondary);
 			int iWeapon = boss.CallFunction("CreateWeapon", 58, "tf_weapon_jar", 100, TFQual_Unusual);
-			if (iWeapon > MaxClients)
+			if(iWeapon > MaxClients)
 			{
 				iWeapon = TF2_GetItemInSlot(boss.iClient, WeaponSlot_Secondary);
 			}
@@ -129,11 +152,11 @@ public void PissCakehole_OnThink(SaxtonHaleBase boss)
 public Action PissCakehole_OnAttackDamage(SaxtonHaleBase boss, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	float flDamageMultiplier = 1.0 - (i_PlayerCounter[boss.iClient] * 0.05);
-	if (flDamageMultiplier < 0.5)
- 		flDamageMultiplier = 0.5;
+	if(flDamageMultiplier < 0.5)
+		flDamageMultiplier = 0.5;
 		damage *= flDamageMultiplier;
-
-	return Plugin_Changed;
+		return Plugin_Changed;
+	//0.5 means 50% damage lost max
 }
 
 public void PissCakehole_OnRage(SaxtonHaleBase boss)
@@ -147,7 +170,7 @@ public void PissCakehole_OnRage(SaxtonHaleBase boss)
 	char attribs[256];
 	Format(attribs, sizeof(attribs), "6 ; 0.50");
 	
-	if (!boss.bSuperRage)
+	if(!boss.bSuperRage)
 		StrCat(attribs, sizeof(attribs), " ; 279 ; 1.0 ; 315 ; 5.0");
 	else
 		StrCat(attribs, sizeof(attribs), " ; 279 ; 2.0 ; 315 ; 5.0");
@@ -159,6 +182,7 @@ public void PissCakehole_OnRage(SaxtonHaleBase boss)
 		TF2_SwitchToWeapon(boss.iClient, iWeapon);
 	}
 
+	//Give user longer infinite jumps on super rage
 	if (!boss.bSuperRage)
 		TF2_AddCondition(boss.iClient, TFCond_HalloweenSpeedBoost, 6.0);
 	else
@@ -168,7 +192,7 @@ public void PissCakehole_OnRage(SaxtonHaleBase boss)
 	//I'll be honest dog I have 0 fucking clue which one of these is actually responsible for giving Jarate *the ammo*
 	//but it works like flex tape, it works, so don't touch it.
 	int iJarate = GetPlayerWeaponSlot(iClient, WeaponSlot_Secondary);
-	if (IsValidEntity(iJarate))
+	if(IsValidEntity(iJarate))
 	{
 		TF2Attrib_SetByDefIndex(iClient, 279, 5.0);
 		TF2Attrib_SetByDefIndex(iClient, 278, 0.0);
@@ -177,12 +201,12 @@ public void PissCakehole_OnRage(SaxtonHaleBase boss)
 		TF2Attrib_SetByDefIndex(iClient, 874, 0.0);
 		int iAmmo = TF2_GetAmmo(iClient, TF_AMMO_SECONDARY);
 		iAmmo += (3 + RoundToFloor(iPlayerCount / 4.0));
-		if (iAmmo > 5)
+		if(iAmmo > 5)
 			iAmmo = 5;
 		TF2_SetAmmo(iClient, TF_AMMO_SECONDARY, iAmmo);
 		GivePlayerAmmo(iClient, 5, TF_AMMO_SECONDARY, true)
 		int ammoType = GetEntProp(iJarate, Prop_Send, "m_iSecondaryAmmoType");
-    	SetEntProp(iClient, Prop_Send, "m_iAmmo", 5, ammoType); // sets jar ammo to 5
+		SetEntProp(iClient, Prop_Send, "m_iAmmo", 5, ammoType); // sets jar ammo to 5
 		SetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon", iJarate);
 		SetEntPropFloat(iJarate, Prop_Send, "m_flEffectBarRegenTime", GetGameTime() + 0.5);
 		SetEntPropFloat(iJarate, Prop_Send, "m_flNextPrimaryAttack", GetGameTime() + 0.5);
@@ -220,7 +244,7 @@ public void PissCakehole_GetSound(SaxtonHaleBase boss, char[] sSound, int length
 public Action PissCakehole_OnSoundPlayed(SaxtonHaleBase boss, int clients[MAXPLAYERS], int &numClients, char sample[PLATFORM_MAX_PATH], int &channel, float &volume, int &level, int &pitch, int &flags, char soundEntry[PLATFORM_MAX_PATH], int &seed)
 {
 
-	if (StrContains(sample, "vo/", false) == 0)
+	if(StrContains(sample, "vo/", false) == 0)
 	{
 		EmitSoundToAll(g_strPissCakeholeBackStabbed[GetRandomInt(0, sizeof(g_strPissCakeholeBackStabbed)-1)], boss.iClient, SNDCHAN_VOICE, _, _, 0.8);
 		
@@ -249,6 +273,7 @@ public void PissCakehole_GetSoundKill(SaxtonHaleBase boss, char[] sSound, int le
 	EmitSoundToAll(PISS_KILL, boss.iClient, SNDCHAN_STATIC, _, _, 1.0);
 }
 
+//Need to precache all custom assets, except sounds apparently
 public void PissCakehole_Precache(SaxtonHaleBase boss)
 {
 	PrecacheModel(CAKEHOLE_MODEL);
