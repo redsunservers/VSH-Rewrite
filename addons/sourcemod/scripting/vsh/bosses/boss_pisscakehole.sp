@@ -48,6 +48,11 @@ public void PissCakehole_Create(SaxtonHaleBase boss)
 	g_flJesusChrist[boss.iClient] = 0.0;
 }
 
+public bool PissCakehole_IsBossHidden(SaxtonHaleBase boss)
+{
+	return true;
+}
+
 public void PissCakehole_GetBossName(SaxtonHaleBase boss, char[] sName, int length)
 {
 	strcopy(sName, length, "Piss Cakehole");
@@ -95,26 +100,26 @@ public void PissCakehole_OnPlayerKilled(SaxtonHaleBase boss, Event event, int iV
 	//Check if valid player, if yes, increase boss speed and decrease boss damage
 	if(SaxtonHale_IsValidAttack(iVictim))
 	{
-		//Speed increase between (40) 32-24 players
-		if(iPlayerCount >= 24 && iPlayerCount <= 40 && iPlayerCount != 24)
+		//Speed increase above 24 players
+		if(iPlayerCount >= 24)
 		{
 			boss.flSpeed += 7.5;
 			i_PlayerCounter[boss.iClient]++;
 		}
-		//Speed increase between 24-16 players
-		if(iPlayerCount >= 16 && iPlayerCount <= 24 && iPlayerCount != 16)
+		//Speed increase above 16 players
+		else if(iPlayerCount >= 16)
 		{
 			boss.flSpeed += 5.0;
 			i_PlayerCounter[boss.iClient]++;
 		}
-		//Speed increase between 16-8 players
-		if(iPlayerCount >= 8 && iPlayerCount <= 16 && iPlayerCount != 8)
+		//Speed increase above 8 players
+		else if(iPlayerCount >= 8)
 		{
 			boss.flSpeed += 3.0;
 			i_PlayerCounter[boss.iClient]++;
 		}
-		//Speed increase between 8-1 players
-		if(iPlayerCount >= 1 && iPlayerCount <= 8 && iPlayerCount != 1)
+		//Speed increase above 1 player
+		else if(iPlayerCount >= 1)
 		{
 			boss.flSpeed += 2.5;
 			i_PlayerCounter[boss.iClient]++;
@@ -126,7 +131,6 @@ public void PissCakehole_OnPlayerKilled(SaxtonHaleBase boss, Event event, int iV
 public void PissCakehole_OnThink(SaxtonHaleBase boss)
 {
 	int iClient = boss.iClient;
-	bool FUCK = false;
 	
 	if(g_flJesusChrist[iClient] != 0.0 && g_flJesusChrist[iClient] <= GetGameTime())
 	{
@@ -135,9 +139,8 @@ public void PissCakehole_OnThink(SaxtonHaleBase boss)
 		TF2Attrib_SetByDefIndex(iClient, 315, 1.0);
 		TF2Attrib_SetByDefIndex(iClient, 278, 1.0);
 		int iAmmo = TF2_GetAmmo(iClient, TF_AMMO_SECONDARY);
-		if(iAmmo <= 1 && !FUCK)
+		if(iAmmo <= 1)
 		{
-			FUCK = true;
 			TF2_RemoveItemInSlot(iClient, WeaponSlot_Secondary);
 			int iWeapon = boss.CallFunction("CreateWeapon", 58, "tf_weapon_jar", 100, TFQual_Unusual);
 			if(iWeapon > MaxClients)
@@ -153,9 +156,9 @@ public Action PissCakehole_OnAttackDamage(SaxtonHaleBase boss, int &attacker, in
 {
 	float flDamageMultiplier = 1.0 - (i_PlayerCounter[boss.iClient] * 0.05);
 	if(flDamageMultiplier < 0.5)
-		flDamageMultiplier = 0.5;
-		damage *= flDamageMultiplier;
-		return Plugin_Changed;
+	flDamageMultiplier = 0.5;
+	damage *= flDamageMultiplier;
+	return Plugin_Changed;
 	//0.5 means 50% damage lost max
 }
 
@@ -296,7 +299,6 @@ public void PissCakehole_Precache(SaxtonHaleBase boss)
 	AddFileToDownloadsTable("models/player/vsh_rewrite/pisscakehole/pisscakehole.mdl");
 	AddFileToDownloadsTable("models/player/vsh_rewrite/pisscakehole/pisscakehole.phy");
 	AddFileToDownloadsTable("models/player/vsh_rewrite/pisscakehole/pisscakehole.vvd");
-	AddFileToDownloadsTable("models/player/vsh_rewrite/pisscakehole/pisscakehole.sw.vtx");
 	AddFileToDownloadsTable("models/player/vsh_rewrite/pisscakehole/pisscakehole.dx80.vtx");
 	AddFileToDownloadsTable("models/player/vsh_rewrite/pisscakehole/pisscakehole.dx90.vtx");
 }
