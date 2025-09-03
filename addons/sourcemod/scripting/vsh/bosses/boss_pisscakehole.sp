@@ -156,7 +156,8 @@ public Action PissCakehole_OnAttackDamage(SaxtonHaleBase boss, int &attacker, in
 {
 	float flDamageMultiplier = 1.0 - (i_PlayerCounter[boss.iClient] * 0.05);
 	if(flDamageMultiplier < 0.5)
-	flDamageMultiplier = 0.5;
+		flDamageMultiplier = 0.5;
+		
 	damage *= flDamageMultiplier;
 	return Plugin_Changed;
 	//0.5 means 50% damage lost max
