@@ -283,9 +283,10 @@ public void PissCakehole_Precache(SaxtonHaleBase boss)
 	PrecacheModel(CAKEHOLE_MODEL);
 	PrepareSound(PISS_RAGE_MUSIC);
 	PrepareSound(PISS_KILL);
-	for (int i = 0; i < sizeof(g_strPissCakeholeRoundStart); i++) PrecacheSound(g_strPissCakeholeRoundStart[i]);
-	for (int i = 0; i < sizeof(g_strPissCakeholeWin); i++) PrecacheSound(g_strPissCakeholeWin[i]);
-	for (int i = 0; i < sizeof(g_strPissCakeholeLose); i++) PrecacheSound(g_strPissCakeholeLose[i]);
+	for (int i = 0; i < sizeof(g_strPissCakeholeRoundStart); i++) PrepareSound(g_strPissCakeholeRoundStart[i]);
+	for (int i = 0; i < sizeof(g_strPissCakeholeWin); i++) PrepareSound(g_strPissCakeholeWin[i]);
+	for (int i = 0; i < sizeof(g_strPissCakeholeLose); i++) PrepareSound(g_strPissCakeholeLose[i]);
+	
 	for (int i = 0; i < sizeof(g_strPissCakeholeJump); i++) PrecacheSound(g_strPissCakeholeJump[i]);
 	for (int i = 0; i < sizeof(g_strPissCakeholeLastMan); i++) PrecacheSound(g_strPissCakeholeLastMan[i]);
 	for (int i = 0; i < sizeof(g_strPissCakeholeBackStabbed); i++) PrecacheSound(g_strPissCakeholeBackStabbed[i]);
