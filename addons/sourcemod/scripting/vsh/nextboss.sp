@@ -282,7 +282,7 @@ void NextBoss_SetBoss(SaxtonHaleNextBoss nextBoss, ArrayList aNonBosses)
 	bool bModifierSet = nextBoss.GetModifier(sModifierType, sizeof(sModifierType));
 	
 	if (StrEmpty(sBossType))
-		NextBoss_GetRandomNormal(sBossType, sizeof(sBossType));
+		NextBoss_GetRandomNormal(sBossType, sizeof(sBossType), nextBoss.iClient);
 	
 	if (!bModifierSet)
 		NextBoss_GetRandomModifiers(sModifierType, sizeof(sModifierType));
@@ -306,7 +306,7 @@ void NextBoss_SetBoss(SaxtonHaleNextBoss nextBoss, ArrayList aNonBosses)
 	TF2_ForceTeamJoin(nextBoss.iClient, TFTeam_Boss);
 	
 	//Display to client what boss you are for 10 seconds
-	MenuBoss_DisplayInfo(nextBoss.iClient, VSHClassType_Boss, sBossType, 10);
+	MenuBoss_DisplayInfo(nextBoss.iClient, VSHClassType_Boss, sBossType, 10, false);
 	
 	//Enable special round if triggered
 	if (nextBoss.bSpecialClassRound)
@@ -362,10 +362,12 @@ stock void NextBoss_RemoveMulti(const char[] sBoss)
 	}
 }
 
-stock void NextBoss_GetRandomNormal(char[] sBoss, int iLength)
+stock void NextBoss_GetRandomNormal(char[] sBoss, int iLength, int iClient)
 {
+	ArrayList aBlacklist = Blacklist_Get(iClient);
+	
 	//Saxton Hale get higher chance to appear
-	if (GetRandomFloat(0.0, 1.0) <= g_ConfigConvar.LookupFloat("vsh_boss_chance_saxton"))
+	if (GetRandomFloat(0.0, 1.0) <= g_ConfigConvar.LookupFloat("vsh_boss_chance_saxton") && aBlacklist.FindString("SaxtonHale") == -1)
 	{
 		Format(sBoss, iLength, "SaxtonHale");
 		return;
@@ -379,15 +381,25 @@ stock void NextBoss_GetRandomNormal(char[] sBoss, int iLength)
 	if (iIndex >= 0)
 		aBosses.Erase(iIndex);
 	
-	//Delet hidden bosses
 	int iBossLength = aBosses.Length;
 	for (int i = iBossLength-1; i >= 0; i--)
 	{
+		//Delet hidden bosses
 		char sBuffer[MAX_TYPE_CHAR];
 		aBosses.GetString(i, sBuffer, sizeof(sBuffer));
 		if (SaxtonHale_CallFunction(sBuffer, "IsBossHidden"))
+		{
+			aBosses.Erase(i);
+			continue;
+		}
+		
+		//Delet blacklisted bosses
+		iIndex = aBlacklist.FindString(sBuffer);
+		if (iIndex != -1)
 			aBosses.Erase(i);
 	}
+	
+	delete aBlacklist;
 	
 	iBossLength = aBosses.Length;
 	if (iBossLength == 0)
