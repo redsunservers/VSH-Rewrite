@@ -89,7 +89,6 @@ void Blacklist_Load(int iClient)
 	}
 	
 	// Something changed since last time? Save the new data
-	PrintToChatAll("previous %d new %d", iCookieAmount, iPluginAmount);
 	if (iCookieAmount != iPluginAmount)
 		Blacklist_Save(iClient);
 	
