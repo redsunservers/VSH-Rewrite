@@ -239,8 +239,22 @@ public int MenuBoss_SelectInfo(Menu hMenu, MenuAction action, int iClient, int i
 		char sBuffer[64];
 		strcopy(sBuffer, sizeof(sBuffer), sSelect[9]);
 		
-		Blacklist_Toggle(iClient, sBuffer);
+		BlacklistResult result = Blacklist_Toggle(iClient, sBuffer);
 		MenuBoss_DisplayInfo(iClient, g_nMenuBossClassType[iClient], sBuffer);
+		
+		SaxtonHale_CallFunction(sBuffer, "GetBossName", sBuffer, sizeof(sBuffer));
+		
+		switch (result)
+		{
+			case BLACKLIST_ADDED:
+				PrintToChat(iClient, "%s%s Added %s%s %sto the boss blacklist.", TEXT_TAG, TEXT_COLOR, TEXT_DARK, sBuffer, TEXT_COLOR);
+			
+			case BLACKLIST_REMOVED:
+				PrintToChat(iClient, "%s%s Removed %s%s %sfrom the boss blacklist.", TEXT_TAG, TEXT_COLOR, TEXT_DARK, sBuffer, TEXT_COLOR);
+			
+			case BLACKLIST_FAILED_TO_CHANGE:
+				PrintToChat(iClient, "%s%s Could not change %s%s %sblacklist status.", TEXT_TAG, TEXT_COLOR, TEXT_DARK, sBuffer, TEXT_COLOR);
+		}
 	}
 	else if (StrEqual(sSelect, "dismiss"))
 	{

@@ -6,7 +6,7 @@ void MenuBlacklist_DisplayMain(int iClient)
 	int iMax = g_ConfigConvar.LookupInt("vsh_blacklist_amount");
 	if (iMax <= 0)
 	{
-		PrintToChat(iClient, "%s%s The blacklist is currently disabled.", TEXT_TAG, TEXT_COLOR);
+		PrintToChat(iClient, "%s%s The boss blacklist is currently disabled.", TEXT_TAG, TEXT_COLOR);
 		return;
 	}
 	
@@ -14,7 +14,7 @@ void MenuBlacklist_DisplayMain(int iClient)
 	ArrayList aBlacklist = Blacklist_Get(iClient);
 	
 	char sTitle[512];
-	FormatEx(sTitle, sizeof(sTitle), "Blacklist Menu\n \nYou can blacklist up to %d bosses to avoid being selected as them.\n ", iMax);
+	FormatEx(sTitle, sizeof(sTitle), "Boss Blacklist Menu\n \nYou can blacklist up to %d bosses to avoid being selected as them.\n ", iMax);
 	
 	int iLength = aBlacklist.Length;
 	if (iLength)

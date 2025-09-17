@@ -4,6 +4,13 @@
 static ArrayList g_aBlacklistedBosses[MAXPLAYERS];
 static Cookie g_hCookiesBlacklist;
 
+enum BlacklistResult
+{
+	BLACKLIST_ADDED,
+	BLACKLIST_REMOVED,
+	BLACKLIST_FAILED_TO_CHANGE
+}
+
 void Blacklist_Init()
 {
 	for (int i = 1; i <= MaxClients; i++)
@@ -14,29 +21,31 @@ void Blacklist_Init()
 	g_hCookiesBlacklist = new Cookie("vsh_blacklist", "Which bosses this player has blacklisted", CookieAccess_Protected);
 }
 
-void Blacklist_Toggle(int iClient, const char[] sBoss)
+BlacklistResult Blacklist_Toggle(int iClient, const char[] sBoss)
 {
+	BlacklistResult result;
 	int iIndex = g_aBlacklistedBosses[iClient].FindString(sBoss);
 	if (iIndex == -1)
 	{
 		int iMax = g_ConfigConvar.LookupInt("vsh_blacklist_amount");
 		if (Blacklist_GetAmount(iClient) >= iMax)
-			return;
+			return BLACKLIST_FAILED_TO_CHANGE;
 		
 		g_aBlacklistedBosses[iClient].PushString(sBoss);
+		result = BLACKLIST_ADDED;
 	}
 	else
 	{
 		g_aBlacklistedBosses[iClient].Erase(iIndex);
+		result = BLACKLIST_REMOVED;
 	}
 	
 	Blacklist_Save(iClient);
+	return result;
 }
 
 void Blacklist_Load(int iClient)
 {
-	if (!g_bEnabled) return;
-	
 	g_aBlacklistedBosses[iClient].Clear();
 	
 	int iMax = g_ConfigConvar.LookupInt("vsh_blacklist_amount");
@@ -80,6 +89,7 @@ void Blacklist_Load(int iClient)
 	}
 	
 	// Something changed since last time? Save the new data
+	PrintToChatAll("previous %d new %d", iCookieAmount, iPluginAmount);
 	if (iCookieAmount != iPluginAmount)
 		Blacklist_Save(iClient);
 	
@@ -106,15 +116,13 @@ void Blacklist_Save(int iClient)
 ArrayList Blacklist_Get(int iClient)
 {
 	// If we somehow have more blacklisted bosses than allowed (ie convar recently changed), only use as many as we can
-	ArrayList aBlacklist = g_aBlacklistedBosses[iClient].Clone();
-	
-	int iLength = aBlacklist.Length;
+	int iLength = g_aBlacklistedBosses[iClient].Length;
 	int iMax = g_ConfigConvar.LookupInt("vsh_blacklist_amount");
 	
 	for (int i = iLength - 1; i >= iMax; i--)
-		aBlacklist.Erase(i);
+		g_aBlacklistedBosses[iClient].Erase(i);
 	
-	return aBlacklist;
+	return g_aBlacklistedBosses[iClient].Clone();
 }
 
 int Blacklist_GetAmount(int iClient)
