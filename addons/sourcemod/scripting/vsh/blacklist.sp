@@ -105,7 +105,16 @@ void Blacklist_Save(int iClient)
 
 ArrayList Blacklist_Get(int iClient)
 {
-	return g_aBlacklistedBosses[iClient].Clone();
+	// If we somehow have more blacklisted bosses than allowed (ie convar recently changed), only use as many as we can
+	ArrayList aBlacklist = g_aBlacklistedBosses[iClient].Clone();
+	
+	int iLength = aBlacklist.Length;
+	int iMax = g_ConfigConvar.LookupInt("vsh_blacklist_amount");
+	
+	for (int i = iLength - 1; i >= iMax; i--)
+		aBlacklist.Erase(i);
+	
+	return aBlacklist;
 }
 
 int Blacklist_GetAmount(int iClient)

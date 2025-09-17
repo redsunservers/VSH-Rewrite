@@ -190,7 +190,6 @@ void MenuBoss_DisplayInfo(int iClient, SaxtonHaleClassType nClassType, const cha
 			char sDisplay[64];
 			int iStyle = ITEMDRAW_DEFAULT;
 			
-			PrintToChatAll("type: %s", sType);
 			if (Blacklist_IsBossBlacklisted(iClient, sType))
 			{
 				sDisplay = "Remove from blacklist";

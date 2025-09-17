@@ -17,9 +17,6 @@ void MenuBlacklist_DisplayMain(int iClient)
 	FormatEx(sTitle, sizeof(sTitle), "Blacklist Menu\n \nYou can blacklist up to %d bosses to avoid being selected as them.\n ", iMax);
 	
 	int iLength = aBlacklist.Length;
-	if (iLength > iMax)
-		iLength = iMax;
-	
 	if (iLength)
 	{
 		StrCat(sTitle, sizeof(sTitle), "\nCurrent blacklist:");
