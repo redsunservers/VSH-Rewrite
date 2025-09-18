@@ -6,7 +6,7 @@
 #define TF_DMG_GAS_AFTERBURN			DMG_BURN|DMG_PREVENT_PHYSICS_FORCE|DMG_ACID
 #define PYROCAR_BACKBURNER_ATTRIBUTES	"24 ; 1.0 ; 72 ; 0.5 ; 74 ; 0.0 ; 112 ; 0.25 ; 178 ; 0.2 ; 181 ; 1.0 ; 252 ; 0.5 ; 259 ; 1.0 ; 356 ; 1.0 ; 839 ; 2.8 ; 841 ; 0 ; 843 ; 8.5 ; 844 ; 1850.0 ; 862 ; 0.45 ; 863 ; 0.01 ; 865 ; 85 ; 214 ; %d"
 #define PYROCAR_THERMAL_THRUSTER_ATTRIBUTES	"259 ; 1.0 ; 801 ; 20.0 ; 856 ; 1.0 ; 870 ; 1.0 ; 872 ; 1.0 ; 873 ; 1.0"
-#define PYROCAR_HEALINGREDUCTION		0.5
+#define PYROCAR_HEALINGREDUCTION		0.8
 
 static char g_strPyrocarRoundStart[][] =  {
 	"vsh_rewrite/pyrocar/pyrocar_intro.mp3", 
@@ -279,16 +279,16 @@ public Action PyroCar_OnAttackDamageAlive(SaxtonHaleBase boss, int victim, int &
 		{
 			for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
 			{
-				int iWeapon = GetPlayerWeaponSlot(boss.iClient, iSlot);
+				int iWeapon = GetPlayerWeaponSlot(victim, iSlot);
 				if (iWeapon > MaxClients)
 				{
-					TF2Attrib_SetByDefIndex(iWeapon, ATTRIB_LESSHEALING, 0.5);
+					TF2Attrib_SetByDefIndex(iWeapon, ATTRIB_LESSHEALING, PYROCAR_HEALINGREDUCTION);
 					TF2Attrib_ClearCache(iWeapon);
 				}
 			}
 		}
 		
-		g_hPyrocarHealTimer[victim] = CreateTimer(0.4, Timer_RemoveLessHealing, GetClientSerial(victim));
+		g_hPyrocarHealTimer[victim] = CreateTimer(0.6, Timer_RemoveLessHealing, GetClientSerial(victim));
 	}
 	
 	if (g_flPyrocarGasCharge[boss.iClient] <= g_iMaxGasPassers * g_flGasMinCharge)

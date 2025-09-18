@@ -26,7 +26,7 @@ public void RageGhost_Create(SaxtonHaleBase boss)
 	boss.SetPropFloat("RageGhost", "Radius", 400.0);
 	boss.SetPropFloat("RageGhost", "Duration", 8.0);
 	boss.SetPropFloat("RageGhost", "HealSteal", 25.0);	//Steals hp per second
-	boss.SetPropFloat("RageGhost", "HealGainMultiplier", 2.0);	//Gains hp multiplied by amount of health stolen
+	boss.SetPropFloat("RageGhost", "HealGainMultiplier", 1.25);	//Gains hp multiplied by amount of health stolen
 	boss.SetPropFloat("RageGhost", "BuildingDrain", 3.0);	//Building health drain multiplier based on flHealSteal, 0.0 or lower disables it
 	boss.SetPropFloat("RageGhost", "PullStrength", 10.0);	//Scale of pull strength, negative values push enemies away instead. Note that making it too weak will only pull players if they're airborne
 	
