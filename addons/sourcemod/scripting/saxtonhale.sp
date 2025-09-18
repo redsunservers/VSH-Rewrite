@@ -449,6 +449,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/config.sp"
 
 #include "vsh/menu/menu_admin.sp"
+#include "vsh/menu/menu_blacklist.sp"
 #include "vsh/menu/menu_boss.sp"
 #include "vsh/menu/menu_weapon.sp"
 #include "vsh/menu.sp"
@@ -460,6 +461,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/function/func_hook.sp"
 #include "vsh/function/func_native.sp"
 
+#include "vsh/blacklist.sp"
 #include "vsh/classlimit.sp"
 #include "vsh/command.sp"
 #include "vsh/console.sp"
@@ -533,6 +535,7 @@ public void OnPluginStart()
 	
 	Config_Init();
 	
+	Blacklist_Init();
 	ClassLimit_Init();
 	Command_Init();
 	Console_Init();
@@ -758,6 +761,7 @@ public void OnPluginStart()
 	g_ConfigConvar.Create("vsh_telefrag_damage", "9001.0", "Damage amount to boss from telefrag", _, true, 0.0);
 	g_ConfigConvar.Create("vsh_music_enable", "1", "Enable boss music?", _, true, 0.0, true, 1.0);
 	g_ConfigConvar.Create("vsh_rps_enable", "1", "Allow everyone use Rock Paper Scissors Taunt?", _, true, 0.0, true, 1.0);
+	g_ConfigConvar.Create("vsh_blacklist_amount", "2", "Maximum amount of bosses a player can blacklist for themselves (0 disables the feature)", _, true, 0.0);
 	
 	//Incase of lateload, call client join functions
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
@@ -1324,6 +1328,7 @@ public void OnClientPutInServer(int iClient)
 	SDKHook(iClient, SDKHook_StartTouch, Client_OnStartTouch);
 	SDKHook(iClient, SDKHook_WeaponSwitchPost, Client_OnWeaponSwitchPost);
 	
+	Blacklist_Load(iClient);
 	Cookies_OnClientJoin(iClient);
 }
 
