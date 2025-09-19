@@ -156,7 +156,7 @@ public void SaxtonHale_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length
 	StrCat(sInfo, length, "\nRage");
 	StrCat(sInfo, length, "\n- Damage requirement: 3000");
 	StrCat(sInfo, length, "\n- Faster attack and movement speed");
-	StrCat(sInfo, length, "\n- Knockback, stun immunity and damage resistance");
+	StrCat(sInfo, length, "\n- Knockback/stun immunity and damage resistance");
 	StrCat(sInfo, length, "\n- 200%% Rage: Extends duration from 5 to 10 seconds");
 }
 
