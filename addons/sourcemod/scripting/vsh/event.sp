@@ -529,7 +529,7 @@ public void Event_PlayerSpawn(Event event, const char[] sName, bool bDontBroadca
 	if (boss.bValid)
 		boss.CallFunction("OnSpawn");
 	
-	UpdateClientGlowEnt(iClient);
+	//UpdateClientGlowEnt(iClient);
 }
 
 public Action Event_BuiltObject(Event event, const char[] sName, bool bDontBroadcast)
