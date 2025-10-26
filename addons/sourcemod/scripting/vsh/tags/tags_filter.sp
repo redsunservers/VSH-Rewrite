@@ -16,6 +16,7 @@ enum TagsFilterType			//List of possible filters
 	TagsFilterType_VictimUber,
 	TagsFilterType_SelfDamage,
 	TagsFilterType_VictimCond,
+	TagsFilterType_IgnoreMinions,
 }
 
 enum struct TagsFilterStruct
@@ -40,7 +41,7 @@ enum struct TagsFilterStruct
 				this.nValue = TagsTarget_GetType(sValue);
 				return !(this.nValue == TagsTarget_Invalid);
 			}
-			case TagsFilterType_Aim, TagsFilterType_SentryTarget, TagsFilterType_FeignDeath, TagsFilterType_VictimUber, TagsFilterType_SelfDamage:
+			case TagsFilterType_Aim, TagsFilterType_SentryTarget, TagsFilterType_FeignDeath, TagsFilterType_VictimUber, TagsFilterType_SelfDamage, TagsFilterType_IgnoreMinions:
 			{
 				this.nValue = !!StringToInt(sValue);	//Turn into boolean
 				return true;
@@ -86,7 +87,7 @@ enum struct TagsFilterStruct
 			}
 			case TagsFilterType_Aim:
 			{
-				return SaxtonHale_IsValidBoss(Client_GetEyeTarget(iClient));
+				return SaxtonHale_IsValidBoss(Client_GetEyeTarget(iClient), false);
 			}
 			case TagsFilterType_SentryTarget:
 			{
@@ -184,6 +185,15 @@ enum struct TagsFilterStruct
 				int iVictim = tParams.GetInt("victim");
 				return TF2_IsPlayerInCondition(iVictim, this.nValue);
 			}
+			case TagsFilterType_IgnoreMinions:
+			{
+				int iVictim = tParams.GetInt("victim");
+				SaxtonHaleBase boss = SaxtonHaleBase(iVictim);
+				if (boss.bValid)
+					return !boss.bMinion;
+				
+				return true;
+			}
 		}
 		
 		return false;
@@ -268,6 +278,7 @@ TagsFilterType TagsFilter_GetType(const char[] sTarget)
 		mFilterType.SetValue("victimuber", TagsFilterType_VictimUber);
 		mFilterType.SetValue("selfdamage", TagsFilterType_SelfDamage);
 		mFilterType.SetValue("victimcond", TagsFilterType_VictimCond);
+		mFilterType.SetValue("ignoreminions", TagsFilterType_IgnoreMinions);
 	}
 	
 	TagsFilterType nFilterType = TagsFilterType_Invalid;

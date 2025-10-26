@@ -19,6 +19,7 @@ public void Command_Init()
 	Command_Create("modifiers", Command_Modifiers);
 	Command_Create("next", Command_HaleNext);
 	Command_Create("credits", Command_Credits);
+	Command_Create("blacklist", Command_Blacklist);
 	
 	Command_Create("settings", Command_Preferences);
 	Command_Create("preferences", Command_Preferences);
@@ -120,6 +121,20 @@ public Action Command_Boss(int iClient, int iArgs)
 	return Plugin_Handled;
 }
 
+public Action Command_Blacklist(int iClient, int iArgs)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+
+	if (iClient == 0)
+	{
+		ReplyToCommand(iClient, "This command can only be used in-game.");
+		return Plugin_Handled;
+	}
+	
+	MenuBlacklist_DisplayMain(iClient);
+	return Plugin_Handled;
+}
+
 public Action Command_MultiBoss(int iClient, int iArgs)
 {
 	if (!g_bEnabled) return Plugin_Continue;
@@ -194,11 +209,11 @@ public Action Command_Preferences(int iClient, int iArgs)
 					char buffer[512];
 					
 					if (bValue)
-						Format(buffer, sizeof(buffer), "Enable");
+						Format(buffer, sizeof(buffer), "Enabled");
 					else
-						Format(buffer, sizeof(buffer), "Disable");
+						Format(buffer, sizeof(buffer), "Disabled");
 					
-					PrintToChat(iClient, "%s%s %s %s", TEXT_TAG, TEXT_COLOR, buffer, g_strPreferencesName[nPreferences]);
+					PrintToChat(iClient, "%s%s %s %s.", TEXT_TAG, TEXT_COLOR, buffer, g_strPreferencesName[nPreferences]);
 					return Plugin_Handled;
 				}
 				else

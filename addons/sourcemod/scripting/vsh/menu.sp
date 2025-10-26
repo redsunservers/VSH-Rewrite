@@ -23,6 +23,7 @@ void Menu_Init()
 	g_hMenuMain.AddItem("modifiers", "Modifiers Info (!vshmodifiers)");
 	g_hMenuMain.AddItem("queue", "Queue List (!vshnext)");
 	g_hMenuMain.AddItem("preference", "Settings (!vshsettings)");
+	g_hMenuMain.AddItem("blacklist", "Boss Blacklist (!vshblacklist)");
 	g_hMenuMain.AddItem("credit", "Credits (!vshcredits)");
 	
 	// Credits
@@ -85,6 +86,8 @@ public int Menu_SelectMain(Menu hMenu, MenuAction action, int iClient, int iSele
 		Menu_DisplayQueue(iClient);
 	else if (StrEqual(sSelect, "preference"))
 		Menu_DisplayPreferences(iClient);
+	else if (StrEqual(sSelect, "blacklist"))
+		MenuBlacklist_DisplayMain(iClient);
 	else if (StrEqual(sSelect, "credit"))
 		Menu_DisplayCredits(iClient);
 	else

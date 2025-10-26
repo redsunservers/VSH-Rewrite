@@ -158,7 +158,7 @@ public void MenuBoss_CallbackInfo(int iClient, MenuBossOption nOption, const cha
 		MenuBoss_DisplayInfo(iClient, g_nMenuBossClassType[iClient], sType);
 }
 
-void MenuBoss_DisplayInfo(int iClient, SaxtonHaleClassType nClassType, const char[] sType, int iTime = MENU_TIME_FOREVER)
+void MenuBoss_DisplayInfo(int iClient, SaxtonHaleClassType nClassType, const char[] sType, int iTime = MENU_TIME_FOREVER, bool bFromMenu = true)
 {
 	g_nMenuBossClassType[iClient] = nClassType;
 	
@@ -179,17 +179,87 @@ void MenuBoss_DisplayInfo(int iClient, SaxtonHaleClassType nClassType, const cha
 		Format(sInfo, sizeof(sInfo), "%s\n \n%s", sName, sInfo);
 	
 	hMenuBossInfo.SetTitle(sInfo);
-	hMenuBossInfo.AddItem("back", "<- Back");
+	
+	if (bFromMenu)
+	{
+		hMenuBossInfo.AddItem("back", "<- Back");
+		
+		int iMaxBlacklistAmount = g_ConfigConvar.LookupInt("vsh_blacklist_amount");
+		if (nClassType == VSHClassType_Boss && iMaxBlacklistAmount)
+		{
+			char sDisplay[64];
+			int iStyle = ITEMDRAW_DEFAULT;
+			
+			if (Blacklist_IsBossBlacklisted(iClient, sType))
+			{
+				sDisplay = "Remove from blacklist";
+			}
+			else
+			{
+				sDisplay = "Add to blacklist";
+				if (Blacklist_GetAmount(iClient) >= iMaxBlacklistAmount)
+				{
+					iStyle = ITEMDRAW_DISABLED;
+					StrCat(sDisplay, sizeof(sDisplay), " (maximum amount reached)");
+				}
+			}
+			
+			FormatEx(sInfo, sizeof(sInfo), "blacklist%s", sType);
+			hMenuBossInfo.AddItem(sInfo, sDisplay, iStyle);
+		}
+	}
+	else
+	{
+		hMenuBossInfo.AddItem("dismiss", "Dismiss");
+	}
+	
 	hMenuBossInfo.Display(iClient, iTime);
 }
 
 public int MenuBoss_SelectInfo(Menu hMenu, MenuAction action, int iClient, int iSelect)
 {
-	//Only back button in menu
-	if (action == MenuAction_Select)
-		MenuBoss_DisplayList(iClient, g_nMenuBossClassType[iClient], MenuBoss_CallbackInfo);
-	else if (action == MenuAction_End)
+	if (action == MenuAction_End)
+	{
 		delete hMenu;
+		return 0;
+	}
+	
+	if (action != MenuAction_Select) return 0;
+	
+	char sSelect[64];
+	hMenu.GetItem(iSelect, sSelect, sizeof(sSelect));
+	
+	if (StrEqual(sSelect, "back"))
+	{
+		MenuBoss_DisplayList(iClient, g_nMenuBossClassType[iClient], MenuBoss_CallbackInfo);
+	}
+	else if (StrContains(sSelect, "blacklist", true) == 0)
+	{
+		// Remove "blacklist" and keep the boss type
+		char sBuffer[64];
+		strcopy(sBuffer, sizeof(sBuffer), sSelect[9]);
+		
+		BlacklistResult result = Blacklist_Toggle(iClient, sBuffer);
+		MenuBoss_DisplayInfo(iClient, g_nMenuBossClassType[iClient], sBuffer);
+		
+		SaxtonHale_CallFunction(sBuffer, "GetBossName", sBuffer, sizeof(sBuffer));
+		
+		switch (result)
+		{
+			case BLACKLIST_ADDED:
+				PrintToChat(iClient, "%s%s Added %s%s %sto the boss blacklist.", TEXT_TAG, TEXT_COLOR, TEXT_DARK, sBuffer, TEXT_COLOR);
+			
+			case BLACKLIST_REMOVED:
+				PrintToChat(iClient, "%s%s Removed %s%s %sfrom the boss blacklist.", TEXT_TAG, TEXT_COLOR, TEXT_DARK, sBuffer, TEXT_COLOR);
+			
+			case BLACKLIST_FAILED_TO_CHANGE:
+				PrintToChat(iClient, "%s%s Could not change %s%s %sblacklist status.", TEXT_TAG, TEXT_COLOR, TEXT_DARK, sBuffer, TEXT_COLOR);
+		}
+	}
+	else if (StrEqual(sSelect, "dismiss"))
+	{
+		return 0;
+	}
 	
 	return 0;
 }
