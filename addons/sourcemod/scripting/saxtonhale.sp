@@ -762,6 +762,7 @@ public void OnPluginStart()
 	g_ConfigConvar.Create("vsh_music_enable", "1", "Enable boss music?", _, true, 0.0, true, 1.0);
 	g_ConfigConvar.Create("vsh_rps_enable", "1", "Allow everyone use Rock Paper Scissors Taunt?", _, true, 0.0, true, 1.0);
 	g_ConfigConvar.Create("vsh_blacklist_amount", "2", "Maximum amount of bosses a player can blacklist for themselves (0 disables the feature)", _, true, 0.0);
+	g_ConfigConvar.Create("vsh_top_score_outline", "0", "Lets bosses see the top scoring player through walls via an outline.", _, true, 0.0, true, 1.0);
 	
 	//Incase of lateload, call client join functions
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
@@ -1804,6 +1805,9 @@ Action GiveNamedItem(int iClient, const char[] sClassname, int iIndex)
 
 void UpdateClientGlowEnt(int iClient)
 {
+	if (!g_ConfigConvar.LookupBool("vsh_top_score_outline"))
+		return;
+	
 	static char sClassModels[][PLATFORM_MAX_PATH] = {	//Do we need to precache this? or does TF2 already precache it
 		"",
 		"models/player/scout.mdl",
@@ -1835,6 +1839,12 @@ void UpdateClientGlowEnt(int iClient)
 
 public Action Transmit_PlayerGlow(int iEntity, int iTarget)
 {
+	if (!g_ConfigConvar.LookupBool("vsh_top_score_outline"))
+	{
+		RemoveEntity(iEntity);
+		return Plugin_Stop;
+	}
+	
 	int iClient = GetEntPropEnt(iEntity, Prop_Data, "m_hParent");
 	if (iClient == INVALID_ENT_REFERENCE)
 	{
