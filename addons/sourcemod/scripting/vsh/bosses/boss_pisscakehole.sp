@@ -103,13 +103,13 @@ public void PissCakehole_OnPlayerKilled(SaxtonHaleBase boss, Event event, int iV
 		//Speed increase above 24 players
 		if(iPlayerCount >= 24)
 		{
-			boss.flSpeed += 7.5;
+			boss.flSpeed += 10.0;
 			i_PlayerCounter[boss.iClient]++;
 		}
 		//Speed increase above 16 players
 		else if(iPlayerCount >= 16)
 		{
-			boss.flSpeed += 5.0;
+			boss.flSpeed += 5.5;
 			i_PlayerCounter[boss.iClient]++;
 		}
 		//Speed increase above 8 players
@@ -149,6 +149,12 @@ public void PissCakehole_OnThink(SaxtonHaleBase boss)
 			}
 		}
 	}
+	
+	for (int iOther = 1; iOther <= MaxClients; iOther++)
+	{
+		if (IsClientInGame(iOther) && IsPlayerAlive(iOther) && TF2_GetClientTeam(iOther) != TF2_GetClientTeam(iClient) && (TF2_IsPlayerInCondition(iOther, TFCond_Jarated) && !TF2_IsPlayerInCondition(iOther, TFCond_Bleeding)))
+			TF2_MakeBleed(iOther, iClient, 0.5);
+	}
 }
 
 //Decrease damage on kill up to a cap
@@ -175,9 +181,9 @@ public void PissCakehole_OnRage(SaxtonHaleBase boss)
 	Format(attribs, sizeof(attribs), "6 ; 0.50");
 	
 	if(!boss.bSuperRage)
-		StrCat(attribs, sizeof(attribs), " ; 279 ; 1.0 ; 315 ; 5.0");
+		StrCat(attribs, sizeof(attribs), " ; 279 ; 1.0 ; 315 ; 5.0 ; 149 ; 6.0");
 	else
-		StrCat(attribs, sizeof(attribs), " ; 279 ; 2.0 ; 315 ; 5.0");
+		StrCat(attribs, sizeof(attribs), " ; 279 ; 2.0 ; 315 ; 5.0 ; 149 ; 6.0");
 	
 	int iWeapon = boss.CallFunction("CreateWeapon", 58, "tf_weapon_jar", 100, TFQual_Unusual, attribs);
 	if (iWeapon > MaxClients)
@@ -286,10 +292,10 @@ public void PissCakehole_Precache(SaxtonHaleBase boss)
 	for (int i = 0; i < sizeof(g_strPissCakeholeRoundStart); i++) PrepareSound(g_strPissCakeholeRoundStart[i]);
 	for (int i = 0; i < sizeof(g_strPissCakeholeWin); i++) PrepareSound(g_strPissCakeholeWin[i]);
 	for (int i = 0; i < sizeof(g_strPissCakeholeLose); i++) PrepareSound(g_strPissCakeholeLose[i]);
-	
+	for (int i = 0; i < sizeof(g_strPissCakeholeBackStabbed); i++) PrepareSound(g_strPissCakeholeBackStabbed[i]);
+
 	for (int i = 0; i < sizeof(g_strPissCakeholeJump); i++) PrecacheSound(g_strPissCakeholeJump[i]);
 	for (int i = 0; i < sizeof(g_strPissCakeholeLastMan); i++) PrecacheSound(g_strPissCakeholeLastMan[i]);
-	for (int i = 0; i < sizeof(g_strPissCakeholeBackStabbed); i++) PrecacheSound(g_strPissCakeholeBackStabbed[i]);
 	
 	AddFileToDownloadsTable("materials/models/player/pisscakehole/sniper_red.vtf");
 	AddFileToDownloadsTable("materials/models/player/pisscakehole/sniper_red.vmt");
