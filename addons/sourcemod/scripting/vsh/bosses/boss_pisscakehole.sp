@@ -151,6 +151,10 @@ public void PissCakehole_OnThink(SaxtonHaleBase boss)
 		}
 	}
 	
+	if (!IsPlayerAlive(iClient))
+		return;
+	
+	// Scuffed way of inflicting bleed to jarated players
 	for (int iOther = 1; iOther <= MaxClients; iOther++)
 	{
 		if (IsClientInGame(iOther) && IsPlayerAlive(iOther) && TF2_GetClientTeam(iOther) != TF2_GetClientTeam(iClient) && (TF2_IsPlayerInCondition(iOther, TFCond_Jarated) && !TF2_IsPlayerInCondition(iOther, TFCond_Bleeding)))
