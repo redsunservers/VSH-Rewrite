@@ -69,6 +69,7 @@ public void PissCakehole_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int leng
 	StrCat(sInfo, length, "\nRage");
 	StrCat(sInfo, length, "\n- Damage requirement: 2500");
 	StrCat(sInfo, length, "\n- Gain 5 Jarate jars and infinite jumps");
+	StrCat(sInfo, length, "\n- Jarate also inflicts bleed");
 	StrCat(sInfo, length, "\n- 200%% Rage: Jarate jars are doubled, infinite jumps last longer");
 }
 
