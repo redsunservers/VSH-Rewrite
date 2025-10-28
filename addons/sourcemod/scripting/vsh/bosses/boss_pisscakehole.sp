@@ -81,6 +81,7 @@ public void PissCakehole_OnSpawn(SaxtonHaleBase boss)
 	i_PlayerCounter[boss.iClient] = 0
 	TF2Attrib_SetByDefIndex(iClient, 279, 1.0);
 	TF2Attrib_SetByDefIndex(iClient, 315, 1.0);
+	SetEntityRenderColor(iClient, 5, 200, 250) //temporary fix
 	
 	Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0");
 	iWeapon = boss.CallFunction("CreateWeapon", 8, "tf_weapon_bonesaw", 100, TFQual_Unusual, attribs);
@@ -237,6 +238,15 @@ public void PissCakehole_OnRage(SaxtonHaleBase boss)
 	*/
 	
 }
+
+/* Commented out until I know how to fix this ass
+public void PissCakehole_GetHudInfo(SaxtonHaleBase boss, char[] sMessage, int iLength, int iColor[4])
+{
+	float flVel[3];
+	float flSpeed = GetEntPropVector(boss.iClient, Prop_Data, "m_vecAbsVelocity", flVel);
+	Format(sMessage, iLength, "\nVelocity: %i%%%%", sMessage, flSpeed);
+}
+*/
 
 public void PissCakehole_GetModel(SaxtonHaleBase boss, char[] sModel, int length)
 {
