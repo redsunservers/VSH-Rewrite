@@ -27,15 +27,15 @@ public void RageMeteor_Create(SaxtonHaleBase boss)
 	g_iRocketCount[boss.iClient] = 0;
 	g_flNextRocketIn[boss.iClient] = 0.0;
 
-	boss.SetPropFloat("RageMeteor", "Damage", 50.0);
+	boss.SetPropFloat("RageMeteor", "Damage", 15.0);
 	boss.SetPropFloat("RageMeteor", "Speed", 300.0);
-	boss.SetPropFloat("RageMeteor", "SpawnRadius", 250.0);
-	boss.SetPropFloat("RageMeteor", "MinAngle", 45.0);
-	boss.SetPropFloat("RageMeteor", "FreezeTime", 1.5);
+	boss.SetPropFloat("RageMeteor", "SpawnRadius", 150.0);
+	boss.SetPropFloat("RageMeteor", "MinAngle", 80.0);
+	boss.SetPropFloat("RageMeteor", "FreezeTime", 3.0);
 	boss.SetPropFloat("RageMeteor", "SpawnDelay", 0.094);
 	boss.SetPropFloat("RageMeteor", "SpawnDelaySuper", 0.077);
-	boss.SetPropInt("RageMeteor", "SpawnCount", 70);
-	boss.SetPropInt("RageMeteor", "SpawnCountSuper", 130);
+	boss.SetPropInt("RageMeteor", "SpawnCount", 25);
+	boss.SetPropInt("RageMeteor", "SpawnCountSuper", 65);
 }
 
 public void RageMeteor_OnRage(SaxtonHaleBase boss)
@@ -97,10 +97,10 @@ public Action RageMeteor_OnAttackDamage(SaxtonHaleBase boss, int victim, int &in
 					EmitAmbientSound(FREEZE_SOUND, vecOrigin);
 					
 					SetEntityRenderColor(victim, 128, 176, 255, 255);
-					SetEntityMoveType(victim, MOVETYPE_NONE);
+					
 				}
 
-				TF2_StunPlayer(victim, flDuration, 1.0, TF_STUNFLAG_SLOWDOWN);
+				TF2_StunPlayer(victim, flDuration, 0.5, TF_STUNFLAG_SLOWDOWN);
 				
 				delete g_hFreezeTimer[victim];
 
@@ -127,7 +127,7 @@ static Action Timer_UnfreezeVictim(Handle hTimer, DataPack pack)
 	int iClient = pack.ReadCell();
 	if (iClient == GetClientOfUserId(pack.ReadCell()))
 	{
-		SetEntityMoveType(iClient, MOVETYPE_WALK);
+		
 		SetEntityRenderColor(iClient, 255, 255, 255, 255);
 
 		float vecOrigin[3];
