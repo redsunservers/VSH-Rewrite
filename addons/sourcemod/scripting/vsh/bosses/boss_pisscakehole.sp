@@ -69,6 +69,7 @@ public void PissCakehole_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int leng
 	StrCat(sInfo, length, "\nRage");
 	StrCat(sInfo, length, "\n- Damage requirement: 2500");
 	StrCat(sInfo, length, "\n- Gain 5 Jarate jars and infinite jumps");
+	StrCat(sInfo, length, "\n- Jarate also inflicts bleed");
 	StrCat(sInfo, length, "\n- 200%% Rage: Jarate jars are doubled, infinite jumps last longer");
 }
 
@@ -80,6 +81,7 @@ public void PissCakehole_OnSpawn(SaxtonHaleBase boss)
 	i_PlayerCounter[boss.iClient] = 0
 	TF2Attrib_SetByDefIndex(iClient, 279, 1.0);
 	TF2Attrib_SetByDefIndex(iClient, 315, 1.0);
+	SetEntityRenderColor(iClient, 5, 200, 250); //temporary fix
 	
 	Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0");
 	iWeapon = boss.CallFunction("CreateWeapon", 8, "tf_weapon_bonesaw", 100, TFQual_Unusual, attribs);
@@ -103,13 +105,13 @@ public void PissCakehole_OnPlayerKilled(SaxtonHaleBase boss, Event event, int iV
 		//Speed increase above 24 players
 		if(iPlayerCount >= 24)
 		{
-			boss.flSpeed += 7.5;
+			boss.flSpeed += 10.0;
 			i_PlayerCounter[boss.iClient]++;
 		}
 		//Speed increase above 16 players
 		else if(iPlayerCount >= 16)
 		{
-			boss.flSpeed += 5.0;
+			boss.flSpeed += 5.5;
 			i_PlayerCounter[boss.iClient]++;
 		}
 		//Speed increase above 8 players
@@ -149,6 +151,16 @@ public void PissCakehole_OnThink(SaxtonHaleBase boss)
 			}
 		}
 	}
+	
+	if (!IsPlayerAlive(iClient))
+		return;
+	
+	// Scuffed way of inflicting bleed to jarated players
+	for (int iOther = 1; iOther <= MaxClients; iOther++)
+	{
+		if (IsClientInGame(iOther) && IsPlayerAlive(iOther) && TF2_GetClientTeam(iOther) != TF2_GetClientTeam(iClient) && (TF2_IsPlayerInCondition(iOther, TFCond_Jarated) && !TF2_IsPlayerInCondition(iOther, TFCond_Bleeding)))
+			TF2_MakeBleed(iOther, iClient, 0.5);
+	}
 }
 
 //Decrease damage on kill up to a cap
@@ -175,9 +187,9 @@ public void PissCakehole_OnRage(SaxtonHaleBase boss)
 	Format(attribs, sizeof(attribs), "6 ; 0.50");
 	
 	if(!boss.bSuperRage)
-		StrCat(attribs, sizeof(attribs), " ; 279 ; 1.0 ; 315 ; 5.0");
+		StrCat(attribs, sizeof(attribs), " ; 279 ; 1.0 ; 315 ; 5.0 ; 149 ; 6.0");
 	else
-		StrCat(attribs, sizeof(attribs), " ; 279 ; 2.0 ; 315 ; 5.0");
+		StrCat(attribs, sizeof(attribs), " ; 279 ; 2.0 ; 315 ; 5.0 ; 149 ; 6.0");
 	
 	int iWeapon = boss.CallFunction("CreateWeapon", 58, "tf_weapon_jar", 100, TFQual_Unusual, attribs);
 	if (iWeapon > MaxClients)
@@ -226,6 +238,15 @@ public void PissCakehole_OnRage(SaxtonHaleBase boss)
 	*/
 	
 }
+
+/* Commented out until I know how to fix this ass
+public void PissCakehole_GetHudInfo(SaxtonHaleBase boss, char[] sMessage, int iLength, int iColor[4])
+{
+	float flVel[3];
+	float flSpeed = GetEntPropVector(boss.iClient, Prop_Data, "m_vecAbsVelocity", flVel);
+	Format(sMessage, iLength, "\nVelocity: %i%%%%", sMessage, flSpeed);
+}
+*/
 
 public void PissCakehole_GetModel(SaxtonHaleBase boss, char[] sModel, int length)
 {
@@ -286,10 +307,10 @@ public void PissCakehole_Precache(SaxtonHaleBase boss)
 	for (int i = 0; i < sizeof(g_strPissCakeholeRoundStart); i++) PrepareSound(g_strPissCakeholeRoundStart[i]);
 	for (int i = 0; i < sizeof(g_strPissCakeholeWin); i++) PrepareSound(g_strPissCakeholeWin[i]);
 	for (int i = 0; i < sizeof(g_strPissCakeholeLose); i++) PrepareSound(g_strPissCakeholeLose[i]);
-	
+	for (int i = 0; i < sizeof(g_strPissCakeholeBackStabbed); i++) PrepareSound(g_strPissCakeholeBackStabbed[i]);
+
 	for (int i = 0; i < sizeof(g_strPissCakeholeJump); i++) PrecacheSound(g_strPissCakeholeJump[i]);
 	for (int i = 0; i < sizeof(g_strPissCakeholeLastMan); i++) PrecacheSound(g_strPissCakeholeLastMan[i]);
-	for (int i = 0; i < sizeof(g_strPissCakeholeBackStabbed); i++) PrecacheSound(g_strPissCakeholeBackStabbed[i]);
 	
 	AddFileToDownloadsTable("materials/models/player/pisscakehole/sniper_red.vtf");
 	AddFileToDownloadsTable("materials/models/player/pisscakehole/sniper_red.vmt");
