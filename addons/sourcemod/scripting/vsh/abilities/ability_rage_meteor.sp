@@ -28,14 +28,14 @@ public void RageMeteor_Create(SaxtonHaleBase boss)
 	g_flNextRocketIn[boss.iClient] = 0.0;
 
 	boss.SetPropFloat("RageMeteor", "Damage", 15.0);
-	boss.SetPropFloat("RageMeteor", "Speed", 400.0);
+	boss.SetPropFloat("RageMeteor", "Speed", 300.0);
 	boss.SetPropFloat("RageMeteor", "SpawnRadius", 150.0);
-	boss.SetPropFloat("RageMeteor", "MinAngle", 25.0);
-	boss.SetPropFloat("RageMeteor", "FreezeTime", 0.5);
+	boss.SetPropFloat("RageMeteor", "MinAngle", 80.0);
+	boss.SetPropFloat("RageMeteor", "FreezeTime", 3.0);
 	boss.SetPropFloat("RageMeteor", "SpawnDelay", 0.094);
 	boss.SetPropFloat("RageMeteor", "SpawnDelaySuper", 0.077);
-	boss.SetPropInt("RageMeteor", "SpawnCount", 55);
-	boss.SetPropInt("RageMeteor", "SpawnCountSuper", 125);
+	boss.SetPropInt("RageMeteor", "SpawnCount", 25);
+	boss.SetPropInt("RageMeteor", "SpawnCountSuper", 65);
 }
 
 public void RageMeteor_OnRage(SaxtonHaleBase boss)
@@ -100,7 +100,7 @@ public Action RageMeteor_OnAttackDamage(SaxtonHaleBase boss, int victim, int &in
 					
 				}
 
-				TF2_StunPlayer(victim, flDuration, 1.0, TF_STUNFLAG_SLOWDOWN);
+				TF2_StunPlayer(victim, flDuration, 0.5, TF_STUNFLAG_SLOWDOWN);
 				
 				delete g_hFreezeTimer[victim];
 

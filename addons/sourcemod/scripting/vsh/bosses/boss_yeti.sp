@@ -73,7 +73,7 @@ public void Yeti_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length)
 	StrCat(sInfo, length, "\nRage");
 	StrCat(sInfo, length, "\n- Damage requirement: 3500");
 	StrCat(sInfo, length, "\n- Rains hail down on to players in front of you");
-	StrCat(sInfo, length, "\n- Players hit will get frozen for 1 second");
+	StrCat(sInfo, length, "\n- Players hit will get slowed for 3 second");
 	StrCat(sInfo, length, "\n- 200%% Rage: Increased projectile count and spawn rate");
 }
 
