@@ -97,10 +97,9 @@ public Action RageMeteor_OnAttackDamage(SaxtonHaleBase boss, int victim, int &in
 					EmitAmbientSound(FREEZE_SOUND, vecOrigin);
 					
 					SetEntityRenderColor(victim, 128, 176, 255, 255);
-					
 				}
 
-				TF2_StunPlayer(victim, flDuration, 0.5, TF_STUNFLAG_SLOWDOWN);
+				AddTemporarySlowdownToClient(victim, 0.5, flDuration);
 				
 				delete g_hFreezeTimer[victim];
 

@@ -1151,3 +1151,16 @@ stock void ShowTFGameTextToClient(int iClient, const char[] sMessage, const char
 		EndMessage();
 	}
 }
+
+stock void AddTemporarySlowdownToClient(int iClient, float flSlowdown, float flDuration, bool bRemoveDoubleJump = false)
+{
+	// The slowdown parameter in stuns is an inverted multiplier, unlike the regular speed multiplier used in attributes
+	flSlowdown = 1.0 - flSlowdown;
+	if (flSlowdown < 0.0)
+		flSlowdown = 0.0;
+	
+	if (bRemoveDoubleJump)
+		TF2Attrib_AddCustomPlayerAttribute(iClient, "no double jump", 1.0, flDuration);
+	
+	TF2Attrib_AddCustomPlayerAttribute(iClient, "SET BONUS: move speed set bonus", flSlowdown, flDuration);
+}

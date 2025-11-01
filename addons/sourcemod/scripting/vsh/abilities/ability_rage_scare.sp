@@ -80,19 +80,13 @@ public void ScareRage_OnRage(SaxtonHaleBase boss)
 				// If we're ONLY slowing players down, use an attribute instead, since this flag doesn't work too well if the player isn't "scared"
 				if (iStunFlags & TF_STUNFLAG_SLOWDOWN && !(iStunFlags & TF_STUNFLAG_THIRDPERSON) && !(iStunFlags & TF_STUNFLAG_BONKSTUCK))
 				{
-					// The slowdown parameter in stuns is an inverted multiplier, unlike the regular speed multiplier used in attributes
-					flSlowdown = 1.0 - flSlowdown;
-					if (flSlowdown < 0.0)
-						flSlowdown = 0.0;
+					AddTemporarySlowdownToClient(iVictim, flSlowdown, flDuration, true);
 					
-					TF2Attrib_AddCustomPlayerAttribute(iVictim, "no double jump", 1.0, flDuration);
-					TF2Attrib_AddCustomPlayerAttribute(iVictim, "SET BONUS: move speed set bonus", flSlowdown, flDuration);
+					// Give players a useless stun for the sake of having the icon in the HUD
+					TF2_StunPlayer(iVictim, flDuration, 0.0, iStunFlags, 0);	
 					
 					if (iStunFlags & TF_STUNFLAG_GHOSTEFFECT)
 						EmitGameSoundToAll("Halloween.PlayerScream", iVictim);
-						
-					// Give players a useless stun for the sake of having the icon in the HUD
-					TF2_StunPlayer(iVictim, flDuration, 0.0, iStunFlags, 0);
 				}
 				else
 				{
