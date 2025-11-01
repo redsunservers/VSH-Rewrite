@@ -58,6 +58,9 @@ public int SaxtonHaleBoss_CalculateMaxHealth(SaxtonHaleBase boss)
 
 public void SaxtonHaleBoss_OnThink(SaxtonHaleBase boss)
 {
+	if (IsFakeClient(boss.iClient) && boss.iRageDamage >= boss.iMaxRageDamage)
+		boss.CallFunction("OnRage");
+	
 	bool bGlow = (boss.flGlowTime == -1.0 || boss.flGlowTime >= GetGameTime());
 	SetEntProp(boss.iClient, Prop_Send, "m_bGlowEnabled", bGlow);
 	
