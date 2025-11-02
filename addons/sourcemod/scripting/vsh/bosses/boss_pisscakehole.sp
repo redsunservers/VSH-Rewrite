@@ -40,8 +40,8 @@ public void PissCakehole_Create(SaxtonHaleBase boss)
 {
 	boss.CreateClass("BraveJump");
 	
-	boss.flSpeed = 250.0; //Fatty
-	boss.iHealthPerPlayer = 500;
+	boss.flSpeed = 275.0; //Slightly less Fatty
+	boss.iHealthPerPlayer = 600;
 	boss.flHealthExponential = 1.05;
 	boss.nClass = TFClass_Sniper;
 	boss.iMaxRageDamage = 2500;
@@ -81,9 +81,9 @@ public void PissCakehole_OnSpawn(SaxtonHaleBase boss)
 	i_PlayerCounter[boss.iClient] = 0
 	TF2Attrib_SetByDefIndex(iClient, 279, 1.0);
 	TF2Attrib_SetByDefIndex(iClient, 315, 1.0);
-	SetEntityRenderColor(iClient, 5, 200, 250); //temporary fix
+	SetEntityRenderColor(iClient, 80, 200, 250); //temporary team recognition fix
 	
-	Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0");
+	Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0 ; 179 ; 1.0");
 	iWeapon = boss.CallFunction("CreateWeapon", 8, "tf_weapon_bonesaw", 100, TFQual_Unusual, attribs);
 	if (iWeapon > MaxClients)
 		SetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
@@ -93,6 +93,7 @@ public void PissCakehole_OnSpawn(SaxtonHaleBase boss)
 	2: damage bonus
 	252: reduction in push force taken from damage
 	259: Deals 3x falling damage to the player you land on
+	179: minicrits become crits
 	*/
 }
 
@@ -181,7 +182,7 @@ public void PissCakehole_OnRage(SaxtonHaleBase boss)
 	int iPlayerCount = SaxtonHale_GetAliveAttackPlayers();
 	g_flJesusChrist[iClient] = GetGameTime()+ 1.0;
 
-	TF2_RemoveItemInSlot(iClient, WeaponSlot_Secondary);
+	//TF2_RemoveItemInSlot(iClient, WeaponSlot_Secondary);
 	
 	char attribs[256];
 	Format(attribs, sizeof(attribs), "6 ; 0.50");
@@ -226,7 +227,7 @@ public void PissCakehole_OnRage(SaxtonHaleBase boss)
 		SetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon", iJarate);
 		SetEntPropFloat(iJarate, Prop_Send, "m_flEffectBarRegenTime", GetGameTime() + 0.5);
 		SetEntPropFloat(iJarate, Prop_Send, "m_flNextPrimaryAttack", GetGameTime() + 0.5);
-		EquipPlayerWeapon(iClient, iJarate);
+		TF2_SwitchToWeapon(boss.iClient, iJarate);
 	}
 	/*
 	if(g_flJesusChrist[iClient] > GetGameTime() + 0.0)
@@ -239,14 +240,11 @@ public void PissCakehole_OnRage(SaxtonHaleBase boss)
 	
 }
 
-/* Commented out until I know how to fix this ass
+
 public void PissCakehole_GetHudInfo(SaxtonHaleBase boss, char[] sMessage, int iLength, int iColor[4])
 {
-	float flVel[3];
-	float flSpeed = GetEntPropVector(boss.iClient, Prop_Data, "m_vecAbsVelocity", flVel);
-	Format(sMessage, iLength, "\nVelocity: %i%%%%", sMessage, flSpeed);
+	Format(sMessage, iLength, "%s\nMax Speed: %.0f", sMessage, boss.flSpeed);
 }
-*/
 
 public void PissCakehole_GetModel(SaxtonHaleBase boss, char[] sModel, int length)
 {
