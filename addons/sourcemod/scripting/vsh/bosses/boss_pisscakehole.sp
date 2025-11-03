@@ -182,7 +182,7 @@ public void PissCakehole_OnRage(SaxtonHaleBase boss)
 	int iPlayerCount = SaxtonHale_GetAliveAttackPlayers();
 	g_flJesusChrist[iClient] = GetGameTime()+ 1.0;
 
-	//TF2_RemoveItemInSlot(iClient, WeaponSlot_Secondary);
+	TF2_RemoveItemInSlot(iClient, WeaponSlot_Secondary);
 	
 	char attribs[256];
 	Format(attribs, sizeof(attribs), "6 ; 0.50");
@@ -243,7 +243,7 @@ public void PissCakehole_OnRage(SaxtonHaleBase boss)
 
 public void PissCakehole_GetHudInfo(SaxtonHaleBase boss, char[] sMessage, int iLength, int iColor[4])
 {
-	Format(sMessage, iLength, "%s\nMax Speed: %.0f", sMessage, boss.flSpeed);
+	Format(sMessage, iLength, "Increase your max speed with more kills\n%sMax Speed: %.0f", sMessage, boss.flSpeed);
 }
 
 public void PissCakehole_GetModel(SaxtonHaleBase boss, char[] sModel, int length)
