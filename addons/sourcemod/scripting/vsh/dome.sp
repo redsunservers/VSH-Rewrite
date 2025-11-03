@@ -72,6 +72,9 @@ void Dome_MapStart()
 
 public MRESReturn Dome_GetCaptureValueForPlayer(Handle hReturn, Handle hParams)
 {
+	if (!Dome_IsEnabled())
+		return MRES_Ignored;
+	
 	int iClient = DHookGetParam(hParams, 1);
 	if (SaxtonHale_IsValidBoss(iClient, false))
 	{
@@ -84,12 +87,18 @@ public MRESReturn Dome_GetCaptureValueForPlayer(Handle hReturn, Handle hParams)
 
 public void Dome_MasterSpawn(int iMaster)
 {
+	if (!Dome_IsEnabled())
+		return;
+	
 	//Prevent round win from capture
 	DispatchKeyValue(iMaster, "cpm_restrict_team_cap_win", "1");
 }
 
 public void Dome_TriggerSpawn(int iTrigger)
 {
+	if (!Dome_IsEnabled())
+		return;
+	
 	//Set time to cap to whatever in convar
 	DispatchKeyValueFloat(iTrigger, "area_time_to_cap", g_ConfigConvar.LookupFloat("vsh_dome_cp_captime") / 2.0);
 	//If mp_capstyle is set to 1, team_numcap_ keyvalues are used in the captime calculations
@@ -100,6 +109,9 @@ public void Dome_TriggerSpawn(int iTrigger)
 
 public Action Dome_TriggerTouch(int iTrigger, int iToucher)
 {
+	if (!Dome_IsEnabled())
+		return Plugin_Continue;
+	
 	if (iToucher <= 0 || iToucher > MaxClients)
 		return Plugin_Continue;
 	
@@ -114,12 +126,18 @@ public void Dome_OnCapEnabled(const char[] output, int caller, int activator, fl
 {
 	if (!g_bEnabled) return;
 	
+	if (!Dome_IsEnabled())
+		return;
+	
 	Dome_Start();
 }
 
 public Action Dome_BlockOutput(const char[] output, int caller, int activator, float delay)
 {
 	if (!g_bEnabled) return Plugin_Continue; //Don't block outside of VSH
+	
+	if (!Dome_IsEnabled())
+		return Plugin_Continue;
 	
 	//Always block this function, maps may assume round ended
 	return Plugin_Handled;
@@ -148,6 +166,9 @@ void Dome_RoundStart()
 		SetEntPropFloat(iObjectiveRessource, Prop_Send, "m_flCustomPositionY", -1.0);
 	}
 	
+	if (!Dome_IsEnabled())
+		return;
+	
 	if (g_ConfigConvar.LookupFloatArray("vsh_dome_centre", g_vecDomeCP, sizeof(g_vecDomeCP)))
 	{
 		//Find CP to teleport
@@ -173,7 +194,7 @@ void Dome_RoundStart()
 
 void Dome_RoundArenaStart()
 {
-	if (!g_ConfigConvar.LookupBool("vsh_dome_enable"))
+	if (!Dome_IsEnabled())
 		return;
 	
 	float flTime = g_ConfigConvar.LookupFloat("vsh_dome_cp_unlock") + (g_ConfigConvar.LookupFloat("vsh_dome_cp_unlockplayer") * g_iTotalAttackCount);
@@ -182,6 +203,9 @@ void Dome_RoundArenaStart()
 
 void Dome_OnThink(int iClient)
 {
+	if (!Dome_IsEnabled())
+		return;
+	
 	//Call our own StartTouch and EndTouch if CP is in custom pos
 	if (!g_bDomeCustomPos)
 		return;
@@ -249,6 +273,9 @@ stock bool TraceFilter_Dome(int iEntity, int iMask, any iData)
 
 bool Dome_Start(int iCP = 0)
 {
+	if (!Dome_IsEnabled())
+		return false;
+	
 	if (g_flDomeStart != 0.0)	//Check if we already have dome enabled, if so return false
 		return false;
 
@@ -606,4 +633,10 @@ bool Dome_IsEntityOutside(int iEntity, bool bIsGettingHurt = false)
 TFTeam Dome_GetTeam()
 {
 	return g_nDomeTeamOwner;
+}
+
+bool Dome_IsEnabled()
+{
+	// Just a heads up: this will be a bit scuffed if the convar is changed mid round.
+	return g_ConfigConvar.LookupBool("vsh_dome_enable");
 }
