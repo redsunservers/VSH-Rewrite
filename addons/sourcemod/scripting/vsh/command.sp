@@ -424,6 +424,12 @@ public Action Command_ForceDome(int iClient, int iArgs)
 
 	if (Client_HasFlag(iClient, ClientFlags_Admin))
 	{
+		if (!Dome_IsEnabled())
+		{
+			ReplyToCommand(iClient, "%s%s The dome is currently disabled.", TEXT_TAG, TEXT_ERROR);
+			return Plugin_Continue;
+		}
+		
 		char sBuffer[32];
 		GetCmdArgString(sBuffer, sizeof(sBuffer));
 		
