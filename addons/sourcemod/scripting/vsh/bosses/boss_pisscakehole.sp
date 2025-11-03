@@ -243,7 +243,7 @@ public void PissCakehole_OnRage(SaxtonHaleBase boss)
 
 public void PissCakehole_GetHudInfo(SaxtonHaleBase boss, char[] sMessage, int iLength, int iColor[4])
 {
-	Format(sMessage, iLength, "Increase your max speed with more kills\n%sMax Speed: %.0f", sMessage, boss.flSpeed);
+	Format(sMessage, iLength, "%s\nIncrease your max speed with more kills\nMax Speed: %.0f", sMessage, boss.flSpeed);
 }
 
 public void PissCakehole_GetModel(SaxtonHaleBase boss, char[] sModel, int length)
