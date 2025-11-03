@@ -775,6 +775,9 @@ public void OnPluginStart()
 			OnClientPutInServer(iClient);
 			OnClientPostAdminCheck(iClient);
 		}
+		
+		if (AreClientCookiesCached(iClient))
+			OnClientCookiesCached(iClient);
 	}
 }
 
@@ -1329,7 +1332,7 @@ public void OnClientPutInServer(int iClient)
 	SDKHook(iClient, SDKHook_StartTouch, Client_OnStartTouch);
 	SDKHook(iClient, SDKHook_WeaponSwitchPost, Client_OnWeaponSwitchPost);
 	
-	Blacklist_Load(iClient);
+	Blacklist_Load(iClient, true);
 	Cookies_OnClientJoin(iClient);
 }
 
@@ -1437,6 +1440,11 @@ public void Client_OnThink(int iClient)
 	}
 	
 	Hud_Think(iClient);
+}
+
+public void OnClientCookiesCached(int iClient)
+{
+	Blacklist_Load(iClient, true);
 }
 
 public Action Client_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)

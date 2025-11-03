@@ -14,9 +14,7 @@ enum BlacklistResult
 void Blacklist_Init()
 {
 	for (int i = 1; i <= MaxClients; i++)
-	{
 		g_aBlacklistedBosses[i] = new ArrayList(32);
-	}
 	
 	g_hCookiesBlacklist = new Cookie("vsh_blacklist", "Which bosses this player has blacklisted", CookieAccess_Protected);
 }
@@ -44,7 +42,7 @@ BlacklistResult Blacklist_Toggle(int iClient, const char[] sBoss)
 	return result;
 }
 
-void Blacklist_Load(int iClient)
+void Blacklist_Load(int iClient, bool bPrintToChat)
 {
 	g_aBlacklistedBosses[iClient].Clear();
 	
@@ -92,6 +90,9 @@ void Blacklist_Load(int iClient)
 	if (iCookieAmount != iPluginAmount)
 		Blacklist_Save(iClient);
 	
+	if (bPrintToChat && IsClientInGame(iClient))
+		CreateTimer(1.0, Blacklist_Timer_PrintToChat, GetClientUserId(iClient), TIMER_FLAG_NO_MAPCHANGE);
+	
 	delete aBosses;
 }
 
@@ -138,4 +139,45 @@ void Blacklist_Clear(int iClient)
 {
 	g_aBlacklistedBosses[iClient].Clear();
 	Blacklist_Save(iClient);
+}
+
+void Blacklist_PrintToChat(int iClient, bool bSkipIfEmpty)
+{
+	int iAmount = Blacklist_GetAmount(iClient);
+	
+	if (bSkipIfEmpty && iAmount == 0)
+		return;
+	
+	char sMessage[256];
+	if (iAmount == 0)
+	{
+		FormatEx(sMessage, sizeof(sMessage), "%s%s There are no bosses in your blacklist.", TEXT_TAG, TEXT_COLOR);
+	}
+	else
+	{
+		FormatEx(sMessage, sizeof(sMessage), "%s%s Your current boss blacklist is:%s", TEXT_TAG, TEXT_COLOR, TEXT_DARK);
+		
+		for (int i = 0; i < iAmount; i++)
+		{
+			if (i > 0)
+				StrCat(sMessage, sizeof(sMessage), ",");
+			
+			char sType[64], sName[64];
+			g_aBlacklistedBosses[iClient].GetString(i, sType, sizeof(sType));
+			SaxtonHale_CallFunction(sType, "GetBossName", sName, sizeof(sName));
+	
+			Format(sMessage, sizeof(sMessage), "%s %s", sMessage, sName);
+		}
+	}
+	
+	PrintToChat(iClient, sMessage);
+}
+
+void Blacklist_Timer_PrintToChat(Handle hTimer, int iUserID)
+{
+	int iClient = GetClientOfUserId(iUserID);
+	if (iClient == 0)
+		return;
+	
+	Blacklist_PrintToChat(iClient, true);
 }
