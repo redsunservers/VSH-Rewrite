@@ -42,6 +42,13 @@ public void Lunge_GetHudInfo(SaxtonHaleBase boss, char[] sMessage, int iLength, 
 	}
 }
 
+public void Lunge_OnArenaRoundStart(SaxtonHaleBase boss)
+{
+	float flTimeUntilMaxCharge = boss.GetPropFloat("Lunge", "Cooldown");
+	g_flLungeCooldownWait[boss.iClient] = GetGameTime() + flTimeUntilMaxCharge;
+	boss.CallFunction("UpdateHudInfo", 0.0, flTimeUntilMaxCharge);	// Update every frame until charge maxes out
+}
+
 static bool CanLunge(SaxtonHaleBase boss)
 {
 	return !TF2_IsPlayerInCondition(boss.iClient, TFCond_Dazed) &&

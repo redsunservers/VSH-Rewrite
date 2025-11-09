@@ -288,7 +288,7 @@ public Action PyroCar_OnAttackDamageAlive(SaxtonHaleBase boss, int victim, int &
 			}
 		}
 		
-		g_hPyrocarHealTimer[victim] = CreateTimer(0.6, Timer_RemoveLessHealing, GetClientSerial(victim));
+		g_hPyrocarHealTimer[victim] = CreateTimer(1.0, Timer_RemoveLessHealing, GetClientSerial(victim));
 	}
 	
 	if (g_flPyrocarGasCharge[boss.iClient] <= g_iMaxGasPassers * g_flGasMinCharge)

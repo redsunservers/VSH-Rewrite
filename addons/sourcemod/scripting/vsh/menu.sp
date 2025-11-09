@@ -37,10 +37,11 @@ void Menu_Init()
 	Format(buffer, sizeof(buffer), "%s \nKirillian - Several boss model addition", buffer);
 	Format(buffer, sizeof(buffer), "%s \nSediSocks - Announcer model", buffer);
 	Format(buffer, sizeof(buffer), "%s \nArtvin & Crusty - Modified Saxton Hale model", buffer);
+	Format(buffer, sizeof(buffer), "%s \nArtvin - Melee hitsound desync fix", buffer);
 	Format(buffer, sizeof(buffer), "%s \nsarysa - Modified Yeti concept", buffer);
 	Format(buffer, sizeof(buffer), "%s \nAlex Turtle & Chillax - Original Rewrite test subjects", buffer);
 	Format(buffer, sizeof(buffer), "%s \nwo - Test subject", buffer);
-	Format(buffer, sizeof(buffer), "%s \nRedSun - Host community!", buffer);
+	Format(buffer, sizeof(buffer), "%s \nRed Sun - Host community!", buffer);
 	g_hMenuCredits.SetTitle(buffer);
 	g_hMenuCredits.AddItem("back", "<- Back");
 	

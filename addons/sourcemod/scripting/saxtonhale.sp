@@ -462,6 +462,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/function/func_native.sp"
 
 #include "vsh/blacklist.sp"
+#include "vsh/custommelee.sp"
 #include "vsh/classlimit.sp"
 #include "vsh/command.sp"
 #include "vsh/console.sp"
@@ -540,6 +541,7 @@ public void OnPluginStart()
 	Command_Init();
 	Console_Init();
 	Cookies_Init();
+	CustomMelee_Init();
 	Dome_Init();
 	Event_Init();
 	FuncClass_Init();
@@ -601,6 +603,7 @@ public void OnPluginStart()
 	SaxtonHaleFunction("OnWeaponSwitchPost", ET_Ignore, Param_Cell);
 	SaxtonHaleFunction("OnConditionAdded", ET_Ignore, Param_Cell);
 	SaxtonHaleFunction("OnConditionRemoved", ET_Ignore, Param_Cell);
+	SaxtonHaleFunction("OnArenaRoundStart", ET_Ignore);
 	
 	func = SaxtonHaleFunction("OnSoundPlayed", ET_Hook, Param_Array, Param_CellByRef, Param_String, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_CellByRef, Param_String, Param_CellByRef);
 	func.SetParam(1, Param_Array, VSHArrayType_Static, MAXPLAYERS);
@@ -763,6 +766,7 @@ public void OnPluginStart()
 	g_ConfigConvar.Create("vsh_rps_enable", "1", "Allow everyone use Rock Paper Scissors Taunt?", _, true, 0.0, true, 1.0);
 	g_ConfigConvar.Create("vsh_blacklist_amount", "2", "Maximum amount of bosses a player can blacklist for themselves (0 disables the feature)", _, true, 0.0);
 	g_ConfigConvar.Create("vsh_top_score_outline", "0", "Lets bosses see the top scoring player through walls via an outline.", _, true, 0.0, true, 1.0);
+	g_ConfigConvar.Create("vsh_block_fake_hit_sound", "1", "Makes the gamemode block fake client predicted melee hit sounds.", _, true, 0.0, true, 1.0);
 	
 	//Incase of lateload, call client join functions
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
@@ -828,6 +832,7 @@ public void OnPluginEnd()
 		RemoveClientGlowEnt(iClient);
 	}
 	
+	CustomMelee_OnPluginEnd();
 	Plugin_Cvars(false);
 }
 
@@ -987,6 +992,7 @@ public void OnMapStart()
 		g_iSpritesLaserbeam = PrecacheModel("materials/sprites/laserbeam.vmt", true);
 		g_iSpritesGlow = PrecacheModel("materials/sprites/glow01.vmt", true);
 		
+		CustomMelee_OnMapStart();
 		Dome_MapStart();
 		
 		CreateTimer(60.0, Timer_WelcomeMessage);
@@ -1081,6 +1087,11 @@ public void OnEntityCreated(int iEntity, const char[] sClassname)
 	{
 		SDKHook(iEntity, SDKHook_OnTakeDamage, Building_OnTakeDamage);
 	}
+}
+
+public void OnEntityDestroyed(int iEntity)
+{
+	CustomMelee_OnEntityDestroyed(iEntity);
 }
 
 public Action Crossbow_OnTouch(int iEntity, int iToucher)
@@ -1748,8 +1759,13 @@ void Client_OnButtonRelease(int iClient, int button)
 
 public Action TF2_CalcIsAttackCritical(int iClient, int iWeapon, char[] sWepClassName, bool &bResult)
 {
-	if (!g_bEnabled) return Plugin_Continue;
-	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
+	if (!g_bEnabled)
+		return Plugin_Continue;
+	
+	CustomMelee_CalcIsAttackCritical(iWeapon, sWepClassName);
+	
+	if (g_iTotalRoundPlayed <= 0)
+		return Plugin_Continue;
 	
 	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 	if (boss.bValid)
@@ -1790,6 +1806,8 @@ public Action NormalSoundHook(int clients[MAXPLAYERS], int &numClients, char sam
 		if (boss.bValid)
 			return boss.CallFunction("OnSoundPlayed", clients, numClients, sample, channel, volume, level, pitch, flags, soundEntry, seed);
 	}
+	
+	CustomMelee_OnSoundHook(clients, numClients, entity, channel);
 	return Plugin_Continue;
 }
 
