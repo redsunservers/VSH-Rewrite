@@ -30,6 +30,13 @@ public void DashJump_GetHudInfo(SaxtonHaleBase boss, char[] sMessage, int iLengt
 		Format(sMessage, iLength, "%s\nDash charge: %d%%%%", sMessage, iCharge);
 }
 
+public void DashJump_OnArenaRoundStart(SaxtonHaleBase boss)
+{
+	float flTimeUntilMaxCharge = boss.GetPropFloat("DashJump", "Cooldown") * boss.GetPropFloat("DashJump", "MaxCharge");
+	g_flDashJumpCooldownWait[boss.iClient] = GetGameTime() + flTimeUntilMaxCharge;
+	boss.CallFunction("UpdateHudInfo", 0.0, flTimeUntilMaxCharge);	// Update every frame until dash charge maxes out
+}
+
 public void DashJump_OnButtonPress(SaxtonHaleBase boss, int iButton)
 {
 	if (iButton == IN_RELOAD && GameRules_GetRoundState() != RoundState_Preround && !TF2_IsPlayerInCondition(boss.iClient, TFCond_Dazed))

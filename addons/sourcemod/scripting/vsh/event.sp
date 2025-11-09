@@ -206,12 +206,14 @@ public void Event_RoundArenaStart(Event event, const char[] sName, bool bDontBro
 		}
 	}
 	
-	//Refresh boss health from player count
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
 		SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 		if (boss.bValid)
 		{
+			boss.CallFunction("OnArenaRoundStart");
+			
+			//Refresh boss health from player count
 			int iHealth = boss.CallFunction("CalculateMaxHealth");
 			boss.iMaxHealth = iHealth;
 			boss.iHealth = iHealth;

@@ -40,6 +40,12 @@
 				"linux"		"@_ZN16CObjectDispenser15CouldHealTargetEP11CBaseEntity"
 				"windows"	"\x55\x8B\xEC\x53\x56\x8B\x75\x08\x57\x8B\xF9\x8B\x87\x38\x01\x00\x00"
 			}
+			"CTFWeaponBaseMelee::DoSwingTraceInternal"
+			{
+  			  	"library"	"server"
+				"linux"		"@_ZN18CTFWeaponBaseMelee20DoSwingTraceInternalER10CGameTracebP10CUtlVectorIS0_10CUtlMemoryIS0_iEE"
+				"windows"	"\x53\x8B\xDC\x83\xEC\x08\x83\xE4\xF0\x83\xC4\x04\x55\x8B\x6B\x04\x89\x6C\x24\x04\x8B\xEC\x81\xEC\x38\x05\x00\x00"
+			}
 		}
 		"Functions"
 		{
@@ -92,6 +98,28 @@
 						"type"	"objectptr"
 					}
 				}				
+			}
+			"CTFWeaponBaseMelee::DoSwingTraceInternal"
+			{
+				"signature"	"CTFWeaponBaseMelee::DoSwingTraceInternal"
+				"callconv"	"thiscall"
+				"return"	"bool"
+				"this"		"entity"
+				"arguments"
+				{
+					"trace"
+					{
+						"type"	"objectptr"
+					}
+					"bCleave"
+					{
+						"type"	"bool"
+					}
+					"pTargetTraceVector"
+					{
+						"type"	"vectorptr"
+					}
+				}
 			}
 		}
 		"Offsets"

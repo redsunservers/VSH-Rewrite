@@ -191,6 +191,18 @@ void SDK_Init()
 	else
 		DHookEnableDetour(hHook, true, Hook_CouldHealTarget);
 	
+	hHook = DHookCreateFromConf(hGameData, "CTFWeaponBaseMelee::DoSwingTraceInternal");
+	if (hHook == null)
+	{
+		LogMessage("Failed to create hook: CTFWeaponBaseMelee::DoSwingTraceInternal!");
+	}
+	else
+	{
+		DHookEnableDetour(hHook, false, Hook_DoSwingTraceInternalPre);
+		DHookEnableDetour(hHook, true, Hook_DoSwingTraceInternalPost);
+	}
+		
+	
 	delete hHook;
 	delete hGameData;
 	
@@ -399,6 +411,18 @@ public MRESReturn Hook_CouldHealTarget(int iDispenser, Handle hReturn, Handle hP
 		return MRES_Supercede;
 	}
 	
+	return MRES_Ignored;
+}
+
+MRESReturn Hook_DoSwingTraceInternalPre(int iEntity, DHookReturn ret, Handle hParams)
+{
+	CustomMelee_DoSwingTracePre(iEntity);
+	return MRES_Ignored;
+}
+
+MRESReturn Hook_DoSwingTraceInternalPost(int iEntity, DHookReturn ret, Handle hParams)
+{
+	CustomMelee_DoSwingTracePost(iEntity, ret.Value);
 	return MRES_Ignored;
 }
 

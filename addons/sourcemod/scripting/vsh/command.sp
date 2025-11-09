@@ -39,6 +39,7 @@ public void Command_Init()
 	Command_Create("special", Command_ForceSpecialRound);
 	Command_Create("dome", Command_ForceDome);
 	Command_Create("rage", Command_SetRage);
+	Command_Create("blacklistdata", Command_BlacklistData);
 }
 
 stock void Command_Create(const char[] sCommand, ConCmd callback)
@@ -517,5 +518,93 @@ public Action Command_SetRage(int iClient, int iArgs)
 	}
 
 	ReplyToCommand(iClient, "%s%s You do not have permission to use this command.", TEXT_TAG, TEXT_ERROR);
+	return Plugin_Handled;
+}
+
+enum struct BlacklistData
+{
+	int iAmount;
+	char sType[32];
+	char sName[64];
+}
+
+public Action Command_BlacklistData(int iClient, int iArgs)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+
+	// Command has no menu option and doesn't a reply to people without access on purpose
+	if (Client_HasFlag(iClient, ClientFlags_Admin))
+	{
+		ArrayList aList = new ArrayList(sizeof(BlacklistData));
+		for (int iOther = 1; iOther <= MaxClients; iOther++)
+		{
+			if (!IsClientInGame(iOther) || IsFakeClient(iOther))
+				continue;
+			
+			ArrayList aBlacklist = Blacklist_Get(iOther);
+			int iLength = aBlacklist.Length;
+			if (iLength == 0)
+			{
+				delete aBlacklist;
+				continue;
+			}
+			
+			for (int i = 0; i < iLength; i++)
+			{
+				BlacklistData data;
+				aBlacklist.GetString(i, data.sType, sizeof(data.sType));
+				
+				int iIndex = aList.FindString(data.sType, BlacklistData::sType);
+				if (iIndex == -1)
+				{
+					SaxtonHale_CallFunction(data.sType, "GetBossName", data.sName, sizeof(data.sName));
+					data.iAmount = 1;
+					aList.PushArray(data);
+				}	
+				else
+				{
+					aList.GetArray(iIndex, data);
+					data.iAmount++;
+					aList.SetArray(iIndex, data);
+				}
+			}
+			
+			delete aBlacklist;
+		}
+		
+		aList.Sort(Sort_Descending, Sort_Integer);
+		
+		char sMessage[2048];
+		int iLength = aList.Length;
+		if (iLength == 0)
+		{
+			sMessage = " \nNo bosses are blacklisted in this session.\n "
+		}
+		else
+		{
+			sMessage = " \nList of bosses blacklisted in this session:\n \n"
+			
+			for (int i = 0; i < iLength; i++)
+			{
+				BlacklistData data;
+				aList.GetArray(i, data, sizeof(data));
+				
+				Format(sMessage, sizeof(sMessage), "%s- %s: %d\n", sMessage, data.sName, data.iAmount);
+			}
+		}
+		
+		delete aList;
+		
+		if (iClient == 0)
+		{
+			PrintToServer(sMessage);
+		}
+		else
+		{
+			PrintToChat(iClient, "%s%s Blacklist data has been sent to your console, if it exists.", TEXT_TAG, TEXT_COLOR);
+			PrintToConsole(iClient, sMessage);
+		}
+	}
+	
 	return Plugin_Handled;
 }
