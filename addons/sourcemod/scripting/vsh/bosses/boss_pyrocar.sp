@@ -435,3 +435,8 @@ public Action Timer_EffectEnd(Handle hTimer, int iClient)
 	g_hGasTimer[iClient] = null;
 	return Plugin_Continue;
 }
+
+public bool PyroCar_IsBossHidden(SaxtonHaleBase boss)
+{
+	return true;
+}

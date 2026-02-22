@@ -412,7 +412,6 @@ ConVar tf_arena_preround_time;
 #include "vsh/bosses/boss_horsemann.sp"
 #include "vsh/bosses/boss_painiscupcakes.sp"
 #include "vsh/bosses/boss_pisscakehole.sp"
-#include "vsh/bosses/boss_pyrocar.sp"
 #include "vsh/bosses/boss_redmond.sp"
 #include "vsh/bosses/boss_seeldier.sp"
 #include "vsh/bosses/boss_seeman.sp"
@@ -701,7 +700,6 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("Merasmus", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("PainisCupcake", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("PissCakehole", VSHClassType_Boss);
-	SaxtonHale_RegisterClass("PyroCar", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("Redmond", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("Seeldier", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("SeeMan", VSHClassType_Boss);
