@@ -102,7 +102,7 @@ public void BrutalSniper_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int leng
 	StrCat(sInfo, length, "\nRage");
 	StrCat(sInfo, length, "\n- Damage requirement: 2500");
 	StrCat(sInfo, length, "\n- Huntsman with high damage and instant charge time");
-	StrCat(sInfo, length, "\n- 200%% Rage: More ammo for Huntsman");
+	StrCat(sInfo, length, "\n- 200%% Rage: Double ammo for Huntsman");
 }
 
 public void BrutalSniper_OnSpawn(SaxtonHaleBase boss)
@@ -284,8 +284,9 @@ public void BrutalSniper_OnRage(SaxtonHaleBase boss)
 		iAmmo += (1 + RoundToFloor(iPlayerCount / 4.0));
 		if (boss.bSuperRage)
 		{
-			if (iAmmo > 8)
-			iAmmo = 8;
+			iAmmo *= 2;
+			if (iAmmo > 12)
+			iAmmo = 12;
 		}
 		else
 		{
