@@ -51,8 +51,6 @@ public void Vagineer_Create(SaxtonHaleBase boss)
 {
 	boss.CreateClass("BraveJump");
 	boss.CreateClass("WeaponSentry");
-	boss.CreateClass("ScareRage");
-	boss.SetPropFloat("ScareRage", "Radius", 200.0);
 	
 	boss.iHealthPerPlayer = 550;
 	boss.flHealthExponential = 1.05;
@@ -74,9 +72,8 @@ public void Vagineer_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length)
 	StrCat(sInfo, length, "\n ");
 	StrCat(sInfo, length, "\nRage");
 	StrCat(sInfo, length, "\n- Damage requirement: 2500");
-	StrCat(sInfo, length, "\n- Builds Level 1 Sentry with faster rotate and firing speed, health scales based on players alive");
-	StrCat(sInfo, length, "\n- Scares players at small range for 5 seconds");
-	StrCat(sInfo, length, "\n- 200%% Rage: Level 2 Sentry, larger scare range and extends duration to 7.5 seconds");
+	StrCat(sInfo, length, "\n- Builds Level 1 Sentry with faster turning and firing speed, health scales based on players alive");
+	StrCat(sInfo, length, "\n- 200%% Rage: Builds Level 2 Sentry");
 }
 
 public void Vagineer_OnSpawn(SaxtonHaleBase boss)

@@ -76,9 +76,6 @@ public void BrutalSniper_Create(SaxtonHaleBase boss)
 {
 	boss.CreateClass("BraveJump");
 	
-	boss.CreateClass("ScareRage");
-	boss.SetPropFloat("ScareRage", "Radius", 200.0);
-	
 	boss.iHealthPerPlayer = 600;
 	boss.flHealthExponential = 1.05;
 	boss.nClass = TFClass_Sniper;
@@ -105,8 +102,6 @@ public void BrutalSniper_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int leng
 	StrCat(sInfo, length, "\nRage");
 	StrCat(sInfo, length, "\n- Damage requirement: 2500");
 	StrCat(sInfo, length, "\n- Huntsman with high damage and instant charge time");
-	StrCat(sInfo, length, "\n- Scares players at close range for 5 seconds");
-	StrCat(sInfo, length, "\n- 200%% Rage: longer range scare and extends duration to 7.5 seconds");
 }
 
 public void BrutalSniper_OnSpawn(SaxtonHaleBase boss)
