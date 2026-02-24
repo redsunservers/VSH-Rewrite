@@ -102,6 +102,7 @@ public void BrutalSniper_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int leng
 	StrCat(sInfo, length, "\nRage");
 	StrCat(sInfo, length, "\n- Damage requirement: 2500");
 	StrCat(sInfo, length, "\n- Huntsman with high damage and instant charge time");
+	StrCat(sInfo, length, "\n- 200%% Rage: More ammo for Huntsman");
 }
 
 public void BrutalSniper_OnSpawn(SaxtonHaleBase boss)
@@ -281,8 +282,16 @@ public void BrutalSniper_OnRage(SaxtonHaleBase boss)
 	{
 		int iAmmo = TF2_GetAmmo(iClient, TF_AMMO_PRIMARY);
 		iAmmo += (1 + RoundToFloor(iPlayerCount / 4.0));
-		if (iAmmo > 6)
+		if (boss.bSuperRage)
+		{
+			if (iAmmo > 8)
+			iAmmo = 8;
+		}
+		else
+		{
+			if (iAmmo > 6)
 			iAmmo = 6;
+		}
 		TF2_SetAmmo(iClient, TF_AMMO_PRIMARY, iAmmo);
 		SetEntProp(iPrimaryWep, Prop_Send, "m_iClip1", 1);
 		SetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon", iPrimaryWep);
