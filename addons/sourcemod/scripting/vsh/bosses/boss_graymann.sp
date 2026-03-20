@@ -133,7 +133,6 @@ static char g_strGrayMannDemomanGibs[][] = {
 public void GrayMann_Create(SaxtonHaleBase boss)
 {	
 	boss.CreateClass("BraveJump");
-	boss.SetPropFloat("BraveJump", "MaxHeight", boss.GetPropFloat("BraveJump", "MaxHeight") * 0.50);
 	
 	boss.CreateClass("RageAddCond");
 	boss.SetPropFloat("RageAddCond", "RageCondDuration", GRAYMANN_RAGE_DURATION);
@@ -166,7 +165,7 @@ public void GrayMann_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length)
 	StrCat(sInfo, length, "\nHealth: Low");
 	StrCat(sInfo, length, "\n ");
 	StrCat(sInfo, length, "\nAbilities");
-	StrCat(sInfo, length, "\n- Mini Jump");
+	StrCat(sInfo, length, "\n- Brave Jump");
 	StrCat(sInfo, length, "\n- Killing people turns them into gold, and you siphon their power to heal yourself for 250 HP flat");
 	StrCat(sInfo, length, "\n ");
 	StrCat(sInfo, length, "\nRage");
