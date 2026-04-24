@@ -931,6 +931,12 @@ void PluginStop(bool bError = false, const char[] sError = "")
 
 public void OnMapStart()
 {
+	// This plugin stays loaded across consecutive VSH maps, so reset state that
+	// would otherwise only reset on plugin load.
+	g_iTotalRoundPlayed = 0;
+	g_bRoundStarted = false;
+	Plugin_Cvars(false);
+
 	//Check if the map is a VSH map
 	char sMapName[64];
 	GetCurrentMap(sMapName, sizeof(sMapName));
