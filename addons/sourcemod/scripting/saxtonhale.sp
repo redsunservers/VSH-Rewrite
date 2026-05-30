@@ -7,7 +7,6 @@
 #include <tf2attributes>
 #include <tf_econ_data>
 #include <dhooks>
-#include <redsun_events>
 
 #undef REQUIRE_EXTENSIONS
 #tryinclude <tf2items>

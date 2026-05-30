@@ -52,12 +52,6 @@ stock void Command_Create(const char[] sCommand, ConCmd callback)
 	}
 }
 
-static bool Command_CanUseAdminTools(int iClient)
-{
-	return Client_HasFlag(iClient, ClientFlags_Admin)
-		|| (LibraryExists("redsun_events") && Events_CanUse(iClient));
-}
-
 public Action Command_MainMenu(int iClient, int iArgs)
 {
 	if (!g_bEnabled) return Plugin_Continue;
@@ -316,7 +310,7 @@ public Action Command_AdminMenu(int iClient, int iArgs)
 		return Plugin_Handled;
 	}
 
-	if (Command_CanUseAdminTools(iClient))
+	if (Client_HasFlag(iClient, ClientFlags_Admin))
 	{
 		MenuAdmin_DisplayMain(iClient);
 		return Plugin_Handled;
@@ -332,7 +326,7 @@ public Action Command_ConfigRefresh(int iClient, int iArgs)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
-	if (Command_CanUseAdminTools(iClient))
+	if (Client_HasFlag(iClient, ClientFlags_Admin))
 	{
 		Config_Refresh();
 		
@@ -348,7 +342,7 @@ public Action Command_AddQueuePoints(int iClient, int iArgs)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
-	if (Command_CanUseAdminTools(iClient))
+	if (Client_HasFlag(iClient, ClientFlags_Admin))
 	{
 		int iAddQueue;
 		if (iArgs < 2)
@@ -393,7 +387,7 @@ public Action Command_ForceSpecialRound(int iClient, int iArgs)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
-	if (Command_CanUseAdminTools(iClient))
+	if (Client_HasFlag(iClient, ClientFlags_Admin))
 	{
 		char sClass[256];
 		
@@ -429,7 +423,7 @@ public Action Command_ForceDome(int iClient, int iArgs)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
-	if (Command_CanUseAdminTools(iClient))
+	if (Client_HasFlag(iClient, ClientFlags_Admin))
 	{
 		if (!Dome_IsEnabled())
 		{
@@ -489,7 +483,7 @@ public Action Command_SetRage(int iClient, int iArgs)
 {
 	if (!g_bEnabled) return Plugin_Continue;
 
-	if (Command_CanUseAdminTools(iClient))
+	if (Client_HasFlag(iClient, ClientFlags_Admin))
 	{
 		int iRage;
 		if (iArgs == 0)
@@ -539,7 +533,7 @@ public Action Command_BlacklistData(int iClient, int iArgs)
 	if (!g_bEnabled) return Plugin_Continue;
 
 	// Command has no menu option and doesn't a reply to people without access on purpose
-	if (Command_CanUseAdminTools(iClient))
+	if (Client_HasFlag(iClient, ClientFlags_Admin))
 	{
 		ArrayList aList = new ArrayList(sizeof(BlacklistData));
 		for (int iOther = 1; iOther <= MaxClients; iOther++)
