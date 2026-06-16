@@ -92,12 +92,12 @@ public void ScareRage_OnRage(SaxtonHaleBase boss)
 				{
 					TF2_StunPlayer(iVictim, flDuration, flSlowdown, iStunFlags, 0);
 				}
-			}
-			//Remove hype meter on rage if victim is a Scout
-			//There's probably a cleaner way of doing this, but it'll suffice for now
-			if (nClass == TFClass_Scout)
-			{
-				SetEntPropFloat(iVictim, Prop_Send, "m_flHypeMeter", 0.0);
+				//Remove hype meter on rage if victim is a Scout
+				//There's probably a cleaner way of doing this, but it'll suffice for now
+				if (nClass == TFClass_Scout)
+				{
+					SetEntPropFloat(iVictim, Prop_Send, "m_flHypeMeter", 0.0);
+				}
 			}
 		}
 	}
