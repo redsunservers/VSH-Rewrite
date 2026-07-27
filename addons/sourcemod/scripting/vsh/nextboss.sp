@@ -89,7 +89,8 @@ void NextBoss_SetNextBoss()
 	int iMainBoss;
 	
 	//Check if there any client bosses force set for this round
-	for (int iClient = 1; iClient <= MaxClients; iClient++)
+	//Always keep at least 1 client back as attacker, so we never drain the pool empty
+	for (int iClient = 1; iClient <= MaxClients && aNonBosses.Length > 1; iClient++)
 	{
 		if (IsClientInGame(iClient))
 		{
@@ -101,30 +102,35 @@ void NextBoss_SetNextBoss()
 			}
 		}
 	}
-	
+
 	//Check if there any other bosses force set, but with missing client
 	bool bBossSet;
 	do
 	{
 		bBossSet = false;
+
+		//Stop force-setting once only 1 client is left, otherwise we'd empty the attacker pool
+		if (aNonBosses.Length <= 1)
+			break;
+
 		int iLength = g_aNextBoss.Length;
 		for (int i = 0; i < iLength; i++)
 		{
 			NextBoss nextStruct;
 			g_aNextBoss.GetArray(i, nextStruct);
-			
+
 			if (!nextStruct.bForceNext)
 				continue;
-			
+
 			//We want to make sure same client can only have 1 NextBoss in array,
 			//delete client's existing NextBoss and assign client to new NextBoss
-			
+
 			nextStruct.iClient = NextBoss_GetNextClient(aNonBosses);	//Get client in queue
 			SaxtonHaleNextBoss nextBoss = SaxtonHaleNextBoss(nextStruct.iClient);	//Get existing client in NextBoss
-			
+
 			g_aNextBoss.SetArray(i, nextStruct);	//Set new client and infos to array
 			NextBoss_Delete(nextBoss);	//Delete previous NextBoss after setting new client, otherwise array indexs get changed
-			
+
 			//Set boss
 			nextBoss = SaxtonHaleNextBoss(nextStruct.iClient);
 			NextBoss_SetBoss(nextBoss, aNonBosses);
@@ -133,7 +139,7 @@ void NextBoss_SetNextBoss()
 			break;	//Break 'for' loop to start 'while' loop again, with updated NextBoss array
 		}
 	}
-	while (bBossSet);
+	while (bBossSet && aNonBosses.Length > 1);
 	
 	//If there no force set, pick one from highest queue
 	if (!bForceSet)
