@@ -181,21 +181,38 @@ void NextBoss_SetNextBoss()
 		}
 	}
 	
-	delete aNonBosses;
-	
-	//Get amount of valid bosses after set
+	//Get amount of valid bosses after set (minions don't count, we need at least 1 real boss)
 	int iBosses = 0;
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
 		if (SaxtonHale_IsValidBoss(iClient, false))
 		{
 			iBosses++;
-			
+
 			if (!iMainBoss)
 				iMainBoss = iClient;
 		}
 	}
-	
+
+	if (iBosses == 0)
+	{
+		//Only minion(s) got force set (eg. via admin menu) with no real boss picked, force one instead of failing
+		int iClient = aNonBosses.Length > 0 ? NextBoss_GetNextClient(aNonBosses) : 0;
+		if (0 < iClient <= MaxClients)
+		{
+			SaxtonHaleNextBoss nextBoss = SaxtonHaleNextBoss(iClient);
+			NextBoss_SetBoss(nextBoss, aNonBosses);
+
+			if (SaxtonHale_IsValidBoss(iClient, false))
+			{
+				iBosses++;
+				iMainBoss = iClient;
+			}
+		}
+	}
+
+	delete aNonBosses;
+
 	if (iBosses == 0)
 	{
 		//Still empty after setting boss...
