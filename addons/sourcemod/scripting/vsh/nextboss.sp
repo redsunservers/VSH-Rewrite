@@ -105,13 +105,29 @@ void NextBoss_SetNextBoss()
 
 	//Check if there any other bosses force set, but with missing client
 	bool bBossSet;
+	bool bQueueProtected;
 	do
 	{
 		bBossSet = false;
 
 		//Stop force-setting once only 1 client is left, otherwise we'd empty the attacker pool
 		if (aNonBosses.Length <= 1)
+		{
+			//Only warn if there are still pending force-set entries left unprocessed
+			int iLength = g_aNextBoss.Length;
+			for (int i = 0; i < iLength; i++)
+			{
+				NextBoss nextStruct;
+				g_aNextBoss.GetArray(i, nextStruct);
+
+				if (nextStruct.bForceNext)
+				{
+					bQueueProtected = true;
+					break;
+				}
+			}
 			break;
+		}
 
 		int iLength = g_aNextBoss.Length;
 		for (int i = 0; i < iLength; i++)
@@ -140,7 +156,10 @@ void NextBoss_SetNextBoss()
 		}
 	}
 	while (bBossSet && aNonBosses.Length > 1);
-	
+
+	if (bQueueProtected)
+		PrintToChatAll("%s%s Not enough players to set all forced bosses this round, remaining will carry over.", TEXT_TAG, TEXT_ERROR);
+
 	//If there no force set, pick one from highest queue
 	if (!bForceSet)
 	{
@@ -207,6 +226,7 @@ void NextBoss_SetNextBoss()
 			{
 				iBosses++;
 				iMainBoss = iClient;
+				PrintToChatAll("%s%s Only minion boss(es) were set, forced %N as a real boss too.", TEXT_TAG, TEXT_ERROR, iClient);
 			}
 		}
 	}
