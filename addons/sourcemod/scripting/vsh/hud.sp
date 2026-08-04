@@ -7,6 +7,13 @@ void Hud_SetRageView(int iClient, bool bEnable)
 	g_bHudRage[iClient] = bEnable;
 }
 
+void Hud_ClearBossInfo(int iClient)
+{
+	//remove cached boss hud text/color because otherwise it can bleed into the next round, most noticable with bosses that have a lot of hud text.... sorry.
+	g_sBossHudText[iClient] = "";
+	g_iBossHudColor[iClient] = {255, 255, 255, 255};
+}
+
 void Hud_UpdateBossInfo(int iClient, float flinterval, float flDuration)
 {
 	//Update now

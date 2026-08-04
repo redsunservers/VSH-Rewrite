@@ -1,8 +1,10 @@
 static Menu g_hMenuAdminMain;
-static Menu g_hMenuAdminQueue;
 static Menu g_hMenuAdminSpecial;
 static Menu g_hMenuAdminSpecialClass;
 static Menu g_hMenuAdminRage;
+
+//replaced with a dynamic menu
+static int g_iAdminQueueTarget[MAXPLAYERS];
 
 void MenuAdmin_Init()
 {
@@ -15,17 +17,6 @@ void MenuAdmin_Init()
 	g_hMenuAdminMain.AddItem("dome", "Force Start Dome (!vshdome)");
 	g_hMenuAdminMain.AddItem("boss", "Set Next Boss & Modifiers (!vshsetboss)");
 	g_hMenuAdminMain.AddItem("rage", "Set Rage (!vshrage)");
-	
-	// Queue menu
-	g_hMenuAdminQueue = new Menu(MenuAdmin_SelectQueue);
-	g_hMenuAdminQueue.SetTitle("Add queue points to self");
-	g_hMenuAdminQueue.AddItem("1", "1");
-	g_hMenuAdminQueue.AddItem("5", "5");
-	g_hMenuAdminQueue.AddItem("10", "10");
-	g_hMenuAdminQueue.AddItem("50", "50");
-	g_hMenuAdminQueue.AddItem("100", "100");
-	g_hMenuAdminQueue.AddItem("500", "500");
-	g_hMenuAdminQueue.AddItem("back", "<- Back");
 	
 	// Special round menu
 	g_hMenuAdminSpecial = new Menu(MenuAdmin_SelectSpecial);
@@ -90,11 +81,97 @@ public int MenuAdmin_SelectMain(Menu hMenu, MenuAction action, int iClient, int 
 
 void MenuAdmin_DisplayQueue(int iClient)
 {
-	g_hMenuAdminQueue.Display(iClient, MENU_TIME_FOREVER);
+	//show a dynamic player list
+	Menu hMenuTarget = new Menu(MenuAdmin_SelectQueueTarget);
+	hMenuTarget.SetTitle("Select player to give queue points to\n---");
+	hMenuTarget.AddItem("back", "<- Back");
+	
+	for (int i = 1; i <= MaxClients; i++)
+	{
+		if (IsClientInGame(i))
+		{
+			char sIndex[4], sName[MAX_NAME_LENGTH];
+			IntToString(i, sIndex, sizeof(sIndex));
+			GetClientName(i, sName, sizeof(sName));
+			
+			hMenuTarget.AddItem(sIndex, sName);
+		}
+	}
+	
+	hMenuTarget.Display(iClient, MENU_TIME_FOREVER);
+}
+
+public int MenuAdmin_SelectQueueTarget(Menu hMenu, MenuAction action, int iClient, int iSelect)
+{
+	if (action == MenuAction_End)
+	{
+		delete hMenu;
+		return 0;
+	}
+	
+	if (action != MenuAction_Select) return 0;
+	
+	char sSelect[16];
+	hMenu.GetItem(iSelect, sSelect, sizeof(sSelect));
+	
+	if (StrEqual(sSelect, "back"))
+	{
+		MenuAdmin_DisplayMain(iClient);
+		return 0;
+	}
+	
+	int iPlayer = StringToInt(sSelect);
+	if (iPlayer != 0 && (iPlayer < 1 || iPlayer > MaxClients || !IsClientInGame(iPlayer)))
+	{
+		//Target disconnected between opening the menu and selecting
+		PrintToChat(iClient, "%s%s That player is no longer available.", TEXT_TAG, TEXT_ERROR);
+		MenuAdmin_DisplayQueue(iClient);
+		return 0;
+	}
+	
+	g_iAdminQueueTarget[iClient] = iPlayer;
+	MenuAdmin_DisplayQueueAmount(iClient);
+	return 0;
+}
+
+void MenuAdmin_DisplayQueueAmount(int iClient)
+{
+	//rebuild the menu
+	Menu hMenuAmount = new Menu(MenuAdmin_SelectQueue);
+	
+	int iTarget = g_iAdminQueueTarget[iClient];
+	char sTitle[128];
+	if (iTarget > 0)
+	{
+		char sName[MAX_NAME_LENGTH];
+		GetClientName(iTarget, sName, sizeof(sName));
+		Format(sTitle, sizeof(sTitle), "Add queue points to %s", sName);
+	}
+	else
+	{
+		Format(sTitle, sizeof(sTitle), "Add queue points (no player selected)");
+	}
+	
+	hMenuAmount.SetTitle(sTitle);
+	hMenuAmount.AddItem("1", "1");
+	hMenuAmount.AddItem("5", "5");
+	hMenuAmount.AddItem("10", "10");
+	hMenuAmount.AddItem("50", "50");
+	hMenuAmount.AddItem("100", "100");
+	hMenuAmount.AddItem("500", "500");
+	hMenuAmount.AddItem("back", "<- Back");
+	
+	hMenuAmount.Display(iClient, MENU_TIME_FOREVER);
 }
 
 public int MenuAdmin_SelectQueue(Menu hMenu, MenuAction action, int iClient, int iSelect)
 {
+	if (action == MenuAction_End)
+	{
+		delete hMenu;
+		return 0;
+	}
+	
 	if (action != MenuAction_Select) return 0;
 	
 	char sSelect[32];
@@ -102,11 +179,27 @@ public int MenuAdmin_SelectQueue(Menu hMenu, MenuAction action, int iClient, int
 	
 	int iValue;
 	if (StringToIntEx(sSelect, iValue) != 0)
-		ClientCommand(iClient, "vsh_queue @me %d", iValue);
+	{
+		int iTarget = g_iAdminQueueTarget[iClient];
+		if (iTarget <= 0 || !IsClientInGame(iTarget))
+		{
+			PrintToChat(iClient, "%s%s No player selected. Pick a player first.", TEXT_TAG, TEXT_ERROR);
+			MenuAdmin_DisplayQueue(iClient);
+			return 0;
+		}
+		
+		//grab the target by #userid so it stays valid even if the client index shifts
+		int iUserId = GetClientUserId(iTarget);
+		ClientCommand(iClient, "vsh_queue #%d %d", iUserId, iValue);
+	}
 	else if (StrEqual(sSelect, "back"))
-		MenuAdmin_DisplayMain(iClient);
+	{
+		MenuAdmin_DisplayQueue(iClient);
+	}
 	else
+	{
 		Menu_DisplayError(iClient);
+	}
 	
 	return 0;
 }

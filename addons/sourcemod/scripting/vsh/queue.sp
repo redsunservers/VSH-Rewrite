@@ -44,23 +44,22 @@ bool Queue_IsClientAllowed(int iClient)
 	}
 }
 
-void Queue_AddPlayerPoints(int iClient, int iPoints)
+bool Queue_AddPlayerPoints(int iClient, int iPoints)
 {
 	if (g_iClientQueuePoints[iClient] == -1)
 	{
 		PrintToChat(iClient, "%s%s Your queue points do not seem to have loaded.", TEXT_TAG, TEXT_ERROR);
-		return;
+		return false;
 	}
 	else if (!Preferences_Get(iClient, VSHPreferences_PickAsBoss))
 	{
 		PrintToChat(iClient, "%s%s You have not been awarded any queue points based on your boss preferences.", TEXT_TAG, TEXT_COLOR);
-		return;
+		return false;
 	}
 
 	g_iClientQueuePoints[iClient] += iPoints;
 	Cookies_SaveQueue(iClient, Queue_PlayerGetPoints(iClient));
-	
-	PrintToChat(iClient, "%s%s You have been awarded %d queue points! (Total: %i)", TEXT_TAG, TEXT_COLOR, iPoints, g_iClientQueuePoints[iClient]);
+	return true;
 }
 
 void Queue_SetPlayerPoints(int iClient, int iPoints)

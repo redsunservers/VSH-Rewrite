@@ -361,7 +361,8 @@ public void Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcast)
 						iAddQueue = 20;
 					if (iAddQueue < 10)
 						iAddQueue = 10;
-					Queue_AddPlayerPoints(iClient, iAddQueue);
+					if (Queue_AddPlayerPoints(iClient, iAddQueue))
+						PrintToChat(iClient, "%s%s You have been awarded %d queue points! (Total: %i)", TEXT_TAG, TEXT_COLOR, iAddQueue, Queue_PlayerGetPoints(iClient));
 				}
 			}
 		}

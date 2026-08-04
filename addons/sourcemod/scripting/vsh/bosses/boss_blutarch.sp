@@ -40,9 +40,11 @@ public void Blutarch_Create(SaxtonHaleBase boss)
 {
 	boss.CreateClass("WeaponSpells");
 	WeaponSpells_AddSpells(boss, haleSpells_Bats);
+	WeaponSpells_AddSpells(boss, haleSpells_Jump);
+	WeaponSpells_AddSpells(boss, haleSpells_Heal);
 	WeaponSpells_RageSpells(boss, haleSpells_Meteor);
 	boss.SetPropFloat("WeaponSpells", "RageRequirement", 0.0);
-	boss.SetPropFloat("WeaponSpells", "Cooldown", 15.0);
+	boss.SetPropFloat("WeaponSpells", "Cooldown", 8.0);
 	
 	boss.iHealthPerPlayer = 550;
 	boss.flHealthExponential = 1.05;
@@ -72,7 +74,9 @@ public void Blutarch_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length)
 	StrCat(sInfo, length, "\nHealth: Low");
 	StrCat(sInfo, length, "\n ");
 	StrCat(sInfo, length, "\nAbilities");
-	StrCat(sInfo, length, "\n- Alt-attack to use Bats spell for 15 seconds cooldown");
+	StrCat(sInfo, length, "\n- Alt-attack to use spell (8 second cooldown)");
+	StrCat(sInfo, length, "\n- Press Reload to cycle spells:");
+	StrCat(sInfo, length, "\n  Swarm of Bats > Blast Jump > Uber Heal");
 	StrCat(sInfo, length, "\n ");
 	StrCat(sInfo, length, "\nRage");
 	StrCat(sInfo, length, "\n- Damage requirement: 2500");
