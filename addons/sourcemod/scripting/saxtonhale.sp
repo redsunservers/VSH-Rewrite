@@ -668,7 +668,10 @@ public void OnPluginStart()
 	
 	func = SaxtonHaleFunction("GetRageMusicInfo", ET_Ignore, Param_String, Param_Cell, Param_FloatByRef);
 	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
-	
+
+	func = SaxtonHaleFunction("GetRageModel", ET_Ignore, Param_String, Param_Cell);
+	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
+
 	SaxtonHaleFunction("UpdateHudInfo", ET_Ignore, Param_Cell, Param_Float);
 	
 	func = SaxtonHaleFunction("GetHudInfo", ET_Ignore, Param_String, Param_Cell, Param_Array);
@@ -706,7 +709,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("UberRanger", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("Vagineer", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("Yeti", VSHClassType_Boss);
-	
+
 	//Register multi bosses
 	SaxtonHale_RegisterClass("MannBrothers", VSHClassType_BossMulti);
 	SaxtonHale_RegisterClass("SeeManSeeldier", VSHClassType_BossMulti);

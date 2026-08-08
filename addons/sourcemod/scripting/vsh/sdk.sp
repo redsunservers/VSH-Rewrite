@@ -495,10 +495,12 @@ void SDK_RemoveObject(int iClient, int iEntity)
 		SDKCall(g_hSDKRemoveObject, iClient, iEntity);
 }
 
-void SDK_TossJarThink(int iEntity)
-{
-	SDKCall(g_hSDKTossJarThink, iEntity);
-}
+
+//commented out because it throws a WARNING and that breaks the compiler on github because why not i guess.
+//void SDK_TossJarThink(int iEntity)
+//{
+//	SDKCall(g_hSDKTossJarThink, iEntity);
+//}
 
 void SDK_SetFuseTime(int iEntity, float flTime)
 {
