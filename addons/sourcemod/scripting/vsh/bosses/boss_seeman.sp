@@ -115,11 +115,10 @@ public Action SeeMan_OnSoundPlayed(SaxtonHaleBase boss, int clients[MAXPLAYERS],
 	return Plugin_Continue;
 }
 
-public void SeeMan_OnRage(SaxtonHaleBase boss)
+public void SeeMan_GetRageMusicInfo(SaxtonHaleBase boss, char[] sSound, int length, float &time)
 {
-	//honestly i barely heard it before, replacing it with a normal audio probably will do better.
-	//...and it doesn't brick the duo boss music.
-	EmitSoundToAll(SEEMAN_RAGE_SND, boss.iClient, SNDCHAN_BODY, SNDLEVEL_SCREAMING);
+	strcopy(sSound, length, SEEMAN_RAGE_SND);
+	time = 6.0;
 }
 
 public void SeeMan_Precache(SaxtonHaleBase boss)

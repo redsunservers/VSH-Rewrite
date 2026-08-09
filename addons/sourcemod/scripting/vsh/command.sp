@@ -373,12 +373,8 @@ public Action Command_AddQueuePoints(int iClient, int iArgs)
 		}
 		
 		for (int i = 0; i < iTargetCount; i++)
-		{
-			int iTarget = iTargetList[i];
-			Queue_AddPlayerPoints(iTarget, iAddQueue);
-			PrintToChatAll("%s%s %N added %d queue points to %N! (Total: %d)", TEXT_TAG, TEXT_COLOR, iClient, iAddQueue, iTarget, Queue_PlayerGetPoints(iTarget));
-		}
-
+			Queue_AddPlayerPoints(iTargetList[i], iAddQueue);
+		
 		ReplyToCommand(iClient, "%s%s Gave %s %d queue points.", TEXT_TAG, TEXT_COLOR, sTargetName, iAddQueue);
 		return Plugin_Handled;
 	}
