@@ -1,5 +1,3 @@
-#define SPELL_CYCLE_SOUND		"weapons/vaccinator_toggle.wav" //tf2 wav so no mp3 bye
-
 static ArrayList g_aSpells[MAXPLAYERS];
 static int g_iCurrentSpellArray[MAXPLAYERS];
 static haleSpells g_rageSpells[MAXPLAYERS];
@@ -60,11 +58,6 @@ public void WeaponSpells_RageSpells(SaxtonHaleBase boss, haleSpells spells)
 	g_rageSpells[boss.iClient] = spells;
 }
 
-public void WeaponSpells_Precache(SaxtonHaleBase boss)
-{
-	PrecacheSound(SPELL_CYCLE_SOUND);
-}
-
 public void WeaponSpells_OnSpawn(SaxtonHaleBase boss)
 {
 	int iClient = boss.iClient;
@@ -89,15 +82,9 @@ public void WeaponSpells_GetHudInfo(SaxtonHaleBase boss, char[] sMessage, int iL
 	int iSpellbook = GetSpellbook(boss.iClient);
 	if (iSpellbook <= MaxClients)
 		return;
-
+	
 	float flRagePercentage = float(boss.iRageDamage) / float(boss.iMaxRageDamage);
-
-	//show current spell at all times here
-	int iSpellIndex = GetEntProp(iSpellbook, Prop_Send, "m_iSelectedSpellIndex");
-	if (iSpellIndex >= 0 && view_as<int>(g_rageSpells[boss.iClient]) != iSpellIndex)
-		Format(sMessage, iLength, "%s\nSpell: %s", sMessage, g_strSpellsName[iSpellIndex]);
-
-	//show spell status on a separate line, so you know what spell you keep.
+	
 	if (g_flSpellsLastUsed[boss.iClient] > GetGameTime()-boss.GetPropFloat("WeaponSpells", "Cooldown"))
 	{
 		int iSec = RoundToCeil(boss.GetPropFloat("WeaponSpells", "Cooldown") - (GetGameTime() - g_flSpellsLastUsed[boss.iClient]));
@@ -107,7 +94,15 @@ public void WeaponSpells_GetHudInfo(SaxtonHaleBase boss, char[] sMessage, int iL
 	{
 		Format(sMessage, iLength, "%s\nNot enough rage for spells!", sMessage);
 	}
-
+	else
+	{
+		int iSpellIndex = GetEntProp(iSpellbook, Prop_Send, "m_iSelectedSpellIndex");
+		if (iSpellIndex < 0)
+			return;
+		
+		Format(sMessage, iLength, "%s\nSpell: %s", sMessage, g_strSpellsName[iSpellIndex]);
+	}
+	
 	Format(sMessage, iLength, "%s\nUse attack2 for spell", sMessage);
 	if (g_aSpells[boss.iClient].Length > 1)
 		Format(sMessage, iLength, "%s, and reload to change current spell!", sMessage);
@@ -232,8 +227,6 @@ public void WeaponSpells_OnButtonPress(SaxtonHaleBase boss, int button)
 			}
 			
 			SetEntProp(iSpellbook, Prop_Send, "m_iSelectedSpellIndex", view_as<int>(spellIndex));
-			boss.CallFunction("UpdateHudInfo", 0.0, 0.0);	//hud update on switch
-			ClientCommand(boss.iClient, "playgamesound %s", SPELL_CYCLE_SOUND);	//vaccinator sound, because it feels nice. clientside
 		}
 	}
 	else if (button == IN_ATTACK2)
