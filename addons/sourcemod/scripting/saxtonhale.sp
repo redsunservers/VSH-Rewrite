@@ -712,7 +712,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("UberRanger", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("Vagineer", VSHClassType_Boss);
 	SaxtonHale_RegisterClass("Yeti", VSHClassType_Boss);
-	
+
 	//Register multi bosses
 	SaxtonHale_RegisterClass("MannBrothers", VSHClassType_BossMulti);
 	SaxtonHale_RegisterClass("SeeManSeeldier", VSHClassType_BossMulti);

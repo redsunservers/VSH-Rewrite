@@ -7,6 +7,10 @@ static int g_iBonkBoyModelBag;
 
 static bool g_bBonkBoyRage[MAXPLAYERS];
 
+static char g_strBonkBoyDashSound[][] = {
+	"vo/Scout_beingshotinvincible28.mp3",
+};
+
 static char g_strBonkBoyRoundStart[][] = {
 	"vo/scout_sf12_goodmagic07.mp3",
 };
@@ -217,6 +221,13 @@ public void BonkBoy_GetSoundKill(SaxtonHaleBase boss, char[] sSound, int length,
 	strcopy(sSound, length, g_strBonkBoyKill[GetRandomInt(0,sizeof(g_strBonkBoyKill)-1)]);
 }
 
+//it feels better this way, okay?
+public void BonkBoy_GetSoundAbility(SaxtonHaleBase boss, char[] sSound, int length, const char[] sType)
+{
+	if (strcmp(sType, "DashJump") == 0)
+		strcopy(sSound, length, g_strBonkBoyDashSound[GetRandomInt(0,sizeof(g_strBonkBoyDashSound)-1)]);
+}
+
 public void BonkBoy_Precache(SaxtonHaleBase boss)
 {
 	g_iBonkBoyModelHelmet = PrecacheModel("models/player/items/scout/bonk_helmet.mdl");
@@ -225,6 +236,7 @@ public void BonkBoy_Precache(SaxtonHaleBase boss)
 	g_iBonkBoyModelBag = PrecacheModel("models/workshop/player/items/scout/dec15_scout_baseball_bag/dec15_scout_baseball_bag.mdl");
 	
 	for (int i = 0; i < sizeof(g_strBonkBoyRoundStart); i++) PrecacheSound(g_strBonkBoyRoundStart[i]);
+	for (int i = 0; i < sizeof(g_strBonkBoyDashSound); i++) PrecacheSound(g_strBonkBoyDashSound[i]);
 	for (int i = 0; i < sizeof(g_strBonkBoyWin); i++) PrecacheSound(g_strBonkBoyWin[i]);
 	for (int i = 0; i < sizeof(g_strBonkBoyLose); i++) PrecacheSound(g_strBonkBoyLose[i]);
 	for (int i = 0; i < sizeof(g_strBonkBoyRage); i++) PrecacheSound(g_strBonkBoyRage[i]);
