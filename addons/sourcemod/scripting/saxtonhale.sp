@@ -669,6 +669,12 @@ public void OnPluginStart()
 	func = SaxtonHaleFunction("GetRageMusicInfo", ET_Ignore, Param_String, Param_Cell, Param_FloatByRef);
 	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
 	
+	//rage music loop. because previous method was kinda bad.
+	SaxtonHaleFunction("GetRageMusicLoop", ET_Single);
+
+	func = SaxtonHaleFunction("GetRageModel", ET_Ignore, Param_String, Param_Cell);
+	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
+
 	SaxtonHaleFunction("UpdateHudInfo", ET_Ignore, Param_Cell, Param_Float);
 	
 	func = SaxtonHaleFunction("GetHudInfo", ET_Ignore, Param_String, Param_Cell, Param_Array);

@@ -7,6 +7,10 @@ static float g_flClientBossRageMusicVolume[MAXPLAYERS];
 static Handle g_hClientBossModelTimer[MAXPLAYERS];
 static Handle g_hClientBossRageMusicTime[MAXPLAYERS];
 
+static bool g_bClientBossRageModelActive[MAXPLAYERS];
+
+static bool g_bClientBossRageMusicLoopActive[MAXPLAYERS];
+
 public void SaxtonHaleBoss_Create(SaxtonHaleBase boss)
 {
 	boss.bSuperRage = false;
@@ -32,6 +36,9 @@ public void SaxtonHaleBoss_Create(SaxtonHaleBase boss)
 	g_sClientBossRageMusic[boss.iClient] = "";
 	g_flClientBossRageMusicVolume[boss.iClient] = 0.0;
 	g_hClientBossRageMusicTime[boss.iClient] = null;
+
+	g_bClientBossRageModelActive[boss.iClient] = false;
+	g_bClientBossRageMusicLoopActive[boss.iClient] = false;
 	
 	if (g_hClientBossModelTimer[boss.iClient] != null)
 		delete g_hClientBossModelTimer[boss.iClient];
@@ -229,8 +236,38 @@ public void SaxtonHaleBoss_OnRage(SaxtonHaleBase boss)
 	char sSound[255];
 	float flDuration = 0.0;
 	boss.CallFunction("GetRageMusicInfo", sSound, sizeof(sSound), flDuration);
-	
-	if (flDuration > 0.0 && !StrEmpty(sSound))
+
+	//check if the boss is using boss music.
+	bool bRageMusicLoop = boss.CallFunction("GetRageMusicLoop");
+	if (bRageMusicLoop && flDuration > 0.0 && !StrEmpty(sSound) && !g_bClientBossRageMusicLoopActive[boss.iClient])
+	{
+		g_bClientBossRageMusicLoopActive[boss.iClient] = true;
+
+		//stop music for everyone and replace with rage music
+		char sRageMusic[PLATFORM_MAX_PATH];
+		Format(sRageMusic, sizeof(sRageMusic), "#%s", sSound);
+
+		if (!StrEmpty(g_sBossMusic))
+		{
+			for (int iClient = 1; iClient <= MaxClients; iClient++)
+			{
+				if (IsClientInGame(iClient))
+				{
+					StopSound(iClient, SNDCHAN_STATIC, g_sBossMusic);
+					if (Preferences_Get(iClient, VSHPreferences_Music))
+						EmitSoundToClient(iClient, sRageMusic, _, SNDCHAN_STATIC, SNDLEVEL_NONE);
+				}
+			}
+		}
+
+		strcopy(g_sBossMusic, sizeof(g_sBossMusic), sRageMusic);
+
+		if (g_hTimerBossMusic != null)
+			delete g_hTimerBossMusic;
+		//repeat boss music, so it loops correctly.
+		g_hTimerBossMusic = CreateTimer(flDuration, Timer_Music, boss, TIMER_REPEAT);
+	}
+	else if (!bRageMusicLoop && flDuration > 0.0 && !StrEmpty(sSound))
 	{
 		StopSound(boss.iClient, SNDCHAN_AUTO, sSound);
 		EmitSoundToAll(sSound, boss.iClient, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
