@@ -1,6 +1,4 @@
 #define SEE_BOSSES_INTRO_SND				"vsh_rewrite/seeman/intro.mp3"
-#define SEEMAN_SEELDIER_THEME				"vsh_rewrite/seeman/theme.mp3"
-#define SEEMAN_SEELDIER_THEME_TIME			178.0
 
 public void SeeManSeeldier_Create(SaxtonHaleBase boss)
 {
@@ -38,20 +36,8 @@ public void SeeManSeeldier_GetSound(SaxtonHaleBase boss, char[] sSound, int leng
 		strcopy(sSound, length, SEE_BOSSES_INTRO_SND);
 }
 
-public void SeeManSeeldier_GetMusicInfo(SaxtonHaleBase boss, char[] sSound, int length, float &time)
-{
-	if (StrEmpty(SEEMAN_SEELDIER_THEME))
-		return;
-
-	strcopy(sSound, length, SEEMAN_SEELDIER_THEME);
-	time = SEEMAN_SEELDIER_THEME_TIME;
-}
-
 public void SeeManSeeldier_Precache(SaxtonHaleBase boss)
 {
 	PrepareSound(SEE_BOSSES_INTRO_SND);
-
-	if (!StrEmpty(SEEMAN_SEELDIER_THEME))
-		PrepareMusic(SEEMAN_SEELDIER_THEME);
 }
 

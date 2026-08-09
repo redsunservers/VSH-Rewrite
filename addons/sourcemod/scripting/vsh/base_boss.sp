@@ -14,19 +14,18 @@ static bool g_bClientBossRageMusicLoopActive[MAXPLAYERS];
 public void SaxtonHaleBoss_Create(SaxtonHaleBase boss)
 {
 	boss.bSuperRage = false;
-
+	
 	boss.iBaseHealth = 0;
 	boss.iHealthPerPlayer = 0;
 	boss.iMaxHealth = 0;
 	boss.flHealthExponential = 1.0;
 	boss.flHealthMultiplier = 1.0;
 	boss.bHealthPerPlayerAlive = false;
-
+	
 	boss.flSpeed = 370.0;
 	boss.flSpeedMult = 0.07;
 	boss.flMaxRagePercentage = 2.0;
 	boss.iRageDamage = 0;
-	boss.flRageLastTime = 0.0;	//this probably should've been a boolean. but whatever
 	boss.flEnvDamageCap = 200.0;
 	boss.flGlowTime = 0.0;
 	
@@ -272,15 +271,12 @@ public void SaxtonHaleBoss_OnRage(SaxtonHaleBase boss)
 	{
 		StopSound(boss.iClient, SNDCHAN_AUTO, sSound);
 		EmitSoundToAll(sSound, boss.iClient, SNDCHAN_AUTO, SNDLEVEL_SCREAMING);
-
+		
 		g_hClientBossRageMusicTime[boss.iClient] = CreateTimer((boss.bSuperRage) ? flDuration : (flDuration/2.0), Timer_BossRageMusic, boss);
 		strcopy(g_sClientBossRageMusic[boss.iClient], sizeof(g_sClientBossRageMusic[]), sSound);
 		g_flClientBossRageMusicVolume[boss.iClient] = 1.0;
 	}
-
-	//swap to rage model if defined, then re-apply it constantly just like normal hale model
-	g_bClientBossRageModelActive[boss.iClient] = true;
-
+	
 	boss.CallFunction("GetSound", sSound, sizeof(sSound), VSHSound_Rage);
 	if (!StrEmpty(sSound))
 		EmitSoundToAll(sSound, boss.iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
@@ -410,12 +406,7 @@ public void SaxtonHaleBoss_UpdateHudInfo(SaxtonHaleBase boss, float flinterval, 
 public void SaxtonHaleBoss_Destroy(SaxtonHaleBase boss)
 {
 	ClearBossEffects(boss.iClient);
-
-	//Drop any cached boss HUD text (nanomachines/explosive charge/etc.) so it
-	//doesn't persist if this client becomes a valid boss again next round or
-	//gets team-swapped into a minion without a fresh spawn.
-	Hud_ClearBossInfo(boss.iClient);
-
+	
 	SetVariantString("");
 	AcceptEntityInput(boss.iClient, "SetCustomModel");
 	TF2_RegeneratePlayer(boss.iClient);
@@ -454,18 +445,9 @@ public void ApplyBossModel(int iClient)
 {
 	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 	if (!boss.bValid) return;
-
+	
 	char sModel[255];
-	bool bUseRageModel = false;
-	if (g_bClientBossRageModelActive[iClient])
-	{
-		boss.CallFunction("GetRageModel", sModel, sizeof(sModel));
-		bUseRageModel = !StrEmpty(sModel);
-	}
-
-	if (!bUseRageModel)
-		boss.CallFunction("GetModel", sModel, sizeof(sModel));
-
+	boss.CallFunction("GetModel", sModel, sizeof(sModel));
 	SetVariantString(sModel);
 	AcceptEntityInput(iClient, "SetCustomModel");
 	SetEntProp(iClient, Prop_Send, "m_bUseClassAnimations", true);
