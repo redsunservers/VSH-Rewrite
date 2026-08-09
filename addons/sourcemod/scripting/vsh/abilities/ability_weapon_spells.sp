@@ -4,6 +4,7 @@ static ArrayList g_aSpells[MAXPLAYERS];
 static int g_iCurrentSpellArray[MAXPLAYERS];
 static haleSpells g_rageSpells[MAXPLAYERS];
 static float g_flSpellsLastUsed[MAXPLAYERS];
+static bool g_bSpellArmed[MAXPLAYERS];
 
 enum haleSpells
 {
@@ -117,21 +118,58 @@ public void WeaponSpells_GetHudInfo(SaxtonHaleBase boss, char[] sMessage, int iL
 
 public void WeaponSpells_OnThink(SaxtonHaleBase boss)
 {
-	int iSpellbook = GetSpellbook(boss.iClient);
+	int iClient = boss.iClient;
+	int iSpellbook = GetSpellbook(iClient);
 	if (iSpellbook == -1)
-		return;
-	
-	int iSpellIndex = GetEntProp(iSpellbook, Prop_Send, "m_iSelectedSpellIndex");
-	if (view_as<int>(g_rageSpells[boss.iClient]) == iSpellIndex && GetEntProp(iSpellbook, Prop_Send, "m_iSpellCharges") > 0)
 	{
-		//Force client use rare spell and don't override
-		Client_ForceUseAction(boss.iClient);
+		g_bSpellArmed[iClient] = false;
 		return;
 	}
-	
-	//Otherwise make sure client always have normal spell
-	SetEntProp(iSpellbook, Prop_Send, "m_iSpellCharges", 1);
-	SetEntProp(iSpellbook, Prop_Send, "m_iSelectedSpellIndex", view_as<int>(g_aSpells[boss.iClient].Get(g_iCurrentSpellArray[boss.iClient])));
+
+	int iSpellIndex = GetEntProp(iSpellbook, Prop_Send, "m_iSelectedSpellIndex");
+	int iCharges = GetEntProp(iSpellbook, Prop_Send, "m_iSpellCharges");
+
+	if (view_as<int>(g_rageSpells[iClient]) == iSpellIndex && iCharges > 0)
+	{
+		//Force client use rare spell and don't override
+		Client_ForceUseAction(iClient);
+		return;
+	}
+
+	//im gonna explode. the keyvalues differ between sourcemod versions. why are we still running ancient stu- oh right...
+	float flRagePercentage = float(boss.iRageDamage) / float(boss.iMaxRageDamage);
+	bool bCanCast = (flRagePercentage >= boss.GetPropFloat("WeaponSpells", "RageRequirement")
+					 && g_flSpellsLastUsed[iClient] <= GetGameTime() - boss.GetPropFloat("WeaponSpells", "Cooldown"));
+
+	if (g_bSpellArmed[iClient])
+	{
+		if (iCharges <= 0)
+		{
+			//The engine consumed the charge -> the player really cast the normal spell.
+			boss.iRageDamage -= RoundToFloor(boss.GetPropFloat("WeaponSpells", "RageRequirement") * float(boss.iMaxRageDamage));
+			g_flSpellsLastUsed[iClient] = GetGameTime();
+			boss.CallFunction("UpdateHudInfo", 1.0, boss.GetPropFloat("WeaponSpells", "Cooldown"));
+
+			char sSound[PLATFORM_MAX_PATH];
+			boss.CallFunction("GetSoundAbility", sSound, sizeof(sSound), "WeaponSpells");
+			if (!StrEmpty(sSound))
+				EmitSoundToAll(sSound, iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
+		}
+		g_bSpellArmed[iClient] = false;
+	}
+	else if (iCharges > 0)
+	{
+		if (!bCanCast)
+			SetEntProp(iSpellbook, Prop_Send, "m_iSpellCharges", 0);
+	}
+
+	if (bCanCast)
+	{
+		//one charge one cast
+		SetEntProp(iSpellbook, Prop_Send, "m_iSpellCharges", 1);
+		SetEntProp(iSpellbook, Prop_Send, "m_iSelectedSpellIndex", view_as<int>(g_aSpells[iClient].Get(g_iCurrentSpellArray[iClient])));
+		g_bSpellArmed[iClient] = true;
+	}
 }
 
 public void WeaponSpells_OnRage(SaxtonHaleBase boss)
@@ -141,7 +179,7 @@ public void WeaponSpells_OnRage(SaxtonHaleBase boss)
 	
 	int iClient = boss.iClient;
 	
-	//Set spellbook to specified rare
+	//set spellbook to specified rare, rage stuff can't be flipped through
 	int iSpellbook = GetSpellbook(iClient);
 	if (iSpellbook == -1)
 		return;
@@ -157,47 +195,33 @@ public Action WeaponSpells_OnCommandKeyValues(SaxtonHaleBase boss, const char[] 
 {
 	if (StrEqual(sCommand, "+use_action_slot_item_server"))
 	{
-		//Check whenever if we should allow him to use spell
 		int iSpellbook = GetSpellbook(boss.iClient);
 		if (iSpellbook == -1)
 			return Plugin_Continue;
-		
+
 		int iSpellIndex = view_as<haleSpells>(GetEntProp(iSpellbook, Prop_Send, "m_iSelectedSpellIndex"));
 		if (iSpellIndex == view_as<int>(haleSpells_Invalid))
 			return Plugin_Handled;
-		
+
 		if (view_as<int>(g_rageSpells[boss.iClient]) == iSpellIndex)
 		{
-			//Allow use rage spell as normal
+			//allow use rage spell as normal
 			return Plugin_Continue;
 		}
-		
+
 		float flRagePercentage = float(boss.iRageDamage) / float(boss.iMaxRageDamage);
 		if (flRagePercentage >= boss.GetPropFloat("WeaponSpells", "RageRequirement") && g_flSpellsLastUsed[boss.iClient] <= GetGameTime()-boss.GetPropFloat("WeaponSpells", "Cooldown"))
 		{
-			//Normal spell, remove rage on use
-			boss.iRageDamage -= RoundToFloor(boss.GetPropFloat("WeaponSpells", "RageRequirement") * float(boss.iMaxRageDamage));
-			
-			//spell cooldowns, set timer after used
-			g_flSpellsLastUsed[boss.iClient] = GetGameTime();
-			boss.CallFunction("UpdateHudInfo", 1.0, boss.GetPropFloat("WeaponSpells", "Cooldown"));	//Update every second for cooldown duration
-			
-			
-			//Play ability sound if boss have one
-			char sSound[PLATFORM_MAX_PATH];
-			boss.CallFunction("GetSoundAbility", sSound, sizeof(sSound), "WeaponSpells");
-			if (!StrEmpty(sSound))
-				EmitSoundToAll(sSound, boss.iClient, SNDCHAN_VOICE, SNDLEVEL_SCREAMING);
-			
+			//enforcement is handled in OnThink; just let the cast through.
 			return Plugin_Continue;
 		}
 		else
 		{
-			//Not enough rage, dont allow him use spell
+			//not enough rage
 			return Plugin_Handled;
 		}
 	}
-	
+
 	return Plugin_Continue;
 }
 
@@ -220,7 +244,7 @@ public void WeaponSpells_OnButtonPress(SaxtonHaleBase boss, int button)
 				//Search in array until we found same spell
 				if (g_aSpells[boss.iClient].Get(i) == spellIndex)
 				{
-					//We found it, get the next spell in array
+					//get the next spell in array
 					i++;
 					if (i >= g_aSpells[boss.iClient].Length) i = 0;	//if we already at end, loop back to start
 					spellIndex = g_aSpells[boss.iClient].Get(i);
@@ -231,14 +255,14 @@ public void WeaponSpells_OnButtonPress(SaxtonHaleBase boss, int button)
 				i++;
 			}
 			
-			SetEntProp(iSpellbook, Prop_Send, "m_iSelectedSpellIndex", view_as<int>(spellIndex));
-			boss.CallFunction("UpdateHudInfo", 0.0, 0.0);	//hud update on switch
-			ClientCommand(boss.iClient, "playgamesound %s", SPELL_CYCLE_SOUND);	//vaccinator sound, because it feels nice. clientside
+		SetEntProp(iSpellbook, Prop_Send, "m_iSelectedSpellIndex", view_as<int>(spellIndex));
+		boss.CallFunction("UpdateHudInfo", 0.0, 0.0);	//hud update on switch
+		g_bSpellArmed[boss.iClient] = false;	//selected spell changed; let OnThink re-arm cleanly
+		ClientCommand(boss.iClient, "playgamesound %s", SPELL_CYCLE_SOUND);	//vaccinator sound, because it feels nice. clientside
 		}
 	}
-	else if (button == IN_ATTACK2)
+	else if (button == IN_ATTACK2) //self explanatory, reuse method on attack2
 	{
-		//Just another way to use spells rather than using default H key
 		Client_ForceUseAction(boss.iClient);
 	}
 }
