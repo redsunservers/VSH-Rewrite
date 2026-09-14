@@ -477,6 +477,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/queue.sp"
 #include "vsh/sdk.sp"
 #include "vsh/stocks.sp"
+#include "vsh/tempmodel.sp"
 
 public Plugin myinfo =
 {
@@ -493,6 +494,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 	FuncNative_AskLoad();
 	Native_AskLoad();
 	Property_AskLoad();
+	TempModel_AskLoad();
 	
 	RegPluginLibrary("saxtonhale");
 	return APLRes_Success;
@@ -1378,6 +1380,8 @@ public void OnClientDisconnect(int iClient)
 
 	SDK_UnhookGiveNamedItem(iClient);
 
+	TempModel_Clear(iClient);
+
 	ClassLimit_SetMainClass(iClient, TFClass_Unknown);
 	ClassLimit_SetDesiredClass(iClient, TFClass_Unknown);
 	
@@ -1399,6 +1403,7 @@ public void Client_OnThink(int iClient)
 	if (!g_bEnabled) return;
 	
 	Dome_OnThink(iClient);
+	TempModel_OnThink(iClient);
 	
 	if (g_iTotalRoundPlayed <= 0) return;
 	
@@ -1720,9 +1725,21 @@ public Action OnClientCommandKeyValues(int iClient, KeyValues kv)
 	return Plugin_Continue;
 }
 
-public Action OnPlayerRunCmd(int iClient,int &buttons,int &impulse, float vel[3], float angles[3],int &weapon,int &subtype,int &cmdnum,int &tickcount,int &seed,int mouse[2])
+public Action OnPlayerRunCmd(int iClient,int &buttons,int &impulse, float vel[3], float angles[3], int &weapon,int &subtype,int &cmdnum,int &tickcount,int &seed,int mouse[2])
 {
 	if (!g_bEnabled) return Plugin_Continue;
+
+	//Player is playing a temp model animation, hard block all input and movement for its duration
+	if (TempModel_IsAnimationActive(iClient))
+	{
+		buttons = 0;
+		impulse = 0;
+		vel[0] = 0.0;
+		vel[1] = 0.0;
+		vel[2] = 0.0;
+		return Plugin_Changed;
+	}
+
 	if (g_iTotalRoundPlayed <= 0) return Plugin_Continue;
 	if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient)) return Plugin_Continue;
 

@@ -259,7 +259,38 @@ methodmap SaxtonHaleBase
 	// @param iVal          Value to set
 	// @error               Invalid client index, client not in game, or client do not have specified class
 	public native void SetPropFloat(const char[] sClass, const char[] sProp, float flVal);
-	
+
+	// Temporarily set client's player model, automatically reverting to strModelToReturnTo once flDurationSec has passed
+	//
+	// @note Model stays applied even while boss model timer is running, and reverts early if client dies
+	//
+	// @param strModelToSetTo       Model to temporarily set
+	// @param strModelToReturnTo    Model to revert back to once duration ends, empty string to remove custom model
+	// @param flDurationSec         How long in seconds before reverting, 0.0 to keep until changed or client dies
+	// @param bSelfAnimating        Decide if to use class anims or not. If not self animating, assume the model has the correct animation in sequence 0. See the reason why below
+
+	// @error                       Invalid client index, client not in game or not alive
+	public native void SetTempModelName(const char[] strModelToSetTo, const char[] strModelToReturnTo, float flDurationSec, bool bSelfAnimating = false);
+
+	// Swap client to a model with an animation that is located on sequence 0, aka it only has one animation. This is the only way to get the animation to work 100% consistently for all clients
+	// as it begins to play clientside without the plugin need to call the sequence and hope that the client gets it without an issue.
+	//
+	// @param strModel              Model to swap to
+	// @param strModelToReturnTo    Model to revert back to once duration ends, empty string to remove custom model
+	// @param flDurationSec         How long in seconds before reverting, capped at 15.0
+	// @param bFreeze               Freeze the client's movement input.
+	// @param bLockLook             Freeze the client's camera movement, this could be needed sometimes if the animation is stationary. Can't seem to find any other way to do it
+	//                              Default off, camera stays with the player so the animation can play as expected, i.e without rotatio
+	// @return                      True when the model was applied, false when the model file is missing
+	// @error                       Invalid client index, client not in game or not alive
+	public native bool SetModelWithAnimation(const char[] strModel, const char[] strModelToReturnTo, float flDurationSec, bool bFreeze = true, bool bLockLook = false);
+
+	// Retrieve whether a temp model animation (SetModelWithAnimation) is currently playing on client
+	property bool bModelAnimationActive
+	{
+		public native get();
+	}
+
 	// Retrieve client index.
 	property int iClient
 	{
@@ -885,7 +916,11 @@ public __pl_saxtonhale_SetNTVOptional()
 	MarkNativeAsOptional("SaxtonHaleBase.GetPropFloat");
 	MarkNativeAsOptional("SaxtonHaleBase.SetPropInt");
 	MarkNativeAsOptional("SaxtonHaleBase.SetPropFloat");
-	
+
+	MarkNativeAsOptional("SaxtonHaleBase.SetTempModelName");
+	MarkNativeAsOptional("SaxtonHaleBase.SetModelWithAnimation");
+	MarkNativeAsOptional("SaxtonHaleBase.bModelAnimationActive.get");
+
 	MarkNativeAsOptional("SaxtonHaleBase.bValid.get");
 	MarkNativeAsOptional("SaxtonHaleBase.bValid.set");
 	MarkNativeAsOptional("SaxtonHaleBase.bModifiers.get");

@@ -455,19 +455,31 @@ public void ApplyBossModel(int iClient)
 	if (!boss.bValid) return;
 
 	char sModel[255];
-	bool bUseRageModel = false;
-	if (g_bClientBossRageModelActive[iClient])
+	bool bTempModel = TempModel_GetActiveModel(iClient, sModel, sizeof(sModel));
+	if (!bTempModel)
 	{
-		boss.CallFunction("GetRageModel", sModel, sizeof(sModel));
-		bUseRageModel = !StrEmpty(sModel);
+		bool bUseRageModel = false;
+		if (g_bClientBossRageModelActive[iClient])
+		{
+			boss.CallFunction("GetRageModel", sModel, sizeof(sModel));
+			bUseRageModel = !StrEmpty(sModel);
+		}
+
+		if (!bUseRageModel)
+			boss.CallFunction("GetModel", sModel, sizeof(sModel));
 	}
 
-	if (!bUseRageModel)
-		boss.CallFunction("GetModel", sModel, sizeof(sModel));
+	//Re-assert class animations just in case.
+	SetEntProp(iClient, Prop_Send, "m_bUseClassAnimations", !(bTempModel && TempModel_IsSelfAnimating(iClient)));
+
+	//Only reset the model when it actually changed. 
+	char sCurrentModel[PLATFORM_MAX_PATH];
+	GetEntPropString(iClient, Prop_Data, "m_ModelName", sCurrentModel, sizeof(sCurrentModel));
+	if (StrEqual(sCurrentModel, sModel))
+		return;
 
 	SetVariantString(sModel);
 	AcceptEntityInput(iClient, "SetCustomModel");
-	SetEntProp(iClient, Prop_Send, "m_bUseClassAnimations", true);
 }
 
 public Action Timer_BossRageMusic(Handle hTimer, SaxtonHaleBase boss)
