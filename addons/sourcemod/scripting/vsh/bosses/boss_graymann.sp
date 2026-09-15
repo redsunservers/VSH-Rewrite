@@ -41,35 +41,40 @@ static bool g_bGrayMannMinionBlockRagdoll;
 static bool g_bGrayMannSpeedRage[MAXPLAYERS + 1];
 
 static char g_strGrayMannRoundStart[][] = {
-	"vsh_rewrite/graymann/intro1.mp3",
-	"vsh_rewrite/graymann/intro2.mp3",
-	"vsh_rewrite/graymann/intro3.mp3"
+	"vsh_rewrite/graymann/fix/intro1.mp3",
+	"vsh_rewrite/graymann/fix/intro2.mp3",
+	"vsh_rewrite/graymann/fix/intro3.mp3"
 };
 
 static char g_strGrayMannWin[][] = {
-	"vsh_rewrite/graymann/win.mp3"
+	"vsh_rewrite/graymann/fix/win.mp3"
 };
 
 static char g_strGrayMannLose[][] = {
-	"vsh_rewrite/graymann/lose.mp3"
+	"vsh_rewrite/graymann/fix/lose.mp3"
 };
 
 static char g_strGrayMannRage[][] = {
-	"vsh_rewrite/graymann/rage1.mp3",
-	"vsh_rewrite/graymann/rage2.mp3",
-	"vsh_rewrite/graymann/rage3.mp3"
+	"vsh_rewrite/graymann/fix/rage1.mp3",
+	"vsh_rewrite/graymann/fix/rage2.mp3",
+	"vsh_rewrite/graymann/fix/rage3.mp3"
 };
 
 static char g_strGrayMannKill[][] = {
-	"vsh_rewrite/graymann/laugh1.mp3",
-	"vsh_rewrite/graymann/laugh2.mp3",
-	"vsh_rewrite/graymann/laugh3.mp3"
+	"vsh_rewrite/graymann/fix/laugh1.mp3",
+	"vsh_rewrite/graymann/fix/laugh2.mp3",
+	"vsh_rewrite/graymann/fix/laugh3.mp3"
 };
 
 static char g_strGrayMannLastMan[][] = {
-	"vsh_rewrite/graymann/lastman1.mp3",
-	"vsh_rewrite/graymann/lastman2.mp3"
+	"vsh_rewrite/graymann/fix/lastman1.mp3",
+	"vsh_rewrite/graymann/fix/lastman2.mp3"
 };
+
+static char g_strGrayBraveJump[][] = {
+	"vsh_rewrite/graymann/fix/jump.mp3"
+};
+
 
 static char g_strGrayMannBackStabbed[][] = {
 	"weapons/fx/rics/arrow_impact_metal.wav",
@@ -240,6 +245,13 @@ public void GrayMann_OnEntityCreated(SaxtonHaleBase boss, int iEntity, const cha
 	}
 }
 
+//Add brave jump sound here because they did not.
+public void GrayMann_GetSoundAbility(SaxtonHaleBase boss, char[] sSound, int length, const char[] sType)
+{
+	if (strcmp(sType, "BraveJump") == 0)
+		strcopy(sSound, length, g_strGrayBraveJump[GetRandomInt(0,sizeof(g_strGrayBraveJump)-1)]);
+}
+
 public void GrayMann_GetSound(SaxtonHaleBase boss, char[] sSound, int length, SaxtonHaleSound iSoundType)
 {
 	switch (iSoundType)
@@ -298,7 +310,7 @@ public void GrayMann_Precache(SaxtonHaleBase boss) //not sure if custom sounds h
 	for (int i = 0; i < sizeof(g_strGrayMannLose); i++) PrepareSound(g_strGrayMannLose[i]);
 	for (int i = 0; i < sizeof(g_strGrayMannRage); i++) PrepareSound(g_strGrayMannRage[i]);
 	for (int i = 0; i < sizeof(g_strGrayMannKill); i++) PrepareSound(g_strGrayMannKill[i]);
-	
+	for (int i = 0; i < sizeof(g_strGrayBraveJump); i++) PrepareSound(g_strGrayBraveJump[i]);
 	for (int i = 0; i < sizeof(g_strGrayMannSoldierGibs); i++) PrecacheModel(g_strGrayMannSoldierGibs[i]);
 	for (int i = 0; i < sizeof(g_strGrayMannPyroGibs); i++) PrecacheModel(g_strGrayMannPyroGibs[i]);
 	for (int i = 0; i < sizeof(g_strGrayMannDemomanGibs); i++) PrecacheModel(g_strGrayMannDemomanGibs[i]);

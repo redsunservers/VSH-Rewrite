@@ -24,12 +24,19 @@ void Event_Init()
 public void Event_RoundStart(Event event, const char[] sName, bool bDontBroadcast)
 {
 	g_bSpawnTeamSwitch = false;
-	
+
 	if (!g_bEnabled || GameRules_GetProp("m_bInWaitingForPlayers"))
 		return;
-	
+
 	// Start dome stuffs regardless if first round
 	Dome_RoundStart();
+
+	//Reset everyone's models to their class models.
+	for (int iClient = 1; iClient <= MaxClients; iClient++)
+		if (IsClientInGame(iClient))
+		{
+			TempModel_ForceClear(iClient);
+		}
 
 	// Play one round of arena
 	if (g_iTotalRoundPlayed <= 0)
