@@ -281,9 +281,11 @@ methodmap SaxtonHaleBase
 	// @param bFreeze               Freeze the client's movement input.
 	// @param bLockLook             Freeze the client's camera movement, this could be needed sometimes if the animation is stationary. Can't seem to find any other way to do it
 	//                              Default off, camera stays with the player so the animation can play as expected, i.e without rotatio
+	// @param bAllowGravity         Used with bFreeze: keep gravity running while frozen, so when playing an animation the client falls down to the ground while still playing the anim
+	//                              Default off, the frozen client is pinned exactly where the animation started
 	// @return                      True when the model was applied, false when the model file is missing
 	// @error                       Invalid client index, client not in game or not alive
-	public native bool SetModelWithAnimation(const char[] strModel, const char[] strModelToReturnTo, float flDurationSec, bool bFreeze = true, bool bLockLook = false);
+	public native bool SetModelWithAnimation(const char[] strModel, const char[] strModelToReturnTo, float flDurationSec, bool bFreeze = true, bool bLockLook = false, bool bAllowGravity = false);
 
 	// Retrieve whether a temp model animation (SetModelWithAnimation) is currently playing on client
 	property bool bModelAnimationActive

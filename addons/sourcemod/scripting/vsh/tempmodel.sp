@@ -10,7 +10,8 @@ static float g_flTempModelEndTime[MAXPLAYERS + 1];					//GetGameTime() when temp
 static bool g_bTempModelAnim[MAXPLAYERS + 1];
 static bool g_bTempModelSelfAnimating[MAXPLAYERS + 1];	//Current temp model self animates
 static bool g_bTempModelAnimFreeze[MAXPLAYERS + 1];		//The animation freezes the player
-static bool g_bTempModelAnimAllowLook[MAXPLAYERS + 1];	//Frozen player can still move the camera 
+static bool g_bTempModelAnimAllowLook[MAXPLAYERS + 1];	//Frozen player can still move the camera
+static bool g_bTempModelAnimAllowGravity[MAXPLAYERS + 1];	//Frozen player still falls to the ground
 static float g_flTempModelAnimEndTime[MAXPLAYERS + 1];
 
 void TempModel_AskLoad()
@@ -79,14 +80,23 @@ public any TempModel_NativeSetModelWithAnimation(Handle hPlugin, int iNumParams)
 
 	bool bFreeze = (iNumParams >= 5) ? view_as<bool>(GetNativeCell(5)) : true;
 	bool bLockLook = (iNumParams >= 6) ? view_as<bool>(GetNativeCell(6)) : false;
+	bool bAllowGravity = (iNumParams >= 7) ? view_as<bool>(GetNativeCell(7)) : false;
 	bool bWasFrozen = g_bTempModelAnimFreeze[iClient];
 	bool bWasLookLocked = bWasFrozen && !g_bTempModelAnimAllowLook[iClient];
 	g_bTempModelAnimFreeze[iClient] = bFreeze;
 	g_bTempModelAnimAllowLook[iClient] = bFreeze && !bLockLook;
+	g_bTempModelAnimAllowGravity[iClient] = bFreeze && bAllowGravity;
 
 	if (bFreeze)
 	{
-		SetEntityMoveType(iClient, MOVETYPE_NONE);
+		if (bAllowGravity)
+		{
+			SetEntityMoveType(iClient, MOVETYPE_WALK);
+		}
+		else
+		{
+			SetEntityMoveType(iClient, MOVETYPE_NONE);
+		}
 
 		//Kill leftover velocity, so the boss dont drift while frozen
 		float vecVelocity[3];
@@ -133,7 +143,23 @@ void TempModel_OnThink(int iClient)
 	//Keep player frozen and in third person while the animation plays
 	if (g_bTempModelAnimFreeze[iClient])
 	{
-		SetEntityMoveType(iClient, MOVETYPE_NONE);
+		if (g_bTempModelAnimAllowGravity[iClient])
+		{
+			SetEntityMoveType(iClient, MOVETYPE_WALK);
+
+			float vecVelocity[3];
+			GetEntPropVector(iClient, Prop_Data, "m_vecVelocity", vecVelocity);
+			vecVelocity[0] = 0.0;
+			vecVelocity[1] = 0.0;
+			if (GetEntityFlags(iClient) & FL_ONGROUND)
+				vecVelocity[2] = 0.0;
+			TeleportEntity(iClient, NULL_VECTOR, NULL_VECTOR, vecVelocity);
+		}
+		else
+		{
+			SetEntityMoveType(iClient, MOVETYPE_NONE);
+		}
+
 		if (!g_bTempModelAnimAllowLook[iClient])
 			TF2_AddCondition(iClient, TFCond_FreezeInput, 0.2);
 		SetEntProp(iClient, Prop_Send, "m_nForceTauntCam", 1);
@@ -271,4 +297,5 @@ static void TempModel_EndAnimation(int iClient)
 
 	g_bTempModelAnimFreeze[iClient] = false;
 	g_bTempModelAnimAllowLook[iClient] = false;
+	g_bTempModelAnimAllowGravity[iClient] = false;
 }
