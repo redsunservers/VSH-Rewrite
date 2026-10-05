@@ -541,7 +541,7 @@ public any FuncNative_GetParamString(Handle hPlugin, int iNumParams)
 	//Get and set string
 	int iLength = GetNativeCell(3);
 	char[] sBuffer = new char[iLength];
-	funcStack.GetArray(iParam, view_as<any>(sBuffer));
+	funcStack.GetString(iParam, sBuffer, iLength);
 	SetNativeString(2, sBuffer, iLength);
 	return 0;
 }
@@ -569,7 +569,7 @@ public any FuncNative_SetParamString(Handle hPlugin, int iNumParams)
 	iLength++;
 	char[] sBuffer = new char[iLength];
 	GetNativeString(2, sBuffer, iLength);
-	funcStack.SetArray(iParam, view_as<any>(sBuffer));
+	funcStack.SetString(iParam, sBuffer);
 	return 0;
 }
 

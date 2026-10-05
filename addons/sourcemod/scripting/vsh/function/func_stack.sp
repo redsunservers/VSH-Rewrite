@@ -27,6 +27,14 @@ enum struct FuncStack
 		this.nParamType[this.iParamLength++] = nParamType;
 	}
 	
+	void PushString(const char[] value, int iLength, ParamType nParamType)
+	{
+		this.array[this.iParamLength] = new ArrayList(ByteCountToCells(iLength));
+		this.array[this.iParamLength].PushString(value);
+		this.iArrayLength[this.iParamLength] = iLength;
+		this.nParamType[this.iParamLength++] = nParamType;
+	}
+	
 	any GetCell(int iParam)
 	{
 		return this.cell[iParam-1];
@@ -38,6 +46,12 @@ enum struct FuncStack
 			this.array[iParam-1].GetArray(0, buffer);
 	}
 	
+	void GetString(int iParam, char[] buffer, int iLength)
+	{
+		if (iParam >= 0)
+			this.array[iParam-1].GetString(0, buffer, iLength);
+	}
+	
 	void SetCell(int iParam, any value)
 	{
 		this.cell[iParam-1] = value;
@@ -46,6 +60,11 @@ enum struct FuncStack
 	void SetArray(int iParam, const any[] value)
 	{
 		this.array[iParam-1].SetArray(0, value);
+	}
+	
+	void SetString(int iParam, const char[] value)
+	{
+		this.array[iParam-1].SetString(0, value);
 	}
 	
 	void Delete()

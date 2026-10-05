@@ -45,7 +45,7 @@ any FuncCall_Setup(SaxtonHaleBase boss, FuncFunction funcFunction)
 					if (iError != SP_ERROR_NONE)
 						ThrowNativeError(SP_ERROR_NATIVE, "Unable to get string value (param %d, error %d)", iParam, iError);
 					
-					funcStack.PushArray(view_as<any>(sBuffer), iLength, Param_String);
+					funcStack.PushString(sBuffer, iLength, Param_String);
 				}
 				else if (funcStack.nParamType[iParam-1] == Param_Array)
 				{
@@ -81,7 +81,7 @@ any FuncCall_Setup(SaxtonHaleBase boss, FuncFunction funcFunction)
 				
 				int iLength = funcStack.iArrayLength[iParam-1];
 				char[] sBuffer = new char[iLength];
-				funcStack.GetArray(iParam, view_as<any>(sBuffer));
+				funcStack.GetString(iParam, sBuffer, iLength);
 				
 				int iError = SetNativeString(iParam+2, sBuffer, iLength);
 				if (iError != SP_ERROR_NONE)
@@ -120,29 +120,38 @@ void FuncCall_Start(SaxtonHaleBase boss, FuncStack funcStack)
 	
 	//Create arrays by reference
 	any[][] array = new any[iParamLength][iArraySize];
+	char[][] sString = new char[iParamLength][iArraySize];
 	
 	//Get array values
 	for (int iParam = 0; iParam < funcStack.iParamLength; iParam++)
-		if (funcStack.nParamType[iParam] == Param_String || funcStack.nParamType[iParam] == Param_Array)
+	{
+		if (funcStack.nParamType[iParam] == Param_String)
+			funcStack.GetString(iParam+1, sString[iParam], iArraySize);
+		else if (funcStack.nParamType[iParam] == Param_Array)
 			funcStack.GetArray(iParam+1, array[iParam]);
+	}
 	
 	//Call each classes
 	int iPos;
 	char sClass[MAX_TYPE_CHAR];
 	while (FuncClass_ClientGetClass(boss.iClient, iPos, sClass, sizeof(sClass)))
-		if (!FuncCall_Call(boss, sClass, funcStack, array, iArraySize))
+		if (!FuncCall_Call(boss, sClass, funcStack, array, sString, iArraySize))
 			return;
 	
 	//Set arrays back
 	for (int iParam = 0; iParam < funcStack.iParamLength; iParam++)
-		if (funcStack.nParamType[iParam] == Param_String || funcStack.nParamType[iParam] == Param_Array)
+	{
+		if (funcStack.nParamType[iParam] == Param_String)
+			funcStack.SetString(iParam+1, sString[iParam]);
+		else if (funcStack.nParamType[iParam] == Param_Array)
 			funcStack.SetArray(iParam+1, array[iParam]);
+	}
 	
 	//Start post hooks
 	FuncHook_Call(boss, funcStack, VSHHookMode_Post);
 }
 
-bool FuncCall_Call(SaxtonHaleBase boss, const char[] sClass, FuncStack funcStack, any[][] array, int iArraySize)
+bool FuncCall_Call(SaxtonHaleBase boss, const char[] sClass, FuncStack funcStack, any[][] array, char[][] sString, int iArraySize)
 {
 	//Start function if valid
 	if (!boss.StartFunction(sClass, funcStack.sFunction))
@@ -189,7 +198,7 @@ bool FuncCall_Call(SaxtonHaleBase boss, const char[] sClass, FuncStack funcStack
 			}
 			case Param_String:
 			{
-				Call_PushStringEx(view_as<char>(array[iParam]), iArraySize, SM_PARAM_STRING_UTF8|SM_PARAM_STRING_COPY, iCopyback);
+				Call_PushStringEx(sString[iParam], iArraySize, SM_PARAM_STRING_UTF8|SM_PARAM_STRING_COPY, iCopyback);
 			}
 			case Param_Array:
 			{

@@ -83,7 +83,6 @@ bool FuncFunction_GetParamTypeName(ParamType nParamType, char[] sBuffer, int iLe
 		case Param_FloatByRef: Format(sBuffer, iLength, "Param_FloatByRef");
 		case Param_String: Format(sBuffer, iLength, "Param_String");
 		case Param_Array: Format(sBuffer, iLength, "Param_Array");
-		case Param_VarArgs: Format(sBuffer, iLength, "Param_VarArgs");
 		default: return false;
 	}
 	
