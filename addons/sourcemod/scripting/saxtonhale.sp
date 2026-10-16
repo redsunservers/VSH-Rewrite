@@ -682,6 +682,10 @@ public void OnPluginStart()
 	func = SaxtonHaleFunction("GetHudInfo", ET_Ignore, Param_String, Param_Cell, Param_Array);
 	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
 	func.SetParam(3, Param_Array, VSHArrayType_Static, 4);
+
+	//Overridable rage meter text, for stuff like rage cancelling or some other stuff, maybe to make rage text show an extra move for the duration of rage.
+	func = SaxtonHaleFunction("GetRageHudInfo", ET_Ignore, Param_String, Param_Cell);
+	func.SetParam(1, Param_String, VSHArrayType_Dynamic, 2);
 	
 	//Misc functions
 	SaxtonHaleFunction("Precache", ET_Ignore);

@@ -83,39 +83,56 @@ public void SaxtonHaleBoss_OnThink(SaxtonHaleBase boss)
 	
 	if (g_bRoundStarted && IsPlayerAlive(boss.iClient) && boss.iMaxRageDamage != -1)
 	{
-		float flRage = (float(boss.iRageDamage) / float(boss.iMaxRageDamage)) * 100.0;
-		
-		char sMessage[255];
-		Format(sMessage, sizeof(sMessage), "Rage: %d%%%s", RoundToFloor(flRage), (flRage >= 100.0) ? " (Rage is ready! Press E to use your Rage!)" : "");
-		
 		float flHUD[2];
 		flHUD[0] = -1.0;
 		flHUD[1] = 0.83;
-		
+
+		char sMessage[255];
 		int iColor[4];
-		if (flRage >= 200.0 || flRage >= boss.flMaxRagePercentage * 100.0)
+
+		//Replace rage meter when needed, i.e type "press e to cancel rage"
+		char sRageHudOverride[128];
+		sRageHudOverride[0] = '\0';	//Function system passes the buffer content in, start it empty
+		boss.CallFunction("GetRageHudInfo", sRageHudOverride, sizeof(sRageHudOverride));
+
+		if (sRageHudOverride[0] != '\0')
 		{
-			//200% rage or max, bright yellow
+			strcopy(sMessage, sizeof(sMessage), sRageHudOverride);
 			iColor[0] = 255;
 			iColor[1] = 255;
 			iColor[2] = 0;
-		}
-		else if (flRage < 100.0)
-		{
-			//0% to 99%: white to red
-			iColor[0] = 255;
-			iColor[1] = RoundToNearest((100.0-flRage) * (255.0/100.0));
-			iColor[2] = RoundToNearest((100.0-flRage) * (255.0/100.0));
+			iColor[3] = 255;
 		}
 		else
 		{
-			//100% to 199%: green to red
-			iColor[0] = RoundToNearest((flRage-100.0) * (255.0/100.0));
-			iColor[1] = RoundToNearest((200.0-flRage) * (255.0/100.0));
-			iColor[2] = 0;
-		}
+			float flRage = (float(boss.iRageDamage) / float(boss.iMaxRageDamage)) * 100.0;
 
-		iColor[3] = 255;
+			Format(sMessage, sizeof(sMessage), "Rage: %d%%%s", RoundToFloor(flRage), (flRage >= 100.0) ? " (Rage is ready! Press E to use your Rage!)" : "");
+
+			if (flRage >= 200.0 || flRage >= boss.flMaxRagePercentage * 100.0)
+			{
+				//200% rage or max, bright yellow
+				iColor[0] = 255;
+				iColor[1] = 255;
+				iColor[2] = 0;
+			}
+			else if (flRage < 100.0)
+			{
+				//0% to 99%: white to red
+				iColor[0] = 255;
+				iColor[1] = RoundToNearest((100.0-flRage) * (255.0/100.0));
+				iColor[2] = RoundToNearest((100.0-flRage) * (255.0/100.0));
+			}
+			else
+			{
+				//100% to 199%: green to red
+				iColor[0] = RoundToNearest((flRage-100.0) * (255.0/100.0));
+				iColor[1] = RoundToNearest((200.0-flRage) * (255.0/100.0));
+				iColor[2] = 0;
+			}
+
+			iColor[3] = 255;
+		}
 
 		Hud_Display(boss.iClient, CHANNEL_RAGE, sMessage, flHUD, 0.2, iColor);
 	}
