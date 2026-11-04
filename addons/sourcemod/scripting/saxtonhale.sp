@@ -429,7 +429,6 @@ ConVar tf_arena_preround_time;
 #include "vsh/modifiers/modifiers_hot.sp"
 #include "vsh/modifiers/modifiers_ice.sp"
 #include "vsh/modifiers/modifiers_jumper.sp"
-#include "vsh/modifiers/modifiers_magnet.sp"
 #include "vsh/modifiers/modifiers_overload.sp"
 #include "vsh/modifiers/modifiers_speed.sp"
 #include "vsh/modifiers/modifiers_vampire.sp"
@@ -446,8 +445,10 @@ ConVar tf_arena_preround_time;
 #include "vsh/tags.sp"
 
 #include "vsh/config.sp"
+#include "vsh/altweapon.sp"
 
 #include "vsh/menu/menu_admin.sp"
+#include "vsh/menu/menu_altweapon.sp"
 #include "vsh/menu/menu_blacklist.sp"
 #include "vsh/menu/menu_boss.sp"
 #include "vsh/menu/menu_weapon.sp"
@@ -537,6 +538,7 @@ public void OnPluginStart()
 	
 	Config_Init();
 	
+	AltWeapon_Init();
 	Blacklist_Init();
 	ClassLimit_Init();
 	Command_Init();
@@ -763,7 +765,6 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("ModifiersHot", VSHClassType_Modifier);
 	SaxtonHale_RegisterClass("ModifiersIce", VSHClassType_Modifier);
 	SaxtonHale_RegisterClass("ModifiersJumper", VSHClassType_Modifier);
-	SaxtonHale_RegisterClass("ModifiersMagnet", VSHClassType_Modifier);
 	SaxtonHale_RegisterClass("ModifiersOverload", VSHClassType_Modifier);
 	SaxtonHale_RegisterClass("ModifiersSpeed", VSHClassType_Modifier);
 	SaxtonHale_RegisterClass("ModifiersVampire", VSHClassType_Modifier);
@@ -771,7 +772,7 @@ public void OnPluginStart()
 	//Init our convars
 	g_ConfigConvar.Create("vsh_force_load", "-1", "Force enable VSH on map start? (-1 for default, 0 for force disable, 1 for force enable)", _, true, -1.0, true, 1.0);
 	g_ConfigConvar.Create("vsh_boss_ping_limit", "200", "Max ping/latency to allow player to play as boss (-1 for no limit)", _, true, -1.0);
-	g_ConfigConvar.Create("vsh_telefrag_damage", "9001.0", "Damage amount to boss from telefrag", _, true, 0.0);
+	g_ConfigConvar.Create("vsh_telefrag_damage", "10000.0", "Damage amount to boss from telefrag", _, true, 0.0);
 	g_ConfigConvar.Create("vsh_music_enable", "1", "Enable boss music?", _, true, 0.0, true, 1.0);
 	g_ConfigConvar.Create("vsh_rps_enable", "1", "Allow everyone use Rock Paper Scissors Taunt?", _, true, 0.0, true, 1.0);
 	g_ConfigConvar.Create("vsh_blacklist_amount", "2", "Maximum amount of bosses a player can blacklist for themselves (0 disables the feature)", _, true, 0.0);
@@ -1070,6 +1071,7 @@ public void OnEntityCreated(int iEntity, const char[] sClassname)
 	if (StrContains(sClassname, "tf_projectile_") == 0)
 	{
 		SDKHook(iEntity, SDKHook_StartTouchPost, Tags_OnProjectileTouch);
+		SDKHook(iEntity, SDKHook_SpawnPost, Tags_OnProjectileSpawnPost);
 	}
 	else if (strncmp(sClassname, "tf_weapon", 9) == 0)
 	{
@@ -1361,6 +1363,7 @@ public void OnClientPutInServer(int iClient)
 	
 	Blacklist_Load(iClient, true);
 	Cookies_OnClientJoin(iClient);
+	AltWeapon_Load(iClient);
 }
 
 public void OnClientPostAdminCheck(int iClient)
@@ -1391,6 +1394,7 @@ public void OnClientDisconnect(int iClient)
 	
 	Preferences_SetAll(iClient, -1);
 	Queue_SetPlayerPoints(iClient, -1);
+	AltWeapon_Clear(iClient);
 	
 	NextBoss_DeleteClient(iClient);
 	
@@ -1436,7 +1440,7 @@ public void Client_OnThink(int iClient)
 			int iPlayerCount = SaxtonHale_GetAliveAttackPlayers();
 			
 			//Check minicrit from index
-			int iMinicrit = g_ConfigIndex.IsMinicrit(iIndex);
+			int iMinicrit = g_ConfigIndex.IsMinicrit(AltWeapon_GetConfigIndex(iClient, iIndex));
 			if (iMinicrit == 1)
 			{
 				TF2_AddCondition(iClient, TFCond_Buffed, 0.05);
@@ -1452,7 +1456,7 @@ public void Client_OnThink(int iClient)
 			}
 			
 			//Check crit from index
-			int iCrit = g_ConfigIndex.IsCrit(iIndex);
+			int iCrit = g_ConfigIndex.IsCrit(AltWeapon_GetConfigIndex(iClient, iIndex));
 			if (iCrit == 1)
 			{
 				TF2_AddCondition(iClient, TFCond_CritOnDamage, 0.05);
@@ -1475,6 +1479,7 @@ public void Client_OnThink(int iClient)
 public void OnClientCookiesCached(int iClient)
 {
 	Blacklist_Load(iClient, true);
+	AltWeapon_Load(iClient);
 }
 
 public Action Client_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
@@ -1555,6 +1560,14 @@ public Action Client_OnTakeDamage(int victim, int &attacker, int &inflictor, flo
 			}
 		}
 		
+		if (victim != attacker && (damagetype & DMG_CRIT) && SaxtonHale_IsValidAttack(attacker) && Tags_IsMiniCritShot(attacker, inflictor))
+		{
+			damagetype &= ~DMG_CRIT;
+			Tags_MarkMiniCritVictim(victim);
+			if (finalAction < Plugin_Changed)
+				finalAction = Plugin_Changed;
+		}
+		
 		//Call damage tags
 		action = TagsDamage_OnTakeDamage(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
 		if (action > finalAction)
@@ -1569,7 +1582,7 @@ public Action Client_OnTakeDamage(int victim, int &attacker, int &inflictor, flo
 		
 		if (0 <= iSlot < sizeof(g_ConfigClass[]))
 		{
-			int iIgnoreFalloff = g_ConfigIndex.IgnoreFalloff(iIndex);
+			int iIgnoreFalloff = g_ConfigIndex.IgnoreFalloff(AltWeapon_GetConfigIndex(attacker, iIndex));
 			if (iIgnoreFalloff == -1)
 				iIgnoreFalloff = g_ConfigClass[nClass][iSlot].IgnoreFalloff();
 			
@@ -1586,6 +1599,8 @@ public void Client_OnTakeDamagePost(int victim, int attacker, int inflictor, flo
 	if (!g_bEnabled) return;
 	if (g_iTotalRoundPlayed <= 0) return;
 	
+	Tags_ClearMiniCritMark(victim);
+	
 	if (victim != attacker && SaxtonHale_IsValidAttack(attacker) && weapon != INVALID_ENT_REFERENCE && HasEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"))
 	{
 		TFClassType nClass = TF2_GetPlayerClass(attacker);
@@ -1594,7 +1609,7 @@ public void Client_OnTakeDamagePost(int victim, int attacker, int inflictor, flo
 		
 		if (0 <= iSlot < sizeof(g_ConfigClass[]))
 		{
-			int iIgnoreFalloff = g_ConfigIndex.IgnoreFalloff(iIndex);
+			int iIgnoreFalloff = g_ConfigIndex.IgnoreFalloff(AltWeapon_GetConfigIndex(attacker, iIndex));
 			if (iIgnoreFalloff == -1)
 				iIgnoreFalloff = g_ConfigClass[nClass][iSlot].IgnoreFalloff();
 			
@@ -1818,6 +1833,14 @@ public Action TF2_CalcIsAttackCritical(int iClient, int iWeapon, char[] sWepClas
 			if (tParams.GetIntEx("attackcrit", iResult))
 			{
 				bResult = !!iResult;
+				delete tParams;
+				return Plugin_Changed;
+			}
+			
+			if (!bResult && tParams.GetIntEx("attackminicrit", iResult) && iResult)
+			{
+				Tags_SetMiniCritShot(iClient);
+				bResult = true;
 				delete tParams;
 				return Plugin_Changed;
 			}

@@ -27,7 +27,7 @@ public Action Console_VoiceCommand(int iClient, const char[] sCommand, int iArgs
 	{
 		action = boss.CallFunction("OnVoiceCommand", sCmd1, sCmd2);
 		
-		if (sCmd1[0] == '0' && sCmd2[0] == '0' && boss.iMaxRageDamage != -1 && (boss.iRageDamage >= boss.iMaxRageDamage))
+		if (sCmd1[0] == '0' && sCmd2[0] == '0' && boss.iMaxRageDamage != -1 && (boss.iRageDamage >= boss.iMaxRageDamage) && BaseBoss_GetRageCooldownLeft(boss) <= 0.0)
 		{
 			boss.CallFunction("OnRage");
 			action = Plugin_Handled;

@@ -13,6 +13,7 @@ public void ModifiersHot_GetModifiersInfo(SaxtonHaleBase boss, char[] sInfo, int
 	StrCat(sInfo, length, "\n ");
 	StrCat(sInfo, length, "\n- Ignites nearby players for 10 seconds, dealing 3 damage");
 	StrCat(sInfo, length, "\n- Boss ignites when taking any damage");
+	StrCat(sInfo, length, "\n- Hale take increased damage from burn");
 }
 
 public void ModifiersHot_GetRenderColor(SaxtonHaleBase boss, int iColor[4])
@@ -69,9 +70,9 @@ public Action ModifiersHot_OnTakeDamage(SaxtonHaleBase boss, int &attacker, int 
 	
 	if (damagetype & DMG_BURN)
 	{
-		damage *= 3.0;
-		if (damage > 12.0) damage = 12.0;
-		return Plugin_Continue;
+		damage *= 6.0;
+		if (damage > 24.0) damage = 24.0;
+		return Plugin_Changed;
 	}
 	
 	if (0 < attacker <= MaxClients && IsClientInGame(attacker))

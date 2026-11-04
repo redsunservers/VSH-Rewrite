@@ -57,11 +57,6 @@ public void UberRanger_Create(SaxtonHaleBase boss)
 {
 	boss.CreateClass("BraveJump");
 	
-	boss.CreateClass("RageAddCond");
-	boss.SetPropFloat("RageAddCond", "RageCondDuration", 5.0);
-	boss.SetPropFloat("RageAddCond", "RageCondSuperRageMultiplier", 1.6);	//8 seconds
-	RageAddCond_AddCond(boss, TFCond_UberchargedCanteen);
-	
 	boss.iHealthPerPlayer = 500;
 	boss.flHealthExponential = 1.05;
 	boss.nClass = TFClass_Medic;
@@ -351,7 +346,6 @@ public void MinionRanger_OnButtonPress(SaxtonHaleBase boss, int button)
 	{	
 		//Reset their über spawn protection
 		TF2_RemoveCondition(boss.iClient, TFCond_UberchargedCanteen);
-		TF2_AddCondition(boss.iClient, TFCond_UberchargedCanteen, 3.0);
 			
 		g_bUberRangerMinionHasMoved[boss.iClient] = true;
 	}

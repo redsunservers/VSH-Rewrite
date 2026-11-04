@@ -9,6 +9,7 @@ public void BodyEat_Create(SaxtonHaleBase boss)
 	boss.SetPropFloat("BodyEat", "MaxEatDistance", 100.0);
 	boss.SetPropFloat("BodyEat", "EatRageRadius", 450.0);
 	boss.SetPropFloat("BodyEat", "EatRageDuration", 10.0);
+	boss.SetPropFloat("BodyEat", "RageHealMultiplier", 1.0);
 }
 
 public void BodyEat_OnPlayerKilled(SaxtonHaleBase boss, Event event, int iVictim)
@@ -84,7 +85,8 @@ public void BodyEat_EatBody(SaxtonHaleBase boss, int iEnt)
 	float eatDuration = boss.GetPropFloat("BodyEat", "EatRageDuration");
 	if (boss.bSuperRage)
 		eatDuration *= 2.0;
-	if (lastRageTime == 0.0 || (GetGameTime()-lastRageTime) > eatDuration)
+	bool bRageWindow = !(lastRageTime == 0.0 || (GetGameTime()-lastRageTime) > eatDuration);
+	if (!bRageWindow)
 	{
 		TF2_StunPlayer(boss.iClient, 2.0, 1.0, 35);
 		TF2_AddCondition(boss.iClient, TFCond_DefenseBuffed, 2.0);
@@ -104,7 +106,11 @@ public void BodyEat_EatBody(SaxtonHaleBase boss, int iEnt)
 		AcceptEntityInput(iDissolve, "Dissolve");
 		AcceptEntityInput(iDissolve, "Kill");
 		
-		Client_AddHealth(boss.iClient, GetEntProp(iEnt, Prop_Data, "m_iHealth"), 0);
+		int iHeal = GetEntProp(iEnt, Prop_Data, "m_iHealth");
+		if (bRageWindow)
+			iHeal = RoundToNearest(float(iHeal) * boss.GetPropFloat("BodyEat", "RageHealMultiplier"));
+		
+		Client_AddHealth(boss.iClient, iHeal, 0);
 		
 		SetEntPropEnt(iEnt, Prop_Send, "m_hOwnerEntity", boss.iClient);
 	}

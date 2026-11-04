@@ -1,6 +1,8 @@
 #define CONFIG_FILE "configs/vsh/vsh.cfg"
 #define CONFIG_MAPS "configs/vsh/maps.cfg"
 
+#define CONFIG_ALT_INDEX_OFFSET	1000000
+
 methodmap ConfigClass < StringMap
 {
 	public ConfigClass()
@@ -113,9 +115,9 @@ methodmap ConfigIndex < ArrayList
 		return view_as<ConfigIndex>(new ArrayList(2));	//0 for int index, 1 for StringMap handle
 	}
 	
-	public void LoadSection(KeyValues kv)
+	public void LoadSection(KeyValues kv, const char[] sSection = "weapons", int iIndexOffset = 0)
 	{
-		if (kv.JumpToKey("weapons", false))	//Jump to "weapons"
+		if (kv.JumpToKey(sSection, false))	//Jump to "weapons"
 		{
 			if (kv.GotoFirstSubKey(false))	//Go to the first key of weapon index
 			{
@@ -123,7 +125,7 @@ methodmap ConfigIndex < ArrayList
 				{
 					char sIndex[MAXLEN_CONFIG_VALUE];
 					kv.GetSectionName(sIndex, sizeof(sIndex));	//Index of the weapon
-					int iIndex = StringToInt(sIndex);
+					int iIndex = StringToInt(sIndex) + iIndexOffset;
 					StringMap sMap = new StringMap();
 					
 					if (kv.GotoFirstSubKey(false))		//Go to first subkeys from that index (attrib, desp etc)
@@ -451,6 +453,7 @@ void Config_Refresh()
 	
 	//Load every indexs
 	g_ConfigIndex.LoadSection(kv);
+	g_ConfigIndex.LoadSection(kv, "weaponsalt", CONFIG_ALT_INDEX_OFFSET);
 	
 	//Load convars
 	g_ConfigConvar.LoadSection(kv, "cvars");
@@ -532,6 +535,23 @@ stock StringMap Config_GetStringMap(int iIndex)
 stock int Config_GetPrefab(int iIndex)
 {
 	return g_ConfigIndex.GetPrefab(iIndex);
+}
+
+stock bool Config_ClientWeaponHasKey(int iClient, const char[] sKey)
+{
+	for (int iSlot = 0; iSlot <= WeaponSlot_BuilderEngie; iSlot++)
+	{
+		int iWeapon = TF2_GetItemInSlot(iClient, iSlot);
+		if (iWeapon <= MaxClients)
+			continue;
+		
+		StringMap sMap = g_ConfigIndex.GetStringMap(AltWeapon_GetConfigIndex(iClient, GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex")));
+		char sValue[MAXLEN_CONFIG_VALUE];
+		if (sMap != null && sMap.GetString(sKey, sValue, sizeof(sValue)) && StringToInt(sValue) == 1)
+			return true;
+	}
+	
+	return false;
 }
 
 public void Config_ConvarChanged(ConVar convar, const char[] oldValue, const char[] newValue)

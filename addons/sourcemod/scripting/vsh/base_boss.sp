@@ -1,5 +1,13 @@
 #define EFFECT_CLASSNAME		"info_particle_system"	// Any cheap ent that allows SetTransmit
 
+#define BOSS_RAGE_COOLDOWN_DEFAULT	20.0
+#define BOSS_ISOLATION_LINK_RADIUS	300.0
+#define BOSS_ISOLATION_GROUP_MIN	4
+#define BOSS_ISOLATION_DISTANCE		2000.0
+#define BOSS_ISOLATION_INTERVAL		0.2
+#define BOSS_STOMP_DAMAGE_PER_FALL_SPEED	0.3182
+#define BOSS_ISOLATION_MARK_DURATION	0.5
+
 static char g_sClientBossRageMusic[MAXPLAYERS][255];
 
 static float g_flClientBossRageMusicVolume[MAXPLAYERS];
@@ -10,9 +18,28 @@ static Handle g_hClientBossRageMusicTime[MAXPLAYERS];
 static bool g_bClientBossRageModelActive[MAXPLAYERS];
 
 static bool g_bClientBossRageMusicLoopActive[MAXPLAYERS];
+
+static bool g_bClientBossIsolated[MAXPLAYERS];
+static float g_flClientBossIsolationNextCheck[MAXPLAYERS];
+static float g_flClientBossIsolationMarkEnd[MAXPLAYERS];
+static bool g_bClientBossIsolationWarned[MAXPLAYERS];
+static bool g_bClientBossIsolationHighlight[MAXPLAYERS][MAXPLAYERS];
+static int g_iClientIsolationGlow[MAXPLAYERS];
+
+static float g_flClientBossFallSpeed[MAXPLAYERS];
+
 public void SaxtonHaleBoss_Create(SaxtonHaleBase boss)
 {
 	boss.bSuperRage = false;
+	
+	boss.SetPropFloat("SaxtonHaleBoss", "RageCooldown", BOSS_RAGE_COOLDOWN_DEFAULT);
+	
+	g_bClientBossIsolated[boss.iClient] = false;
+	g_flClientBossIsolationNextCheck[boss.iClient] = 0.0;
+	g_flClientBossIsolationMarkEnd[boss.iClient] = 0.0;
+	g_bClientBossIsolationWarned[boss.iClient] = false;
+	BaseBoss_ClearIsolationHighlight(boss.iClient);
+	g_flClientBossFallSpeed[boss.iClient] = 0.0;
 
 	boss.iBaseHealth = 0;
 	boss.iHealthPerPlayer = 0;
@@ -65,11 +92,20 @@ public int SaxtonHaleBoss_CalculateMaxHealth(SaxtonHaleBase boss)
 
 public void SaxtonHaleBoss_OnThink(SaxtonHaleBase boss)
 {
-	if (IsFakeClient(boss.iClient) && boss.iRageDamage >= boss.iMaxRageDamage)
+	if (IsFakeClient(boss.iClient) && boss.iRageDamage >= boss.iMaxRageDamage && BaseBoss_GetRageCooldownLeft(boss) <= 0.0)
 		boss.CallFunction("OnRage");
 	
-	bool bGlow = (boss.flGlowTime == -1.0 || boss.flGlowTime >= GetGameTime());
+	BaseBoss_UpdateIsolation(boss);
+	
+	bool bGlow = (boss.flGlowTime == -1.0 || boss.flGlowTime >= GetGameTime() || g_bClientBossIsolated[boss.iClient]);
 	SetEntProp(boss.iClient, Prop_Send, "m_bGlowEnabled", bGlow);
+	
+	if (!(GetEntityFlags(boss.iClient) & FL_ONGROUND))
+	{
+		float vecFallVel[3];
+		GetEntPropVector(boss.iClient, Prop_Data, "m_vecVelocity", vecFallVel);
+		g_flClientBossFallSpeed[boss.iClient] = (vecFallVel[2] < 0.0) ? -vecFallVel[2] : 0.0;
+	}
 	
 	if ((GetEntityFlags(boss.iClient) & FL_ONGROUND) && TF2_IsPlayerInCondition(boss.iClient, TFCond_BlastJumping))
 		TF2_RemoveCondition(boss.iClient, TFCond_BlastJumping);
@@ -106,10 +142,24 @@ public void SaxtonHaleBoss_OnThink(SaxtonHaleBase boss)
 		else
 		{
 			float flRage = (float(boss.iRageDamage) / float(boss.iMaxRageDamage)) * 100.0;
+			float flRageCooldown = BaseBoss_GetRageCooldownLeft(boss);
 
-			Format(sMessage, sizeof(sMessage), "Rage: %d%%%s", RoundToFloor(flRage), (flRage >= 100.0) ? " (Rage is ready! Press E to use your Rage!)" : "");
+			if (flRageCooldown > 0.0)
+			{
+				Format(sMessage, sizeof(sMessage), "Rage: %d%%%% (%ds)", RoundToFloor(flRage), RoundToCeil(flRageCooldown));
+			}
+			else
+			{
+				Format(sMessage, sizeof(sMessage), "Rage: %d%%%%%s", RoundToFloor(flRage), (flRage >= 100.0) ? " (Ready)" : "");
+			}
 
-			if (flRage >= 200.0 || flRage >= boss.flMaxRagePercentage * 100.0)
+			if (flRageCooldown > 0.0)
+			{
+				iColor[0] = 105;
+				iColor[1] = 105;
+				iColor[2] = 105;
+			}
+			else if (flRage >= 200.0 || flRage >= boss.flMaxRagePercentage * 100.0)
 			{
 				//200% rage or max, bright yellow
 				iColor[0] = 255;
@@ -328,9 +378,195 @@ public Action SaxtonHaleBoss_OnAttackDamage(SaxtonHaleBase boss, int victim, int
 	if (damagecustom == TF_CUSTOM_BOOTS_STOMP)
 	{
 		//Because we made fall damage deal near zero, hard set stomp damage to insta kill
-		damage = 999.0;
+		float flFallSpeed = g_flClientBossFallSpeed[boss.iClient];
+		float flFallVelocity = GetEntPropFloat(boss.iClient, Prop_Send, "m_flFallVelocity");
+		if (flFallVelocity > flFallSpeed)
+			flFallSpeed = flFallVelocity;
+		
+		damage = flFallSpeed * BOSS_STOMP_DAMAGE_PER_FALL_SPEED;
 		return Plugin_Changed;
 	}
+	
+	return Plugin_Continue;
+}
+
+float BaseBoss_GetRageCooldownLeft(SaxtonHaleBase boss)
+{
+	if (boss.flRageLastTime <= 0.0)
+		return 0.0;
+	
+	float flLeft = boss.flRageLastTime + boss.GetPropFloat("SaxtonHaleBoss", "RageCooldown") - GetGameTime();
+	return (flLeft > 0.0) ? flLeft : 0.0;
+}
+
+static void BaseBoss_UpdateIsolation(SaxtonHaleBase boss)
+{
+	int iClient = boss.iClient;
+	float flTime = GetGameTime();
+	
+	if (boss.bMinion || !g_bRoundStarted || !IsPlayerAlive(iClient))
+	{
+		g_bClientBossIsolated[iClient] = false;
+		BaseBoss_ClearIsolationHighlight(iClient);
+		return;
+	}
+	
+	if (flTime >= g_flClientBossIsolationNextCheck[iClient])
+	{
+		g_flClientBossIsolationNextCheck[iClient] = flTime + BOSS_ISOLATION_INTERVAL;
+		bool bClosestGroup[MAXPLAYERS];
+		g_bClientBossIsolated[iClient] = BaseBoss_IsIsolated(iClient, bClosestGroup);
+		for (int iAttacker = 1; iAttacker <= MaxClients; iAttacker++)
+		{
+			g_bClientBossIsolationHighlight[iClient][iAttacker] = (g_bClientBossIsolated[iClient] && bClosestGroup[iAttacker]);
+			if (g_bClientBossIsolationHighlight[iClient][iAttacker])
+				BaseBoss_UpdateIsolationGlow(iAttacker);
+		}
+		
+		if (g_bClientBossIsolated[iClient] && !g_bClientBossIsolationWarned[iClient])
+		{
+			g_bClientBossIsolationWarned[iClient] = true;
+			PrintToChat(iClient, "%s%s You become marked for death and outlined if you are too far away from where most of red team currently is.", TEXT_TAG, TEXT_ERROR);
+		}
+	}
+	
+	if (!g_bClientBossIsolated[iClient])
+		return;
+	
+	bool bMarked = TF2_IsPlayerInCondition(iClient, TFCond_MarkedForDeath);
+	bool bOurMark = (g_flClientBossIsolationMarkEnd[iClient] > flTime);
+	if (!bMarked || (bOurMark && g_flClientBossIsolationMarkEnd[iClient] - flTime < BOSS_ISOLATION_MARK_DURATION / 2.0))
+	{
+		TF2_AddCondition(iClient, TFCond_MarkedForDeath, BOSS_ISOLATION_MARK_DURATION);
+		g_flClientBossIsolationMarkEnd[iClient] = flTime + BOSS_ISOLATION_MARK_DURATION;
+	}
+}
+
+static bool BaseBoss_IsIsolated(int iBoss, bool bClosestGroup[MAXPLAYERS])
+{
+	int iCount = 0;
+	int iClients[MAXPLAYERS];
+	float vecPos[MAXPLAYERS][3];
+	for (int iClient = 1; iClient <= MaxClients; iClient++)
+	{
+		bClosestGroup[iClient] = false;
+		if (SaxtonHale_IsValidAttack(iClient) && IsPlayerAlive(iClient))
+		{
+			GetClientAbsOrigin(iClient, vecPos[iCount]);
+			iClients[iCount] = iClient;
+			iCount++;
+		}
+	}
+	
+	if (iCount < BOSS_ISOLATION_GROUP_MIN)
+		return false;
+	
+	float vecBoss[3];
+	GetClientAbsOrigin(iBoss, vecBoss);
+	
+	float flLinkSq = BOSS_ISOLATION_LINK_RADIUS * BOSS_ISOLATION_LINK_RADIUS;
+	float flFarSq = BOSS_ISOLATION_DISTANCE * BOSS_ISOLATION_DISTANCE;
+	
+	int iGroup[MAXPLAYERS];
+	int iGroups = 0;
+	int iStack[MAXPLAYERS];
+	int iClosestGroup = 0;
+	float flClosestGroupSq = -1.0;
+	
+	for (int iStart = 0; iStart < iCount; iStart++)
+	{
+		if (iGroup[iStart])
+			continue;
+		
+		iGroups++;
+		int iSize = 0;
+		int iStackLen = 0;
+		float flClosestSq = -1.0;
+		
+		iGroup[iStart] = iGroups;
+		iStack[iStackLen] = iStart;
+		iStackLen++;
+		
+		while (iStackLen > 0)
+		{
+			iStackLen--;
+			int iCurrent = iStack[iStackLen];
+			iSize++;
+			
+			float flDistSq = GetVectorDistance(vecBoss, vecPos[iCurrent], true);
+			if (flClosestSq < 0.0 || flDistSq < flClosestSq)
+				flClosestSq = flDistSq;
+			
+			for (int iOther = 0; iOther < iCount; iOther++)
+			{
+				if (!iGroup[iOther] && GetVectorDistance(vecPos[iCurrent], vecPos[iOther], true) <= flLinkSq)
+				{
+					iGroup[iOther] = iGroups;
+					iStack[iStackLen] = iOther;
+					iStackLen++;
+				}
+			}
+		}
+		
+		if (iSize >= BOSS_ISOLATION_GROUP_MIN)
+		{
+			if (flClosestSq <= flFarSq)
+				return false;
+			
+			if (flClosestGroupSq < 0.0 || flClosestSq < flClosestGroupSq)
+			{
+				flClosestGroupSq = flClosestSq;
+				iClosestGroup = iGroups;
+			}
+		}
+	}
+	
+	if (!iClosestGroup)
+		return false;
+	
+	for (int i = 0; i < iCount; i++)
+	{
+		if (iGroup[i] == iClosestGroup)
+			bClosestGroup[iClients[i]] = true;
+	}
+	
+	return true;
+}
+
+static void BaseBoss_UpdateIsolationGlow(int iClient)
+{
+	char sModel[PLATFORM_MAX_PATH];
+	GetEntPropString(iClient, Prop_Data, "m_ModelName", sModel, sizeof(sModel));
+	
+	if (g_iClientIsolationGlow[iClient] == 0 || !IsValidEntity(g_iClientIsolationGlow[iClient]))
+	{
+		g_iClientIsolationGlow[iClient] = TF2_CreateTransmitGlow(iClient, sModel, BaseBoss_IsolationGlowTransmit);
+		return;
+	}
+	
+	char sGlowModel[PLATFORM_MAX_PATH];
+	GetEntPropString(g_iClientIsolationGlow[iClient], Prop_Data, "m_ModelName", sGlowModel, sizeof(sGlowModel));
+	if (!StrEqual(sModel, sGlowModel))
+		SetEntityModel(g_iClientIsolationGlow[iClient], sModel);
+}
+
+static void BaseBoss_ClearIsolationHighlight(int iBoss)
+{
+	for (int iClient = 0; iClient < MAXPLAYERS; iClient++)
+		g_bClientBossIsolationHighlight[iBoss][iClient] = false;
+}
+
+public Action BaseBoss_IsolationGlowTransmit(int iEntity, int iTarget)
+{
+	int iClient = GetEntPropEnt(iEntity, Prop_Data, "m_hParent");
+	if (iClient <= 0 || iClient > MaxClients || iTarget <= 0 || iTarget > MaxClients)
+		return Plugin_Stop;
+	
+	if (!g_bClientBossIsolationHighlight[iTarget][iClient] || !g_bClientBossIsolated[iTarget] || !SaxtonHale_IsValidBoss(iTarget) || !IsPlayerAlive(iTarget) || !IsPlayerAlive(iClient))
+		return Plugin_Stop;
+	
+	if (TF2_IsPlayerInCondition(iClient, TFCond_Cloaked) || TF2_IsPlayerInCondition(iClient, TFCond_Disguised) || TF2_IsPlayerInCondition(iClient, TFCond_Stealthed))
+		return Plugin_Stop;
 	
 	return Plugin_Continue;
 }

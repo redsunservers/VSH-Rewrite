@@ -77,6 +77,12 @@ public Action TagsDamage_OnTakeDamageAlive(int victim, int &attacker, int &infli
 		action = Plugin_Changed;
 	}
 	
+	if (tParams.GetFloatEx("add", flValue))
+	{
+		damage += flValue;
+		action = Plugin_Changed;
+	}
+	
 	if (tParams.GetFloatEx("min", flValue) && damage < flValue)
 	{
 		damage = flValue;

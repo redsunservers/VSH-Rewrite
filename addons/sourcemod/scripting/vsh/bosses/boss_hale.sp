@@ -123,16 +123,17 @@ public void SaxtonHale_Create(SaxtonHaleBase boss)
 	boss.CreateClass("RageAttributes");
 	boss.SetPropFloat("RageAttributes", "RageAttribDuration", 5.0);
 	boss.SetPropFloat("RageAttributes", "RageAttribSuperRageMultiplier", 2.0);
-	RageAttributes_AddAttrib(boss, 6, 0.3, 0.3, false);		// Increased attack speed (+70%)
+	RageAttributes_AddAttrib(boss, 6, 0.4615, 0.4615, false);		// Increased attack speed (+70%)
 
 	boss.CreateClass("RageAddCond");
 	boss.SetPropFloat("RageAddCond", "RageCondDuration", 5.0);
 	boss.SetPropFloat("RageAddCond", "RageCondSuperRageMultiplier", 2.0);
 	RageAddCond_AddCond(boss, TFCond_SpeedBuffAlly);	// Speed boost effect
-	RageAddCond_AddCond(boss, TFCond_MegaHeal);			// Knockback & stun immunity
 	RageAddCond_AddCond(boss, TFCond_DefenseBuffNoCritBlock);	// MvM Defense Buff
 
 	boss.CreateClass("Lunge");
+	boss.SetPropFloat("Lunge", "MaxDamage", 50.0);
+	boss.SetPropFloat("Lunge", "Cooldown", 30.0);
 	
 	boss.iHealthPerPlayer = 600;
 	boss.flHealthExponential = 1.05;
@@ -156,7 +157,7 @@ public void SaxtonHale_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length
 	StrCat(sInfo, length, "\nRage");
 	StrCat(sInfo, length, "\n- Damage requirement: 3000");
 	StrCat(sInfo, length, "\n- Faster attack and movement speed");
-	StrCat(sInfo, length, "\n- Knockback/stun immunity and damage resistance");
+	StrCat(sInfo, length, "\n- Damage resistance");
 	StrCat(sInfo, length, "\n- 200%% Rage: Extends duration from 5 to 10 seconds");
 }
 
