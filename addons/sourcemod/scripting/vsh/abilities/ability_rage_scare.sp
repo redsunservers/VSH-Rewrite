@@ -37,7 +37,7 @@ public void ScareRage_OnRage(SaxtonHaleBase boss)
 	
 	for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
 	{
-		if (IsClientInGame(iVictim) && IsPlayerAlive(iVictim) && GetClientTeam(iVictim) != bossTeam && !TF2_IsUbercharged(iVictim))
+		if (IsClientInGame(iVictim) && IsPlayerAlive(iVictim) && GetClientTeam(iVictim) != bossTeam && !TF2_IsUbercharged(iVictim) && !Config_ClientWeaponHasKey(iVictim, "scareimmune"))
 		{
 			GetClientAbsOrigin(iVictim, vecTargetPos);
 			TFClassType nClass = TF2_GetPlayerClass(iVictim);

@@ -254,6 +254,54 @@ public Action Tags_OnProjectileTouch(int iProjectile, int iToucher)
 	return Plugin_Continue;
 }
 
+static float g_flTagsMiniCritShotTime[MAXPLAYERS];
+static int g_iTagsMiniCritProjectile[2049];
+static bool g_bTagsMiniCritMarked[MAXPLAYERS];
+
+void Tags_SetMiniCritShot(int iClient)
+{
+	g_flTagsMiniCritShotTime[iClient] = GetGameTime();
+}
+
+public void Tags_OnProjectileSpawnPost(int iProjectile)
+{
+	if (iProjectile <= MaxClients || iProjectile >= sizeof(g_iTagsMiniCritProjectile))
+		return;
+	
+	g_iTagsMiniCritProjectile[iProjectile] = 0;
+	
+	int iOwner = GetEntPropEnt(iProjectile, Prop_Send, "m_hOwnerEntity");
+	if (0 < iOwner <= MaxClients && g_flTagsMiniCritShotTime[iOwner] == GetGameTime())
+		g_iTagsMiniCritProjectile[iProjectile] = EntIndexToEntRef(iProjectile);
+}
+
+bool Tags_IsMiniCritShot(int iAttacker, int iInflictor)
+{
+	if (MaxClients < iInflictor < sizeof(g_iTagsMiniCritProjectile))
+		return (g_iTagsMiniCritProjectile[iInflictor] != 0 && g_iTagsMiniCritProjectile[iInflictor] == EntIndexToEntRef(iInflictor));
+	
+	return (iInflictor == iAttacker && 0 < iAttacker <= MaxClients && g_flTagsMiniCritShotTime[iAttacker] == GetGameTime());
+}
+
+void Tags_MarkMiniCritVictim(int iVictim)
+{
+	if (TF2_IsPlayerInCondition(iVictim, TFCond_MarkedForDeath) || TF2_IsPlayerInCondition(iVictim, TFCond_MarkedForDeathSilent))
+		return;
+	
+	TF2_AddCondition(iVictim, TFCond_MarkedForDeathSilent, 0.05);
+	g_bTagsMiniCritMarked[iVictim] = true;
+}
+
+void Tags_ClearMiniCritMark(int iVictim)
+{
+	if (0 < iVictim <= MaxClients && g_bTagsMiniCritMarked[iVictim])
+	{
+		g_bTagsMiniCritMarked[iVictim] = false;
+		if (IsClientInGame(iVictim))
+			TF2_RemoveCondition(iVictim, TFCond_MarkedForDeathSilent);
+	}
+}
+
 //---------------------------
 
 public void Tags_AddCond(int iClient, int iTarget, TagsParams tParams)

@@ -163,7 +163,7 @@ public void Event_RoundArenaStart(Event event, const char[] sName, bool bDontBro
 						g_ConfigClass[nClass][iSlot].GetDesp(sDesp, sizeof(sDesp));
 					// Desp for specific index
 					else if (i == 1)
-						g_ConfigIndex.GetDesp(iIndex, sDesp, sizeof(sDesp));
+						g_ConfigIndex.GetDesp(AltWeapon_GetConfigIndex(iClient, iIndex), sDesp, sizeof(sDesp));
 
 					if (!StrEmpty(sDesp))
 					{
@@ -780,7 +780,7 @@ public void Event_PlayerInventoryUpdate(Event event, const char[] sName, bool bD
 						switch (i)
 						{
 							case 0: g_ConfigClass[nClass][iSlot].GetAttrib(sAttrib, sizeof(sAttrib));
-							case 1: g_ConfigIndex.GetAttrib(iIndex, sAttrib, sizeof(sAttrib));
+							case 1: g_ConfigIndex.GetAttrib(AltWeapon_GetConfigIndex(iClient, iIndex), sAttrib, sizeof(sAttrib));
 						}
 						
 						int count = ExplodeString(sAttrib, " ; ", atts, 32, 32);
@@ -797,7 +797,7 @@ public void Event_PlayerInventoryUpdate(Event event, const char[] sName, bool bD
 						switch (i)
 						{
 							case 0: iClip = g_ConfigClass[nClass][iSlot].GetClip();
-							case 1: iClip = g_ConfigIndex.GetClip(iIndex);
+							case 1: iClip = g_ConfigIndex.GetClip(AltWeapon_GetConfigIndex(iClient, iIndex));
 						}
 						
 						if (iClip > -1)

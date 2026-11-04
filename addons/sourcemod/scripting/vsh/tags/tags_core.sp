@@ -116,7 +116,7 @@ void TagsCore_RefreshClient(int iClient, bool bClearTimer = true)
 	{
 		int iWeapon = TF2_GetItemInSlot(iClient, iSlot);
 		if (IsValidEdict(iWeapon))
-			iIndex[iSlot] = Config_GetPrefab(GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex"));
+			iIndex[iSlot] = Config_GetPrefab(AltWeapon_GetConfigIndex(iClient, GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex")));
 		else
 			iIndex[iSlot] = -1;
 	}

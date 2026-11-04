@@ -20,6 +20,8 @@ public void Command_Init()
 	Command_Create("next", Command_HaleNext);
 	Command_Create("credits", Command_Credits);
 	Command_Create("blacklist", Command_Blacklist);
+	Command_Create("altweapon", Command_AltWeapon);
+	RegConsoleCmd("sm_altweapon", Command_AltWeapon);
 	
 	Command_Create("settings", Command_Preferences);
 	Command_Create("preferences", Command_Preferences);
@@ -63,6 +65,20 @@ public Action Command_MainMenu(int iClient, int iArgs)
 	}
 
 	Menu_DisplayMain(iClient);
+	return Plugin_Handled;
+}
+
+public Action Command_AltWeapon(int iClient, int iArgs)
+{
+	if (!g_bEnabled) return Plugin_Continue;
+
+	if (iClient == 0)
+	{
+		ReplyToCommand(iClient, "This command can only be used in-game.");
+		return Plugin_Handled;
+	}
+
+	MenuAltWeapon_DisplayList(iClient);
 	return Plugin_Handled;
 }
 

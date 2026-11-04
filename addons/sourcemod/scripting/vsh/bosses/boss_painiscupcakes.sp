@@ -81,6 +81,7 @@ public void PainisCupcake_Create(SaxtonHaleBase boss)
 	boss.SetPropFloat("BodyEat", "MaxEatDistance", 100.0);
 	boss.SetPropFloat("BodyEat", "EatRageRadius", 450.0);
 	boss.SetPropFloat("BodyEat", "EatRageDuration", 8.0);
+	boss.SetPropFloat("BodyEat", "RageHealMultiplier", 3.0);
 	
 	boss.CreateClass("LightRage");
 	boss.SetPropFloat("LightRage", "LigthRageDuration", 8.0);
@@ -89,7 +90,6 @@ public void PainisCupcake_Create(SaxtonHaleBase boss)
 	
 	boss.CreateClass("RageAddCond");
 	boss.SetPropFloat("RageAddCond", "RageCondDuration", 8.0);
-	RageAddCond_AddCond(boss, TFCond_UberchargedCanteen);
 	RageAddCond_AddCond(boss, TFCond_SpeedBuffAlly);
 	
 	boss.iHealthPerPlayer = 500;
@@ -113,9 +113,24 @@ public void PainisCupcake_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int len
 	StrCat(sInfo, length, "\n ");
 	StrCat(sInfo, length, "\nRage");
 	StrCat(sInfo, length, "\n- Damage requirement: 2500");
-	StrCat(sInfo, length, "\n- Übercharge and bright glow for 8 seconds");
+	StrCat(sInfo, length, "\n- Gain damage resistance and heals more from corpses for 8 seconds");
 	StrCat(sInfo, length, "\n- Automatically eats nearby bodies");
 	StrCat(sInfo, length, "\n- 200%% Rage: extends duration to 16 seconds");
+}
+
+#define PAINIS_RAGE_DAMAGE_TAKEN	0.8
+
+public Action PainisCupcake_OnTakeDamage(SaxtonHaleBase boss, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+{
+	float flDuration = boss.GetPropFloat("RageAddCond", "RageCondDuration");
+	if (boss.bSuperRage)
+		flDuration *= boss.GetPropFloat("RageAddCond", "RageCondSuperRageMultiplier");
+	
+	if (boss.flRageLastTime <= 0.0 || GetGameTime() - boss.flRageLastTime > flDuration)
+		return Plugin_Continue;
+	
+	damage *= PAINIS_RAGE_DAMAGE_TAKEN;
+	return Plugin_Changed;
 }
 
 public void PainisCupcake_OnRage(SaxtonHaleBase boss)

@@ -28,6 +28,9 @@ void MenuWeapon_Refresh()
 		char sDesp[256];
 		int iIndex = g_ConfigIndex.Get(i, 0);
 		
+		if (iIndex >= CONFIG_ALT_INDEX_OFFSET)
+			continue;
+		
 		//Don't use prefab weapons
 		if (g_ConfigIndex.IsPrefab(iIndex))
 			continue;

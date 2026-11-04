@@ -72,7 +72,12 @@ void Hud_Think(int iClient)
 				if (IsClientInGame(iBoss) && IsPlayerAlive(iBoss) && boss.bValid && !boss.bMinion)
 				{
 					int iRage = RoundToFloor(float(boss.iRageDamage) / float(boss.iMaxRageDamage) * 100.0);
-					Format(sMessage, sizeof(sMessage), "%s | Boss Rage: %i%%%%", sMessage, iRage);
+					
+					float flRageCooldown = BaseBoss_GetRageCooldownLeft(boss);
+					if (flRageCooldown > 0.0)
+						Format(sMessage, sizeof(sMessage), "%s | Boss Rage: %i%%%% (%ds)", sMessage, iRage, RoundToCeil(flRageCooldown));
+					else
+						Format(sMessage, sizeof(sMessage), "%s | Boss Rage: %i%%%%", sMessage, iRage);
 					break;
 				}
 			}

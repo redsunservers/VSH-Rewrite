@@ -6,11 +6,20 @@ static float g_flWeaponBallRageEnd[MAXPLAYERS];
 static float g_flWeaponBallStunTime[MAXPLAYERS];
 static int g_iWeaponBallThrower[MAXPLAYERS];
 
+#define WEAPONBALL_SOUND_STUN		"player/pl_impact_stun.wav"
+#define WEAPONBALL_SOUND_STUN_RANGE	"player/pl_impact_stun_range.wav"
+
+static float g_flWeaponBallSlowdown[MAXPLAYERS];
+static float g_flWeaponBallSlowEnd[MAXPLAYERS];
+static bool g_bWeaponBallWasDazed[MAXPLAYERS];
+static bool g_bWeaponBallHomeRun[MAXPLAYERS];
+
 public void WeaponBall_Create(SaxtonHaleBase boss)
 {
 	//Default values
 	boss.SetPropInt("WeaponBall", "MaxBall", 3);
 	boss.SetPropFloat("WeaponBall", "Duration", 5.0);
+	boss.SetPropFloat("WeaponBall", "Slowdown", 0.8);
 	
 	g_flWeaponBallRageEnd[boss.iClient] = 0.0;
 }
@@ -52,6 +61,27 @@ public void WeaponBall_OnEntityCreated(SaxtonHaleBase boss, int iEntity, const c
 public void WeaponBall_Precache(SaxtonHaleBase boss)
 {
 	g_iWeaponBallStunType = FindSendPropInfo("CTFStunBall", "m_iType");
+	
+	PrecacheSound(WEAPONBALL_SOUND_STUN);
+	PrecacheSound(WEAPONBALL_SOUND_STUN_RANGE);
+}
+
+void WeaponBall_SlowPlayer(int iVictim, float flSlowdown, float flDuration, bool bRange)
+{
+	if (flDuration <= 0.0)
+		return;
+	
+	AddTemporarySlowdownToClient(iVictim, flSlowdown, flDuration);
+	EmitSoundToAll(bRange ? WEAPONBALL_SOUND_STUN_RANGE : WEAPONBALL_SOUND_STUN, iVictim);
+	
+	float flEnd = GetGameTime() + flDuration;
+	if (flEnd > g_flWeaponBallSlowEnd[iVictim])
+		g_flWeaponBallSlowEnd[iVictim] = flEnd;
+}
+
+bool WeaponBall_IsSlowed(int iVictim)
+{
+	return (0 < iVictim <= MaxClients && IsClientInGame(iVictim) && IsPlayerAlive(iVictim) && g_flWeaponBallSlowEnd[iVictim] > GetGameTime());
 }
 
 public MRESReturn WeaponBall_BallImpact(int iEntity, Handle hParams)
@@ -69,6 +99,10 @@ public MRESReturn WeaponBall_BallImpact(int iEntity, Handle hParams)
 	
 	g_flWeaponBallStunTime[iVictim] = flTime;
 	g_iWeaponBallThrower[iVictim] = iThrower;
+	
+	g_bWeaponBallWasDazed[iVictim] = TF2_IsPlayerInCondition(iVictim, TFCond_Dazed);
+	g_bWeaponBallHomeRun[iVictim] = false;
+	g_flWeaponBallSlowdown[iVictim] = SaxtonHaleBase(GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity")).GetPropFloat("WeaponBall", "Slowdown");
 	
 	SDKHook(iVictim, SDKHook_OnTakeDamageAlive, WeaponBall_OnTakeDamage);
 	HookEvent("player_death", WeaponBall_PlayerDeath, EventHookMode_Pre);
@@ -147,13 +181,14 @@ public Action WeaponBall_OnTakeDamage(int victim, int &attacker, int &inflictor,
 		{
 			//Home run baby
 			damage = 1337.0;
-			TF2_StunPlayer(victim, 10.0, _, TF_STUNFLAGS_BIGBONK, attacker);
+			g_bWeaponBallHomeRun[victim] = true;
+			WeaponBall_SlowPlayer(victim, g_flWeaponBallSlowdown[victim], 10.0, true);
 		}
 		else if (g_flWeaponBallStunTime[victim] > 0.10)
 		{
 			//Not so home run
 			damage *= g_flWeaponBallStunTime[victim] * 3.0;
-			TF2_StunPlayer(victim, g_flWeaponBallStunTime[victim] * 8.0, _, TF_STUNFLAGS_SMALLBONK, attacker);
+			WeaponBall_SlowPlayer(victim, g_flWeaponBallSlowdown[victim], g_flWeaponBallStunTime[victim] * 8.0, false);
 		}
 		
 		g_flWeaponBallStunTime[victim] = 0.0;
@@ -164,7 +199,9 @@ public Action WeaponBall_OnTakeDamage(int victim, int &attacker, int &inflictor,
 
 public void WeaponBall_PlayerDeath(Event event, const char[] sName, bool bDontBroadcast)
 {
-	if (event.GetInt("customkill") == TF_CUSTOM_BASEBALL && event.GetInt("stun_flags") == TF_STUNFLAGS_BIGBONK)
+	int iVictim = GetClientOfUserId(event.GetInt("userid"));
+	bool bHomeRun = (0 < iVictim <= MaxClients && g_bWeaponBallHomeRun[iVictim]);
+	if (event.GetInt("customkill") == TF_CUSTOM_BASEBALL && (bHomeRun || event.GetInt("stun_flags") == TF_STUNFLAGS_BIGBONK))
 	{
 		event.SetInt("customkill", TF_CUSTOM_TAUNT_GRAND_SLAM);
 		event.SetString("weapon", "taunt_scout");
@@ -176,7 +213,14 @@ public void WeaponBall_UnhookBallDamage(int iUserId)
 {
 	int iClient = GetClientOfUserId(iUserId);
 	if (0 < iClient <= MaxClients && IsClientInGame(iClient))
+	{
 		SDKUnhook(iClient, SDKHook_OnTakeDamageAlive, WeaponBall_OnTakeDamage);
+		
+		if (!g_bWeaponBallWasDazed[iClient] && TF2_IsPlayerInCondition(iClient, TFCond_Dazed))
+			TF2_RemoveCondition(iClient, TFCond_Dazed);
+		
+		g_bWeaponBallHomeRun[iClient] = false;
+	}
 	
 	UnhookEvent("player_death", WeaponBall_PlayerDeath, EventHookMode_Pre);
 }

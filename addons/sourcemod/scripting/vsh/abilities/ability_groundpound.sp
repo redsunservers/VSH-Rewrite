@@ -10,7 +10,7 @@ public void GroundPound_Create(SaxtonHaleBase boss)
 	g_bClientBossWeighDownForce[boss.iClient] = false;
 	g_flClientBossWeighDownTimer[boss.iClient] = 0.0;
 	
-	boss.SetPropFloat("GroundPound", "StartTimer", 2.8);
+	boss.SetPropFloat("GroundPound", "StartTimer", 2.0);
 	boss.SetPropFloat("GroundPound", "GravityMultiplier", 8.0);
 	boss.SetPropFloat("GroundPound", "JumpCooldown", 5.0);
 	
@@ -59,27 +59,6 @@ public Action GroundPound_OnTakeDamage(SaxtonHaleBase boss, int &attacker, int &
 	TF2_Shake(vecBossOrigin, 10.0, boss.GetPropFloat("GroundPound", "ImpactRadius"), 1.0, 0.5);
 	TF2_SpawnParticle(IMPACT_PARTICLE, vecBossOrigin);
 	
-	for (int iClient = 1; iClient <= MaxClients; iClient++)
-	{
-		if (IsClientInGame(iClient) && GetClientTeam(iClient) != GetClientTeam(boss.iClient) && IsClientInRange(iClient, vecBossOrigin, boss.GetPropFloat("GroundPound", "ImpactRadius")) && GetEntityFlags(iClient) & FL_ONGROUND)
-		{
-			float vecClientOrigin[3], vecClientVelocity[3];
-			GetClientAbsOrigin(iClient, vecClientOrigin);
-			GetEntPropVector(iClient, Prop_Data, "m_vecVelocity", vecClientVelocity);
-			vecClientVelocity[2] += boss.GetPropFloat("GroundPound", "ImpactLaunchVelocity");
-			
-			float vecVelocity[3];
-			SubtractVectors(vecClientOrigin, vecBossOrigin, vecVelocity);
-			vecVelocity[2] = 0.0;
-			NormalizeVector(vecVelocity, vecVelocity);
-			ScaleVector(vecVelocity, boss.GetPropFloat("GroundPound", "ImpactPush"));
-			AddVectors(vecClientVelocity, vecVelocity, vecClientVelocity);
-			
-			SDKHooks_TakeDamage(iClient, boss.iClient, boss.iClient, boss.GetPropFloat("GroundPound", "ImpactDamage"));
-			TeleportEntity(iClient, NULL_VECTOR, NULL_VECTOR, vecClientVelocity);
-		}
-	}
-	
 	return Plugin_Continue;
 }
 
@@ -122,7 +101,7 @@ public void GroundPound_GetSoundAbility(SaxtonHaleBase boss, char[] sSound, int 
 {
 	// Allow ground pound immediately on brave jump
 	if (StrEqual(sAbility, "BraveJump"))
-		g_flClientBossWeighDownTimer[boss.iClient] = 1.0;
+		g_flClientBossWeighDownTimer[boss.iClient] = GetGameTime();
 }
 
 public void GroundPound_Destroy(SaxtonHaleBase boss)

@@ -86,6 +86,10 @@ static char g_strMerasmusBackStabbed[][] = {
 static int g_iMerasmusModelWand = -1;
 static int g_iMerasmusModelArms = -1;
 
+#define MERASMUS_RAGE_SPEED_MULT	1.2
+
+static bool g_bMerasmusRageSpeed[MAXPLAYERS];
+
 public void Merasmus_Create(SaxtonHaleBase boss)
 {
 	boss.CreateClass("TeleportView");
@@ -99,12 +103,68 @@ public void Merasmus_Create(SaxtonHaleBase boss)
 	boss.CreateClass("RageAddCond");
 	boss.SetPropFloat("RageAddCond", "RageCondDuration", 8.0);
 	boss.SetPropFloat("RageAddCond", "RageCondSuperRageMultiplier", 1.0);
-	RageAddCond_AddCond(boss, TFCond_UberchargedCanteen);	//Ubered while raged
+	RageAddCond_AddCond(boss, TFCond_DefenseBuffNoCritBlock);
 	
 	boss.iHealthPerPlayer = 600;
 	boss.flHealthExponential = 1.05;
 	boss.nClass = TFClass_Sniper;
 	boss.iMaxRageDamage = 2500;
+	
+	g_bMerasmusRageSpeed[boss.iClient] = false;
+}
+
+static float Merasmus_GetRageDuration(SaxtonHaleBase boss)
+{
+	float flDuration = boss.GetPropFloat("RageAddCond", "RageCondDuration");
+	if (boss.bSuperRage)
+		flDuration *= boss.GetPropFloat("RageAddCond", "RageCondSuperRageMultiplier");
+	
+	return flDuration;
+}
+
+public void Merasmus_OnRage(SaxtonHaleBase boss)
+{
+	if (!g_bMerasmusRageSpeed[boss.iClient])
+	{
+		boss.flSpeed *= MERASMUS_RAGE_SPEED_MULT;
+		g_bMerasmusRageSpeed[boss.iClient] = true;
+	}
+}
+
+public void Merasmus_OnThink(SaxtonHaleBase boss)
+{
+	if (g_bMerasmusRageSpeed[boss.iClient] && GetGameTime() - boss.flRageLastTime > Merasmus_GetRageDuration(boss))
+	{
+		boss.flSpeed /= MERASMUS_RAGE_SPEED_MULT;
+		g_bMerasmusRageSpeed[boss.iClient] = false;
+	}
+}
+
+#define MERASMUS_RAGE_RESIST_TOTAL		0.5
+#define MERASMUS_RAGE_RESIST_NATIVE		0.65
+
+public Action Merasmus_OnTakeDamage(SaxtonHaleBase boss, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+{
+	if (!TF2_IsPlayerInCondition(boss.iClient, TFCond_DefenseBuffNoCritBlock))
+		return Plugin_Continue;
+	
+	float flDuration = boss.GetPropFloat("RageAddCond", "RageCondDuration");
+	if (boss.bSuperRage)
+		flDuration *= boss.GetPropFloat("RageAddCond", "RageCondSuperRageMultiplier");
+	
+	if (boss.flRageLastTime <= 0.0 || GetGameTime() - boss.flRageLastTime > flDuration)
+		return Plugin_Continue;
+	
+	if (inflictor > MaxClients)
+	{
+		char sInflictor[32];
+		GetEdictClassname(inflictor, sInflictor, sizeof(sInflictor));
+		if (strcmp(sInflictor, "obj_sentrygun") == 0 || strcmp(sInflictor, "tf_projectile_sentryrocket") == 0)
+			return Plugin_Continue;
+	}
+	
+	damage *= MERASMUS_RAGE_RESIST_TOTAL / MERASMUS_RAGE_RESIST_NATIVE;
+	return Plugin_Changed;
 }
 
 public void Merasmus_GetBossName(SaxtonHaleBase boss, char[] sName, int length)
@@ -123,7 +183,7 @@ public void Merasmus_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length)
 	StrCat(sInfo, length, "\nRage");
 	StrCat(sInfo, length, "\n- Damage requirement: 2500");
 	StrCat(sInfo, length, "\n- Bomb projectiles at random directions from boss");
-	StrCat(sInfo, length, "\n- Übercharge for 8 seconds");
+	StrCat(sInfo, length, "\n- Damage resistance for 8 seconds");
 	StrCat(sInfo, length, "\n- 200%% Rage: Doubled bomb projectile spawn rate");
 }
 
