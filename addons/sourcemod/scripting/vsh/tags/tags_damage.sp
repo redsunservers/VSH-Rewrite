@@ -30,7 +30,7 @@ public Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor,
 			if (iDamageType > 0)
 				damagetype |= iDamageType;
 			else if (iDamageType < 0)
-				damagetype &= ~iDamageType;
+				damagetype &= ~(-iDamageType);
 		}
 		
 		delete aDamageType;

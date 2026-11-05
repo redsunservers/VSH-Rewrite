@@ -85,10 +85,9 @@ public void UberRanger_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length
 	StrCat(sInfo, length, "\n ");
 	StrCat(sInfo, length, "\nRage");
 	StrCat(sInfo, length, "\n- Damage requirement: 2500");
-	StrCat(sInfo, length, "\n- Übercharge for 5 seconds");
 	StrCat(sInfo, length, "\n- Summons a fellow Über Ranger");
 	StrCat(sInfo, length, "\n- Über Rangers can heal and über each other");
-	StrCat(sInfo, length, "\n- 200%% Rage: extends über duration to 8 seconds and summons 3 Über Rangers");
+	StrCat(sInfo, length, "\n- 200%% Rage: summons 3 Über Rangers");
 }
 
 public void UberRanger_OnSpawn(SaxtonHaleBase boss)

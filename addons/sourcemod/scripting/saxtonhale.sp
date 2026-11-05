@@ -37,8 +37,10 @@
 #define ATTRIB_BIDERECTIONAL			276
 #define ATTRIB_JUMP_HEIGHT				326
 #define ATTRIB_LESSHEALING				734
+#define ATTRIB_TAUNT_PRESS_AND_HOLD		322
 
 #define ITEM_ROCK_PAPER_SCISSORS		1110
+#define ITEM_EUREKA_EFFECT				589
 
 #define SOUND_ALERT			"ui/system_message_alert.wav"
 #define SOUND_METERFULL		"player/recharged.wav"
@@ -446,6 +448,7 @@ ConVar tf_arena_preround_time;
 
 #include "vsh/config.sp"
 #include "vsh/altweapon.sp"
+#include "vsh/weaponkeys.sp"
 
 #include "vsh/menu/menu_admin.sp"
 #include "vsh/menu/menu_altweapon.sp"
@@ -539,6 +542,7 @@ public void OnPluginStart()
 	Config_Init();
 	
 	AltWeapon_Init();
+	WeaponKeys_Init();
 	Blacklist_Init();
 	ClassLimit_Init();
 	Command_Init();
@@ -616,6 +620,7 @@ public void OnPluginStart()
 	//Damage/Death functions
 	SaxtonHaleFunction("OnPlayerKilled", ET_Ignore, Param_Cell, Param_Cell);
 	SaxtonHaleFunction("OnDeath", ET_Ignore, Param_Cell);
+	SaxtonHaleFunction("OnRageBodyEaten", ET_Ignore, Param_Cell, Param_Cell);
 	
 	func = SaxtonHaleFunction("OnAttackBuilding", ET_Hook, Param_Cell, Param_CellByRef, Param_FloatByRef, Param_CellByRef, Param_CellByRef, Param_Array, Param_Array, Param_Cell);
 	func.SetParam(6, Param_Array, VSHArrayType_Static, 3);
@@ -1072,6 +1077,7 @@ public void OnEntityCreated(int iEntity, const char[] sClassname)
 	{
 		SDKHook(iEntity, SDKHook_StartTouchPost, Tags_OnProjectileTouch);
 		SDKHook(iEntity, SDKHook_SpawnPost, Tags_OnProjectileSpawnPost);
+		WeaponKeys_OnEntityCreated(iEntity, sClassname);
 	}
 	else if (strncmp(sClassname, "tf_weapon", 9) == 0)
 	{
@@ -1243,6 +1249,12 @@ public void TF2_OnConditionAdded(int iClient, TFCond nCond)
 			TF2_RemoveCondition(iClient, TFCond_Taunting);
 			PrintToChat(iClient, "%s%s Rock, Paper, Scissors taunt is disabled in this gamemode", TEXT_TAG, TEXT_ERROR);
 		}
+	}
+	
+	if (nCond == TFCond_Taunting && TF2_HasItemInSlot(iClient, WeaponSlot_Melee, ITEM_EUREKA_EFFECT) && TF2_IsLoopingTaunt(GetEntProp(iClient, Prop_Send, "m_iTauntItemDefIndex")))
+	{
+		TF2_RemoveCondition(iClient, TFCond_Taunting);
+		PrintToChat(iClient, "%s%s Looping taunts disabled with the Eureka Effect", TEXT_TAG, TEXT_ERROR);
 	}
 }
 
@@ -1496,6 +1508,9 @@ public Action Client_OnTakeDamage(int victim, int &attacker, int &inflictor, flo
 		
 		Action action = Plugin_Continue;
 		
+		if (WeaponKeys_OnTakeDamage(victim, attacker, damagetype, weapon, damagecustom))
+			finalAction = Plugin_Changed;
+		
 		if (bossVictim.bValid)
 		{
 			action = bossVictim.CallFunction("OnTakeDamage", attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
@@ -1655,6 +1670,9 @@ public Action Client_OnTakeDamageAlive(int victim, int &attacker, int &inflictor
 		action = TagsDamage_OnTakeDamageAlive(victim, attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
 		if (action > finalAction)
 			finalAction = action;
+		
+		if (WeaponKeys_OnTakeDamageAlive(victim, attacker, damage) && finalAction < Plugin_Changed)
+			finalAction = Plugin_Changed;
 		
 		// Give telefrag assists after tags modified it
 		if (damagecustom == TF_CUSTOM_TELEFRAG)

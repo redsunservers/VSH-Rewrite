@@ -41,7 +41,6 @@ public void Redmond_Create(SaxtonHaleBase boss)
 	boss.CreateClass("WeaponSpells");
 	WeaponSpells_AddSpells(boss, haleSpells_Teleport);
 	WeaponSpells_AddSpells(boss, haleSpells_Fireball);
-	WeaponSpells_AddSpells(boss, haleSpells_Stealth);
 	WeaponSpells_RageSpells(boss, haleSpells_Monoculus);
 	boss.SetPropFloat("WeaponSpells", "RageRequirement", 0.0);
 	boss.SetPropFloat("WeaponSpells", "Cooldown", 8.0);
@@ -76,7 +75,7 @@ public void Redmond_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length)
 	StrCat(sInfo, length, "\nAbilities");
 	StrCat(sInfo, length, "\n- Alt-attack to use spell (8 second cooldown)");
 	StrCat(sInfo, length, "\n- Press Reload to cycle spells:");
-	StrCat(sInfo, length, "\n  Shadow Leap (Teleport) > Fireball > Stealth");
+	StrCat(sInfo, length, "\n  Shadow Leap (Teleport) > Fireball");
 	StrCat(sInfo, length, "\n ");
 	StrCat(sInfo, length, "\nRage");
 	StrCat(sInfo, length, "\n- Damage requirement: 2500");
