@@ -7,7 +7,8 @@
 #define PAINIS_CORPSE_SOLDIER_RADIUS_STACK	50.0
 #define PAINIS_CORPSE_SOLDIER_RADIUS_SUPER	50.0
 #define PAINIS_CORPSE_PYRO_BURN	5.0
-#define PAINIS_CORPSE_PYRO_RADIUS	300.0
+#define PAINIS_CORPSE_PYRO_PULSE	0.5
+#define PAINIS_CORPSE_PYRO_RADIUS	135.0
 #define PAINIS_CORPSE_PYRO_AFTERBURN	4.0
 #define PAINIS_CORPSE_HEAVY_RESIST	0.05
 #define PAINIS_CORPSE_RESIST_CAP	0.80
@@ -34,7 +35,8 @@ static float g_flPainisCorpseNextTick[MAXPLAYERS];
 static float g_flPainisSpeedApplied[MAXPLAYERS];
 static float g_flPainisRangeApplied[MAXPLAYERS];
 static int g_iPainisRangeWeapon[MAXPLAYERS];
-static int g_iPainisRingParticle[MAXPLAYERS];
+static float g_flPainisPyroNextPulse[MAXPLAYERS];
+static float g_flPainisRingLastHit[MAXPLAYERS];
 static int g_iPainisBurnBoss[MAXPLAYERS];
 static float g_flPainisBurnEnd[MAXPLAYERS];
 static float g_flPainisBurnDamage[MAXPLAYERS];
@@ -195,6 +197,9 @@ public Action PainisCupcake_OnAttackDamage(SaxtonHaleBase boss, int victim, int 
 
 	if (damagecustom == TF_CUSTOM_BURNING && 0 < victim <= MaxClients && g_iPainisBurnBoss[victim] == boss.iClient)
 	{
+		if (GetGameTime() - g_flPainisRingLastHit[victim] < PAINIS_CORPSE_PYRO_PULSE + 0.1)
+			return Plugin_Stop;
+
 		damage = g_flPainisBurnDamage[victim];
 		action = Plugin_Changed;
 	}
@@ -288,6 +293,7 @@ public void PainisCupcake_OnThink(SaxtonHaleBase boss)
 {
 	int iClient = boss.iClient;
 	float flNow = GetGameTime();
+	Painis_PyroPulse(boss);
 	if (flNow < g_flPainisCorpseNextTick[iClient])
 		return;
 
@@ -328,7 +334,7 @@ static void Painis_ResetCorpseState(int iClient)
 	g_flPainisSpeedApplied[iClient] = 1.0;
 	g_flPainisRangeApplied[iClient] = 1.0;
 	g_iPainisRangeWeapon[iClient] = INVALID_ENT_REFERENCE;
-	g_iPainisRingParticle[iClient] = INVALID_ENT_REFERENCE;
+	g_flPainisPyroNextPulse[iClient] = 0.0;
 
 	for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
 	{
@@ -350,8 +356,6 @@ static void Painis_EndCorpseEffects(SaxtonHaleBase boss, bool bRevertBoss = true
 
 	if (bRevertBoss)
 		Painis_UpdateCorpseEffects(boss);
-	else
-		Painis_RemoveRing(iClient);
 
 	for (int iBuilding = MaxClients + 1; iBuilding < PAINIS_MAX_EDICTS; iBuilding++)
 	{
@@ -391,66 +395,73 @@ static void Painis_UpdateCorpseEffects(SaxtonHaleBase boss)
 		TF2Attrib_ClearCache(iMelee);
 		g_flPainisRangeApplied[iClient] = flRange;
 	}
-
-	if (Painis_GetStacks(iClient, TFClass_Pyro) > 0 && IsPlayerAlive(iClient))
-	{
-		if (EntRefToEntIndex(g_iPainisRingParticle[iClient]) <= MaxClients)
-		{
-			char sParticle[64];
-			strcopy(sParticle, sizeof(sParticle), PAINIS_RING_PARTICLE);
-			float vecPos[3];
-			GetClientAbsOrigin(iClient, vecPos);
-			g_iPainisRingParticle[iClient] = TF2_SpawnParticle(sParticle, vecPos, NULL_VECTOR, true, iClient);
-		}
-	}
-	else
-	{
-		Painis_RemoveRing(iClient);
-	}
-}
-
-static void Painis_RemoveRing(int iClient)
-{
-	int iRing = EntRefToEntIndex(g_iPainisRingParticle[iClient]);
-	if (iRing > MaxClients)
-		RemoveEntity(iRing);
-
-	g_iPainisRingParticle[iClient] = INVALID_ENT_REFERENCE;
 }
 
 static void Painis_BurnTick(SaxtonHaleBase boss)
 {
 	int iClient = boss.iClient;
 	float flNow = GetGameTime();
-	int iPyro = Painis_GetStacks(iClient, TFClass_Pyro);
-	bool bRing = g_bPainisCorpseActive[iClient] && iPyro > 0 && IsPlayerAlive(iClient);
-	int iTeam = GetClientTeam(iClient);
-
-	float vecBoss[3];
-	if (bRing)
-		Painis_GetEntityCenter(iClient, vecBoss);
 
 	for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
 	{
-		if (!IsClientInGame(iVictim))
+		if (!IsClientInGame(iVictim) || g_iPainisBurnBoss[iVictim] != iClient || flNow < g_flPainisBurnEnd[iVictim])
 			continue;
 
-		if (bRing && IsPlayerAlive(iVictim) && GetClientTeam(iVictim) > 1 && GetClientTeam(iVictim) != iTeam
-			&& Painis_GetBoxDistance(iVictim, vecBoss) <= PAINIS_CORPSE_PYRO_RADIUS && Painis_IsInSight(vecBoss, iVictim))
-		{
-			TF2_IgnitePlayer(iVictim, iClient, PAINIS_CORPSE_PYRO_AFTERBURN);
-			g_iPainisBurnBoss[iVictim] = iClient;
-			g_flPainisBurnEnd[iVictim] = flNow + PAINIS_CORPSE_PYRO_AFTERBURN;
-			g_flPainisBurnDamage[iVictim] = PAINIS_CORPSE_PYRO_BURN * float(iPyro) * Painis_GetCorpseMultiplier(boss);
-		}
-		else if (g_iPainisBurnBoss[iVictim] == iClient && flNow >= g_flPainisBurnEnd[iVictim])
-		{
-			if (IsPlayerAlive(iVictim) && TF2_IsPlayerInCondition(iVictim, TFCond_OnFire))
-				TF2_RemoveCondition(iVictim, TFCond_OnFire);
+		if (IsPlayerAlive(iVictim) && TF2_IsPlayerInCondition(iVictim, TFCond_OnFire))
+			TF2_RemoveCondition(iVictim, TFCond_OnFire);
 
-			g_iPainisBurnBoss[iVictim] = 0;
-			g_flPainisBurnEnd[iVictim] = 0.0;
-		}
+		g_iPainisBurnBoss[iVictim] = 0;
+		g_flPainisBurnEnd[iVictim] = 0.0;
+	}
+}
+
+static void Painis_PyroPulse(SaxtonHaleBase boss)
+{
+	int iClient = boss.iClient;
+	int iPyro = Painis_GetStacks(iClient, TFClass_Pyro);
+	if (!g_bPainisCorpseActive[iClient] || iPyro <= 0 || !IsPlayerAlive(iClient) || !BodyEat_IsRageWindow(boss))
+	{
+		g_flPainisPyroNextPulse[iClient] = 0.0;
+		return;
+	}
+
+	float flNow = GetGameTime();
+	if (flNow < g_flPainisPyroNextPulse[iClient])
+		return;
+
+	if (g_flPainisPyroNextPulse[iClient] > 0.0 && flNow - g_flPainisPyroNextPulse[iClient] < PAINIS_CORPSE_PYRO_PULSE)
+		g_flPainisPyroNextPulse[iClient] += PAINIS_CORPSE_PYRO_PULSE;
+	else
+		g_flPainisPyroNextPulse[iClient] = flNow + PAINIS_CORPSE_PYRO_PULSE;
+
+	char sParticle[64];
+	strcopy(sParticle, sizeof(sParticle), PAINIS_RING_PARTICLE);
+	float vecFeet[3];
+	GetClientAbsOrigin(iClient, vecFeet);
+	CreateTimer(2.0, Timer_EntityCleanup, TF2_SpawnParticle(sParticle, vecFeet, NULL_VECTOR, true, iClient));
+
+	float vecBoss[3];
+	Painis_GetEntityCenter(iClient, vecBoss);
+	float flDamage = PAINIS_CORPSE_PYRO_BURN * float(iPyro) * Painis_GetCorpseMultiplier(boss);
+	int iTeam = GetClientTeam(iClient);
+
+	for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
+	{
+		if (!IsClientInGame(iVictim) || !IsPlayerAlive(iVictim) || GetClientTeam(iVictim) <= 1 || GetClientTeam(iVictim) == iTeam)
+			continue;
+
+		if (TF2_IsUbercharged(iVictim))
+			continue;
+
+		if (Painis_GetBoxDistance(iVictim, vecBoss) > PAINIS_CORPSE_PYRO_RADIUS || !Painis_IsInSight(vecBoss, iVictim))
+			continue;
+
+		g_iPainisBurnBoss[iVictim] = iClient;
+		g_flPainisBurnEnd[iVictim] = flNow + PAINIS_CORPSE_PYRO_AFTERBURN;
+		g_flPainisBurnDamage[iVictim] = flDamage;
+		g_flPainisRingLastHit[iVictim] = flNow;
+		TF2_IgnitePlayer(iVictim, iClient, PAINIS_CORPSE_PYRO_AFTERBURN);
+		SDKHooks_TakeDamage(iVictim, iClient, iClient, flDamage, DMG_BURN|DMG_PREVENT_PHYSICS_FORCE, -1, NULL_VECTOR, vecBoss, false);
 	}
 }
 
