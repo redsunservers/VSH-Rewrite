@@ -55,7 +55,7 @@ public void WeaponKeys_PipeVPhysicsUpdate(int iPipe)
 			return;
 		
 		int iOwner = GetEntPropEnt(iLauncher, Prop_Send, "m_hOwnerEntity");
-		g_iWeaponKeysPipeState[iPipe] = (SaxtonHale_IsValidAttack(iOwner) && WeaponKeys_GetInt(iOwner, iLauncher, "passteammates") == 1) ? 1 : -1;
+		g_iWeaponKeysPipeState[iPipe] = (SaxtonHale_IsValidAttack(iOwner) && Config_GetWeaponKeyInt(iOwner, iLauncher, "passteammates") == 1) ? 1 : -1;
 	}
 	
 	if (g_iWeaponKeysPipeState[iPipe] != 1)
@@ -102,12 +102,8 @@ bool WeaponKeys_OnTakeDamage(int iVictim, int iAttacker, int &iDamageType, int i
 	if (iVictim == iAttacker || !SaxtonHale_IsValidBoss(iVictim, false) || !SaxtonHale_IsValidAttack(iAttacker))
 		return false;
 	
-	StringMap sIndexMap, sClassMap;
-	if (!WeaponKeys_GetMaps(iAttacker, iWeapon, sIndexMap, sClassMap))
-		return false;
-	
 	bool bChanged = false;
-	if (WeaponKeys_ReadInt(sIndexMap, sClassMap, "nobosspush") == 1)
+	if (Config_GetWeaponKeyInt(iAttacker, iWeapon, "nobosspush") == 1)
 	{
 		iDamageType |= DMG_PREVENT_PHYSICS_FORCE;
 		bChanged = true;
@@ -116,7 +112,7 @@ bool WeaponKeys_OnTakeDamage(int iVictim, int iAttacker, int &iDamageType, int i
 			WeaponKeys_BlockImpactPush(iVictim);
 	}
 	
-	float flBonus = WeaponKeys_ReadFloat(sIndexMap, sClassMap, "doubledonk");
+	float flBonus = Config_GetWeaponKeyFloat(iAttacker, iWeapon, "doubledonk");
 	if (flBonus != 0.0 && (iDamageType & DMG_BLAST))
 	{
 		char sClassname[64];
@@ -191,58 +187,4 @@ public void WeaponKeys_RemovePushConds(int iBoss)
 	
 	g_bWeaponKeysPushAir[iBoss] = false;
 	g_bWeaponKeysPushImmune[iBoss] = false;
-}
-
-static bool WeaponKeys_GetMaps(int iClient, int iWeapon, StringMap &sIndexMap, StringMap &sClassMap)
-{
-	sIndexMap = null;
-	sClassMap = null;
-	
-	if (iWeapon <= MaxClients || !IsValidEntity(iWeapon) || !HasEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex"))
-		return false;
-	
-	int iIndex = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
-	sIndexMap = g_ConfigIndex.GetStringMap(AltWeapon_GetConfigIndex(iClient, iIndex));
-	
-	TFClassType nClass = TF2_GetPlayerClass(iClient);
-	int iSlot = TF2_GetItemSlot(iIndex, nClass);
-	if (nClass != TFClass_Unknown && 0 <= iSlot < sizeof(g_ConfigClass[]))
-		sClassMap = view_as<StringMap>(g_ConfigClass[nClass][iSlot]);
-	
-	return (sIndexMap != null || sClassMap != null);
-}
-
-static bool WeaponKeys_Read(StringMap sIndexMap, StringMap sClassMap, const char[] sKey, char[] sValue, int iLength)
-{
-	if (sIndexMap != null && sIndexMap.GetString(sKey, sValue, iLength))
-		return true;
-	
-	return (sClassMap != null && sClassMap.GetString(sKey, sValue, iLength));
-}
-
-static int WeaponKeys_ReadInt(StringMap sIndexMap, StringMap sClassMap, const char[] sKey)
-{
-	char sValue[MAXLEN_CONFIG_VALUE];
-	if (!WeaponKeys_Read(sIndexMap, sClassMap, sKey, sValue, sizeof(sValue)))
-		return 0;
-	
-	return StringToInt(sValue);
-}
-
-static float WeaponKeys_ReadFloat(StringMap sIndexMap, StringMap sClassMap, const char[] sKey)
-{
-	char sValue[MAXLEN_CONFIG_VALUE];
-	if (!WeaponKeys_Read(sIndexMap, sClassMap, sKey, sValue, sizeof(sValue)))
-		return 0.0;
-	
-	return StringToFloat(sValue);
-}
-
-static int WeaponKeys_GetInt(int iClient, int iWeapon, const char[] sKey)
-{
-	StringMap sIndexMap, sClassMap;
-	if (!WeaponKeys_GetMaps(iClient, iWeapon, sIndexMap, sClassMap))
-		return 0;
-	
-	return WeaponKeys_ReadInt(sIndexMap, sClassMap, sKey);
 }

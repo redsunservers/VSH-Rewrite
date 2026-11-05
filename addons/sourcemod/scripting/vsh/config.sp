@@ -554,6 +554,42 @@ stock bool Config_ClientWeaponHasKey(int iClient, const char[] sKey)
 	return false;
 }
 
+stock bool Config_GetWeaponKey(int iClient, int iWeapon, const char[] sKey, char[] sValue, int iLength)
+{
+	if (iWeapon <= MaxClients || !IsValidEntity(iWeapon) || !HasEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex"))
+		return false;
+	
+	int iIndex = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
+	StringMap sMap = g_ConfigIndex.GetStringMap(AltWeapon_GetConfigIndex(iClient, iIndex));
+	if (sMap != null && sMap.GetString(sKey, sValue, iLength))
+		return true;
+	
+	TFClassType nClass = TF2_GetPlayerClass(iClient);
+	int iSlot = TF2_GetItemSlot(iIndex, nClass);
+	if (nClass == TFClass_Unknown || iSlot < 0 || iSlot >= sizeof(g_ConfigClass[]))
+		return false;
+	
+	return g_ConfigClass[nClass][iSlot].GetString(sKey, sValue, iLength);
+}
+
+stock int Config_GetWeaponKeyInt(int iClient, int iWeapon, const char[] sKey)
+{
+	char sValue[MAXLEN_CONFIG_VALUE];
+	if (!Config_GetWeaponKey(iClient, iWeapon, sKey, sValue, sizeof(sValue)))
+		return 0;
+	
+	return StringToInt(sValue);
+}
+
+stock float Config_GetWeaponKeyFloat(int iClient, int iWeapon, const char[] sKey)
+{
+	char sValue[MAXLEN_CONFIG_VALUE];
+	if (!Config_GetWeaponKey(iClient, iWeapon, sKey, sValue, sizeof(sValue)))
+		return 0.0;
+	
+	return StringToFloat(sValue);
+}
+
 public void Config_ConvarChanged(ConVar convar, const char[] oldValue, const char[] newValue)
 {
 	g_ConfigConvar.Changed(convar, newValue);
