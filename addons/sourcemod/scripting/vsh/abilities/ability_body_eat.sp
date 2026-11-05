@@ -2,6 +2,8 @@
 #define BODY_EAT		"vo/sandwicheat09.mp3"
 
 static bool g_bBodyBlockRagdoll;
+static TFClassType g_nBodyClass[2048];
+static int g_iBodyClassRef[2048];
 
 public void BodyEat_Create(SaxtonHaleBase boss)
 {
@@ -10,6 +12,7 @@ public void BodyEat_Create(SaxtonHaleBase boss)
 	boss.SetPropFloat("BodyEat", "EatRageRadius", 450.0);
 	boss.SetPropFloat("BodyEat", "EatRageDuration", 10.0);
 	boss.SetPropFloat("BodyEat", "RageHealMultiplier", 1.0);
+	boss.SetPropInt("BodyEat", "RageClassEffects", 0);
 }
 
 public void BodyEat_OnPlayerKilled(SaxtonHaleBase boss, Event event, int iVictim)
@@ -67,6 +70,12 @@ public void BodyEat_OnPlayerKilled(SaxtonHaleBase boss, Event event, int iVictim
 	
 	DispatchSpawn(iRagdoll);
 	TeleportEntity(iRagdoll, vecPos, vecAng, vecVel);
+
+	if (MaxClients < iRagdoll < sizeof(g_nBodyClass))
+	{
+		g_nBodyClass[iRagdoll] = bFake ? TFClass_Unknown : TF2_GetPlayerClass(iVictim);
+		g_iBodyClassRef[iRagdoll] = EntIndexToEntRef(iRagdoll);
+	}
 	
 	//Create glow to body
 	TF2_CreateEntityGlow(iRagdoll, sModel, iColor);
@@ -85,7 +94,7 @@ public void BodyEat_EatBody(SaxtonHaleBase boss, int iEnt)
 	float eatDuration = boss.GetPropFloat("BodyEat", "EatRageDuration");
 	if (boss.bSuperRage)
 		eatDuration *= 2.0;
-	bool bRageWindow = !(lastRageTime == 0.0 || (GetGameTime()-lastRageTime) > eatDuration);
+	bool bRageWindow = (eatDuration > 0.0 && !(lastRageTime == 0.0 || (GetGameTime()-lastRageTime) > eatDuration));
 	if (!bRageWindow)
 	{
 		TF2_StunPlayer(boss.iClient, 2.0, 1.0, 35);
@@ -110,7 +119,18 @@ public void BodyEat_EatBody(SaxtonHaleBase boss, int iEnt)
 		if (bRageWindow)
 			iHeal = RoundToNearest(float(iHeal) * boss.GetPropFloat("BodyEat", "RageHealMultiplier"));
 		
-		Client_AddHealth(boss.iClient, iHeal, 0);
+		if (bRageWindow && boss.GetPropInt("BodyEat", "RageClassEffects"))
+		{
+			TFClassType nClass = TFClass_Unknown;
+			if (iEnt < sizeof(g_nBodyClass) && g_iBodyClassRef[iEnt] == EntIndexToEntRef(iEnt))
+				nClass = g_nBodyClass[iEnt];
+
+			boss.CallFunction("OnRageBodyEaten", iEnt, nClass);
+		}
+		else
+		{
+			Client_AddHealth(boss.iClient, iHeal, 0);
+		}
 		
 		SetEntPropEnt(iEnt, Prop_Send, "m_hOwnerEntity", boss.iClient);
 	}
@@ -145,7 +165,7 @@ public void BodyEat_OnThink(SaxtonHaleBase boss)
 	float eatDuration = boss.GetPropFloat("BodyEat", "EatRageDuration");
 	if (boss.bSuperRage)
 		eatDuration *= 2.0;
-	if (lastRageTime != 0.0 && ((GetGameTime()-lastRageTime) <= eatDuration))
+	if (eatDuration > 0.0 && lastRageTime != 0.0 && ((GetGameTime()-lastRageTime) <= eatDuration))
 	{
 		float vecPos[3], vecBodyPos[3];
 		GetClientEyePosition(boss.iClient, vecPos);
@@ -177,4 +197,13 @@ public void BodyEat_OnEntityCreated(SaxtonHaleBase boss, int iEntity, const char
 public void BodyEat_Precache(SaxtonHaleBase boss)
 {
 	PrecacheSound(BODY_EAT);
+}
+
+bool BodyEat_IsRageWindow(SaxtonHaleBase boss)
+{
+	float flDuration = boss.GetPropFloat("BodyEat", "EatRageDuration");
+	if (boss.bSuperRage)
+		flDuration *= 2.0;
+
+	return flDuration > 0.0 && boss.flRageLastTime != 0.0 && GetGameTime() - boss.flRageLastTime <= flDuration;
 }

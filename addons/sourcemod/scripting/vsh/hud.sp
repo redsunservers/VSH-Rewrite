@@ -93,6 +93,10 @@ void Hud_Think(int iClient)
 		float flCooldown = Tags_GetAirblastCooldown(iClient);
 		if (flCooldown > 0.0)
 			Format(sMessage, sizeof(sMessage), "%s\nAirblast Cooldown: %d sec", sMessage, RoundToCeil(flCooldown));
+		
+		int iUberPercent = Hud_GetHeldWeaponUberPercent(iClient);
+		if (iUberPercent >= 0)
+			Format(sMessage, sizeof(sMessage), "%s\nCurrent Ubercharge: %i%%%%", sMessage, iUberPercent);
 	}
 	else if (!IsPlayerAlive(iClient))
 	{
@@ -123,6 +127,30 @@ void Hud_Think(int iClient)
 	
 	//Display
 	Hud_Display(iClient, CHANNEL_HELP, sMessage, view_as<float>({-1.0, 0.88}), 0.2, iColor);
+}
+
+int Hud_GetHeldWeaponUberPercent(int iClient)
+{
+	if (!IsPlayerAlive(iClient) || TF2_GetPlayerClass(iClient) != TFClass_Medic)
+		return -1;
+	
+	int iActiveWeapon = GetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon");
+	if (iActiveWeapon <= MaxClients)
+		return -1;
+	
+	int iMedigun = GetPlayerWeaponSlot(iClient, WeaponSlot_Secondary);
+	if (iMedigun <= MaxClients || iMedigun == iActiveWeapon)
+		return -1;
+	
+	char sClassname[64];
+	GetEntityClassname(iMedigun, sClassname, sizeof(sClassname));
+	if (!StrEqual(sClassname, "tf_weapon_medigun"))
+		return -1;
+	
+	if (TF2Attrib_HookValueFloat(0.0, "add_onhit_ubercharge", iActiveWeapon) <= 0.0)
+		return -1;
+	
+	return RoundToFloor(GetEntPropFloat(iMedigun, Prop_Send, "m_flChargeLevel") * 100.0);
 }
 
 void Hud_Display(int iClient, int iChannel, char[] sText, float flHUD[2], float flDuration = 0.0, int iColor[4] = {255, 255, 255, 255}, int iEffect = 0, float flTime = 0.0, float flFade[2] = {0.0, 0.0})

@@ -257,6 +257,29 @@ stock bool TF2_WeaponFindAttribute(int iWeapon, int iAttrib, float &flVal)
 	return true;
 }
 
+stock bool TF2_HasItemInSlot(int iClient, int iSlot, int iIndex)
+{
+	int iItem = TF2_GetItemInSlot(iClient, iSlot);
+	return iItem > MaxClients && GetEntProp(iItem, Prop_Send, "m_iItemDefinitionIndex") == iIndex;
+}
+
+stock bool TF2_IsLoopingTaunt(int iTauntIndex)
+{
+	if (iTauntIndex < 0 || !TF2Econ_IsValidItemDefinition(iTauntIndex))
+		return false;
+	
+	int iAttributes[16];
+	float flAttribValues[16];
+	int iMaxAttrib = TF2Attrib_GetStaticAttribs(iTauntIndex, iAttributes, flAttribValues);
+	for (int i = 0; i < iMaxAttrib; i++)
+	{
+		if (iAttributes[i] == ATTRIB_TAUNT_PRESS_AND_HOLD && flAttribValues[i] != 0.0)
+			return true;
+	}
+	
+	return false;
+}
+
 stock void TF2_AddAttributeStack(int iClient, int iAttrib, float flAddVal)
 {
 	float flVal = 1.0;
