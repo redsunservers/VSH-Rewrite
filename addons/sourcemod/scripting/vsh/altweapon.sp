@@ -1,4 +1,5 @@
 static ArrayList g_aAltWeaponEnabled[MAXPLAYERS];
+static ArrayList g_aAltWeaponActive[MAXPLAYERS];
 static Cookie g_hCookiesAltWeapon;
 
 void AltWeapon_Init()
@@ -18,6 +19,45 @@ void AltWeapon_Clear(int iClient)
 {
 	if (g_aAltWeaponEnabled[iClient] != null)
 		g_aAltWeaponEnabled[iClient].Clear();
+	
+	if (g_aAltWeaponActive[iClient] != null)
+		g_aAltWeaponActive[iClient].Clear();
+}
+
+void AltWeapon_UpdateActive(int iClient)
+{
+	if (g_aAltWeaponActive[iClient] == null)
+		g_aAltWeaponActive[iClient] = new ArrayList();
+	
+	g_aAltWeaponActive[iClient].Clear();
+	if (g_iTotalRoundPlayed <= 0 || g_aAltWeaponEnabled[iClient] == null)
+		return;
+	
+	int iLength = g_aAltWeaponEnabled[iClient].Length;
+	for (int i = 0; i < iLength; i++)
+		g_aAltWeaponActive[iClient].Push(g_aAltWeaponEnabled[iClient].Get(i));
+}
+
+void AltWeapon_ResetAttribs(int iWeapon, int iIndex)
+{
+	int iAltIndex = Config_GetPrefab(iIndex) + CONFIG_ALT_INDEX_OFFSET;
+	if (Config_GetStringMap(iAltIndex) == null)
+		return;
+	
+	AltWeapon_RemoveConfigAttribs(iWeapon, iIndex);
+	AltWeapon_RemoveConfigAttribs(iWeapon, iAltIndex);
+	TF2Attrib_ClearCache(iWeapon);
+}
+
+static void AltWeapon_RemoveConfigAttribs(int iWeapon, int iConfigIndex)
+{
+	char sAttrib[255], atts[32][32];
+	if (!g_ConfigIndex.GetAttrib(iConfigIndex, sAttrib, sizeof(sAttrib)))
+		return;
+	
+	int iCount = ExplodeString(sAttrib, " ; ", atts, sizeof(atts), sizeof(atts[]));
+	for (int i = 0; i + 1 < iCount; i += 2)
+		TF2Attrib_RemoveByDefIndex(iWeapon, StringToInt(atts[i]));
 }
 
 static bool AltWeapon_UseCookies(int iClient)
@@ -99,11 +139,11 @@ int AltWeapon_GetConfigIndex(int iClient, int iIndex)
 	if (iIndex < 0 || iIndex >= CONFIG_ALT_INDEX_OFFSET)
 		return iIndex;
 	
-	if (iClient <= 0 || iClient > MaxClients || g_aAltWeaponEnabled[iClient] == null || g_aAltWeaponEnabled[iClient].Length == 0)
+	if (iClient <= 0 || iClient > MaxClients || g_aAltWeaponActive[iClient] == null || g_aAltWeaponActive[iClient].Length == 0)
 		return iIndex;
 	
 	int iBase = Config_GetPrefab(iIndex);
-	if (!AltWeapon_IsEnabled(iClient, iBase) || Config_GetStringMap(iBase + CONFIG_ALT_INDEX_OFFSET) == null)
+	if (g_aAltWeaponActive[iClient].FindValue(iBase) == -1 || Config_GetStringMap(iBase + CONFIG_ALT_INDEX_OFFSET) == null)
 		return iIndex;
 	
 	return iBase + CONFIG_ALT_INDEX_OFFSET;
@@ -147,6 +187,11 @@ static void AltWeapon_ApplyNow(int iClient, int iIndex)
 		{
 			TF2_RemoveItemInSlot(iClient, iSlot);
 			TF2_RegeneratePlayer(iClient);
+			
+			int iMaxHealth = SDK_GetMaxHealth(iClient);
+			if (GetClientHealth(iClient) > iMaxHealth)
+				SetEntityHealth(iClient, iMaxHealth);
+			
 			return;
 		}
 	}
