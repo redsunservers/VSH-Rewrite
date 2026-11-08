@@ -164,20 +164,32 @@ void NextBoss_SetNextBoss()
 	if (!bForceSet)
 	{
 		iMainBoss = NextBoss_GetNextClient(aNonBosses);
-		
+
+		int iPartner = DuoParty_GetBossPartner(iMainBoss, aNonBosses);
+		bool bPartyDuo = (iPartner > 0 && DuoParty_IsOptedInPair(iMainBoss));
+
 		//Roll for multi boss
 		char sMultiBoss[MAX_TYPE_CHAR];
-		if (Preferences_Get(iMainBoss, VSHPreferences_MultiBoss)
-			&& GetRandomFloat(0.0, 1.0) <= g_ConfigConvar.LookupFloat("vsh_boss_chance_multi")
-			&& NextBoss_GetRandomMulti(sMultiBoss, sizeof(sMultiBoss)))
+		if ((bPartyDuo || (Preferences_Get(iMainBoss, VSHPreferences_MultiBoss)
+			&& GetRandomFloat(0.0, 1.0) <= g_ConfigConvar.LookupFloat("vsh_boss_chance_multi")))
+			&& NextBoss_GetRandomMulti(sMultiBoss, sizeof(sMultiBoss), iMainBoss, iPartner))
 		{
 			ArrayList aList = new ArrayList(ByteCountToCells(MAX_TYPE_CHAR));
 			SaxtonHale_CallFunction(sMultiBoss, "GetBossMultiList", aList);
-			
+
 			int iLength = aList.Length;
+			int iNextPartner = 0;
 			for (int i = 0; i < iLength; i++)
 			{
-				int iClient = NextBoss_GetNextClient(aNonBosses, true);
+				int iClient;
+				if (i == 0)
+					iClient = iMainBoss;
+				else if (iNextPartner > 0)
+					iClient = iNextPartner;
+				else
+					iClient = NextBoss_GetNextClient(aNonBosses, true, iLength - i);
+
+				iNextPartner = (i + 1 < iLength) ? DuoParty_GetBossPartner(iClient, aNonBosses) : 0;
 				
 				//Set client to play as multi boss
 				SaxtonHaleNextBoss nextBoss = SaxtonHaleNextBoss(iClient);
@@ -276,7 +288,7 @@ void NextBoss_SetNextBoss()
 	CreateTimer(flPickBossTime, Timer_RoundStartSound, iMainBoss);
 }
 
-int NextBoss_GetNextClient(ArrayList aNonBosses, bool bMultiBoss = false)
+int NextBoss_GetNextClient(ArrayList aNonBosses, bool bMultiBoss = false, int iSlotsLeft = 0)
 {
 	if (aNonBosses.Length <= 0)
 	{
@@ -302,6 +314,10 @@ int NextBoss_GetNextClient(ArrayList aNonBosses, bool bMultiBoss = false)
 		else if (bMultiBoss && !Preferences_Get(iClient, VSHPreferences_MultiBoss))
 		{
 			//We want to skip players not wanting to play as multi boss
+			iRank++;
+		}
+		else if (iSlotsLeft == 1 && DuoParty_GetBossPartner(iClient, aNonBosses) > 0)
+		{
 			iRank++;
 		}
 		else
@@ -456,13 +472,17 @@ stock void NextBoss_GetRandomNormal(char[] sBoss, int iLength, int iClient)
 	delete aBosses;
 }
 
-stock bool NextBoss_GetRandomMulti(char[] sBossMulti, int iLength)
+stock bool NextBoss_GetRandomMulti(char[] sBossMulti, int iLength, int iPartyBoss = 0, int iPartyPartner = 0)
 {
 	//Count players with duo prefs
 	int iPlayersDuo = 0;
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
+	{
 		if (IsClientInGame(iClient) && TF2_GetClientTeam(iClient) > TFTeam_Spectator && Preferences_Get(iClient, VSHPreferences_PickAsBoss) && Preferences_Get(iClient, VSHPreferences_MultiBoss))
 			iPlayersDuo++;
+		else if (iPartyPartner > 0 && (iClient == iPartyBoss || iClient == iPartyPartner))
+			iPlayersDuo++;
+	}
 	
 	//Get list of all multi bosses
 	ArrayList aBossesMulti = SaxtonHale_GetAllClassType(VSHClassType_BossMulti);

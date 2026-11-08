@@ -52,10 +52,20 @@ static void AltWeapon_Save(int iClient)
 		return;
 	
 	ArrayList aList = AltWeapon_GetList(iClient);
-	char sValue[100];
+	char sValue[100], sIndex[12];
 	int iLength = aList.Length;
 	for (int i = 0; i < iLength; i++)
-		Format(sValue, sizeof(sValue), "%s%s%d", sValue, (i > 0) ? ";" : "", aList.Get(i));
+	{
+		int iIndex = aList.Get(i);
+		if (Config_GetStringMap(iIndex + CONFIG_ALT_INDEX_OFFSET) == null)
+			continue;
+
+		IntToString(iIndex, sIndex, sizeof(sIndex));
+		if (sValue[0] != '\0')
+			StrCat(sValue, sizeof(sValue), ";");
+
+		StrCat(sValue, sizeof(sValue), sIndex);
+	}
 	
 	g_hCookiesAltWeapon.Set(iClient, sValue);
 }

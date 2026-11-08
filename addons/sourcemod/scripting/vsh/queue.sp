@@ -9,7 +9,11 @@ int Queue_GetPlayerFromRank(int iRank)
 	{
 		if (Queue_IsClientAllowed(iClient))
 		{
-			aQueue.Set(iLength, Queue_PlayerGetPoints(iClient), 0);	//block 0 gets sorted
+			int iPartner = DuoParty_GetQueuePartner(iClient);
+			if (0 < iPartner < iClient)
+				continue;
+
+			aQueue.Set(iLength, Queue_GetEntryPoints(iClient), 0);	//block 0 gets sorted
 			aQueue.Set(iLength, iClient, 1);
 			iLength++;
 		}
@@ -80,4 +84,14 @@ void Queue_ResetPlayer(int iClient)
 int Queue_PlayerGetPoints(int iClient)
 {
 	return g_iClientQueuePoints[iClient];
+}
+
+int Queue_GetEntryPoints(int iClient)
+{
+	int iPoints = Queue_PlayerGetPoints(iClient);
+	int iPartner = DuoParty_GetQueuePartner(iClient);
+	if (iPartner > 0)
+		iPoints = (iPoints + Queue_PlayerGetPoints(iPartner)) / 2;
+
+	return iPoints;
 }

@@ -454,6 +454,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/menu/menu_altweapon.sp"
 #include "vsh/menu/menu_blacklist.sp"
 #include "vsh/menu/menu_boss.sp"
+#include "vsh/menu/menu_duoparty.sp"
 #include "vsh/menu/menu_weapon.sp"
 #include "vsh/menu.sp"
 
@@ -471,6 +472,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/console.sp"
 #include "vsh/cookies.sp"
 #include "vsh/dome.sp"
+#include "vsh/duoparty.sp"
 #include "vsh/event.sp"
 #include "vsh/forward.sp"
 #include "vsh/hud.sp"
@@ -543,6 +545,7 @@ public void OnPluginStart()
 	
 	AltWeapon_Init();
 	WeaponKeys_Init();
+	DuoParty_Init();
 	Blacklist_Init();
 	ClassLimit_Init();
 	Command_Init();
@@ -1376,6 +1379,7 @@ public void OnClientPutInServer(int iClient)
 	Blacklist_Load(iClient, true);
 	Cookies_OnClientJoin(iClient);
 	AltWeapon_Load(iClient);
+	DuoParty_LoadOptIn(iClient);
 }
 
 public void OnClientPostAdminCheck(int iClient)
@@ -1383,6 +1387,8 @@ public void OnClientPostAdminCheck(int iClient)
 	AdminId iAdmin = GetUserAdmin(iClient);
 	if (iAdmin.HasFlag(Admin_RCON) || iAdmin.HasFlag(Admin_Root))
 		Client_AddFlag(iClient, ClientFlags_Admin);
+
+	DuoParty_OnClientJoin(iClient);
 }
 
 public void OnClientDisconnect(int iClient)
@@ -1407,6 +1413,7 @@ public void OnClientDisconnect(int iClient)
 	Preferences_SetAll(iClient, -1);
 	Queue_SetPlayerPoints(iClient, -1);
 	AltWeapon_Clear(iClient);
+	DuoParty_OnClientLeave(iClient);
 	
 	NextBoss_DeleteClient(iClient);
 	
@@ -1492,6 +1499,7 @@ public void OnClientCookiesCached(int iClient)
 {
 	Blacklist_Load(iClient, true);
 	AltWeapon_Load(iClient);
+	DuoParty_LoadOptIn(iClient);
 }
 
 public Action Client_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
