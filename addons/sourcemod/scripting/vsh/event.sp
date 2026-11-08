@@ -754,6 +754,7 @@ public void Event_PlayerInventoryUpdate(Event event, const char[] sName, bool bD
 	if (GetClientTeam(iClient) <= 1) return;
 	
 	TF2_CheckClientWeapons(iClient);
+	AltWeapon_UpdateActive(iClient);
 	
 	if (SaxtonHale_IsValidAttack(iClient))
 	{
@@ -778,6 +779,7 @@ public void Event_PlayerInventoryUpdate(Event event, const char[] sName, bool bD
 				if (g_iTotalRoundPlayed > 0)
 				{
 					int iIndex = GetEntProp(iWeapon, Prop_Send, "m_iItemDefinitionIndex");
+					AltWeapon_ResetAttribs(iWeapon, iIndex);
 					
 					for (int i = 0; i <= 1; i++)
 					{
