@@ -1,4 +1,8 @@
+#define ZOMBIE_SPAWN_UBER	7.0
+
 static float g_flZombieLastDamage[MAXPLAYERS];
+static bool g_bZombieSpawnProtect[MAXPLAYERS];
+static bool g_bZombieProtected[MAXPLAYERS];
 
 public void Zombie_Create(SaxtonHaleBase boss)
 {
@@ -7,7 +11,10 @@ public void Zombie_Create(SaxtonHaleBase boss)
 	boss.iMaxRageDamage = -1;
 	boss.bMinion = true;
 	boss.bModel = false;
-	
+
+	g_bZombieSpawnProtect[boss.iClient] = true;
+	g_bZombieProtected[boss.iClient] = false;
+
 	EmitSoundToClient(boss.iClient, SOUND_ALERT);	//Alert player as he spawned
 }
 
@@ -28,12 +35,26 @@ public void Zombie_OnSpawn(SaxtonHaleBase boss)
 	AcceptEntityInput(boss.iClient, "SpeakResponseConcept");
 	
 	SetEntityRenderColor(boss.iClient, 206, 100, 100, _);
+
+	if (g_bZombieSpawnProtect[boss.iClient])
+	{
+		g_bZombieSpawnProtect[boss.iClient] = false;
+		ZombieSpawn_StartProtection(boss.iClient);
+	}
+}
+
+public void Zombie_OnButtonPress(SaxtonHaleBase boss, int button)
+{
+	ZombieSpawn_EndProtection(boss.iClient, true);
 }
 
 public void Zombie_OnThink(SaxtonHaleBase boss)
 {
 	int iClient = boss.iClient;
-	
+
+	if (g_bZombieProtected[iClient] && (!IsPlayerAlive(iClient) || !TF2_IsPlayerInCondition(iClient, TFCond_UberchargedCanteen)))
+		ZombieSpawn_EndProtection(iClient, false);
+
 	if (!IsPlayerAlive(iClient)) return;
 	
 	if (g_flZombieLastDamage[iClient] == 0.0 || g_flZombieLastDamage[iClient] <= GetGameTime()-1.0)
@@ -83,8 +104,44 @@ public Action Zombie_CanHealTarget(SaxtonHaleBase boss, int iTarget, bool &bResu
 
 public void Zombie_Destroy(SaxtonHaleBase boss)
 {
+	g_bZombieSpawnProtect[boss.iClient] = false;
+	ZombieSpawn_EndProtection(boss.iClient, true);
+
 	SetEntityRenderColor(boss.iClient, 255, 255, 255, _);
 	
 	if (TF2_IsPlayerInCondition(boss.iClient, TFCond_CritOnDamage))
 		TF2_RemoveCondition(boss.iClient, TFCond_CritOnDamage);
+}
+
+static void ZombieSpawn_StartProtection(int iClient)
+{
+	TF2_AddCondition(iClient, TFCond_UberchargedCanteen, ZOMBIE_SPAWN_UBER);
+	g_bZombieProtected[iClient] = true;
+	SDKHook(iClient, SDKHook_ShouldCollide, ZombieSpawn_ShouldCollide);
+	EntityCollisionRulesChanged(iClient);
+}
+
+static void ZombieSpawn_EndProtection(int iClient, bool bRemoveUber)
+{
+	if (!g_bZombieProtected[iClient])
+		return;
+
+	g_bZombieProtected[iClient] = false;
+	SDKUnhook(iClient, SDKHook_ShouldCollide, ZombieSpawn_ShouldCollide);
+
+	if (!IsClientInGame(iClient))
+		return;
+
+	if (bRemoveUber && TF2_IsPlayerInCondition(iClient, TFCond_UberchargedCanteen))
+		TF2_RemoveCondition(iClient, TFCond_UberchargedCanteen);
+
+	EntityCollisionRulesChanged(iClient);
+}
+
+public bool ZombieSpawn_ShouldCollide(int iEntity, int iCollisionGroup, int iContentsMask, bool bOriginalResult)
+{
+	if (0 < iEntity <= MaxClients && g_bZombieProtected[iEntity])
+		return false;
+
+	return bOriginalResult;
 }

@@ -25,6 +25,7 @@ void Menu_Init()
 	g_hMenuMain.AddItem("preference", "Settings (!vshsettings)");
 	g_hMenuMain.AddItem("altweapon", "Alternate Weapon Behaviour (!altweapon)");
 	g_hMenuMain.AddItem("blacklist", "Boss Blacklist (!vshblacklist)");
+	g_hMenuMain.AddItem("duopref", "Duo Preference (!duopref)");
 	g_hMenuMain.AddItem("credit", "Credits (!vshcredits)");
 	
 	// Credits
@@ -92,6 +93,8 @@ public int Menu_SelectMain(Menu hMenu, MenuAction action, int iClient, int iSele
 		MenuAltWeapon_DisplayList(iClient);
 	else if (StrEqual(sSelect, "blacklist"))
 		MenuBlacklist_DisplayMain(iClient);
+	else if (StrEqual(sSelect, "duopref"))
+		MenuDuoParty_Display(iClient);
 	else if (StrEqual(sSelect, "credit"))
 		Menu_DisplayCredits(iClient);
 	else
@@ -111,7 +114,13 @@ void Menu_DisplayQueue(int iClient)
 	{
 		int iPlayer = Queue_GetPlayerFromRank(i);
 
-		if (0 < iPlayer <= MaxClients)
+		if (0 < iPlayer <= MaxClients && DuoParty_GetQueuePartner(iPlayer) > 0)
+		{
+			char sEntry[128];
+			DuoParty_GetEntryName(iPlayer, sEntry, sizeof(sEntry));
+			Format(buffer, sizeof(buffer), "%s\n%i) - %s (%i)", buffer, i, sEntry, Queue_GetEntryPoints(iPlayer));
+		}
+		else if (0 < iPlayer <= MaxClients)
 			Format(buffer, sizeof(buffer), "%s\n%i) - %N (%i)", buffer, i, iPlayer, Queue_PlayerGetPoints(iPlayer));
 		else
 			Format(buffer, sizeof(buffer), "%s\n%i) - ", buffer, i);

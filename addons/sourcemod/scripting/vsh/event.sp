@@ -288,6 +288,13 @@ public void Event_RoundArenaStart(Event event, const char[] sName, bool bDontBro
 	int iNextPlayer = Queue_GetPlayerFromRank(1);
 	if (0 < iNextPlayer <= MaxClients && IsClientInGame(iNextPlayer))
 		PrintToChat(iNextPlayer, "%s================%s\nYou are about to be the next boss!\n%s================", TEXT_DARK, TEXT_COLOR, TEXT_DARK);
+
+	if (0 < iNextPlayer <= MaxClients && IsClientInGame(iNextPlayer))
+	{
+		int iNextPartner = DuoParty_GetQueuePartner(iNextPlayer);
+		if (iNextPartner > 0)
+			PrintToChat(iNextPartner, "%s================%s\nYou are about to be the next boss!\n%s================", TEXT_DARK, TEXT_COLOR, TEXT_DARK);
+	}
 }
 
 public void Event_RoundEnd(Event event, const char[] sName, bool bDontBroadcast)

@@ -12,9 +12,20 @@
 #define PAINIS_CORPSE_PYRO_AFTERBURN	4.0
 #define PAINIS_CORPSE_HEAVY_RESIST	0.05
 #define PAINIS_CORPSE_RESIST_CAP	0.80
-#define PAINIS_CORPSE_DEMO_MELEE	0.10
+#define PAINIS_CORPSE_DEMO_RADIUS	100.0
+#define PAINIS_CORPSE_DEMO_RADIUS_STACK	50.0
+#define PAINIS_CORPSE_DEMO_FUSE	3.0
+#define PAINIS_CORPSE_DEMO_FUSE_STACK	0.5
+#define PAINIS_CORPSE_DEMO_INTERVAL	6.0
+#define PAINIS_CORPSE_DEMO_INTERVAL_STACK	1.0
+#define PAINIS_CORPSE_DEMO_MAX_STACKS	6
+#define PAINIS_CORPSE_DEMO_DAMAGE	200.0
+#define PAINIS_CORPSE_DEMO_REDRAW	0.1
+#define PAINIS_DEMO_MAX_CIRCLES	4
+#define PAINIS_DEMO_RING_HEIGHT	8.0
+#define PAINIS_DEMO_BLAST_HEIGHT	24.0
 #define PAINIS_CORPSE_ENGINEER_BUILDING	0.50
-#define PAINIS_CORPSE_SNIPER_RANGE	5.0
+#define PAINIS_CORPSE_SNIPER_RANGE	15.0
 #define PAINIS_MELEE_BASE_RANGE	48.0
 #define PAINIS_ATTRIB_MELEE_RANGE	264
 #define PAINIS_CORPSE_SPY_RADIUS	250.0
@@ -36,6 +47,12 @@ static float g_flPainisSpeedApplied[MAXPLAYERS];
 static float g_flPainisRangeApplied[MAXPLAYERS];
 static int g_iPainisRangeWeapon[MAXPLAYERS];
 static float g_flPainisPyroNextPulse[MAXPLAYERS];
+static float g_flPainisDemoNextCircle[MAXPLAYERS];
+static float g_flPainisDemoPos[MAXPLAYERS][PAINIS_DEMO_MAX_CIRCLES * 3];
+static float g_flPainisDemoRadius[MAXPLAYERS][PAINIS_DEMO_MAX_CIRCLES];
+static float g_flPainisDemoFuse[MAXPLAYERS][PAINIS_DEMO_MAX_CIRCLES];
+static float g_flPainisDemoExplode[MAXPLAYERS][PAINIS_DEMO_MAX_CIRCLES];
+static float g_flPainisDemoNextDraw[MAXPLAYERS][PAINIS_DEMO_MAX_CIRCLES];
 static float g_flPainisRingLastHit[MAXPLAYERS];
 static int g_iPainisBurnBoss[MAXPLAYERS];
 static float g_flPainisBurnEnd[MAXPLAYERS];
@@ -205,16 +222,7 @@ public Action PainisCupcake_OnAttackDamage(SaxtonHaleBase boss, int victim, int 
 	}
 
 	if (g_bPainisCorpseActive[boss.iClient] && Painis_IsMeleeHit(boss, inflictor, weapon, damagecustom))
-	{
-		int iDemo = Painis_GetStacks(boss.iClient, TFClass_DemoMan);
-		if (iDemo > 0)
-		{
-			damage *= 1.0 + PAINIS_CORPSE_DEMO_MELEE * float(iDemo) * Painis_GetCorpseMultiplier(boss);
-			action = Plugin_Changed;
-		}
-
 		Painis_QueueExplosion(boss, victim, damagePosition);
-	}
 
 	return action;
 }
@@ -228,16 +236,7 @@ public Action PainisCupcake_OnAttackBuilding(SaxtonHaleBase boss, int building, 
 	float flMult = Painis_GetCorpseMultiplier(boss);
 
 	if (Painis_IsMeleeHit(boss, inflictor, weapon, damagecustom))
-	{
-		int iDemo = Painis_GetStacks(boss.iClient, TFClass_DemoMan);
-		if (iDemo > 0)
-		{
-			damage *= 1.0 + PAINIS_CORPSE_DEMO_MELEE * float(iDemo) * flMult;
-			action = Plugin_Changed;
-		}
-
 		Painis_QueueExplosion(boss, building, damagePosition);
-	}
 
 	int iEngineer = Painis_GetStacks(boss.iClient, TFClass_Engineer);
 	if (iEngineer > 0)
@@ -251,8 +250,6 @@ public Action PainisCupcake_OnAttackBuilding(SaxtonHaleBase boss, int building, 
 
 public void PainisCupcake_OnRage(SaxtonHaleBase boss)
 {
-	Painis_EndCorpseEffects(boss);
-
 	if (boss.HasClass("LightRage"))
 	{
 		int iColor[4];
@@ -294,6 +291,7 @@ public void PainisCupcake_OnThink(SaxtonHaleBase boss)
 	int iClient = boss.iClient;
 	float flNow = GetGameTime();
 	Painis_PyroPulse(boss);
+	Painis_DemoThink(boss);
 	if (flNow < g_flPainisCorpseNextTick[iClient])
 		return;
 
@@ -302,8 +300,11 @@ public void PainisCupcake_OnThink(SaxtonHaleBase boss)
 	else
 		g_flPainisCorpseNextTick[iClient] = flNow + PAINIS_CORPSE_TICK;
 
-	if (g_bPainisCorpseActive[iClient] && (!IsPlayerAlive(iClient) || !BodyEat_IsRageWindow(boss)))
+	bool bRageWindow = IsPlayerAlive(iClient) && BodyEat_IsRageWindow(boss);
+	if (g_bPainisCorpseActive[iClient] && !bRageWindow)
 		Painis_EndCorpseEffects(boss);
+	else if (!g_bPainisCorpseActive[iClient] && bRageWindow && Painis_HasStacks(iClient))
+		g_bPainisCorpseActive[iClient] = true;
 
 	Painis_BurnTick(boss);
 
@@ -335,6 +336,9 @@ static void Painis_ResetCorpseState(int iClient)
 	g_flPainisRangeApplied[iClient] = 1.0;
 	g_iPainisRangeWeapon[iClient] = INVALID_ENT_REFERENCE;
 	g_flPainisPyroNextPulse[iClient] = 0.0;
+	g_flPainisDemoNextCircle[iClient] = 0.0;
+	for (int i = 0; i < PAINIS_DEMO_MAX_CIRCLES; i++)
+		g_flPainisDemoExplode[iClient][i] = 0.0;
 
 	for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
 	{
@@ -349,9 +353,6 @@ static void Painis_ResetCorpseState(int iClient)
 static void Painis_EndCorpseEffects(SaxtonHaleBase boss, bool bRevertBoss = true)
 {
 	int iClient = boss.iClient;
-	for (int i = 0; i < sizeof(g_iPainisCorpseStacks[]); i++)
-		g_iPainisCorpseStacks[iClient][i] = 0;
-
 	g_bPainisCorpseActive[iClient] = false;
 
 	if (bRevertBoss)
@@ -463,6 +464,100 @@ static void Painis_PyroPulse(SaxtonHaleBase boss)
 		TF2_IgnitePlayer(iVictim, iClient, PAINIS_CORPSE_PYRO_AFTERBURN);
 		SDKHooks_TakeDamage(iVictim, iClient, iClient, flDamage, DMG_BURN|DMG_PREVENT_PHYSICS_FORCE, -1, NULL_VECTOR, vecBoss, false);
 	}
+}
+
+static void Painis_DemoThink(SaxtonHaleBase boss)
+{
+	int iClient = boss.iClient;
+	float flNow = GetGameTime();
+
+	for (int i = 0; i < PAINIS_DEMO_MAX_CIRCLES; i++)
+	{
+		if (g_flPainisDemoExplode[iClient][i] <= 0.0)
+			continue;
+
+		float vecPos[3];
+		vecPos[0] = g_flPainisDemoPos[iClient][i * 3];
+		vecPos[1] = g_flPainisDemoPos[iClient][i * 3 + 1];
+		vecPos[2] = g_flPainisDemoPos[iClient][i * 3 + 2];
+
+		if (flNow >= g_flPainisDemoExplode[iClient][i])
+		{
+			g_flPainisDemoExplode[iClient][i] = 0.0;
+			if (IsPlayerAlive(iClient))
+			{
+				vecPos[2] += PAINIS_DEMO_BLAST_HEIGHT;
+				Painis_BlastArea(iClient, vecPos, g_flPainisDemoRadius[iClient][i], PAINIS_CORPSE_DEMO_DAMAGE, -1);
+			}
+		}
+		else if (flNow >= g_flPainisDemoNextDraw[iClient][i])
+		{
+			g_flPainisDemoNextDraw[iClient][i] = flNow + PAINIS_CORPSE_DEMO_REDRAW;
+			float flLeft = g_flPainisDemoExplode[iClient][i] - flNow;
+			Painis_DrawDemoCircle(vecPos, g_flPainisDemoRadius[iClient][i], 1.0 - flLeft / g_flPainisDemoFuse[iClient][i]);
+		}
+	}
+
+	int iStacks = Painis_GetDemoStacks(boss);
+	if (iStacks <= 0 || !IsPlayerAlive(iClient) || !BodyEat_IsRageWindow(boss))
+	{
+		g_flPainisDemoNextCircle[iClient] = 0.0;
+		return;
+	}
+
+	if (flNow < g_flPainisDemoNextCircle[iClient])
+		return;
+
+	int iSlot = -1;
+	for (int i = 0; i < PAINIS_DEMO_MAX_CIRCLES; i++)
+	{
+		if (g_flPainisDemoExplode[iClient][i] <= 0.0)
+		{
+			iSlot = i;
+			break;
+		}
+	}
+
+	if (iSlot == -1)
+		return;
+
+	float flExtra = float(iStacks - 1);
+	float flRadius = PAINIS_CORPSE_DEMO_RADIUS + PAINIS_CORPSE_DEMO_RADIUS_STACK * flExtra;
+	float flFuse = PAINIS_CORPSE_DEMO_FUSE - PAINIS_CORPSE_DEMO_FUSE_STACK * flExtra;
+	g_flPainisDemoNextCircle[iClient] = flNow + PAINIS_CORPSE_DEMO_INTERVAL - PAINIS_CORPSE_DEMO_INTERVAL_STACK * flExtra;
+
+	float vecPos[3];
+	GetClientAbsOrigin(iClient, vecPos);
+	vecPos[2] += PAINIS_DEMO_RING_HEIGHT;
+
+	g_flPainisDemoPos[iClient][iSlot * 3] = vecPos[0];
+	g_flPainisDemoPos[iClient][iSlot * 3 + 1] = vecPos[1];
+	g_flPainisDemoPos[iClient][iSlot * 3 + 2] = vecPos[2];
+	g_flPainisDemoRadius[iClient][iSlot] = flRadius;
+	g_flPainisDemoFuse[iClient][iSlot] = flFuse;
+	g_flPainisDemoExplode[iClient][iSlot] = flNow + flFuse;
+	g_flPainisDemoNextDraw[iClient][iSlot] = flNow + PAINIS_CORPSE_DEMO_REDRAW;
+
+	TE_SetupBeamRingPoint(vecPos, flRadius * 2.0, 1.0, g_iSpritesLaserbeam, g_iSpritesGlow, 0, 10, flFuse, 4.0, 0.0, {255, 255, 255, 255}, 10, 0);
+	TE_SendToAll();
+	Painis_DrawDemoCircle(vecPos, flRadius, 0.0);
+}
+
+static void Painis_DrawDemoCircle(const float vecPos[3], float flRadius, float flProgress)
+{
+	if (flProgress < 0.0)
+		flProgress = 0.0;
+	else if (flProgress > 1.0)
+		flProgress = 1.0;
+
+	int iColor[4];
+	iColor[0] = 255;
+	iColor[1] = RoundToNearest(255.0 * (1.0 - flProgress));
+	iColor[2] = 0;
+	iColor[3] = 255;
+
+	TE_SetupBeamRingPoint(vecPos, flRadius * 2.0, flRadius * 2.0 + 1.0, g_iSpritesLaserbeam, g_iSpritesGlow, 0, 10, PAINIS_CORPSE_DEMO_REDRAW + 0.1, 8.0, 0.0, iColor, 10, 0);
+	TE_SendToAll();
 }
 
 static void Painis_SapperTick(SaxtonHaleBase boss)
@@ -618,6 +713,11 @@ static void Painis_Explode(DataPack hPack)
 	if (iClient <= 0 || !IsClientInGame(iClient) || !IsPlayerAlive(iClient))
 		return;
 
+	Painis_BlastArea(iClient, vecPos, flRadius, flDamage, iStruck);
+}
+
+static void Painis_BlastArea(int iClient, float vecPos[3], float flRadius, float flDamage, int iStruck)
+{
 	char sParticle[64];
 	strcopy(sParticle, sizeof(sParticle), PAINIS_EXPLOSION_PARTICLE);
 	CreateTimer(3.0, Timer_EntityCleanup, TF2_SpawnParticle(sParticle, vecPos));
@@ -668,7 +768,33 @@ static bool Painis_IsMeleeHit(SaxtonHaleBase boss, int iInflictor, int iWeapon, 
 
 static int Painis_GetStacks(int iClient, TFClassType nClass)
 {
+	if (!g_bPainisCorpseActive[iClient])
+		return 0;
+
 	return g_iPainisCorpseStacks[iClient][view_as<int>(nClass)];
+}
+
+static bool Painis_HasStacks(int iClient)
+{
+	for (int i = 0; i < sizeof(g_iPainisCorpseStacks[]); i++)
+	{
+		if (g_iPainisCorpseStacks[iClient][i] > 0)
+			return true;
+	}
+
+	return false;
+}
+
+static int Painis_GetDemoStacks(SaxtonHaleBase boss)
+{
+	int iStacks = Painis_GetStacks(boss.iClient, TFClass_DemoMan);
+	if (boss.bSuperRage)
+		iStacks *= 2;
+
+	if (iStacks > PAINIS_CORPSE_DEMO_MAX_STACKS)
+		iStacks = PAINIS_CORPSE_DEMO_MAX_STACKS;
+
+	return iStacks;
 }
 
 static float Painis_GetCorpseMultiplier(SaxtonHaleBase boss)
