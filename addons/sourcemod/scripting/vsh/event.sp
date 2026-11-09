@@ -42,6 +42,8 @@ public void Event_RoundStart(Event event, const char[] sName, bool bDontBroadcas
 	if (g_iTotalRoundPlayed <= 0)
 		return;
 	
+	Afk_RoundStart();
+	
 	// Arena has a very dumb logic, if all players from a team leave the round will end and then restart without reseting the game state...
 	// Catch that issue and don't run our logic!
 	int iRed = 0, iBlu = 0;
@@ -130,6 +132,8 @@ public void Event_RoundArenaStart(Event event, const char[] sName, bool bDontBro
 
 	g_bRoundStarted = true;
 	g_iTotalAttackCount = SaxtonHale_GetAliveAttackPlayers();
+	
+	Afk_RoundArenaStart();
 
 	//New round started
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
