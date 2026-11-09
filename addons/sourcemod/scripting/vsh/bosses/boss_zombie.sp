@@ -3,6 +3,7 @@
 static float g_flZombieLastDamage[MAXPLAYERS];
 static bool g_bZombieSpawnProtect[MAXPLAYERS];
 static bool g_bZombieProtected[MAXPLAYERS];
+static bool g_bZombieRestoreCollision[MAXPLAYERS];
 
 public void Zombie_Create(SaxtonHaleBase boss)
 {
@@ -14,6 +15,7 @@ public void Zombie_Create(SaxtonHaleBase boss)
 
 	g_bZombieSpawnProtect[boss.iClient] = true;
 	g_bZombieProtected[boss.iClient] = false;
+	g_bZombieRestoreCollision[boss.iClient] = false;
 }
 
 public bool Zombie_IsBossHidden(SaxtonHaleBase boss)
@@ -52,6 +54,8 @@ public void Zombie_OnThink(SaxtonHaleBase boss)
 
 	if (g_bZombieProtected[iClient] && (!IsPlayerAlive(iClient) || !TF2_IsPlayerInCondition(iClient, TFCond_UberchargedCanteen)))
 		ZombieSpawn_EndProtection(iClient, false);
+	else if (g_bZombieRestoreCollision[iClient])
+		ZombieSpawn_RestoreCollision(iClient, false);
 
 	if (!IsPlayerAlive(iClient)) return;
 	
@@ -104,6 +108,7 @@ public void Zombie_Destroy(SaxtonHaleBase boss)
 {
 	g_bZombieSpawnProtect[boss.iClient] = false;
 	ZombieSpawn_EndProtection(boss.iClient, true);
+	ZombieSpawn_RestoreCollision(boss.iClient, true);
 
 	SetEntityRenderColor(boss.iClient, 255, 255, 255, _);
 	
@@ -115,8 +120,8 @@ static void ZombieSpawn_StartProtection(int iClient)
 {
 	TF2_AddCondition(iClient, TFCond_UberchargedCanteen, ZOMBIE_SPAWN_UBER);
 	g_bZombieProtected[iClient] = true;
-	SDKHook(iClient, SDKHook_ShouldCollide, ZombieSpawn_ShouldCollide);
-	EntityCollisionRulesChanged(iClient);
+	g_bZombieRestoreCollision[iClient] = false;
+	SetEntityCollisionGroup(iClient, view_as<int>(COLLISION_GROUP_DEBRIS));
 }
 
 static void ZombieSpawn_EndProtection(int iClient, bool bRemoveUber)
@@ -125,7 +130,6 @@ static void ZombieSpawn_EndProtection(int iClient, bool bRemoveUber)
 		return;
 
 	g_bZombieProtected[iClient] = false;
-	SDKUnhook(iClient, SDKHook_ShouldCollide, ZombieSpawn_ShouldCollide);
 
 	if (!IsClientInGame(iClient))
 		return;
@@ -133,13 +137,57 @@ static void ZombieSpawn_EndProtection(int iClient, bool bRemoveUber)
 	if (bRemoveUber && TF2_IsPlayerInCondition(iClient, TFCond_UberchargedCanteen))
 		TF2_RemoveCondition(iClient, TFCond_UberchargedCanteen);
 
-	EntityCollisionRulesChanged(iClient);
+	g_bZombieRestoreCollision[iClient] = true;
+	ZombieSpawn_RestoreCollision(iClient, false);
 }
 
-public bool ZombieSpawn_ShouldCollide(int iEntity, int iCollisionGroup, int iContentsMask, bool bOriginalResult)
+static void ZombieSpawn_RestoreCollision(int iClient, bool bForce)
 {
-	if (0 < iEntity <= MaxClients && g_bZombieProtected[iEntity])
-		return false;
+	if (!g_bZombieRestoreCollision[iClient] || !IsClientInGame(iClient))
+	{
+		g_bZombieRestoreCollision[iClient] = false;
+		return;
+	}
 
-	return bOriginalResult;
+	if (!bForce && IsPlayerAlive(iClient) && ZombieSpawn_IsInsideEnemy(iClient))
+		return;
+
+	g_bZombieRestoreCollision[iClient] = false;
+	if (GetEntProp(iClient, Prop_Send, "m_CollisionGroup") == view_as<int>(COLLISION_GROUP_DEBRIS))
+		SetEntityCollisionGroup(iClient, view_as<int>(COLLISION_GROUP_PLAYER));
+}
+
+static bool ZombieSpawn_IsInsideEnemy(int iClient)
+{
+	float vecPos[3], vecMins[3], vecMaxs[3];
+	GetClientAbsOrigin(iClient, vecPos);
+	GetClientMins(iClient, vecMins);
+	GetClientMaxs(iClient, vecMaxs);
+
+	int iTeam = GetClientTeam(iClient);
+	for (int iOther = 1; iOther <= MaxClients; iOther++)
+	{
+		if (iOther == iClient || !IsClientInGame(iOther) || !IsPlayerAlive(iOther) || GetClientTeam(iOther) == iTeam)
+			continue;
+
+		float vecOther[3], vecOtherMins[3], vecOtherMaxs[3];
+		GetClientAbsOrigin(iOther, vecOther);
+		GetClientMins(iOther, vecOtherMins);
+		GetClientMaxs(iOther, vecOtherMaxs);
+
+		bool bOverlap = true;
+		for (int i = 0; i < 3; i++)
+		{
+			if (vecPos[i] + vecMins[i] > vecOther[i] + vecOtherMaxs[i] || vecPos[i] + vecMaxs[i] < vecOther[i] + vecOtherMins[i])
+			{
+				bOverlap = false;
+				break;
+			}
+		}
+
+		if (bOverlap)
+			return true;
+	}
+
+	return false;
 }

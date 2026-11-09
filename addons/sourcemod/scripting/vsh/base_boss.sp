@@ -206,7 +206,7 @@ public void SaxtonHaleBoss_OnSpawn(SaxtonHaleBase boss)
 		SetEntProp(boss.iClient, Prop_Send, "m_iPlayerSkinOverride", 0);
 	}
 	
-	if (boss.bMinion)
+	if (boss.bMinion && GameRules_GetRoundState() != RoundState_Preround)
 		EmitSoundToClient(boss.iClient, SOUND_ALERT);
 	
 	if (!boss.bMinion)
