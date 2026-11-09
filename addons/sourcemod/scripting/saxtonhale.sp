@@ -447,6 +447,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/tags.sp"
 
 #include "vsh/config.sp"
+#include "vsh/prefsave.sp"
 #include "vsh/altweapon.sp"
 #include "vsh/weaponkeys.sp"
 
@@ -543,6 +544,7 @@ public void OnPluginStart()
 	
 	Config_Init();
 	
+	PrefSave_Init();
 	AltWeapon_Init();
 	WeaponKeys_Init();
 	DuoParty_Init();
@@ -780,7 +782,7 @@ public void OnPluginStart()
 	//Init our convars
 	g_ConfigConvar.Create("vsh_force_load", "-1", "Force enable VSH on map start? (-1 for default, 0 for force disable, 1 for force enable)", _, true, -1.0, true, 1.0);
 	g_ConfigConvar.Create("vsh_boss_ping_limit", "200", "Max ping/latency to allow player to play as boss (-1 for no limit)", _, true, -1.0);
-	g_ConfigConvar.Create("vsh_telefrag_damage", "10000.0", "Damage amount to boss from telefrag", _, true, 0.0);
+	g_ConfigConvar.Create("vsh_telefrag_damage", "9001.0", "Damage amount to boss from telefrag", _, true, 0.0);
 	g_ConfigConvar.Create("vsh_music_enable", "1", "Enable boss music?", _, true, 0.0, true, 1.0);
 	g_ConfigConvar.Create("vsh_rps_enable", "1", "Allow everyone use Rock Paper Scissors Taunt?", _, true, 0.0, true, 1.0);
 	g_ConfigConvar.Create("vsh_blacklist_amount", "2", "Maximum amount of bosses a player can blacklist for themselves (0 disables the feature)", _, true, 0.0);
@@ -1019,6 +1021,7 @@ public void OnMapStart()
 		
 		CustomMelee_OnMapStart();
 		Dome_MapStart();
+		DuoParty_OnMapStart();
 		
 		CreateTimer(60.0, Timer_WelcomeMessage);
 		CreateTimer(240.0, Timer_WelcomeMessage, _, TIMER_REPEAT|TIMER_FLAG_NO_MAPCHANGE);
@@ -1440,6 +1443,7 @@ public void Client_OnThink(int iClient)
 	else
 	{
 		Tags_OnThink(iClient);
+		WeaponKeys_OnThink(iClient);
 		
 		TFClassType nClass = TF2_GetPlayerClass(iClient);
 		
@@ -1623,6 +1627,7 @@ public void Client_OnTakeDamagePost(int victim, int attacker, int inflictor, flo
 	if (g_iTotalRoundPlayed <= 0) return;
 	
 	Tags_ClearMiniCritMark(victim);
+	WeaponKeys_OnTakeDamagePost(victim, attacker, damage);
 	
 	if (victim != attacker && SaxtonHale_IsValidAttack(attacker) && weapon != INVALID_ENT_REFERENCE && HasEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"))
 	{
@@ -1655,6 +1660,9 @@ public Action Client_OnTakeDamageAlive(int victim, int &attacker, int &inflictor
 		SaxtonHaleBase bossAttacker = SaxtonHaleBase(attacker);
 		
 		Action action = Plugin_Continue;
+		
+		if (WeaponKeys_OnTakeDamageAliveFalloff(victim, attacker, damage, damagetype, weapon))
+			finalAction = Plugin_Changed;
 		
 		if (bossVictim.bValid)
 		{

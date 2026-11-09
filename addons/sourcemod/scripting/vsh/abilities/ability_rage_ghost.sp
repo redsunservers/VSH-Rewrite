@@ -62,7 +62,7 @@ public void RageGhost_OnRage(SaxtonHaleBase boss)
 	
 	//Stun and Fly
 	float flDuration = boss.GetPropFloat("RageGhost", "Duration");
-	TF2_StunPlayer(iClient, flDuration, 0.0, TF_STUNFLAG_GHOSTEFFECT|TF_STUNFLAG_NOSOUNDOREFFECT, 0)
+	BaseBoss_SelfStun(iClient, flDuration, 0.0, TF_STUNFLAG_GHOSTEFFECT|TF_STUNFLAG_NOSOUNDOREFFECT, 0)
 	TF2_AddCondition(iClient, TFCond_SwimmingNoEffects, flDuration);
 	TF2_AddCondition(iClient, TFCond_ImmuneToPushback, flDuration);
 	

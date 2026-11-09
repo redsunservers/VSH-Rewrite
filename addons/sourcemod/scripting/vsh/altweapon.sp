@@ -4,7 +4,7 @@ static Cookie g_hCookiesAltWeapon;
 
 void AltWeapon_Init()
 {
-	g_hCookiesAltWeapon = new Cookie("vsh_altweapons", "VSH alternate weapon toggles", CookieAccess_Private);
+	g_hCookiesAltWeapon = PrefSave_NewCookie("vsh_altweapons", "VSH alternate weapon toggles", CookieAccess_Private);
 }
 
 static ArrayList AltWeapon_GetList(int iClient)
@@ -107,7 +107,7 @@ static void AltWeapon_Save(int iClient)
 		StrCat(sValue, sizeof(sValue), sIndex);
 	}
 	
-	g_hCookiesAltWeapon.Set(iClient, sValue);
+	PrefSave_SetCookie(iClient, g_hCookiesAltWeapon, sValue);
 }
 
 bool AltWeapon_IsEnabled(int iClient, int iIndex)

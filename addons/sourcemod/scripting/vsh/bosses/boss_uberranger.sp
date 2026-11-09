@@ -276,8 +276,6 @@ public void MinionRanger_Create(SaxtonHaleBase boss)
 	g_bUberRangerPlayerWasSummoned[boss.iClient] = true;	//Mark the player as summoned so they won't become a miniboss again in this round
 	g_bUberRangerMinionHasMoved[boss.iClient] = false;		//Will check if the player has moved to determine if they're AFK or not
 	g_iUberRangerMinionAFKTimeLeft[boss.iClient] = 6;		//The player has 6 seconds to move after being summoned, else they'll be taken as AFK and replaced by someone else
-	
-	EmitSoundToClient(boss.iClient, SOUND_ALERT);			//Alert player as they (re)spawned
 }
 
 public bool MinionRanger_IsBossHidden(SaxtonHaleBase boss)

@@ -1,4 +1,8 @@
 #define WEAPONKEYS_DONK_WINDOW	0.5
+#define WEAPONKEYS_DMG_USEDISTANCEMOD	(1 << 21)
+#define WEAPONKEYS_FALLOFF_DISTANCE	512.0
+#define WEAPONKEYS_JAR_RECHARGE_TIME	20.1
+#define WEAPONKEYS_SHOVE_CLASSNAME	"tf_weapon_handgun_scout_primary"
 
 static int g_iWeaponKeysCollideOffset = -1;
 static int g_iWeaponKeysCollideState;
@@ -18,6 +22,10 @@ static int g_iWeaponKeysPushUserId[MAXPLAYERS];
 static bool g_bWeaponKeysPushAir[MAXPLAYERS];
 static bool g_bWeaponKeysPushImmune[MAXPLAYERS];
 
+static ConVar g_cvWeaponKeysDamageRange;
+static ConVar g_cvWeaponKeysCritFalloff;
+static ConVar g_cvWeaponKeysMiniCritFalloff;
+
 void WeaponKeys_Init()
 {
 	int iOffset = FindSendPropInfo("CTFGrenadePipebombProjectile", "m_hOriginalLauncher");
@@ -27,6 +35,9 @@ void WeaponKeys_Init()
 		LogMessage("Could not locate offset for CTFGrenadePipebombProjectile::m_hOriginalLauncher, \"passteammates\" is disabled");
 	
 	g_cvWeaponKeysDonkWindow = FindConVar("tf_double_donk_window");
+	g_cvWeaponKeysDamageRange = FindConVar("tf_damage_range");
+	g_cvWeaponKeysCritFalloff = FindConVar("tf_weapon_criticals_distance_falloff");
+	g_cvWeaponKeysMiniCritFalloff = FindConVar("tf_weapon_minicrits_distance_falloff");
 }
 
 void WeaponKeys_OnEntityCreated(int iEntity, const char[] sClassname)
@@ -99,10 +110,19 @@ bool WeaponKeys_OnTakeDamage(int iVictim, int iAttacker, int &iDamageType, int i
 {
 	g_flWeaponKeysDonkTime = -1.0;
 	
-	if (iVictim == iAttacker || !SaxtonHale_IsValidBoss(iVictim, false) || !SaxtonHale_IsValidAttack(iAttacker))
-		return false;
-	
 	bool bChanged = false;
+	
+	if (iVictim != iAttacker && SaxtonHale_IsValidAttack(iAttacker) && GetClientTeam(iVictim) != GetClientTeam(iAttacker)
+		&& Config_GetWeaponKeyInt(iAttacker, iWeapon, "noknockback") == 1)
+	{
+		iDamageType |= DMG_PREVENT_PHYSICS_FORCE;
+		WeaponKeys_BlockPushback(iVictim);
+		bChanged = true;
+	}
+	
+	if (iVictim == iAttacker || !SaxtonHale_IsValidBoss(iVictim, false) || !SaxtonHale_IsValidAttack(iAttacker))
+		return bChanged;
+	
 	if (Config_GetWeaponKeyInt(iAttacker, iWeapon, "nobosspush") == 1)
 	{
 		iDamageType |= DMG_PREVENT_PHYSICS_FORCE;
@@ -187,4 +207,156 @@ public void WeaponKeys_RemovePushConds(int iBoss)
 	
 	g_bWeaponKeysPushAir[iBoss] = false;
 	g_bWeaponKeysPushImmune[iBoss] = false;
+}
+
+static void WeaponKeys_BlockPushback(int iVictim)
+{
+	if (TF2_IsPlayerInCondition(iVictim, TFCond_ImmuneToPushback))
+		return;
+	
+	TF2_AddCondition(iVictim, TFCond_ImmuneToPushback, TFCondDuration_Infinite);
+	g_bWeaponKeysPushImmune[iVictim] = true;
+	g_iWeaponKeysPushUserId[iVictim] = GetClientUserId(iVictim);
+	RequestFrame(WeaponKeys_RemovePushConds, iVictim);
+}
+
+void WeaponKeys_OnThink(int iClient)
+{
+	if (!IsPlayerAlive(iClient) || TF2_GetPlayerClass(iClient) != TFClass_Scout)
+		return;
+	
+	int iWeapon = GetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon");
+	if (iWeapon <= MaxClients || !IsValidEntity(iWeapon))
+		return;
+	
+	char sClassname[64];
+	GetEntityClassname(iWeapon, sClassname, sizeof(sClassname));
+	if (strcmp(sClassname, WEAPONKEYS_SHOVE_CLASSNAME) != 0 || Config_GetWeaponKeyInt(iClient, iWeapon, "noknockback") != 1)
+		return;
+	
+	float flBlock = GetGameTime() + 1.0;
+	if (GetEntPropFloat(iWeapon, Prop_Send, "m_flNextSecondaryAttack") < flBlock)
+		SetEntPropFloat(iWeapon, Prop_Send, "m_flNextSecondaryAttack", flBlock + 1.0);
+}
+
+bool WeaponKeys_OnTakeDamageAliveFalloff(int iVictim, int iAttacker, float &flDamage, int iDamageType, int iWeapon)
+{
+	if (flDamage <= 0.0 || iVictim == iAttacker || !SaxtonHale_IsValidAttack(iAttacker))
+		return false;
+	
+	if ((iDamageType & DMG_BLAST) || !(iDamageType & WEAPONKEYS_DMG_USEDISTANCEMOD))
+		return false;
+	
+	float flScale = Config_GetWeaponKeyFloat(iAttacker, iWeapon, "falloffscale");
+	if (flScale <= 0.0 || flScale == 1.0)
+		return false;
+	
+	if (iDamageType & DMG_CRIT)
+	{
+		if (g_cvWeaponKeysCritFalloff == null || !g_cvWeaponKeysCritFalloff.BoolValue)
+			return false;
+	}
+	else if (WeaponKeys_IsMiniCrit(iVictim, iAttacker, iWeapon))
+	{
+		if (g_cvWeaponKeysMiniCritFalloff == null || !g_cvWeaponKeysMiniCritFalloff.BoolValue)
+			return false;
+	}
+	
+	if (TF2_IsPlayerInCondition(iAttacker, TFCond_RunePrecision) || TF2_IsPlayerInCondition(iAttacker, TFCond_RuneStrength))
+		return false;
+	
+	float vecAttacker[3], vecVictim[3];
+	WeaponKeys_GetWorldSpaceCenter(iAttacker, vecAttacker);
+	WeaponKeys_GetWorldSpaceCenter(iVictim, vecVictim);
+	float flDistance = GetVectorDistance(vecAttacker, vecVictim);
+	
+	float flCenter = 1.0 - flDistance / (WEAPONKEYS_FALLOFF_DISTANCE * 2.0);
+	if (flCenter >= 0.5)
+		return false;
+	
+	float flValue = (flCenter > 0.1) ? flCenter : 0.1;
+	float flSpline = flValue * flValue * (3.0 - 2.0 * flValue);
+	float flRange = (g_cvWeaponKeysDamageRange != null) ? g_cvWeaponKeysDamageRange.FloatValue : 0.5;
+	float flLoss = flRange * (2.0 * flSpline - 1.0);
+	if (flLoss >= 0.0 || 1.0 + flLoss <= 0.0)
+		return false;
+	
+	flDamage *= (1.0 + flLoss * flScale) / (1.0 + flLoss);
+	return true;
+}
+
+static bool WeaponKeys_IsMiniCrit(int iVictim, int iAttacker, int iWeapon)
+{
+	if (TF2_IsPlayerInCondition(iVictim, TFCond_Jarated) || TF2_IsPlayerInCondition(iVictim, TFCond_MarkedForDeath)
+		|| TF2_IsPlayerInCondition(iVictim, TFCond_MarkedForDeathSilent) || TF2_IsPlayerInCondition(iVictim, TFCond_PasstimePenaltyDebuff))
+		return true;
+	
+	if (TF2_IsPlayerInCondition(iAttacker, TFCond_Buffed) || TF2_IsPlayerInCondition(iAttacker, TFCond_NoHealingDamageBuff)
+		|| TF2_IsPlayerInCondition(iAttacker, TFCond_CritCola))
+		return true;
+	
+	if (iWeapon <= MaxClients || !IsValidEntity(iWeapon))
+		return false;
+	
+	if (TF2_GetPlayerClass(iAttacker) == TFClass_Scout && !(GetEntityFlags(iAttacker) & FL_ONGROUND)
+		&& iWeapon == GetEntPropEnt(iAttacker, Prop_Send, "m_hActiveWeapon") && TF2Attrib_HookValueInt(0, "air_dash_count", iWeapon) != 0)
+		return true;
+	
+	if (TF2Attrib_HookValueInt(0, "closerange_backattack_minicrits", iWeapon) == 1)
+	{
+		float vecAttacker[3], vecVictim[3], vecToVictim[3], vecAngles[3], vecForward[3];
+		GetClientAbsOrigin(iAttacker, vecAttacker);
+		GetClientAbsOrigin(iVictim, vecVictim);
+		SubtractVectors(vecVictim, vecAttacker, vecToVictim);
+		if (GetVectorLength(vecToVictim, true) < 512.0 * 512.0)
+		{
+			GetClientEyeAngles(iVictim, vecAngles);
+			GetAngleVectors(vecAngles, vecForward, NULL_VECTOR, NULL_VECTOR);
+			vecToVictim[2] = 0.0;
+			NormalizeVector(vecToVictim, vecToVictim);
+			if (GetVectorDotProduct(vecToVictim, vecForward) > 0.259)
+				return true;
+		}
+	}
+	
+	return false;
+}
+
+static void WeaponKeys_GetWorldSpaceCenter(int iClient, float vecCenter[3])
+{
+	float vecMins[3], vecMaxs[3];
+	GetClientAbsOrigin(iClient, vecCenter);
+	GetClientMins(iClient, vecMins);
+	GetClientMaxs(iClient, vecMaxs);
+	for (int i = 0; i < 3; i++)
+		vecCenter[i] += (vecMins[i] + vecMaxs[i]) * 0.5;
+}
+
+void WeaponKeys_OnTakeDamagePost(int iVictim, int iAttacker, float flDamage)
+{
+	if (flDamage <= 0.0 || iVictim == iAttacker || !SaxtonHale_IsValidAttack(iAttacker) || !IsPlayerAlive(iAttacker))
+		return;
+	
+	if (iVictim <= 0 || iVictim > MaxClients || !IsClientInGame(iVictim) || GetClientTeam(iVictim) == GetClientTeam(iAttacker))
+		return;
+	
+	float flNow = GetGameTime();
+	for (int iSlot = WeaponSlot_Primary; iSlot <= WeaponSlot_Melee; iSlot++)
+	{
+		int iWeapon = TF2_GetItemInSlot(iAttacker, iSlot);
+		if (iWeapon <= MaxClients || !HasEntProp(iWeapon, Prop_Send, "m_flEffectBarRegenTime"))
+			continue;
+		
+		float flDamageFull = Config_GetWeaponKeyFloat(iAttacker, iWeapon, "rechargedamage");
+		if (flDamageFull <= 0.0)
+			continue;
+		
+		float flRegenTime = GetEntPropFloat(iWeapon, Prop_Send, "m_flEffectBarRegenTime");
+		if (flRegenTime <= flNow)
+			continue;
+		
+		float flFullTime = TF2Attrib_HookValueFloat(WEAPONKEYS_JAR_RECHARGE_TIME, "effectbar_recharge_rate", iWeapon);
+		flRegenTime -= flFullTime * flDamage / flDamageFull;
+		SetEntPropFloat(iWeapon, Prop_Send, "m_flEffectBarRegenTime", (flRegenTime > flNow) ? flRegenTime : flNow);
+	}
 }
