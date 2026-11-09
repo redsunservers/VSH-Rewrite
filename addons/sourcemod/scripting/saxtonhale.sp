@@ -450,6 +450,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/prefsave.sp"
 #include "vsh/altweapon.sp"
 #include "vsh/weaponkeys.sp"
+#include "vsh/afk.sp"
 
 #include "vsh/menu/menu_admin.sp"
 #include "vsh/menu/menu_altweapon.sp"
@@ -547,6 +548,7 @@ public void OnPluginStart()
 	PrefSave_Init();
 	AltWeapon_Init();
 	WeaponKeys_Init();
+	Afk_Init();
 	DuoParty_Init();
 	Blacklist_Init();
 	ClassLimit_Init();
@@ -1781,6 +1783,8 @@ public Action OnClientCommandKeyValues(int iClient, KeyValues kv)
 public Action OnPlayerRunCmd(int iClient,int &buttons,int &impulse, float vel[3], float angles[3], int &weapon,int &subtype,int &cmdnum,int &tickcount,int &seed,int mouse[2])
 {
 	if (!g_bEnabled) return Plugin_Continue;
+	
+	Afk_OnPlayerRunCmd(iClient, buttons, impulse, weapon, mouse);
 
 	//Player is playing a temp model animation, hard block all input and movement for its duration
 	if (TempModel_IsAnimationActive(iClient))
@@ -1812,6 +1816,15 @@ public Action OnPlayerRunCmd(int iClient,int &buttons,int &impulse, float vel[3]
 		return Plugin_Changed;
 
 	return Plugin_Continue;
+}
+
+public void OnPlayerRunCmdPost(int iClient, int buttons, int impulse, const float vel[3], const float angles[3], int weapon, int subtype, int cmdnum, int tickcount, int seed, const int mouse[2])
+{
+	if (!g_bEnabled || g_iTotalRoundPlayed <= 0)
+		return;
+	
+	if (SaxtonHale_IsValidAttack(iClient) && IsPlayerAlive(iClient))
+		WeaponKeys_OnPlayerRunCmdPost(iClient);
 }
 
 void Client_OnButton(int iClient, int &buttons)

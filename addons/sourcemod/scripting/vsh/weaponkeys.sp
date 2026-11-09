@@ -3,6 +3,9 @@
 #define WEAPONKEYS_FALLOFF_DISTANCE	512.0
 #define WEAPONKEYS_JAR_RECHARGE_TIME	20.1
 #define WEAPONKEYS_SHOVE_CLASSNAME	"tf_weapon_handgun_scout_primary"
+#define WEAPONKEYS_SCATTERGUN_PUSH	300.0
+#define WEAPONKEYS_SCATTERGUN_PUSH_UP	50.0
+#define WEAPONKEYS_SCATTERGUN_PUSH_TOLERANCE	2.0
 
 static int g_iWeaponKeysCollideOffset = -1;
 static int g_iWeaponKeysCollideState;
@@ -25,6 +28,9 @@ static bool g_bWeaponKeysPushImmune[MAXPLAYERS];
 static ConVar g_cvWeaponKeysDamageRange;
 static ConVar g_cvWeaponKeysCritFalloff;
 static ConVar g_cvWeaponKeysMiniCritFalloff;
+
+static int g_iWeaponKeysFireWeapon[MAXPLAYERS];
+static float g_flWeaponKeysFireTime[MAXPLAYERS];
 
 void WeaponKeys_Init()
 {
@@ -359,4 +365,67 @@ void WeaponKeys_OnTakeDamagePost(int iVictim, int iAttacker, float flDamage)
 		flRegenTime -= flFullTime * flDamage / flDamageFull;
 		SetEntPropFloat(iWeapon, Prop_Send, "m_flEffectBarRegenTime", (flRegenTime > flNow) ? flRegenTime : flNow);
 	}
+}
+
+void WeaponKeys_OnPlayerRunCmdPost(int iClient)
+{
+	int iWeapon = GetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon");
+	if (iWeapon <= MaxClients || !HasEntProp(iWeapon, Prop_Send, "m_flLastFireTime"))
+	{
+		g_iWeaponKeysFireWeapon[iClient] = 0;
+		return;
+	}
+	
+	int iRef = EntIndexToEntRef(iWeapon);
+	float flFireTime = GetEntPropFloat(iWeapon, Prop_Send, "m_flLastFireTime");
+	bool bFired = (iRef == g_iWeaponKeysFireWeapon[iClient] && flFireTime > g_flWeaponKeysFireTime[iClient]);
+	g_iWeaponKeysFireWeapon[iClient] = iRef;
+	g_flWeaponKeysFireTime[iClient] = flFireTime;
+	
+	if (!bFired)
+		return;
+	
+	char sSound[PLATFORM_MAX_PATH];
+	if (Config_GetWeaponKey(iClient, iWeapon, "extrafiresound", sSound, sizeof(sSound)) && sSound[0] != '\0')
+		WeaponKeys_PlayFireSound(iClient, sSound);
+	
+	float flScale = Config_GetWeaponKeyFloat(iClient, iWeapon, "selfpushscale");
+	if (flScale > 0.0 && flScale != 1.0)
+		WeaponKeys_ScaleScattergunPush(iClient, flScale);
+}
+
+static void WeaponKeys_PlayFireSound(int iClient, const char[] sGameSound)
+{
+	if (!PrecacheScriptSound(sGameSound))
+		return;
+	
+	int iChannel, iLevel, iPitch;
+	float flVolume;
+	char sSample[PLATFORM_MAX_PATH];
+	if (!GetGameSoundParams(sGameSound, iChannel, iLevel, flVolume, iPitch, sSample, sizeof(sSample), iClient))
+		return;
+	
+	EmitSoundToAll(sSample, iClient, SNDCHAN_AUTO, iLevel, SND_NOFLAGS, flVolume, iPitch);
+}
+
+static void WeaponKeys_ScaleScattergunPush(int iClient, float flScale)
+{
+	if (GetEntityFlags(iClient) & FL_ONGROUND)
+		return;
+	
+	float vecAngles[3], vecForward[3], vecVelocity[3];
+	GetClientEyeAngles(iClient, vecAngles);
+	GetAngleVectors(vecAngles, vecForward, NULL_VECTOR, NULL_VECTOR);
+	GetEntPropVector(iClient, Prop_Data, "m_vecVelocity", vecVelocity);
+	
+	float flPushed = -WEAPONKEYS_SCATTERGUN_PUSH + WEAPONKEYS_SCATTERGUN_PUSH_UP * vecForward[2];
+	if (FloatAbs(GetVectorDotProduct(vecVelocity, vecForward) - flPushed) > WEAPONKEYS_SCATTERGUN_PUSH_TOLERANCE)
+		return;
+	
+	float flExtra = flScale - 1.0;
+	for (int i = 0; i < 3; i++)
+		vecVelocity[i] -= vecForward[i] * WEAPONKEYS_SCATTERGUN_PUSH * flExtra;
+	
+	vecVelocity[2] += WEAPONKEYS_SCATTERGUN_PUSH_UP * flExtra;
+	TeleportEntity(iClient, NULL_VECTOR, NULL_VECTOR, vecVelocity);
 }
