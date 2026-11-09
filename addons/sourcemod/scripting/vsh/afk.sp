@@ -1,4 +1,5 @@
 #define AFK_CHECK_TIME	20.0
+#define AFK_ALERT_TIME	7.0
 
 static char g_sAfkCommands[][] = { "say", "say_team", "menuselect", "voicemenu", "taunt", "+taunt", "joinclass", "+inspect_server", "+use_action_slot_item_server" };
 
@@ -6,6 +7,10 @@ static int g_iAfkRound;
 static bool g_bAfkWindow;
 static int g_iAfkInputUserId[MAXPLAYERS];
 static int g_iAfkTrackedUserId[MAXPLAYERS];
+static bool g_bAfkLive;
+static float g_flAfkLiveTime;
+static float g_flAfkLastInput[MAXPLAYERS];
+static bool g_bAfkAlerted[MAXPLAYERS];
 
 void Afk_Init()
 {
@@ -23,23 +28,48 @@ void Afk_OnPlayerRunCmd(int iClient, int iButtons, int iImpulse, int iWeapon, co
 {
 	if (iButtons != 0 || iImpulse != 0 || iWeapon != 0 || iMouse[0] != 0 || iMouse[1] != 0)
 		Afk_MarkInput(iClient);
+	else if (g_bAfkLive)
+		Afk_CheckIdle(iClient);
 }
 
 static void Afk_MarkInput(int iClient)
 {
 	if (g_bAfkWindow && 0 < iClient <= MaxClients && IsClientInGame(iClient))
+	{
 		g_iAfkInputUserId[iClient] = GetClientUserId(iClient);
+		g_flAfkLastInput[iClient] = GetGameTime();
+		g_bAfkAlerted[iClient] = false;
+	}
+}
+
+static void Afk_CheckIdle(int iClient)
+{
+	if (!g_bRoundStarted || g_bAfkAlerted[iClient] || g_iAfkTrackedUserId[iClient] != GetClientUserId(iClient))
+		return;
+	
+	if (TF2_GetClientTeam(iClient) != TFTeam_Attack)
+		return;
+	
+	float flIdleSince = (g_flAfkLastInput[iClient] > g_flAfkLiveTime) ? g_flAfkLastInput[iClient] : g_flAfkLiveTime;
+	if (GetGameTime() - flIdleSince < AFK_ALERT_TIME)
+		return;
+	
+	g_bAfkAlerted[iClient] = true;
+	EmitSoundToClient(iClient, SOUND_ALERT);
 }
 
 void Afk_RoundStart()
 {
 	g_iAfkRound++;
 	g_bAfkWindow = true;
+	g_bAfkLive = false;
 	
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
 		g_iAfkInputUserId[iClient] = 0;
 		g_iAfkTrackedUserId[iClient] = 0;
+		g_flAfkLastInput[iClient] = 0.0;
+		g_bAfkAlerted[iClient] = false;
 	}
 }
 
@@ -50,16 +80,23 @@ void Afk_RoundArenaStart()
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
 		g_iAfkTrackedUserId[iClient] = 0;
+		g_bAfkAlerted[iClient] = false;
 		if (SaxtonHale_IsValidAttack(iClient) && IsPlayerAlive(iClient))
 			g_iAfkTrackedUserId[iClient] = GetClientUserId(iClient);
 	}
 	
+	g_bAfkLive = true;
+	g_flAfkLiveTime = GetGameTime();
 	CreateTimer(AFK_CHECK_TIME, Afk_Timer_Check, g_iAfkRound, TIMER_FLAG_NO_MAPCHANGE);
 }
 
 public Action Afk_Timer_Check(Handle hTimer, int iRound)
 {
-	if (iRound != g_iAfkRound || !g_bEnabled || !g_bRoundStarted)
+	if (iRound != g_iAfkRound)
+		return Plugin_Continue;
+	
+	g_bAfkLive = false;
+	if (!g_bEnabled || !g_bRoundStarted)
 		return Plugin_Continue;
 	
 	g_bAfkWindow = false;

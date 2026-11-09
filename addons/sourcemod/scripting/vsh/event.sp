@@ -133,10 +133,6 @@ public void Event_RoundArenaStart(Event event, const char[] sName, bool bDontBro
 	g_bRoundStarted = true;
 	g_iTotalAttackCount = SaxtonHale_GetAliveAttackPlayers();
 	
-	for (int iClient = 1; iClient <= MaxClients; iClient++)
-		if (IsClientInGame(iClient) && TF2_GetClientTeam(iClient) == TFTeam_Attack)
-			EmitSoundToClient(iClient, SOUND_ALERT);
-	
 	Afk_RoundArenaStart();
 
 	//New round started
