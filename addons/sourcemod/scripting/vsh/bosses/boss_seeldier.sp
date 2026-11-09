@@ -9,9 +9,11 @@
 #define SEELDIER_MINION_GROUND_NORMAL	0.7
 #define SEELDIER_MINION_EXPLOSION_PARTICLE	"ExplosionCore_MidAir"
 #define SEELDIER_MINION_EXPLOSION_SOUND	"weapons/explode1.wav"
+#define SEELDIER_MINION_BLAST_COOLDOWN	6.0
 
 static float g_flSeeldierMinionSmackTime[MAXPLAYERS];
 static ConVar g_cvSeeldierGravity;
+static float g_flSeeldierMinionBlastReady[MAXPLAYERS];
 
 public void Seeldier_Create(SaxtonHaleBase boss)
 {
@@ -163,6 +165,7 @@ public void SeeldierMinion_Create(SaxtonHaleBase boss)
 	boss.bMinion = true;
 	boss.flSpeed *= SEELDIER_MINION_SPEED_MULTIPLIER;
 	g_flSeeldierMinionSmackTime[boss.iClient] = 0.0;
+	g_flSeeldierMinionBlastReady[boss.iClient] = 0.0;
 }
 
 public bool SeeldierMinion_IsBossHidden(SaxtonHaleBase boss)
@@ -173,7 +176,7 @@ public bool SeeldierMinion_IsBossHidden(SaxtonHaleBase boss)
 public void SeeldierMinion_OnSpawn(SaxtonHaleBase boss)
 {
 	char attribs[128];
-	Format(attribs, sizeof(attribs), "2 ; 2.80 ; 252 ; 0.5 ; 259 ; 1.0");
+	Format(attribs, sizeof(attribs), "2 ; 1.9 ; 252 ; 0.5 ; 259 ; 1.0");
 	int iWeapon = boss.CallFunction("CreateWeapon", 195, "tf_weapon_shovel", 100, TFQual_Collectors, attribs);
 	if (iWeapon > MaxClients)
 		SetEntPropEnt(boss.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
@@ -201,6 +204,9 @@ public void SeeldierMinion_OnThink(SaxtonHaleBase boss)
 
 static void SeeldierMinion_GroundBlast(int iClient)
 {
+	if (GetGameTime() < g_flSeeldierMinionBlastReady[iClient])
+		return;
+	
 	int iWeapon = TF2_GetItemInSlot(iClient, WeaponSlot_Melee);
 	if (iWeapon <= MaxClients)
 		return;
@@ -266,6 +272,23 @@ static void SeeldierMinion_GroundBlast(int iClient)
 	GetEntPropVector(iClient, Prop_Data, "m_vecVelocity", vecVelocity);
 	vecVelocity[2] = SquareRoot(2.0 * flGravity * SEELDIER_MINION_JUMP_HEIGHT);
 	TeleportEntity(iClient, NULL_VECTOR, NULL_VECTOR, vecVelocity);
+	
+	g_flSeeldierMinionBlastReady[iClient] = GetGameTime() + SEELDIER_MINION_BLAST_COOLDOWN;
+	SaxtonHaleBase(iClient).CallFunction("UpdateHudInfo", 1.0, SEELDIER_MINION_BLAST_COOLDOWN + 1.0);
+}
+
+public void SeeldierMinion_GetHudInfo(SaxtonHaleBase boss, char[] sMessage, int iLength, int iColor[4])
+{
+	float flLeft = g_flSeeldierMinionBlastReady[boss.iClient] - GetGameTime();
+	if (flLeft <= 0.0)
+		return;
+	
+	int iSec = RoundToCeil(flLeft);
+	char sPlural[2];
+	if (iSec > 1)
+		strcopy(sPlural, sizeof(sPlural), "s");
+	
+	Format(sMessage, iLength, "%s\nBlast-jump cooldown %i second%s remaining!", sMessage, iSec, sPlural);
 }
 
 public bool SeeldierMinion_TraceFilter(int iEntity, int iMask, int iClient)
@@ -307,4 +330,5 @@ public void SeeldierMinion_Destroy(SaxtonHaleBase boss)
 {
 	SetEntityModelScale(boss.iClient, 1.0);
 	g_flSeeldierMinionSmackTime[boss.iClient] = 0.0;
+	g_flSeeldierMinionBlastReady[boss.iClient] = 0.0;
 }
