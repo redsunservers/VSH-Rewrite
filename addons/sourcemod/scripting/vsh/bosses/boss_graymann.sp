@@ -656,8 +656,6 @@ void GrayMann_GiantCommon_Create(SaxtonHaleBase boss)
 {
 	g_bGrayMannMinionHasMoved[boss.iClient] = false;	// Will check if the player has moved to determine if they're AFK or not
 	g_iGrayMannMinionAFKTimeLeft[boss.iClient] = 6;		// The player has 6 seconds to move after being summoned, else they'll be taken as AFK and replaced by someone else
-	
-	EmitSoundToClient(boss.iClient, SOUND_ALERT);		// Alert player as they (re)spawned
 }
 
 void GrayMann_GiantCommon_OnSpawn(SaxtonHaleBase boss, int iWeapon)

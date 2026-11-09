@@ -9,7 +9,7 @@ void MenuDuoParty_Display(int iClient)
 void MenuDuoParty_DisplayList(int iClient)
 {
 	Menu hMenu = new Menu(MenuDuoParty_SelectList);
-	hMenu.AddItem("", "select a player to invite to play with you as duo boss", ITEMDRAW_DISABLED);
+	hMenu.AddItem("", "Select a player to invite to play with you as duo boss", ITEMDRAW_DISABLED);
 
 	for (int i = 1; i <= MaxClients; i++)
 	{

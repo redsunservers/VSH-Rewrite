@@ -7,6 +7,7 @@
 #define BOSS_ISOLATION_INTERVAL		0.2
 #define BOSS_STOMP_DAMAGE_PER_FALL_SPEED	0.3182
 #define BOSS_ISOLATION_MARK_DURATION	0.5
+#define BOSS_STUN_SELF_WINDOW	0.2
 
 static char g_sClientBossRageMusic[MAXPLAYERS][255];
 
@@ -28,6 +29,9 @@ static int g_iClientIsolationGlow[MAXPLAYERS];
 
 static float g_flClientBossFallSpeed[MAXPLAYERS];
 
+static float g_flClientBossRageCooldownCleared[MAXPLAYERS];
+static float g_flClientBossSelfStunTime[MAXPLAYERS];
+
 public void SaxtonHaleBoss_Create(SaxtonHaleBase boss)
 {
 	boss.bSuperRage = false;
@@ -40,6 +44,8 @@ public void SaxtonHaleBoss_Create(SaxtonHaleBase boss)
 	g_bClientBossIsolationWarned[boss.iClient] = false;
 	BaseBoss_ClearIsolationHighlight(boss.iClient);
 	g_flClientBossFallSpeed[boss.iClient] = 0.0;
+	g_flClientBossRageCooldownCleared[boss.iClient] = -1.0;
+	g_flClientBossSelfStunTime[boss.iClient] = 0.0;
 
 	boss.iBaseHealth = 0;
 	boss.iHealthPerPlayer = 0;
@@ -199,6 +205,9 @@ public void SaxtonHaleBoss_OnSpawn(SaxtonHaleBase boss)
 		SetEntProp(boss.iClient, Prop_Send, "m_nForcedSkin", 0);
 		SetEntProp(boss.iClient, Prop_Send, "m_iPlayerSkinOverride", 0);
 	}
+	
+	if (boss.bMinion)
+		EmitSoundToClient(boss.iClient, SOUND_ALERT);
 	
 	if (!boss.bMinion)
 	{
@@ -395,8 +404,28 @@ float BaseBoss_GetRageCooldownLeft(SaxtonHaleBase boss)
 	if (boss.flRageLastTime <= 0.0)
 		return 0.0;
 	
+	if (g_flClientBossRageCooldownCleared[boss.iClient] == boss.flRageLastTime)
+		return 0.0;
+	
 	float flLeft = boss.flRageLastTime + boss.GetPropFloat("SaxtonHaleBoss", "RageCooldown") - GetGameTime();
 	return (flLeft > 0.0) ? flLeft : 0.0;
+}
+
+public void SaxtonHaleBoss_OnConditionAdded(SaxtonHaleBase boss, TFCond nCond)
+{
+	if (nCond != TFCond_Dazed || boss.flRageLastTime <= 0.0)
+		return;
+	
+	if (GetGameTime() - g_flClientBossSelfStunTime[boss.iClient] <= BOSS_STUN_SELF_WINDOW)
+		return;
+	
+	g_flClientBossRageCooldownCleared[boss.iClient] = boss.flRageLastTime;
+}
+
+void BaseBoss_SelfStun(int iClient, float flDuration, float flSlowdown, int iStunFlags, int iAttacker = 0)
+{
+	g_flClientBossSelfStunTime[iClient] = GetGameTime();
+	TF2_StunPlayer(iClient, flDuration, flSlowdown, iStunFlags, iAttacker);
 }
 
 static void BaseBoss_UpdateIsolation(SaxtonHaleBase boss)
@@ -636,7 +665,7 @@ public Action SaxtonHaleBoss_OnTakeDamage(SaxtonHaleBase boss, int &attacker, in
 					GetEntPropVector(aSpawnPoints.Get(0), Prop_Data, "m_vecAbsOrigin", vecPos);
 					float vecNoVel[3];
 					TeleportEntity(boss.iClient, vecPos, NULL_VECTOR, vecNoVel);
-					TF2_StunPlayer(boss.iClient, 2.0, _, TF_STUNFLAGS_NORMALBONK, 0);
+					BaseBoss_SelfStun(boss.iClient, 2.0, 0.0, TF_STUNFLAGS_NORMALBONK, 0);
 				}
 				
 				delete aSpawnPoints;

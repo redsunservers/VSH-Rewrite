@@ -141,7 +141,7 @@ public void TeleportSwap_OnButtonRelease(SaxtonHaleBase boss, int button)
 			
 			TF2_TeleportSwap(iClient);
 			
-			TF2_StunPlayer(iClient[0], boss.GetPropFloat("TeleportSwap", "StunDuration"), 0.0, TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT, iClient[1]);
+			BaseBoss_SelfStun(iClient[0], boss.GetPropFloat("TeleportSwap", "StunDuration"), 0.0, TF_STUNFLAGS_GHOSTSCARE|TF_STUNFLAG_NOSOUNDOREFFECT, iClient[1]);
 			TF2_AddCondition(iClient[0], TFCond_DefenseBuffMmmph, boss.GetPropFloat("TeleportSwap", "StunDuration"));
 			
 			g_flTeleportSwapCooldownWait[boss.iClient] = GetGameTime()+boss.GetPropFloat("TeleportSwap", "Cooldown");

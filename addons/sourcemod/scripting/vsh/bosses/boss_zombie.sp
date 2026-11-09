@@ -14,8 +14,6 @@ public void Zombie_Create(SaxtonHaleBase boss)
 
 	g_bZombieSpawnProtect[boss.iClient] = true;
 	g_bZombieProtected[boss.iClient] = false;
-
-	EmitSoundToClient(boss.iClient, SOUND_ALERT);	//Alert player as he spawned
 }
 
 public bool Zombie_IsBossHidden(SaxtonHaleBase boss)

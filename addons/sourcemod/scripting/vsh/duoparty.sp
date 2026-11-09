@@ -1,5 +1,10 @@
 #define DUOPARTY_NAME_LENGTH	64
 #define DUOPARTY_AWAY_TIME	120.0
+#define DUOPARTY_TEXT_COLOR	"\x07FFE600"
+#define DUOPARTY_SOUND_INVITE	"ui/notification_alert.wav"
+#define DUOPARTY_SOUND_FORMED	"ui/cyoa_node_activate.wav"
+#define DUOPARTY_SOUND_OPTIN	"ui/duel_challenge.wav"
+#define DUOPARTY_SOUND_DISBAND	"ui/chat_display_text.wav"
 
 enum struct DuoParty
 {
@@ -21,7 +26,7 @@ static bool g_bDuoNaming[MAXPLAYERS];
 void DuoParty_Init()
 {
 	g_aDuoParties = new ArrayList(sizeof(DuoParty));
-	g_hCookiesDuoOptIn = new Cookie("vsh_duo_optin", "VSH opt in to only play as duo boss", CookieAccess_Private);
+	g_hCookiesDuoOptIn = PrefSave_NewCookie("vsh_duo_optin", "VSH opt in to only play as duo boss", CookieAccess_Private);
 
 	Command_Create("duopref", DuoParty_Command_Menu);
 	RegConsoleCmd("sm_duopref", DuoParty_Command_Menu);
@@ -30,6 +35,14 @@ void DuoParty_Init()
 	RegConsoleCmd("sm_partyname", DuoParty_Command_PartyName);
 
 	CreateTimer(5.0, DuoParty_Timer_CheckAway, _, TIMER_REPEAT);
+}
+
+void DuoParty_OnMapStart()
+{
+	PrecacheSound(DUOPARTY_SOUND_INVITE);
+	PrecacheSound(DUOPARTY_SOUND_FORMED);
+	PrecacheSound(DUOPARTY_SOUND_OPTIN);
+	PrecacheSound(DUOPARTY_SOUND_DISBAND);
 }
 
 void DuoParty_LoadOptIn(int iClient)
@@ -117,7 +130,8 @@ public Action DuoParty_Timer_CheckAway(Handle hTimer)
 		if (iStayed > 0)
 		{
 			g_bDuoNaming[iStayed] = false;
-			PrintToChat(iStayed, "%s%s Party has disbanded due to player leaving your party", TEXT_TAG, TEXT_COLOR);
+			PrintToChat(iStayed, "%s%s Party has disbanded due to player leaving your party", TEXT_TAG, DUOPARTY_TEXT_COLOR);
+			EmitSoundToClient(iStayed, DUOPARTY_SOUND_DISBAND);
 		}
 	}
 
@@ -175,7 +189,7 @@ public Action DuoParty_Command_OptIn(int iClient, int iArgs)
 	}
 
 	DuoParty_SetOptIn(iClient, true);
-	PrintToChat(iClient, "%s%s You have chosen to opt in to always become a duo boss", TEXT_TAG, TEXT_COLOR);
+	PrintToChat(iClient, "%s%s You have chosen to opt in to always become a duo boss", TEXT_TAG, DUOPARTY_TEXT_COLOR);
 	return Plugin_Handled;
 }
 
@@ -211,8 +225,9 @@ void DuoParty_Invite(int iClient, int iTarget)
 	}
 
 	g_iDuoInviteFrom[iTarget] = GetClientUserId(iClient);
-	PrintToChat(iTarget, "%s%s You have been invited to be a duo boss partner for %N during their next duo boss round, type /accept to accept.", TEXT_TAG, TEXT_COLOR, iClient);
-	PrintToChat(iClient, "%s%s Invite sent to %N", TEXT_TAG, TEXT_COLOR, iTarget);
+	PrintToChat(iTarget, "%s%s You have been invited to be a duo boss partner for %N during their next duo boss round, type %s/accept%s to accept.", TEXT_TAG, DUOPARTY_TEXT_COLOR, iClient, TEXT_POSITIVE, DUOPARTY_TEXT_COLOR);
+	EmitSoundToClient(iTarget, DUOPARTY_SOUND_INVITE);
+	PrintToChat(iClient, "%s%s Invite sent to %N", TEXT_TAG, DUOPARTY_TEXT_COLOR, iTarget);
 }
 
 static void DuoParty_Create(int iInviter, int iInvitee)
@@ -233,8 +248,10 @@ static void DuoParty_Create(int iInviter, int iInvitee)
 
 	DuoParty_RefreshPartners();
 
-	PrintToChat(iInviter, "%s%s Party formed, return to Duo Preference menu or type !duopref to access party settings", TEXT_TAG, TEXT_COLOR);
-	PrintToChat(iInvitee, "%s%s Party formed, return to Duo Preference menu or type !duopref to access party settings", TEXT_TAG, TEXT_COLOR);
+	PrintToChat(iInviter, "%s%s Party formed, return to Duo Preference menu or type %s!duopref%s to access party settings", TEXT_TAG, DUOPARTY_TEXT_COLOR, TEXT_POSITIVE, DUOPARTY_TEXT_COLOR);
+	PrintToChat(iInvitee, "%s%s Party formed, return to Duo Preference menu or type %s!duopref%s to access party settings", TEXT_TAG, DUOPARTY_TEXT_COLOR, TEXT_POSITIVE, DUOPARTY_TEXT_COLOR);
+	EmitSoundToClient(iInviter, DUOPARTY_SOUND_FORMED);
+	EmitSoundToClient(iInvitee, DUOPARTY_SOUND_FORMED);
 
 	if (g_bDuoOptIn[iInviter] && !g_bDuoOptIn[iInvitee])
 		DuoParty_AskOptIn(iInvitee);
@@ -244,7 +261,8 @@ static void DuoParty_Create(int iInviter, int iInvitee)
 
 static void DuoParty_AskOptIn(int iClient)
 {
-	PrintToChat(iClient, "%s%s The other player in your party wants to opt in to always play as duo boss, type /optin to confirm this choice", TEXT_TAG, TEXT_COLOR);
+	PrintToChat(iClient, "%s%s The other player in your party wants to opt in to always play as duo boss, type %s/optin%s to confirm this choice", TEXT_TAG, DUOPARTY_TEXT_COLOR, TEXT_POSITIVE, DUOPARTY_TEXT_COLOR);
+	EmitSoundToClient(iClient, DUOPARTY_SOUND_OPTIN);
 }
 
 static void DuoParty_SetOptIn(int iClient, bool bOptIn)
@@ -255,7 +273,7 @@ static void DuoParty_SetOptIn(int iClient, bool bOptIn)
 	{
 		char sValue[4];
 		IntToString(view_as<int>(bOptIn), sValue, sizeof(sValue));
-		g_hCookiesDuoOptIn.Set(iClient, sValue);
+		PrefSave_SetCookie(iClient, g_hCookiesDuoOptIn, sValue);
 	}
 
 	int iPartner = DuoParty_GetPartner(iClient);
@@ -286,7 +304,7 @@ void DuoParty_StartNaming(int iClient)
 	}
 
 	g_bDuoNaming[iClient] = true;
-	PrintToChat(iClient, "%s%s type in chat what you want to name your party", TEXT_TAG, TEXT_COLOR);
+	PrintToChat(iClient, "%s%s type in chat what you want to name your party", TEXT_TAG, DUOPARTY_TEXT_COLOR);
 }
 
 void DuoParty_Disband(int iClient)
@@ -308,7 +326,8 @@ void DuoParty_Disband(int iClient)
 			continue;
 
 		g_bDuoNaming[iMembers[i]] = false;
-		PrintToChat(iMembers[i], "%s%s %N has disbanded the party", TEXT_TAG, TEXT_COLOR, iClient);
+		PrintToChat(iMembers[i], "%s%s %N has disbanded the party", TEXT_TAG, DUOPARTY_TEXT_COLOR, iClient);
+		EmitSoundToClient(iMembers[i], DUOPARTY_SOUND_DISBAND);
 	}
 
 	DuoParty_RefreshPartners();
@@ -335,7 +354,7 @@ public Action OnClientSayCommand(int iClient, const char[] sCommand, const char[
 	strcopy(party.sPartyName, DUOPARTY_NAME_LENGTH, sName);
 	g_aDuoParties.SetArray(iIndex, party);
 
-	PrintToChat(iClient, "%s%s Party has been renamed to %s", TEXT_TAG, TEXT_COLOR, sName);
+	PrintToChat(iClient, "%s%s Party has been renamed to %s", TEXT_TAG, DUOPARTY_TEXT_COLOR, sName);
 	return Plugin_Handled;
 }
 
