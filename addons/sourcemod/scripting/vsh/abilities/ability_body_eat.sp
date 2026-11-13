@@ -13,6 +13,7 @@ public void BodyEat_Create(SaxtonHaleBase boss)
 	boss.SetPropFloat("BodyEat", "EatRageDuration", 10.0);
 	boss.SetPropFloat("BodyEat", "RageHealMultiplier", 1.0);
 	boss.SetPropInt("BodyEat", "RageClassEffects", 0);
+	boss.SetPropFloat("BodyEat", "EatRageSuperRageMultiplier", 2.0);
 }
 
 public void BodyEat_OnPlayerKilled(SaxtonHaleBase boss, Event event, int iVictim)
@@ -93,7 +94,7 @@ public void BodyEat_EatBody(SaxtonHaleBase boss, int iEnt)
 	float lastRageTime = boss.flRageLastTime;
 	float eatDuration = boss.GetPropFloat("BodyEat", "EatRageDuration");
 	if (boss.bSuperRage)
-		eatDuration *= 2.0;
+		eatDuration *= boss.GetPropFloat("BodyEat", "EatRageSuperRageMultiplier");
 	bool bRageWindow = (eatDuration > 0.0 && !(lastRageTime == 0.0 || (GetGameTime()-lastRageTime) > eatDuration));
 	if (!bRageWindow)
 	{
@@ -164,7 +165,7 @@ public void BodyEat_OnThink(SaxtonHaleBase boss)
 	float lastRageTime = boss.flRageLastTime;
 	float eatDuration = boss.GetPropFloat("BodyEat", "EatRageDuration");
 	if (boss.bSuperRage)
-		eatDuration *= 2.0;
+		eatDuration *= boss.GetPropFloat("BodyEat", "EatRageSuperRageMultiplier");
 	if (eatDuration > 0.0 && lastRageTime != 0.0 && ((GetGameTime()-lastRageTime) <= eatDuration))
 	{
 		float vecPos[3], vecBodyPos[3];
@@ -203,7 +204,7 @@ bool BodyEat_IsRageWindow(SaxtonHaleBase boss)
 {
 	float flDuration = boss.GetPropFloat("BodyEat", "EatRageDuration");
 	if (boss.bSuperRage)
-		flDuration *= 2.0;
+		flDuration *= boss.GetPropFloat("BodyEat", "EatRageSuperRageMultiplier");
 
 	return flDuration > 0.0 && boss.flRageLastTime != 0.0 && GetGameTime() - boss.flRageLastTime <= flDuration;
 }

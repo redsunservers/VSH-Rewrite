@@ -37,8 +37,7 @@ bool Queue_IsClientAllowed(int iClient)
 		&& GetClientTeam(iClient) > 1			//Is client not in spectator
 		&& Queue_PlayerGetPoints(iClient) != -1	//Does client have his queue point loaded
 		&& !Client_HasFlag(iClient, ClientFlags_Punishment)	//Is client not in punishment
-		&& Preferences_Get(iClient, VSHPreferences_PickAsBoss)	//Is client not in boss disable preferences
-		&& (IsFakeClient(iClient) || (GetClientAvgLatency(iClient, NetFlow_Outgoing) * 1024.0) < g_ConfigConvar.LookupFloat("vsh_boss_ping_limit")))	//Is client under the ping limit
+		&& Preferences_Get(iClient, VSHPreferences_PickAsBoss))	//Is client not in boss disable preferences
 	{
 		return true;
 	}
