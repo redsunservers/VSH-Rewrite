@@ -1,13 +1,15 @@
 #define PAINIS_RAGE_MUSIC "vsh_rewrite/painis/rage.mp3"
 
 #define PAINIS_CORPSE_TICK	0.2
-#define PAINIS_CORPSE_SCOUT_SPEED	0.10
+#define PAINIS_SUPER_RAGE_MULTIPLIER	1.625
+#define PAINIS_CORPSE_SCOUT_SPEED	5.0
 #define PAINIS_CORPSE_SOLDIER_DAMAGE	20.0
 #define PAINIS_CORPSE_SOLDIER_RADIUS	100.0
-#define PAINIS_CORPSE_SOLDIER_RADIUS_STACK	50.0
-#define PAINIS_CORPSE_SOLDIER_RADIUS_SUPER	50.0
+#define PAINIS_CORPSE_SOLDIER_RADIUS_STACK	25.0
 #define PAINIS_CORPSE_PYRO_BURN	5.0
-#define PAINIS_CORPSE_PYRO_PULSE	0.5
+#define PAINIS_CORPSE_PYRO_PULSE	1.0
+#define PAINIS_CORPSE_PYRO_PULSE_STACK	0.1
+#define PAINIS_CORPSE_PYRO_PULSE_MIN	0.1
 #define PAINIS_CORPSE_PYRO_RADIUS	135.0
 #define PAINIS_CORPSE_PYRO_AFTERBURN	4.0
 #define PAINIS_CORPSE_HEAVY_RESIST	0.05
@@ -28,7 +30,8 @@
 #define PAINIS_CORPSE_SNIPER_RANGE	15.0
 #define PAINIS_MELEE_BASE_RANGE	48.0
 #define PAINIS_ATTRIB_MELEE_RANGE	264
-#define PAINIS_CORPSE_SPY_RADIUS	250.0
+#define PAINIS_CORPSE_SPY_RADIUS	150.0
+#define PAINIS_CORPSE_SPY_RADIUS_STACK	25.0
 #define PAINIS_CORPSE_SAPPER_DPS	25.0
 #define PAINIS_CORPSE_MEDIC_HEAL	1000
 #define PAINIS_MAX_EDICTS	2048
@@ -54,6 +57,7 @@ static float g_flPainisDemoFuse[MAXPLAYERS][PAINIS_DEMO_MAX_CIRCLES];
 static float g_flPainisDemoExplode[MAXPLAYERS][PAINIS_DEMO_MAX_CIRCLES];
 static float g_flPainisDemoNextDraw[MAXPLAYERS][PAINIS_DEMO_MAX_CIRCLES];
 static float g_flPainisRingLastHit[MAXPLAYERS];
+static float g_flPainisRingGap[MAXPLAYERS];
 static int g_iPainisBurnBoss[MAXPLAYERS];
 static float g_flPainisBurnEnd[MAXPLAYERS];
 static float g_flPainisBurnDamage[MAXPLAYERS];
@@ -149,14 +153,17 @@ public void PainisCupcake_Create(SaxtonHaleBase boss)
 	boss.SetPropFloat("BodyEat", "EatRageRadius", 450.0);
 	boss.SetPropFloat("BodyEat", "EatRageDuration", 8.0);
 	boss.SetPropInt("BodyEat", "RageClassEffects", 1);
+	boss.SetPropFloat("BodyEat", "EatRageSuperRageMultiplier", PAINIS_SUPER_RAGE_MULTIPLIER);
 	
 	boss.CreateClass("LightRage");
 	boss.SetPropFloat("LightRage", "LigthRageDuration", 8.0);
 	boss.SetPropFloat("LightRage", "LightRageRadius", 450.0);
 	boss.SetPropInt("LightRage", "RageLightBrigthness", 6);
+	boss.SetPropFloat("LightRage", "LightRageSuperRageMultiplier", PAINIS_SUPER_RAGE_MULTIPLIER);
 	
 	boss.CreateClass("RageAddCond");
 	boss.SetPropFloat("RageAddCond", "RageCondDuration", 8.0);
+	boss.SetPropFloat("RageAddCond", "RageCondSuperRageMultiplier", PAINIS_SUPER_RAGE_MULTIPLIER);
 	RageAddCond_AddCond(boss, TFCond_SpeedBuffAlly);
 	
 	boss.iHealthPerPlayer = 500;
@@ -199,7 +206,7 @@ public Action PainisCupcake_OnTakeDamage(SaxtonHaleBase boss, int &attacker, int
 
 	float flResistance = 1.0 - PAINIS_RAGE_DAMAGE_TAKEN;
 	if (g_bPainisCorpseActive[boss.iClient])
-		flResistance += PAINIS_CORPSE_HEAVY_RESIST * float(Painis_GetStacks(boss.iClient, TFClass_Heavy)) * Painis_GetCorpseMultiplier(boss);
+		flResistance += PAINIS_CORPSE_HEAVY_RESIST * float(Painis_GetStacks(boss.iClient, TFClass_Heavy));
 
 	if (flResistance > PAINIS_CORPSE_RESIST_CAP)
 		flResistance = PAINIS_CORPSE_RESIST_CAP;
@@ -214,7 +221,7 @@ public Action PainisCupcake_OnAttackDamage(SaxtonHaleBase boss, int victim, int 
 
 	if (damagecustom == TF_CUSTOM_BURNING && 0 < victim <= MaxClients && g_iPainisBurnBoss[victim] == boss.iClient)
 	{
-		if (GetGameTime() - g_flPainisRingLastHit[victim] < PAINIS_CORPSE_PYRO_PULSE + 0.1)
+		if (GetGameTime() - g_flPainisRingLastHit[victim] < g_flPainisRingGap[victim] + 0.1)
 			return Plugin_Stop;
 
 		damage = g_flPainisBurnDamage[victim];
@@ -233,7 +240,6 @@ public Action PainisCupcake_OnAttackBuilding(SaxtonHaleBase boss, int building, 
 		return Plugin_Continue;
 
 	Action action = Plugin_Continue;
-	float flMult = Painis_GetCorpseMultiplier(boss);
 
 	if (Painis_IsMeleeHit(boss, inflictor, weapon, damagecustom))
 		Painis_QueueExplosion(boss, building, damagePosition);
@@ -241,7 +247,7 @@ public Action PainisCupcake_OnAttackBuilding(SaxtonHaleBase boss, int building, 
 	int iEngineer = Painis_GetStacks(boss.iClient, TFClass_Engineer);
 	if (iEngineer > 0)
 	{
-		damage *= 1.0 + PAINIS_CORPSE_ENGINEER_BUILDING * float(iEngineer) * flMult;
+		damage *= 1.0 + PAINIS_CORPSE_ENGINEER_BUILDING * float(iEngineer);
 		action = Plugin_Changed;
 	}
 
@@ -281,7 +287,7 @@ public void PainisCupcake_OnRageBodyEaten(SaxtonHaleBase boss, int iBody, TFClas
 	g_iPainisCorpseStacks[boss.iClient][iClass]++;
 
 	if (nClass == TFClass_Medic)
-		Client_AddHealth(boss.iClient, RoundToNearest(float(PAINIS_CORPSE_MEDIC_HEAL) * Painis_GetCorpseMultiplier(boss)), 0);
+		Client_AddHealth(boss.iClient, PAINIS_CORPSE_MEDIC_HEAL, 0);
 
 	Painis_UpdateCorpseEffects(boss);
 }
@@ -332,7 +338,7 @@ static void Painis_ResetCorpseState(int iClient)
 
 	g_bPainisCorpseActive[iClient] = false;
 	g_flPainisCorpseNextTick[iClient] = 0.0;
-	g_flPainisSpeedApplied[iClient] = 1.0;
+	g_flPainisSpeedApplied[iClient] = 0.0;
 	g_flPainisRangeApplied[iClient] = 1.0;
 	g_iPainisRangeWeapon[iClient] = INVALID_ENT_REFERENCE;
 	g_flPainisPyroNextPulse[iClient] = 0.0;
@@ -368,12 +374,11 @@ static void Painis_EndCorpseEffects(SaxtonHaleBase boss, bool bRevertBoss = true
 static void Painis_UpdateCorpseEffects(SaxtonHaleBase boss)
 {
 	int iClient = boss.iClient;
-	float flMult = Painis_GetCorpseMultiplier(boss);
 
-	float flSpeed = 1.0 + PAINIS_CORPSE_SCOUT_SPEED * float(Painis_GetStacks(iClient, TFClass_Scout)) * flMult;
+	float flSpeed = PAINIS_CORPSE_SCOUT_SPEED * float(Painis_GetStacks(iClient, TFClass_Scout));
 	if (flSpeed != g_flPainisSpeedApplied[iClient])
 	{
-		boss.flSpeed = boss.flSpeed / g_flPainisSpeedApplied[iClient] * flSpeed;
+		boss.flSpeed = boss.flSpeed - g_flPainisSpeedApplied[iClient] + flSpeed;
 		g_flPainisSpeedApplied[iClient] = flSpeed;
 	}
 
@@ -384,7 +389,7 @@ static void Painis_UpdateCorpseEffects(SaxtonHaleBase boss)
 		g_flPainisRangeApplied[iClient] = 1.0;
 	}
 
-	float flRange = (PAINIS_MELEE_BASE_RANGE + PAINIS_CORPSE_SNIPER_RANGE * float(Painis_GetStacks(iClient, TFClass_Sniper)) * flMult) / PAINIS_MELEE_BASE_RANGE;
+	float flRange = (PAINIS_MELEE_BASE_RANGE + PAINIS_CORPSE_SNIPER_RANGE * float(Painis_GetStacks(iClient, TFClass_Sniper))) / PAINIS_MELEE_BASE_RANGE;
 	if (iMelee > MaxClients && flRange != g_flPainisRangeApplied[iClient])
 	{
 		float flCurrent = 1.0;
@@ -430,10 +435,11 @@ static void Painis_PyroPulse(SaxtonHaleBase boss)
 	if (flNow < g_flPainisPyroNextPulse[iClient])
 		return;
 
-	if (g_flPainisPyroNextPulse[iClient] > 0.0 && flNow - g_flPainisPyroNextPulse[iClient] < PAINIS_CORPSE_PYRO_PULSE)
-		g_flPainisPyroNextPulse[iClient] += PAINIS_CORPSE_PYRO_PULSE;
+	float flPulse = Painis_GetPyroPulse(iClient);
+	if (g_flPainisPyroNextPulse[iClient] > 0.0 && flNow - g_flPainisPyroNextPulse[iClient] < flPulse)
+		g_flPainisPyroNextPulse[iClient] += flPulse;
 	else
-		g_flPainisPyroNextPulse[iClient] = flNow + PAINIS_CORPSE_PYRO_PULSE;
+		g_flPainisPyroNextPulse[iClient] = flNow + flPulse;
 
 	char sParticle[64];
 	strcopy(sParticle, sizeof(sParticle), PAINIS_RING_PARTICLE);
@@ -443,7 +449,7 @@ static void Painis_PyroPulse(SaxtonHaleBase boss)
 
 	float vecBoss[3];
 	Painis_GetEntityCenter(iClient, vecBoss);
-	float flDamage = PAINIS_CORPSE_PYRO_BURN * float(iPyro) * Painis_GetCorpseMultiplier(boss);
+	float flDamage = PAINIS_CORPSE_PYRO_BURN;
 	int iTeam = GetClientTeam(iClient);
 
 	for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
@@ -461,6 +467,7 @@ static void Painis_PyroPulse(SaxtonHaleBase boss)
 		g_flPainisBurnEnd[iVictim] = flNow + PAINIS_CORPSE_PYRO_AFTERBURN;
 		g_flPainisBurnDamage[iVictim] = flDamage;
 		g_flPainisRingLastHit[iVictim] = flNow;
+		g_flPainisRingGap[iVictim] = flPulse;
 		TF2_IgnitePlayer(iVictim, iClient, PAINIS_CORPSE_PYRO_AFTERBURN);
 		SDKHooks_TakeDamage(iVictim, iClient, iClient, flDamage, DMG_BURN|DMG_PREVENT_PHYSICS_FORCE, -1, NULL_VECTOR, vecBoss, false);
 	}
@@ -583,7 +590,7 @@ static void Painis_SapperTick(SaxtonHaleBase boss)
 	if (iSpy <= 0 || !IsPlayerAlive(iClient))
 		return;
 
-	float flRadius = PAINIS_CORPSE_SPY_RADIUS * float(iSpy) * Painis_GetCorpseMultiplier(boss);
+	float flRadius = PAINIS_CORPSE_SPY_RADIUS + PAINIS_CORPSE_SPY_RADIUS_STACK * float(iSpy - 1);
 	float vecBoss[3];
 	Painis_GetEntityCenter(iClient, vecBoss);
 	int iTeam = GetClientTeam(iClient);
@@ -681,10 +688,8 @@ static void Painis_QueueExplosion(SaxtonHaleBase boss, int iTarget, const float 
 	if (GetVectorLength(vecPos) == 0.0)
 		Painis_GetEntityCenter(iTarget, vecPos);
 
-	float flDamage = PAINIS_CORPSE_SOLDIER_DAMAGE * float(iSoldier) * Painis_GetCorpseMultiplier(boss);
+	float flDamage = PAINIS_CORPSE_SOLDIER_DAMAGE * float(iSoldier);
 	float flRadius = PAINIS_CORPSE_SOLDIER_RADIUS + PAINIS_CORPSE_SOLDIER_RADIUS_STACK * float(iSoldier - 1);
-	if (boss.bSuperRage)
-		flRadius += PAINIS_CORPSE_SOLDIER_RADIUS_SUPER;
 
 	DataPack hPack = new DataPack();
 	hPack.WriteCell(GetClientUserId(boss.iClient));
@@ -788,8 +793,6 @@ static bool Painis_HasStacks(int iClient)
 static int Painis_GetDemoStacks(SaxtonHaleBase boss)
 {
 	int iStacks = Painis_GetStacks(boss.iClient, TFClass_DemoMan);
-	if (boss.bSuperRage)
-		iStacks *= 2;
 
 	if (iStacks > PAINIS_CORPSE_DEMO_MAX_STACKS)
 		iStacks = PAINIS_CORPSE_DEMO_MAX_STACKS;
@@ -797,9 +800,17 @@ static int Painis_GetDemoStacks(SaxtonHaleBase boss)
 	return iStacks;
 }
 
-static float Painis_GetCorpseMultiplier(SaxtonHaleBase boss)
+static float Painis_GetPyroPulse(int iClient)
 {
-	return boss.bSuperRage ? 2.0 : 1.0;
+	int iPyro = Painis_GetStacks(iClient, TFClass_Pyro);
+	if (iPyro < 1)
+		iPyro = 1;
+
+	float flPulse = PAINIS_CORPSE_PYRO_PULSE - PAINIS_CORPSE_PYRO_PULSE_STACK * float(iPyro - 1);
+	if (flPulse < PAINIS_CORPSE_PYRO_PULSE_MIN)
+		flPulse = PAINIS_CORPSE_PYRO_PULSE_MIN;
+
+	return flPulse;
 }
 
 static void Painis_GetEntityCenter(int iEntity, float vecCenter[3])

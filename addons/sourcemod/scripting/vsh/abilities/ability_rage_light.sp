@@ -13,6 +13,7 @@ public void LightRage_Create(SaxtonHaleBase boss)
 	boss.SetPropFloat("LightRage", "LigthRageDuration", 10.0);
 	boss.SetPropFloat("LightRage", "LightRageRadius", 450.0);
 	boss.SetPropInt("LightRage", "RageLightBrigthness", 10);
+	boss.SetPropFloat("LightRage", "LightRageSuperRageMultiplier", 2.0);
 }
 
 public void LightRage_OnRage(SaxtonHaleBase boss)
@@ -32,7 +33,7 @@ public void LightRage_OnRage(SaxtonHaleBase boss)
 		
 		float flDuration = boss.GetPropFloat("LightRage", "LigthRageDuration");
 		if (boss.bSuperRage)
-			flDuration *= 2.0;
+			flDuration *= boss.GetPropFloat("LightRage", "LightRageSuperRageMultiplier");
 		CreateTimer(flDuration, Timer_DestroyLight, EntIndexToEntRef(iGlow));
 	}
 }
