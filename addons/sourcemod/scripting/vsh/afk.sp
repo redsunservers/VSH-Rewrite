@@ -11,6 +11,12 @@ static bool g_bAfkLive;
 static float g_flAfkLiveTime;
 static float g_flAfkLastInput[MAXPLAYERS];
 static bool g_bAfkAlerted[MAXPLAYERS];
+static int g_iAfkCount;
+
+int Afk_GetCount()
+{
+	return g_iAfkCount;
+}
 
 void Afk_Init()
 {
@@ -63,6 +69,7 @@ void Afk_RoundStart()
 	g_iAfkRound++;
 	g_bAfkWindow = true;
 	g_bAfkLive = false;
+	g_iAfkCount = 0;
 	
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
@@ -114,6 +121,8 @@ public Action Afk_Timer_Check(Handle hTimer, int iRound)
 		iAfk++;
 	}
 	
+	g_iAfkCount = iAfk;
+
 	if (iAfk > 0)
 	{
 		int iRemoved = Afk_RemoveBossHealth(iAfk);

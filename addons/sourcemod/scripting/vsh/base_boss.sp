@@ -6,6 +6,7 @@
 #define BOSS_ISOLATION_DISTANCE		2000.0
 #define BOSS_ISOLATION_INTERVAL		0.2
 #define BOSS_STOMP_DAMAGE_PER_FALL_SPEED	0.3182
+#define BOSS_STOMP_HEAVY_MULTIPLIER	0.5
 #define BOSS_ISOLATION_MARK_DURATION	0.5
 #define BOSS_STUN_SELF_WINDOW	0.2
 
@@ -393,6 +394,9 @@ public Action SaxtonHaleBoss_OnAttackDamage(SaxtonHaleBase boss, int victim, int
 			flFallSpeed = flFallVelocity;
 		
 		damage = flFallSpeed * BOSS_STOMP_DAMAGE_PER_FALL_SPEED;
+		if (TF2_GetPlayerClass(victim) == TFClass_Heavy && SaxtonHale_IsValidAttack(victim))
+			damage *= BOSS_STOMP_HEAVY_MULTIPLIER;
+
 		return Plugin_Changed;
 	}
 	

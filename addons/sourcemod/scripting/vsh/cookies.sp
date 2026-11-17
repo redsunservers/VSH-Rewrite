@@ -42,6 +42,18 @@ void Cookies_OnClientJoin(int iClient)
 		Cookies_RefreshQueue(iClient);
 }
 
+void Cookies_OnClientCookiesCached(int iClient)
+{
+	if (!IsClientInGame(iClient) || IsFakeClient(iClient))
+		return;
+
+	if (g_ConfigConvar.LookupBool("vsh_cookies_preferences"))
+		Cookies_RefreshPreferences(iClient);
+
+	if (g_ConfigConvar.LookupBool("vsh_cookies_queue"))
+		Cookies_RefreshQueue(iClient);
+}
+
 void Cookies_RefreshPreferences(int iClient)
 {
 	int iVal;

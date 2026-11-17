@@ -236,7 +236,8 @@ char g_strPreferencesName[][] = {
 	"",
 	"Multi Boss",
 	"Music",
-	"Revival"
+	"Revival",
+	"Hale modifiers"
 };
 
 // TF2 Class names, ordered from TFClassType
@@ -373,7 +374,6 @@ ConVar tf_feign_death_activate_damage_scale;
 ConVar tf_feign_death_damage_scale;
 ConVar tf_stealth_damage_reduction;
 ConVar tf_feign_death_duration;
-ConVar tf_feign_death_speed_duration;
 ConVar tf_arena_preround_time;
 
 #include "vsh/base_boss.sp"
@@ -382,6 +382,7 @@ ConVar tf_arena_preround_time;
 #include "vsh/abilities/ability_brave_jump.sp"
 #include "vsh/abilities/ability_dash_jump.sp"
 #include "vsh/abilities/ability_groundpound.sp"
+#include "vsh/abilities/ability_ice_boulder.sp"
 #include "vsh/abilities/ability_lunge.sp"
 #include "vsh/abilities/ability_rage_attributes.sp"
 #include "vsh/abilities/ability_rage_bomb.sp"
@@ -530,7 +531,6 @@ public void OnPluginStart()
 	tf_feign_death_damage_scale = FindConVar("tf_feign_death_damage_scale");
 	tf_stealth_damage_reduction = FindConVar("tf_stealth_damage_reduction");
 	tf_feign_death_duration = FindConVar("tf_feign_death_duration");
-	tf_feign_death_speed_duration = FindConVar("tf_feign_death_speed_duration");
 	tf_arena_preround_time = FindConVar("tf_arena_preround_time");
 
 	AddNormalSoundHook(NormalSoundHook);
@@ -546,7 +546,6 @@ public void OnPluginStart()
 	Config_Init();
 	
 	PrefSave_Init();
-	AltWeapon_Init();
 	WeaponKeys_Init();
 	Afk_Init();
 	DuoParty_Init();
@@ -753,6 +752,7 @@ public void OnPluginStart()
 	SaxtonHale_RegisterClass("BraveJump", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("DashJump", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("GroundPound", VSHClassType_Ability);
+	SaxtonHale_RegisterClass("IceBoulder", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("Lunge", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("RageAttributes", VSHClassType_Ability);
 	SaxtonHale_RegisterClass("RageAddCond", VSHClassType_Ability);
@@ -873,7 +873,6 @@ void Plugin_Cvars(bool toggle)
 	static float flFeignDeathDamageScale;
 	static float flStealthDamageReduction;
 	static float flFeignDeathDuration;
-	static float flFeignDeathSpeed;
 
 	static bool toggled = false; // Used to avoid a overwrite of default value if toggled twice
 
@@ -913,9 +912,6 @@ void Plugin_Cvars(bool toggle)
 
 		flFeignDeathDuration = tf_feign_death_duration.FloatValue;
 		tf_feign_death_duration.FloatValue = 7.0;
-
-		flFeignDeathSpeed = tf_feign_death_speed_duration.FloatValue;
-		tf_feign_death_speed_duration.FloatValue = 0.0;
 	}
 	else if (!toggle && toggled)
 	{
@@ -934,7 +930,6 @@ void Plugin_Cvars(bool toggle)
 		tf_feign_death_damage_scale.FloatValue = flFeignDeathDamageScale;
 		tf_stealth_damage_reduction.FloatValue = flStealthDamageReduction;
 		tf_feign_death_duration.FloatValue = flFeignDeathDuration;
-		tf_feign_death_speed_duration.FloatValue = flFeignDeathSpeed;
 	}
 }
 
@@ -1382,7 +1377,6 @@ public void OnClientPutInServer(int iClient)
 	
 	Blacklist_Load(iClient, true);
 	Cookies_OnClientJoin(iClient);
-	AltWeapon_Load(iClient);
 	DuoParty_LoadOptIn(iClient);
 }
 
@@ -1503,7 +1497,7 @@ public void Client_OnThink(int iClient)
 public void OnClientCookiesCached(int iClient)
 {
 	Blacklist_Load(iClient, true);
-	AltWeapon_Load(iClient);
+	Cookies_OnClientCookiesCached(iClient);
 	DuoParty_LoadOptIn(iClient);
 }
 

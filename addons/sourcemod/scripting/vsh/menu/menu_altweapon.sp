@@ -91,7 +91,10 @@ public int MenuAltWeapon_SelectWeapon(Menu hMenu, MenuAction action, int iClient
 	
 	int iIndex = StringToInt(sSelect[1]);
 	if (sSelect[0] == 't')
-		AltWeapon_Toggle(iClient, iIndex);
+	{
+		if (!AltWeapon_Toggle(iClient, iIndex))
+			PrintToChat(iClient, "%s%s Your preferences are still loading, try again later.", TEXT_TAG, TEXT_ERROR);
+	}
 	else if (sSelect[0] == 's')
 		AltWeapon_PrintDesp(iClient, iIndex);
 	

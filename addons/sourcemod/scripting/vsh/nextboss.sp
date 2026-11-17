@@ -343,7 +343,7 @@ void NextBoss_SetBoss(SaxtonHaleNextBoss nextBoss, ArrayList aNonBosses)
 	if (StrEmpty(sBossType))
 		NextBoss_GetRandomNormal(sBossType, sizeof(sBossType), nextBoss.iClient);
 	
-	if (!bModifierSet)
+	if (!bModifierSet && Preferences_Get(nextBoss.iClient, VSHPreferences_Modifiers))
 		NextBoss_GetRandomModifiers(sModifierType, sizeof(sModifierType));
 	
 	SaxtonHaleBase boss = SaxtonHaleBase(nextBoss.iClient);

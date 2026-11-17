@@ -39,6 +39,10 @@ static char g_strYetiVoice[][] =  {
 	"player/taunt_yeti_roar_second.wav"
 };
 
+static char g_strYetiJump[][] =  {
+	"player/taunt_yeti_appear_snow.wav"
+};
+
 static char g_strYetiFootsteps[][] =  {
 	"player/footsteps/giant1.wav", 
 	"player/footsteps/giant2.wav"
@@ -49,6 +53,7 @@ public void Yeti_Create(SaxtonHaleBase boss)
 	boss.CreateClass("BraveJump");
 	boss.CreateClass("GroundPound");
 	boss.CreateClass("RageMeteor");
+	boss.CreateClass("IceBoulder");
 
 	boss.SetPropFloat("GroundPound", "JumpCooldown", 0.0);
 	
@@ -69,12 +74,13 @@ public void Yeti_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length)
 	StrCat(sInfo, length, "\n ");
 	StrCat(sInfo, length, "\nAbilities");
 	StrCat(sInfo, length, "\n- Brave Jump (Not Reduced by Ground Pound)");
+	StrCat(sInfo, length, "\n- Charge and release to fire a meteor projectile that drags enemies with it as it travels");
 	StrCat(sInfo, length, "\n ");
 	StrCat(sInfo, length, "\nRage");
 	StrCat(sInfo, length, "\n- Damage requirement: 3500");
-	StrCat(sInfo, length, "\n- Rains hail down on to players in front of you");
-	StrCat(sInfo, length, "\n- Players hit will get slowed for 3 second");
-	StrCat(sInfo, length, "\n- 200%% Rage: Increased projectile count and spawn rate");
+	StrCat(sInfo, length, "\n- Rains hail down on random players in your vicinity");
+	StrCat(sInfo, length, "\n- Players hit by a meteor landing are slowed for 3 seconds");
+	StrCat(sInfo, length, "\n- 200%% Rage: Increased projectile radius and reduces the time it takes for meteors to land");
 }
 
 public void Yeti_OnSpawn(SaxtonHaleBase boss)
@@ -124,7 +130,7 @@ static void KillIconShared(Event event, bool bLog)
 {
 	int iWeaponId = event.GetInt("weaponid");
 	
-	if (iWeaponId == TF_WEAPON_ROCKETLAUNCHER)
+	if (iWeaponId == TF_WEAPON_ROCKETLAUNCHER || RageMeteor_IsDamaging() || IceBoulder_IsDamaging())
 	{
 		if (bLog)
 			event.SetString("weapon_logclassname", "meteor");
@@ -148,6 +154,14 @@ public void Yeti_GetSound(SaxtonHaleBase boss, char[] sSound, int length, Saxton
 		case VSHSound_Lastman:strcopy(sSound, length, g_strYetiLastMan[GetRandomInt(0, sizeof(g_strYetiLastMan) - 1)]);
 		case VSHSound_Backstab:strcopy(sSound, length, g_strYetiBackStabbed[GetRandomInt(0, sizeof(g_strYetiBackStabbed) - 1)]);
 	}
+}
+
+public void Yeti_GetSoundAbility(SaxtonHaleBase boss, char[] sSound, int length, const char[] sType)
+{
+	if (strcmp(sType, "BraveJump") == 0)
+		strcopy(sSound, length, g_strYetiJump[GetRandomInt(0, sizeof(g_strYetiJump) - 1)]);
+	else if (strcmp(sType, "IceBoulder") == 0)
+		strcopy(sSound, length, g_strYetiVoice[GetRandomInt(0, sizeof(g_strYetiVoice) - 1)]);
 }
 
 public void Yeti_GetSoundKill(SaxtonHaleBase boss, char[] sSound, int length, TFClassType nClass)
@@ -208,6 +222,7 @@ public void Yeti_Precache(SaxtonHaleBase boss)
 	for (int i = 0; i < sizeof(g_strYetiBackStabbed); i++)PrecacheSound(g_strYetiBackStabbed[i]);
 	for (int i = 0; i < sizeof(g_strYetiVoice); i++)PrecacheSound(g_strYetiVoice[i]);
 	for (int i = 0; i < sizeof(g_strYetiFootsteps); i++)PrecacheSound(g_strYetiFootsteps[i]);
+	for (int i = 0; i < sizeof(g_strYetiJump); i++)PrecacheSound(g_strYetiJump[i]);
 	
 	AddFileToDownloadsTable("materials/models/player/boss/yeti/invun_grey.vtf");
 	AddFileToDownloadsTable("materials/models/player/boss/yeti/yeti_face_invun.vmt");

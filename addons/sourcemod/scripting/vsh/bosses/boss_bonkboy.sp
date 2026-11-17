@@ -64,11 +64,11 @@ static char g_strBonkBoyBackStabbed[][] = {
 public void BonkBoy_Create(SaxtonHaleBase boss)
 {
 	boss.CreateClass("DashJump");
+	boss.SetPropFloat("DashJump", "RageRegenMultiplier", 3.0);
 	boss.CreateClass("WeaponBall");
 	
 	boss.CreateClass("RageAddCond");
 	boss.SetPropFloat("RageAddCond", "RageCondDuration", 5.0);
-	RageAddCond_AddCond(boss, TFCond_HalloweenSpeedBoost);	//Unlimited jumps
 	RageAddCond_AddCond(boss, TFCond_CritHype);				//Pink weapon effect
 	RageAddCond_AddCond(boss, TFCond_SpeedBuffAlly);			//Speed boost effect
 	
@@ -95,15 +95,15 @@ public void BonkBoy_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length)
 	StrCat(sInfo, length, "\nAbilities");
 	StrCat(sInfo, length, "\n- Faster movement speed and extra jump height");
 	StrCat(sInfo, length, "\n- Dash Jump");
-	StrCat(sInfo, length, "\n- Sandman deals crit to slowed players");
+	StrCat(sInfo, length, "\n- Balls apply damage vulnerability to players it hits");
 	StrCat(sInfo, length, "\n- Fast recharge balls, able to hold 3 max");
 	StrCat(sInfo, length, "\n- Medium range balls slows players and disables buildings, moonshot instakills");
 	StrCat(sInfo, length, "\n ");
 	StrCat(sInfo, length, "\nRage");
 	StrCat(sInfo, length, "\n- Damage requirement: 1500");
-	StrCat(sInfo, length, "\n- Unlimited and greater mobility jumps");
+	StrCat(sInfo, length, "\n- Dashes recharge faster");
 	StrCat(sInfo, length, "\n- Faster movement speed");
-	StrCat(sInfo, length, "\n- Unlimited balls");
+	StrCat(sInfo, length, "\n- Balls recharge faster and gain higher capacity to store them for the duration of rage");
 	StrCat(sInfo, length, "\n- Bat slows and knockback players");
 	StrCat(sInfo, length, "\n- 200%% Rage: Extends duration from 5 to 10 seconds");
 }
@@ -111,7 +111,7 @@ public void BonkBoy_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length)
 public void BonkBoy_OnSpawn(SaxtonHaleBase boss)
 {
 	char attribs[256];
-	Format(attribs, sizeof(attribs), "2 ; 3.54 ; 252 ; 0.5 ; 259 ; 1.0 ; 38 ; 1.0 ; 278 ; 0.5 ; 524 ; 1.2 ; 551 ; 1.0");
+	Format(attribs, sizeof(attribs), "2 ; 4.0 ; 252 ; 0.5 ; 259 ; 1.0 ; 38 ; 1.0 ; 278 ; 0.5 ; 524 ; 1.2 ; 551 ; 1.0");
 	int iWeapon = boss.CallFunction("CreateWeapon", 44, "tf_weapon_bat_wood", 1, TFQual_Collectors, attribs);
 	if (iWeapon > MaxClients)
 		SetEntPropEnt(boss.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
@@ -185,7 +185,7 @@ public void BonkBoy_OnThink(SaxtonHaleBase boss)
 
 public Action BonkBoy_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
-	if (weapon > MaxClients && TF2_GetItemInSlot(boss.iClient, WeaponSlot_Melee) == weapon && damagecustom == 0 && WeaponBall_IsSlowed(victim))
+	if (weapon > MaxClients && TF2_GetItemInSlot(boss.iClient, WeaponSlot_Melee) == weapon && damagecustom == 0 && WeaponBall_IsMarked(boss.iClient, victim))
 	{
 		damagetype |= DMG_CRIT;
 		return Plugin_Changed;
