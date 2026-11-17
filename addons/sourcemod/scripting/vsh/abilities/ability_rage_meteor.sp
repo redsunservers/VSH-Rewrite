@@ -32,6 +32,9 @@ static float g_flRageMeteorExplode[MAXPLAYERS][RAGEMETEOR_MAX_CIRCLES];
 static float g_flRageMeteorNextDraw[MAXPLAYERS][RAGEMETEOR_MAX_CIRCLES];
 static int g_iRageMeteorRocks[MAXPLAYERS][RAGEMETEOR_MAX_CIRCLES * RAGEMETEOR_MAX_ROCKS];
 static bool g_bRageMeteorDamaging;
+static int g_iRageMeteorWavesLeft[MAXPLAYERS];
+static float g_flRageMeteorNextWave[MAXPLAYERS];
+static bool g_bRageMeteorWaveSuper[MAXPLAYERS];
 
 public void RageMeteor_Precache(SaxtonHaleBase boss)
 {
@@ -53,10 +56,14 @@ public void RageMeteor_Create(SaxtonHaleBase boss)
 	boss.SetPropInt("RageMeteor", "PlayersPerCircle", 8);
 	boss.SetPropFloat("RageMeteor", "TargetRadius", 500.0);
 	boss.SetPropFloat("RageMeteor", "TargetRadiusSuper", 800.0);
-	boss.SetPropFloat("RageMeteor", "CircleRadius", 300.0);
-	boss.SetPropFloat("RageMeteor", "CircleRadiusSuper", 500.0);
+	boss.SetPropFloat("RageMeteor", "TargetRadiusFar", 1000.0);
+	boss.SetPropFloat("RageMeteor", "TargetRadiusFarSuper", 1200.0);
+	boss.SetPropFloat("RageMeteor", "CircleRadius", 150.0);
+	boss.SetPropFloat("RageMeteor", "CircleRadiusSuper", 300.0);
 	boss.SetPropFloat("RageMeteor", "Fuse", 3.0);
 	boss.SetPropFloat("RageMeteor", "FuseSuper", 2.0);
+	boss.SetPropInt("RageMeteor", "Waves", 3);
+	boss.SetPropInt("RageMeteor", "WavesSuper", 5);
 	boss.SetPropInt("RageMeteor", "RockCount", 6);
 }
 
@@ -70,9 +77,9 @@ bool RageMeteor_IsDamaging()
 	return g_bRageMeteorDamaging;
 }
 
-static float RageMeteor_GetRageProp(SaxtonHaleBase boss, const char[] sProp, const char[] sPropSuper)
+static float RageMeteor_GetRageProp(SaxtonHaleBase boss, bool bSuper, const char[] sProp, const char[] sPropSuper)
 {
-	if (boss.bSuperRage)
+	if (bSuper)
 		return boss.GetPropFloat("RageMeteor", sPropSuper);
 
 	return boss.GetPropFloat("RageMeteor", sProp);
@@ -81,9 +88,28 @@ static float RageMeteor_GetRageProp(SaxtonHaleBase boss, const char[] sProp, con
 public void RageMeteor_OnRage(SaxtonHaleBase boss)
 {
 	int iClient = boss.iClient;
-	float flTargetRadius = RageMeteor_GetRageProp(boss, "TargetRadius", "TargetRadiusSuper");
-	float flCircleRadius = RageMeteor_GetRageProp(boss, "CircleRadius", "CircleRadiusSuper");
-	float flFuse = RageMeteor_GetRageProp(boss, "Fuse", "FuseSuper");
+
+	g_bRageMeteorWaveSuper[iClient] = boss.bSuperRage;
+	if (boss.bSuperRage)
+		g_iRageMeteorWavesLeft[iClient] = boss.GetPropInt("RageMeteor", "WavesSuper");
+	else
+		g_iRageMeteorWavesLeft[iClient] = boss.GetPropInt("RageMeteor", "Waves");
+
+	if (g_iRageMeteorWavesLeft[iClient] > 0)
+		RageMeteor_StartWave(boss);
+}
+
+static void RageMeteor_StartWave(SaxtonHaleBase boss)
+{
+	int iClient = boss.iClient;
+	bool bSuper = g_bRageMeteorWaveSuper[iClient];
+	float flTargetRadius = RageMeteor_GetRageProp(boss, bSuper, "TargetRadius", "TargetRadiusSuper");
+	float flTargetRadiusFar = RageMeteor_GetRageProp(boss, bSuper, "TargetRadiusFar", "TargetRadiusFarSuper");
+	float flCircleRadius = RageMeteor_GetRageProp(boss, bSuper, "CircleRadius", "CircleRadiusSuper");
+	float flFuse = RageMeteor_GetRageProp(boss, bSuper, "Fuse", "FuseSuper");
+
+	g_iRageMeteorWavesLeft[iClient]--;
+	g_flRageMeteorNextWave[iClient] = GetGameTime() + flFuse;
 
 	int iPlayers = g_iTotalAttackCount - Afk_GetCount();
 	if (iPlayers < 1)
@@ -98,36 +124,65 @@ public void RageMeteor_OnRage(SaxtonHaleBase boss)
 		iCircles = RAGEMETEOR_MAX_CIRCLES;
 
 	static float vecCandidate[MAXPLAYERS][3];
-	int iCount = 0;
+	int iNear = 0;
+	int iFar = 0;
 
 	float vecBoss[3];
 	GetClientAbsOrigin(iClient, vecBoss);
 	int iTeam = GetClientTeam(iClient);
 
-	for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
+	for (int iPass = 0; iPass < 2; iPass++)
 	{
-		if (!IsClientInGame(iVictim) || !IsPlayerAlive(iVictim) || GetClientTeam(iVictim) <= 1 || GetClientTeam(iVictim) == iTeam)
-			continue;
+		for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
+		{
+			if (!IsClientInGame(iVictim) || !IsPlayerAlive(iVictim) || GetClientTeam(iVictim) <= 1 || GetClientTeam(iVictim) == iTeam)
+				continue;
 
-		if (!IsClientInRange(iVictim, vecBoss, flTargetRadius))
-			continue;
+			if (TF2_IsPlayerInCondition(iVictim, TFCond_Cloaked) || TF2_IsPlayerInCondition(iVictim, TFCond_Stealthed))
+				continue;
 
-		if (TF2_IsPlayerInCondition(iVictim, TFCond_Cloaked) || TF2_IsPlayerInCondition(iVictim, TFCond_Stealthed))
-			continue;
+			bool bNear = IsClientInRange(iVictim, vecBoss, flTargetRadius);
+			if (iPass == 0)
+			{
+				if (!bNear)
+					continue;
+			}
+			else if (bNear || !IsClientInRange(iVictim, vecBoss, flTargetRadiusFar))
+			{
+				continue;
+			}
 
-		RageMeteor_GetGroundPos(iVictim, vecCandidate[iCount]);
-		iCount++;
+			RageMeteor_GetGroundPos(iVictim, vecCandidate[iNear + iFar]);
+			if (iPass == 0)
+				iNear++;
+			else
+				iFar++;
+		}
 	}
 
 	float vecChosen[RAGEMETEOR_MAX_CIRCLES][3];
 	int iChosen = 0;
+	int iNearLeft = iNear;
+	int iFarLeft = iFar;
 
-	while (iChosen < iCircles && iCount > 0)
+	while (iChosen < iCircles)
 	{
+		bool bFromNear = (iNearLeft > 0);
+		int iFirst = 0;
+		int iEnd = iNearLeft;
+		if (!bFromNear)
+		{
+			iFirst = iNear;
+			iEnd = iNear + iFarLeft;
+		}
+
+		if (iEnd <= iFirst)
+			break;
+
 		int iPick = -1;
 		if (iChosen == 0)
 		{
-			iPick = GetRandomInt(0, iCount - 1);
+			iPick = GetRandomInt(iFirst, iEnd - 1);
 		}
 		else
 		{
@@ -136,7 +191,7 @@ public void RageMeteor_OnRage(SaxtonHaleBase boss)
 			int iFurthest = -1;
 			float flFurthest = -1.0;
 
-			for (int i = 0; i < iCount; i++)
+			for (int i = iFirst; i < iEnd; i++)
 			{
 				float flNearest = -1.0;
 				for (int j = 0; j < iChosen; j++)
@@ -171,10 +226,13 @@ public void RageMeteor_OnRage(SaxtonHaleBase boss)
 		RageMeteor_PlaceCircle(boss, vecChosen[iChosen], flCircleRadius, flFuse);
 		iChosen++;
 
-		iCount--;
-		vecCandidate[iPick][0] = vecCandidate[iCount][0];
-		vecCandidate[iPick][1] = vecCandidate[iCount][1];
-		vecCandidate[iPick][2] = vecCandidate[iCount][2];
+		vecCandidate[iPick][0] = vecCandidate[iEnd - 1][0];
+		vecCandidate[iPick][1] = vecCandidate[iEnd - 1][1];
+		vecCandidate[iPick][2] = vecCandidate[iEnd - 1][2];
+		if (bFromNear)
+			iNearLeft--;
+		else
+			iFarLeft--;
 	}
 }
 
@@ -265,6 +323,14 @@ public void RageMeteor_OnThink(SaxtonHaleBase boss)
 			g_flRageMeteorNextDraw[iClient][i] = flNow + RAGEMETEOR_REDRAW;
 			RageMeteor_DrawCircle(vecPos, g_flRageMeteorRadius[iClient][i]);
 		}
+	}
+
+	if (g_iRageMeteorWavesLeft[iClient] > 0 && flNow >= g_flRageMeteorNextWave[iClient])
+	{
+		if (IsPlayerAlive(iClient))
+			RageMeteor_StartWave(boss);
+		else
+			g_iRageMeteorWavesLeft[iClient] = 0;
 	}
 }
 
@@ -469,6 +535,7 @@ static void RageMeteor_RemoveRocks(int iClient, int iSlot)
 
 static void RageMeteor_ClearCircles(int iClient)
 {
+	g_iRageMeteorWavesLeft[iClient] = 0;
 	for (int i = 0; i < RAGEMETEOR_MAX_CIRCLES; i++)
 	{
 		g_flRageMeteorExplode[iClient][i] = 0.0;

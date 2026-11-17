@@ -1,6 +1,7 @@
 #define ATTRIB_MAX_MISC_AMMO	279
 #define ATTRIB_EFFECTBAR_RECHARGE_RATE	278
 #define WEAPONBALL_RECHARGE_TIME	10.0
+#define WEAPONBALL_STOCK_DAMAGE	15.0
 
 static int g_iWeaponBallStunType;
 
@@ -28,6 +29,7 @@ public void WeaponBall_Create(SaxtonHaleBase boss)
 	boss.SetPropFloat("WeaponBall", "Slowdown", 0.8);
 	boss.SetPropFloat("WeaponBall", "DamageScale", 3.75);
 	boss.SetPropFloat("WeaponBall", "RageDamageScale", 4.5);
+	boss.SetPropFloat("WeaponBall", "RageBaseDamage", 80.0);
 	boss.SetPropFloat("WeaponBall", "BuildingDamage", 150.0);
 	boss.SetPropInt("WeaponBall", "RageBall", 5);
 	boss.SetPropInt("WeaponBall", "RageMaxBall", 7);
@@ -223,6 +225,26 @@ static float WeaponBall_GetDamageScale(int iBoss)
 	return SaxtonHaleBase(iBoss).GetPropFloat("WeaponBall", "DamageScale");
 }
 
+static float WeaponBall_GetBaseScale(int iBoss)
+{
+	if (!SaxtonHale_IsValidBoss(iBoss) || !SaxtonHaleBase(iBoss).HasClass("WeaponBall"))
+		return 1.0;
+
+	if (g_flWeaponBallRageEnd[iBoss] <= GetGameTime())
+		return 1.0;
+
+	float flBase = SaxtonHaleBase(iBoss).GetPropFloat("WeaponBall", "RageBaseDamage");
+	if (flBase <= 0.0)
+		return 1.0;
+
+	float flStock = WEAPONBALL_STOCK_DAMAGE;
+	ConVar cvStock = FindConVar("sv_proj_stunball_damage");
+	if (cvStock != null && cvStock.FloatValue > 0.0)
+		flStock = cvStock.FloatValue;
+
+	return flBase / flStock;
+}
+
 public MRESReturn WeaponBall_BallImpact(int iEntity, Handle hParams)
 {
 	//Get victim whos stunned from ball
@@ -328,7 +350,12 @@ public Action WeaponBall_OnTakeDamage(int victim, int &attacker, int &inflictor,
 		{
 			//Not so home run
 			damage *= g_flWeaponBallStunTime[victim] * WeaponBall_GetDamageScale(g_iWeaponBallBoss[victim]);
+			damage *= WeaponBall_GetBaseScale(g_iWeaponBallBoss[victim]);
 			WeaponBall_SlowPlayer(victim, g_flWeaponBallSlowdown[victim], g_flWeaponBallStunTime[victim] * 8.0, false);
+		}
+		else
+		{
+			damage *= WeaponBall_GetBaseScale(g_iWeaponBallBoss[victim]);
 		}
 		
 		g_flWeaponBallStunTime[victim] = 0.0;
