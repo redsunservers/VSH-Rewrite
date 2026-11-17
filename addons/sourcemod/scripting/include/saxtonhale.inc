@@ -768,6 +768,7 @@ enum SaxtonHalePreferences
 	VSHPreferences_MultiBoss,
 	VSHPreferences_Music,
 	VSHPreferences_Revival,
+	VSHPreferences_Modifiers,
 };
 
 /**

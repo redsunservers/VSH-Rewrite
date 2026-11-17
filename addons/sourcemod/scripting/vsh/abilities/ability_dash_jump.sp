@@ -1,13 +1,46 @@
 static float g_flDashJumpCooldownWait[MAXPLAYERS];
+static float g_flDashJumpRageEnd[MAXPLAYERS];
+static float g_flDashJumpLastThink[MAXPLAYERS];
 
 public void DashJump_Create(SaxtonHaleBase boss)
 {
 	g_flDashJumpCooldownWait[boss.iClient] = 0.0;
+	g_flDashJumpRageEnd[boss.iClient] = 0.0;
+	g_flDashJumpLastThink[boss.iClient] = 0.0;
 	
 	//Default values, these can be changed if needed
 	boss.SetPropFloat("DashJump", "Cooldown", 4.0);
 	boss.SetPropFloat("DashJump", "MaxCharge", 2.0);
 	boss.SetPropFloat("DashJump", "MaxForce", 700.0);
+	boss.SetPropFloat("DashJump", "RageRegenMultiplier", 1.0);
+	boss.SetPropFloat("DashJump", "RageDuration", 5.0);
+}
+
+public void DashJump_OnRage(SaxtonHaleBase boss)
+{
+	if (boss.GetPropFloat("DashJump", "RageRegenMultiplier") <= 1.0)
+		return;
+
+	float flDuration = boss.GetPropFloat("DashJump", "RageDuration");
+	if (boss.bSuperRage)
+		flDuration *= 2.0;
+
+	g_flDashJumpRageEnd[boss.iClient] = GetGameTime() + flDuration;
+	boss.CallFunction("UpdateHudInfo", 0.0, flDuration);
+}
+
+public void DashJump_OnThink(SaxtonHaleBase boss)
+{
+	int iClient = boss.iClient;
+	float flNow = GetGameTime();
+	float flDelta = flNow - g_flDashJumpLastThink[iClient];
+	g_flDashJumpLastThink[iClient] = flNow;
+
+	if (g_flDashJumpRageEnd[iClient] <= flNow || flDelta <= 0.0 || flDelta > 0.5)
+		return;
+
+	if (g_flDashJumpCooldownWait[iClient] > flNow)
+		g_flDashJumpCooldownWait[iClient] -= flDelta * (boss.GetPropFloat("DashJump", "RageRegenMultiplier") - 1.0);
 }
 
 public void DashJump_GetHudInfo(SaxtonHaleBase boss, char[] sMessage, int iLength, int iColor[4])

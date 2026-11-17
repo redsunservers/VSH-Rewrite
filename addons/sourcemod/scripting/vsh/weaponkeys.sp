@@ -30,6 +30,8 @@ static ConVar g_cvWeaponKeysCritFalloff;
 static ConVar g_cvWeaponKeysMiniCritFalloff;
 
 static int g_iWeaponKeysFireWeapon[MAXPLAYERS];
+static int g_iWeaponKeysMilkAttacker;
+static int g_iWeaponKeysMilkTick;
 static float g_flWeaponKeysFireTime[MAXPLAYERS];
 
 void WeaponKeys_Init()
@@ -115,6 +117,13 @@ static void WeaponKeys_CollideCheckFailed()
 bool WeaponKeys_OnTakeDamage(int iVictim, int iAttacker, int &iDamageType, int iWeapon, int iDamageCustom)
 {
 	g_flWeaponKeysDonkTime = -1.0;
+
+	g_iWeaponKeysMilkAttacker = 0;
+	if (iVictim != iAttacker && SaxtonHale_IsValidAttack(iAttacker) && TF2_IsPlayerInCondition(iVictim, TFCond_Milked))
+	{
+		g_iWeaponKeysMilkAttacker = iAttacker;
+		g_iWeaponKeysMilkTick = GetGameTickCount();
+	}
 	
 	bool bChanged = false;
 	
@@ -340,6 +349,8 @@ static void WeaponKeys_GetWorldSpaceCenter(int iClient, float vecCenter[3])
 
 void WeaponKeys_OnTakeDamagePost(int iVictim, int iAttacker, float flDamage)
 {
+	g_iWeaponKeysMilkAttacker = 0;
+
 	if (flDamage <= 0.0 || iVictim == iAttacker || !SaxtonHale_IsValidAttack(iAttacker) || !IsPlayerAlive(iAttacker))
 		return;
 	
@@ -392,6 +403,22 @@ void WeaponKeys_OnPlayerRunCmdPost(int iClient)
 	float flScale = Config_GetWeaponKeyFloat(iClient, iWeapon, "selfpushscale");
 	if (flScale > 0.0 && flScale != 1.0)
 		WeaponKeys_ScaleScattergunPush(iClient, flScale);
+}
+
+void WeaponKeys_OnPlayerHealed(int iPatient, int iHealer, int iAmount)
+{
+	if (iPatient <= 0 || iPatient != g_iWeaponKeysMilkAttacker || GetGameTickCount() != g_iWeaponKeysMilkTick)
+		return;
+
+	if (!IsClientInGame(iPatient) || !SaxtonHale_IsValidAttack(iHealer))
+		return;
+
+	int iMissing = SDK_GetMaxHealth(iPatient) - GetClientHealth(iPatient);
+	if (iAmount > iMissing)
+		iAmount = iMissing;
+
+	if (iAmount > 0)
+		g_iPlayerAssistDamage[iHealer] += iAmount;
 }
 
 static void WeaponKeys_PlayFireSound(int iClient, const char[] sGameSound)

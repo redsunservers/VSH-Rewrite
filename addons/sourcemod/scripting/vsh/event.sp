@@ -17,6 +17,7 @@ void Event_Init()
 	HookEvent("npc_hurt", Event_ObjectHurt);
 	HookEvent("object_destroyed", Event_ObjectDestroyed, EventHookMode_Pre);
 	HookEvent("player_sapped_object", Event_SappedObject, EventHookMode_Pre);
+	HookEvent("player_healed", Event_PlayerHealed);
 
 	HookUserMessage(GetUserMessageId("PlayerJarated"), Event_Jarated);
 }
@@ -617,6 +618,14 @@ public Action Event_ObjectDestroyed(Event event, const char[] sName, bool bDontB
 	}
 	
 	return Plugin_Continue;
+}
+
+public void Event_PlayerHealed(Event event, const char[] sName, bool bDontBroadcast)
+{
+	if (!g_bEnabled) return;
+	if (g_iTotalRoundPlayed <= 0) return;
+
+	WeaponKeys_OnPlayerHealed(GetClientOfUserId(event.GetInt("patient")), GetClientOfUserId(event.GetInt("healer")), event.GetInt("amount"));
 }
 
 public Action Event_SappedObject(Event event, const char[] sName, bool bDontBroadcast)

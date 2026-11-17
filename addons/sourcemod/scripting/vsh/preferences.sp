@@ -25,6 +25,28 @@ bool Preferences_Set(int iClient, SaxtonHalePreferences nPreferences, bool bEnab
 	return true;
 }
 
+bool Preferences_GetBit(int iClient, int iBit)
+{
+	if (g_iPlayerPreferences[iClient] == -1)
+		return false;
+
+	return (g_iPlayerPreferences[iClient] & (1 << iBit)) != 0;
+}
+
+bool Preferences_SetBit(int iClient, int iBit, bool bSet)
+{
+	if (g_iPlayerPreferences[iClient] == -1)
+		return false;
+
+	if (bSet)
+		g_iPlayerPreferences[iClient] |= (1 << iBit);
+	else
+		g_iPlayerPreferences[iClient] &= ~(1 << iBit);
+
+	Cookies_SavePreferences(iClient, g_iPlayerPreferences[iClient]);
+	return true;
+}
+
 void Preferences_SetAll(int iClient, int iPreferences)
 {
 	//No checks if it -1, and no forwards. Be careful with it
