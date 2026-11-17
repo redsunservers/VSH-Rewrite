@@ -47,13 +47,13 @@ void DuoParty_OnMapStart()
 
 void DuoParty_LoadOptIn(int iClient)
 {
-	g_bDuoOptIn[iClient] = false;
+	g_bDuoOptIn[iClient] = !IsFakeClient(iClient);
 	if (!DuoParty_UseCookies(iClient))
 		return;
 
 	char sValue[4];
 	g_hCookiesDuoOptIn.Get(iClient, sValue, sizeof(sValue));
-	g_bDuoOptIn[iClient] = (StringToInt(sValue) == 1);
+	g_bDuoOptIn[iClient] = !StrEqual(sValue, "0");
 }
 
 static bool DuoParty_UseCookies(int iClient)
