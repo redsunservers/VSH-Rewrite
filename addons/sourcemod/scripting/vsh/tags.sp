@@ -56,20 +56,21 @@ void Tags_OnThink(int iClient)
 	if (GetEntityFlags(iClient) & FL_ONGROUND)
 		g_iClimbAmount[iClient] = 0;
 	
-	if (g_flTagsAirblastCooldown[iClient] > 0.0 && g_flTagsAirblastLastUsed[iClient] + g_flTagsAirblastCooldown[iClient] < GetGameTime())
+	if (g_flTagsAirblastCooldown[iClient] > 0.0)
 	{
 		//Detect if airblast is used, and reset if so
 		int iPrimary = TF2_GetItemInSlot(iClient, WeaponSlot_Primary);
 		if (iPrimary > MaxClients)
 		{
-			FlamethrowerState nState = view_as<FlamethrowerState>(GetEntProp(iPrimary, Prop_Send, "m_iWeaponState"));
-			if (nState != g_nTagsAirblastState[iClient] && nState == FlamethrowerState_Airblast)
+			float flCooldownEnd = g_flTagsAirblastLastUsed[iClient] + g_flTagsAirblastCooldown[iClient];
+			if (flCooldownEnd < GetGameTime())
 			{
-				g_flTagsAirblastLastUsed[iClient] = GetGameTime();	//Set cooldown
-				SetEntPropFloat(iPrimary, Prop_Send, "m_flNextSecondaryAttack", GetGameTime() + g_flTagsAirblastCooldown[iClient]);
+				g_nTagsAirblastState[iClient] = view_as<FlamethrowerState>(GetEntProp(iPrimary, Prop_Send, "m_iWeaponState"));
 			}
-			
-			g_nTagsAirblastState[iClient] = nState;
+			else if (GetEntPropFloat(iPrimary, Prop_Send, "m_flNextSecondaryAttack") < flCooldownEnd)
+			{
+				SetEntPropFloat(iPrimary, Prop_Send, "m_flNextSecondaryAttack", flCooldownEnd);
+			}
 		}
 	}
 	
@@ -1080,6 +1081,18 @@ stock TagsMath Tags_GetMath(const char[] sMath)
 stock int Tags_GetBackstabCount(int iClient, int iVictim)
 {
 	return g_iBackstabCount[iClient][iVictim];
+}
+
+void Tags_OnAirblastPush(int iClient, int iVictim)
+{
+	if (iClient <= 0 || iClient > MaxClients || iVictim <= 0 || iVictim > MaxClients || iClient == iVictim)
+		return;
+
+	if (g_flTagsAirblastCooldown[iClient] <= 0.0)
+		return;
+
+	g_flTagsAirblastLastUsed[iClient] = GetGameTime();	//Set cooldown
+	g_nTagsAirblastState[iClient] = FlamethrowerState_Airblast;
 }
 
 stock float Tags_GetAirblastCooldown(int iClient)

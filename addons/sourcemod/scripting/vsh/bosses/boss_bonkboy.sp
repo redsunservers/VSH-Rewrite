@@ -73,12 +73,13 @@ public void BonkBoy_Create(SaxtonHaleBase boss)
 	RageAddCond_AddCond(boss, TFCond_SpeedBuffAlly);			//Speed boost effect
 	
 	boss.flSpeed = 400.0;
-	boss.iHealthPerPlayer = 500;
+	boss.iHealthPerPlayer = 550;
 	boss.flHealthExponential = 1.05;
 	boss.nClass = TFClass_Scout;
-	boss.iMaxRageDamage = 1500;
+	boss.iMaxRageDamage = 1750;
 	
-	boss.SetPropFloat("SaxtonHaleBoss", "RageCooldown", 10.0);
+	boss.SetPropFloat("SaxtonHaleBoss", "RageCooldown", 15.0);
+	boss.SetPropFloat("SaxtonHaleBoss", "RageCooldownMin", 5.0);
 	
 	g_bBonkBoyRage[boss.iClient] = false;
 }
@@ -154,7 +155,8 @@ public void BonkBoy_OnRage(SaxtonHaleBase boss)
 	//Just to fix TFCond_CritHype not doing anything
 	SetEntPropFloat(boss.iClient, Prop_Send, "m_flHypeMeter", 100.0);
 	
-	boss.flSpeed *= 1.5;
+	if (!g_bBonkBoyRage[boss.iClient])
+		boss.flSpeed *= 1.5;
 	g_bBonkBoyRage[boss.iClient] = true;
 	SetEntityMoveType(boss.iClient, MOVETYPE_ISOMETRIC);
 	
