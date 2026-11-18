@@ -1,6 +1,9 @@
 #define EFFECT_CLASSNAME		"info_particle_system"	// Any cheap ent that allows SetTransmit
 
 #define BOSS_RAGE_COOLDOWN_DEFAULT	20.0
+#define BOSS_RAGE_COOLDOWN_MIN_DEFAULT	10.0
+#define BOSS_RAGE_COOLDOWN_PLAYERS_LOW	10
+#define BOSS_RAGE_COOLDOWN_PLAYERS_HIGH	40
 #define BOSS_ISOLATION_LINK_RADIUS	300.0
 #define BOSS_ISOLATION_GROUP_MIN	4
 #define BOSS_ISOLATION_DISTANCE		2000.0
@@ -38,6 +41,7 @@ public void SaxtonHaleBoss_Create(SaxtonHaleBase boss)
 	boss.bSuperRage = false;
 	
 	boss.SetPropFloat("SaxtonHaleBoss", "RageCooldown", BOSS_RAGE_COOLDOWN_DEFAULT);
+	boss.SetPropFloat("SaxtonHaleBoss", "RageCooldownMin", BOSS_RAGE_COOLDOWN_MIN_DEFAULT);
 	
 	g_bClientBossIsolated[boss.iClient] = false;
 	g_flClientBossIsolationNextCheck[boss.iClient] = 0.0;
@@ -403,6 +407,23 @@ public Action SaxtonHaleBoss_OnAttackDamage(SaxtonHaleBase boss, int victim, int
 	return Plugin_Continue;
 }
 
+float BaseBoss_GetRageCooldown(SaxtonHaleBase boss)
+{
+	float flCooldown = boss.GetPropFloat("SaxtonHaleBoss", "RageCooldown");
+	float flCooldownMin = boss.GetPropFloat("SaxtonHaleBoss", "RageCooldownMin");
+	if (flCooldownMin > flCooldown)
+		flCooldownMin = flCooldown;
+
+	int iPlayers = g_iTotalAttackCount - Afk_GetCount();
+	if (iPlayers <= BOSS_RAGE_COOLDOWN_PLAYERS_LOW)
+		return flCooldown;
+
+	if (iPlayers >= BOSS_RAGE_COOLDOWN_PLAYERS_HIGH)
+		return flCooldownMin;
+
+	return flCooldown - (flCooldown - flCooldownMin) * float(iPlayers - BOSS_RAGE_COOLDOWN_PLAYERS_LOW) / float(BOSS_RAGE_COOLDOWN_PLAYERS_HIGH - BOSS_RAGE_COOLDOWN_PLAYERS_LOW);
+}
+
 float BaseBoss_GetRageCooldownLeft(SaxtonHaleBase boss)
 {
 	if (boss.flRageLastTime <= 0.0)
@@ -411,7 +432,7 @@ float BaseBoss_GetRageCooldownLeft(SaxtonHaleBase boss)
 	if (g_flClientBossRageCooldownCleared[boss.iClient] == boss.flRageLastTime)
 		return 0.0;
 	
-	float flLeft = boss.flRageLastTime + boss.GetPropFloat("SaxtonHaleBoss", "RageCooldown") - GetGameTime();
+	float flLeft = boss.flRageLastTime + BaseBoss_GetRageCooldown(boss) - GetGameTime();
 	return (flLeft > 0.0) ? flLeft : 0.0;
 }
 

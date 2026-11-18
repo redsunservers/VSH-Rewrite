@@ -29,6 +29,7 @@ public void WeaponBall_Create(SaxtonHaleBase boss)
 	boss.SetPropFloat("WeaponBall", "Slowdown", 0.8);
 	boss.SetPropFloat("WeaponBall", "DamageScale", 3.75);
 	boss.SetPropFloat("WeaponBall", "RageDamageScale", 4.5);
+	boss.SetPropFloat("WeaponBall", "BaseDamage", 40.0);
 	boss.SetPropFloat("WeaponBall", "RageBaseDamage", 80.0);
 	boss.SetPropFloat("WeaponBall", "BuildingDamage", 150.0);
 	boss.SetPropInt("WeaponBall", "RageBall", 5);
@@ -230,10 +231,12 @@ static float WeaponBall_GetBaseScale(int iBoss)
 	if (!SaxtonHale_IsValidBoss(iBoss) || !SaxtonHaleBase(iBoss).HasClass("WeaponBall"))
 		return 1.0;
 
-	if (g_flWeaponBallRageEnd[iBoss] <= GetGameTime())
-		return 1.0;
+	float flBase;
+	if (g_flWeaponBallRageEnd[iBoss] > GetGameTime())
+		flBase = SaxtonHaleBase(iBoss).GetPropFloat("WeaponBall", "RageBaseDamage");
+	else
+		flBase = SaxtonHaleBase(iBoss).GetPropFloat("WeaponBall", "BaseDamage");
 
-	float flBase = SaxtonHaleBase(iBoss).GetPropFloat("WeaponBall", "RageBaseDamage");
 	if (flBase <= 0.0)
 		return 1.0;
 

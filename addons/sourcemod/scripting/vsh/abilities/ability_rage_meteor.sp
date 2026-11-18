@@ -58,8 +58,8 @@ public void RageMeteor_Create(SaxtonHaleBase boss)
 	boss.SetPropFloat("RageMeteor", "TargetRadiusSuper", 800.0);
 	boss.SetPropFloat("RageMeteor", "TargetRadiusFar", 1000.0);
 	boss.SetPropFloat("RageMeteor", "TargetRadiusFarSuper", 1200.0);
-	boss.SetPropFloat("RageMeteor", "CircleRadius", 150.0);
-	boss.SetPropFloat("RageMeteor", "CircleRadiusSuper", 300.0);
+	boss.SetPropFloat("RageMeteor", "CircleRadius", 75.0);
+	boss.SetPropFloat("RageMeteor", "CircleRadiusSuper", 100.0);
 	boss.SetPropFloat("RageMeteor", "Fuse", 3.0);
 	boss.SetPropFloat("RageMeteor", "FuseSuper", 2.0);
 	boss.SetPropInt("RageMeteor", "Waves", 3);

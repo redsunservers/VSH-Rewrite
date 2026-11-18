@@ -18,6 +18,7 @@ void Event_Init()
 	HookEvent("object_destroyed", Event_ObjectDestroyed, EventHookMode_Pre);
 	HookEvent("player_sapped_object", Event_SappedObject, EventHookMode_Pre);
 	HookEvent("player_healed", Event_PlayerHealed);
+	HookEvent("object_deflected", Event_ObjectDeflected);
 
 	HookUserMessage(GetUserMessageId("PlayerJarated"), Event_Jarated);
 }
@@ -626,6 +627,17 @@ public void Event_PlayerHealed(Event event, const char[] sName, bool bDontBroadc
 	if (g_iTotalRoundPlayed <= 0) return;
 
 	WeaponKeys_OnPlayerHealed(GetClientOfUserId(event.GetInt("patient")), GetClientOfUserId(event.GetInt("healer")), event.GetInt("amount"));
+}
+
+public void Event_ObjectDeflected(Event event, const char[] sName, bool bDontBroadcast)
+{
+	if (!g_bEnabled) return;
+	if (g_iTotalRoundPlayed <= 0) return;
+
+	if (event.GetInt("weaponid") != 0)
+		return;
+
+	Tags_OnAirblastPush(GetClientOfUserId(event.GetInt("userid")), GetClientOfUserId(event.GetInt("ownerid")));
 }
 
 public Action Event_SappedObject(Event event, const char[] sName, bool bDontBroadcast)
