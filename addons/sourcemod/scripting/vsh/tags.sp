@@ -859,6 +859,8 @@ public void Tags_Explode(int iClient, int iTarget, TagsParams tParams)
 	char sParticle[MAXLEN_CONFIG_VALUE];
 	if (!tParams.GetString("particle", sParticle, sizeof(sParticle)))
 		Format(sParticle, sizeof(sParticle), "ExplosionCore_MidAir");
+	else if (StrEqual(sParticle, "none"))
+		sParticle[0] = '\0';
 	
 	//If no sounds were specified, pick a generic explosion sound. If multiple sounds were specified, pick a random one
 	char sSound[MAXLEN_CONFIG_VALUE];

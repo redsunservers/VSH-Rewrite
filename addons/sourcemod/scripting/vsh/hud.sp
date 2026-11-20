@@ -97,6 +97,10 @@ void Hud_Think(int iClient)
 		int iUberPercent = Hud_GetHeldWeaponUberPercent(iClient);
 		if (iUberPercent >= 0)
 			Format(sMessage, sizeof(sMessage), "%s\nCurrent Ubercharge: %i%%%%", sMessage, iUberPercent);
+		
+		int iDamageRequired;
+		if (WeaponKeys_GetDamageRequired(iClient, iDamageRequired))
+			Format(sMessage, sizeof(sMessage), "%s\n[%i/%i] Damage needed to charge your caber", sMessage, g_iPlayerDamage[iClient], iDamageRequired);
 	}
 	else if (!IsPlayerAlive(iClient))
 	{
