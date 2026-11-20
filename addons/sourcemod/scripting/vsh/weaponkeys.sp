@@ -6,6 +6,16 @@
 #define WEAPONKEYS_SCATTERGUN_PUSH	300.0
 #define WEAPONKEYS_SCATTERGUN_PUSH_UP	50.0
 #define WEAPONKEYS_SCATTERGUN_PUSH_TOLERANCE	2.0
+#define WEAPONKEYS_MISS_CHECK_TIME	0.3
+#define WEAPONKEYS_MISS_GRACE	0.25
+#define WEAPONKEYS_MISS_READY	0.05
+#define WEAPONKEYS_MISS_SWING_MIN	0.25
+#define WEAPONKEYS_CABER_DAMAGE	75.0
+#define WEAPONKEYS_CABER_RADIUS	100.0
+#define WEAPONKEYS_CABER_SELF_SCALE	0.75
+#define WEAPONKEYS_DMG_MELEE	(1 << 27)
+#define WEAPONKEYS_EXPLOSION_WEAPONID	23
+#define WEAPONKEYS_EXPLOSION_SOUND	11
 #define WEAPONKEYS_REQUIRED_HOLD	0.5
 
 static int g_iWeaponKeysCollideOffset = -1;
@@ -33,6 +43,11 @@ static ConVar g_cvWeaponKeysMiniCritFalloff;
 static int g_iWeaponKeysFireWeapon[MAXPLAYERS];
 static int g_iWeaponKeysMilkAttacker;
 static int g_iWeaponKeysMilkTick;
+static float g_flWeaponKeysNextAttack[MAXPLAYERS];
+static float g_flWeaponKeysSwingTime[MAXPLAYERS];
+static int g_iWeaponKeysCaberHitTick[MAXPLAYERS];
+static int g_iWeaponKeysBlastClient;
+static int g_iWeaponKeysBlastWeapon;
 static float g_flWeaponKeysFireTime[MAXPLAYERS];
 
 void WeaponKeys_Init()
@@ -127,6 +142,10 @@ bool WeaponKeys_OnTakeDamage(int iVictim, int iAttacker, int &iDamageType, int i
 	}
 	
 	bool bChanged = false;
+	
+	if (iVictim != iAttacker && 0 < iAttacker <= MaxClients && iDamageCustom != TF_CUSTOM_STICKBOMB_EXPLOSION && !(iDamageType & DMG_BLAST)
+		&& iWeapon > MaxClients && IsValidEntity(iWeapon) && HasEntProp(iWeapon, Prop_Send, "m_iDetonated"))
+		g_iWeaponKeysCaberHitTick[iAttacker] = GetGameTickCount();
 	
 	if (iVictim != iAttacker && SaxtonHale_IsValidAttack(iAttacker) && GetClientTeam(iVictim) != GetClientTeam(iAttacker)
 		&& Config_GetWeaponKeyInt(iAttacker, iWeapon, "noknockback") == 1)
@@ -418,14 +437,18 @@ void WeaponKeys_OnPlayerRunCmdPost(int iClient)
 	if (iWeapon <= MaxClients || !HasEntProp(iWeapon, Prop_Send, "m_flLastFireTime"))
 	{
 		g_iWeaponKeysFireWeapon[iClient] = 0;
+		g_flWeaponKeysSwingTime[iClient] = 0.0;
 		return;
 	}
 	
 	int iRef = EntIndexToEntRef(iWeapon);
+	bool bSameWeapon = (iRef == g_iWeaponKeysFireWeapon[iClient]);
 	float flFireTime = GetEntPropFloat(iWeapon, Prop_Send, "m_flLastFireTime");
-	bool bFired = (iRef == g_iWeaponKeysFireWeapon[iClient] && flFireTime > g_flWeaponKeysFireTime[iClient]);
+	bool bFired = (bSameWeapon && flFireTime > g_flWeaponKeysFireTime[iClient]);
 	g_iWeaponKeysFireWeapon[iClient] = iRef;
 	g_flWeaponKeysFireTime[iClient] = flFireTime;
+	
+	WeaponKeys_MissExplodeThink(iClient, iWeapon, bSameWeapon);
 	
 	if (!bFired)
 		return;
@@ -453,6 +476,140 @@ void WeaponKeys_OnPlayerHealed(int iPatient, int iHealer, int iAmount)
 
 	if (iAmount > 0)
 		g_iPlayerAssistDamage[iHealer] += iAmount;
+}
+
+static void WeaponKeys_MissExplodeThink(int iClient, int iWeapon, bool bSameWeapon)
+{
+	float flNextAttack = GetEntPropFloat(iWeapon, Prop_Send, "m_flNextPrimaryAttack");
+	float flPrevAttack = g_flWeaponKeysNextAttack[iClient];
+	g_flWeaponKeysNextAttack[iClient] = flNextAttack;
+	
+	if (!bSameWeapon)
+	{
+		g_flWeaponKeysSwingTime[iClient] = 0.0;
+		return;
+	}
+	
+	float flNow = float(GetEntProp(iClient, Prop_Send, "m_nTickBase") - 1) * GetTickInterval();
+	
+	if (g_flWeaponKeysSwingTime[iClient] > 0.0)
+	{
+		float flSince = flNow - g_flWeaponKeysSwingTime[iClient];
+		if (flSince >= 0.0 && flSince < WEAPONKEYS_MISS_CHECK_TIME)
+			return;
+		
+		g_flWeaponKeysSwingTime[iClient] = 0.0;
+		if (flSince < 0.0 || flSince > WEAPONKEYS_MISS_CHECK_TIME + WEAPONKEYS_MISS_GRACE)
+			return;
+		
+		if (Config_GetWeaponKeyFloat(iClient, iWeapon, "missexplode") > 0.0 && HasEntProp(iWeapon, Prop_Send, "m_iDetonated") && GetEntProp(iWeapon, Prop_Send, "m_iDetonated") == 0)
+			WeaponKeys_MissExplode(iClient, iWeapon);
+		
+		return;
+	}
+	
+	if (!(GetClientButtons(iClient) & IN_ATTACK) || flPrevAttack > flNow + WEAPONKEYS_MISS_READY || flNextAttack < flNow + WEAPONKEYS_MISS_SWING_MIN)
+		return;
+	
+	if (!HasEntProp(iWeapon, Prop_Send, "m_iDetonated") || GetEntProp(iWeapon, Prop_Send, "m_iDetonated") != 0)
+		return;
+	
+	if (Config_GetWeaponKeyInt(iClient, iWeapon, "damagerequired") > g_iPlayerDamage[iClient])
+		return;
+	
+	if (Config_GetWeaponKeyFloat(iClient, iWeapon, "missexplode") > 0.0)
+		g_flWeaponKeysSwingTime[iClient] = flNow;
+}
+
+static void WeaponKeys_MissExplode(int iClient, int iWeapon)
+{
+	SetEntProp(iWeapon, Prop_Send, "m_iDetonated", 1);
+	if (HasEntProp(iWeapon, Prop_Send, "m_bBroken"))
+		SetEntProp(iWeapon, Prop_Send, "m_bBroken", 1);
+	
+	float vecPos[3];
+	GetClientEyePosition(iClient, vecPos);
+	
+	float flRadius = TF2Attrib_HookValueFloat(WEAPONKEYS_CABER_RADIUS, "mult_explosion_radius", iWeapon);
+	int iDamageType = DMG_BLAST | WEAPONKEYS_DMG_USEDISTANCEMOD | WEAPONKEYS_DMG_MELEE;
+	if (TF2_IsForceCrit(iClient) || TF2_IsPlayerInCondition(iClient, TFCond_Kritzkrieged))
+		iDamageType |= DMG_CRIT;
+	
+	g_iWeaponKeysBlastClient = iClient;
+	g_iWeaponKeysBlastWeapon = iWeapon;
+	
+	TFTeam nTeam = TF2_GetClientTeam(iClient);
+	for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
+	{
+		if (iVictim == iClient || !IsClientInGame(iVictim) || !IsPlayerAlive(iVictim) || TF2_GetClientTeam(iVictim) == nTeam)
+			continue;
+		
+		if (RageMeteor_GetBoxDistance(iVictim, vecPos) > flRadius || !RageMeteor_IsInSight(vecPos, iVictim))
+			continue;
+		
+		SDKHooks_TakeDamage(iVictim, iClient, iClient, WeaponKeys_GetBlastDamage(iVictim, vecPos, flRadius), iDamageType, iWeapon, NULL_VECTOR, vecPos, false);
+	}
+	
+	if (IsClientInGame(iClient) && IsPlayerAlive(iClient))
+		SDKHooks_TakeDamage(iClient, iClient, iClient, WeaponKeys_GetBlastDamage(iClient, vecPos, flRadius) * WEAPONKEYS_CABER_SELF_SCALE, iDamageType, iWeapon, NULL_VECTOR, vecPos, false);
+	
+	g_iWeaponKeysBlastClient = 0;
+	g_iWeaponKeysBlastWeapon = 0;
+	
+	float vecNormal[3] = {0.0, 0.0, 1.0};
+	TE_Start("TFExplosion");
+	TE_WriteFloat("m_vecOrigin[0]", vecPos[0]);
+	TE_WriteFloat("m_vecOrigin[1]", vecPos[1]);
+	TE_WriteFloat("m_vecOrigin[2]", vecPos[2]);
+	TE_WriteVector("m_vecNormal", vecNormal);
+	TE_WriteNum("m_iWeaponID", WEAPONKEYS_EXPLOSION_WEAPONID);
+	TE_WriteNum("entindex", iClient);
+	TE_WriteNum("m_nDefID", -1);
+	TE_WriteNum("m_nSound", WEAPONKEYS_EXPLOSION_SOUND);
+	TE_WriteNum("m_iCustomParticleIndex", -1);
+	TE_SendToAll();
+}
+
+static float WeaponKeys_GetBlastDamage(int iVictim, const float vecPos[3], float flRadius)
+{
+	float vecCenter[3], vecOrigin[3];
+	WeaponKeys_GetWorldSpaceCenter(iVictim, vecCenter);
+	GetClientAbsOrigin(iVictim, vecOrigin);
+	
+	float flDistance = GetVectorDistance(vecPos, vecCenter);
+	float flToOrigin = GetVectorDistance(vecPos, vecOrigin);
+	if (flToOrigin < flDistance)
+		flDistance = flToOrigin;
+	
+	if (flDistance > flRadius)
+		flDistance = flRadius;
+	
+	float flEdge = WEAPONKEYS_CABER_DAMAGE / flRadius;
+	if (flEdge > 1.0)
+		flEdge = 1.0;
+	
+	return WEAPONKEYS_CABER_DAMAGE * (1.0 - (1.0 - flEdge) * flDistance / flRadius);
+}
+
+int WeaponKeys_GetDamageCustom(int iVictim, int iAttacker, int iWeapon, int iDamageCustom)
+{
+	bool bCodeBlast = (g_iWeaponKeysBlastClient != 0 && iAttacker == g_iWeaponKeysBlastClient && iWeapon == g_iWeaponKeysBlastWeapon);
+	if (!bCodeBlast && iDamageCustom != TF_CUSTOM_STICKBOMB_EXPLOSION)
+		return iDamageCustom;
+	
+	if (iVictim == iAttacker)
+		return TF_CUSTOM_STICKBOMB_EXPLOSION;
+	
+	if (bCodeBlast)
+		return TAGS_DAMAGECUSTOM_CABERMISS;
+	
+	if (iAttacker <= 0 || iAttacker > MaxClients || g_iWeaponKeysCaberHitTick[iAttacker] == GetGameTickCount())
+		return iDamageCustom;
+	
+	if (Config_GetWeaponKeyFloat(iAttacker, iWeapon, "missexplode") <= 0.0)
+		return iDamageCustom;
+	
+	return TAGS_DAMAGECUSTOM_CABERMISS;
 }
 
 static void WeaponKeys_PlayFireSound(int iClient, const char[] sGameSound)

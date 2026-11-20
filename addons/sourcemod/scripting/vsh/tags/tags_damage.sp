@@ -1,3 +1,5 @@
+#define TAGS_DAMAGECUSTOM_CABERMISS	1000
+
 static TagsParams g_tOngoingParams;
 static float g_flLastFunctionCallTime;
 
@@ -195,6 +197,7 @@ int TagsDamage_GetCustom(const char[] sDamageCustom)
 		mDamageCustom.SetValue("stomp", TF_CUSTOM_BOOTS_STOMP);
 		mDamageCustom.SetValue("telefrag", TF_CUSTOM_TELEFRAG);
 		mDamageCustom.SetValue("caberexplosion", TF_CUSTOM_STICKBOMB_EXPLOSION);
+		mDamageCustom.SetValue("cabermiss", TAGS_DAMAGECUSTOM_CABERMISS);
 	}
 	
 	int iDamageCustom = 0;
