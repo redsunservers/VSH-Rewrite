@@ -1515,6 +1515,8 @@ public Action Client_OnTakeDamage(int victim, int &attacker, int &inflictor, flo
 		
 		Action action = Plugin_Continue;
 		
+		damagecustom = WeaponKeys_GetDamageCustom(victim, attacker, weapon, damagecustom);
+		
 		if (WeaponKeys_OnTakeDamage(victim, attacker, damagetype, weapon, damagecustom))
 			finalAction = Plugin_Changed;
 		
@@ -1655,6 +1657,8 @@ public Action Client_OnTakeDamageAlive(int victim, int &attacker, int &inflictor
 		SaxtonHaleBase bossAttacker = SaxtonHaleBase(attacker);
 		
 		Action action = Plugin_Continue;
+		
+		damagecustom = WeaponKeys_GetDamageCustom(victim, attacker, weapon, damagecustom);
 		
 		if (WeaponKeys_OnTakeDamageAliveFalloff(victim, attacker, damage, damagetype, weapon))
 			finalAction = Plugin_Changed;
