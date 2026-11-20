@@ -6,6 +6,7 @@
 #define WEAPONKEYS_SCATTERGUN_PUSH	300.0
 #define WEAPONKEYS_SCATTERGUN_PUSH_UP	50.0
 #define WEAPONKEYS_SCATTERGUN_PUSH_TOLERANCE	2.0
+#define WEAPONKEYS_REQUIRED_HOLD	0.5
 
 static int g_iWeaponKeysCollideOffset = -1;
 static int g_iWeaponKeysCollideState;
@@ -237,11 +238,21 @@ static void WeaponKeys_BlockPushback(int iVictim)
 
 void WeaponKeys_OnThink(int iClient)
 {
-	if (!IsPlayerAlive(iClient) || TF2_GetPlayerClass(iClient) != TFClass_Scout)
+	if (!IsPlayerAlive(iClient))
 		return;
 	
 	int iWeapon = GetEntPropEnt(iClient, Prop_Send, "m_hActiveWeapon");
 	if (iWeapon <= MaxClients || !IsValidEntity(iWeapon))
+		return;
+	
+	if (Config_GetWeaponKeyInt(iClient, iWeapon, "damagerequired") > g_iPlayerDamage[iClient])
+	{
+		float flHold = GetGameTime() + WEAPONKEYS_REQUIRED_HOLD;
+		if (GetEntPropFloat(iWeapon, Prop_Send, "m_flNextPrimaryAttack") < flHold)
+			SetEntPropFloat(iWeapon, Prop_Send, "m_flNextPrimaryAttack", flHold + WEAPONKEYS_REQUIRED_HOLD);
+	}
+	
+	if (TF2_GetPlayerClass(iClient) != TFClass_Scout)
 		return;
 	
 	char sClassname[64];
@@ -252,6 +263,29 @@ void WeaponKeys_OnThink(int iClient)
 	float flBlock = GetGameTime() + 1.0;
 	if (GetEntPropFloat(iWeapon, Prop_Send, "m_flNextSecondaryAttack") < flBlock)
 		SetEntPropFloat(iWeapon, Prop_Send, "m_flNextSecondaryAttack", flBlock + 1.0);
+}
+
+bool WeaponKeys_GetDamageRequired(int iClient, int &iRequired)
+{
+	iRequired = 0;
+	if (g_iTotalRoundPlayed <= 0 || !SaxtonHale_IsValidAttack(iClient) || !IsPlayerAlive(iClient))
+		return false;
+	
+	for (int iSlot = WeaponSlot_Primary; iSlot <= WeaponSlot_Melee; iSlot++)
+	{
+		int iWeapon = GetPlayerWeaponSlot(iClient, iSlot);
+		if (iWeapon <= MaxClients)
+			continue;
+		
+		int iValue = Config_GetWeaponKeyInt(iClient, iWeapon, "damagerequired");
+		if (iValue > g_iPlayerDamage[iClient])
+		{
+			iRequired = iValue;
+			return true;
+		}
+	}
+	
+	return false;
 }
 
 bool WeaponKeys_OnTakeDamageAliveFalloff(int iVictim, int iAttacker, float &flDamage, int iDamageType, int iWeapon)
