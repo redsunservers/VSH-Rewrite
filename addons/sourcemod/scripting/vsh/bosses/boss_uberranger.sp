@@ -4,7 +4,12 @@
 #define RANGER_RAGESOUND				"player/taunt_medic_heroic.wav"
 #define RANGER_RAGESOUND_FAILED			"replay/replaydialog_warn.wav"
 
+#define RANGER_RAGE_KNOCKBACK_RADIUS	250.0
+#define RANGER_RAGE_KNOCKBACK_FORCE	600.0
+#define RANGER_RAGE_KNOCKBACK_UP	300.0
+
 static bool g_bUberRangerHasSwappedWeapons[MAXPLAYERS + 1];
+static bool g_bUberRangerChargeTold[MAXPLAYERS + 1];
 
 static int g_iUberRangerMinionAFKTimeLeft[MAXPLAYERS + 1];
 
@@ -63,6 +68,7 @@ public void UberRanger_Create(SaxtonHaleBase boss)
 	boss.iMaxRageDamage = 2500;
 	
 	g_bUberRangerHasSwappedWeapons[boss.iClient] = false;
+	g_bUberRangerChargeTold[boss.iClient] = false;
 	
 	for (int i = 1; i <= MaxClients; i++)
 		g_bUberRangerPlayerWasSummoned[i] = false;
@@ -143,8 +149,46 @@ public void UberRanger_OnThink(SaxtonHaleBase boss)
 	}
 }
 
+static void UberRanger_RageKnockback(SaxtonHaleBase boss)
+{
+	float vecBoss[3], vecVictim[3], vecVelocity[3];
+	GetClientAbsOrigin(boss.iClient, vecBoss);
+
+	int iTeam = GetClientTeam(boss.iClient);
+	for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
+	{
+		if (!IsClientInGame(iVictim) || !IsPlayerAlive(iVictim) || GetClientTeam(iVictim) == iTeam)
+			continue;
+
+		GetClientAbsOrigin(iVictim, vecVictim);
+		if (GetVectorDistance(vecBoss, vecVictim) > RANGER_RAGE_KNOCKBACK_RADIUS)
+			continue;
+
+		MakeVectorFromPoints(vecBoss, vecVictim, vecVelocity);
+		vecVelocity[2] = 0.0;
+		if (NormalizeVector(vecVelocity, vecVelocity) <= 0.0)
+			vecVelocity[0] = 1.0;
+
+		ScaleVector(vecVelocity, RANGER_RAGE_KNOCKBACK_FORCE);
+		vecVelocity[2] = RANGER_RAGE_KNOCKBACK_UP;
+		TeleportEntity(iVictim, NULL_VECTOR, NULL_VECTOR, vecVelocity);
+	}
+}
+
 public void UberRanger_OnRage(SaxtonHaleBase boss)
 {
+	int iMedigun = GetPlayerWeaponSlot(boss.iClient, WeaponSlot_Secondary);
+	if (iMedigun > MaxClients && HasEntProp(iMedigun, Prop_Send, "m_flChargeLevel"))
+		SetEntPropFloat(iMedigun, Prop_Send, "m_flChargeLevel", 1.0);
+
+	if (!g_bUberRangerChargeTold[boss.iClient])
+	{
+		g_bUberRangerChargeTold[boss.iClient] = true;
+		PrintToChat(boss.iClient, "%s%s Every time you use your rage your medigun is fully charged!", TEXT_TAG, TEXT_POSITIVE);
+	}
+
+	UberRanger_RageKnockback(boss);
+
 	int iTotalSummons = 1;
 	if (boss.bSuperRage)
 		iTotalSummons = 3;
@@ -264,10 +308,9 @@ public void UberRanger_Destroy(SaxtonHaleBase boss)
 public void MinionRanger_Create(SaxtonHaleBase boss)
 {
 	boss.CreateClass("BraveJump");
-	boss.SetPropFloat("BraveJump", "MaxHeight", boss.GetPropFloat("BraveJump", "MaxHeight") * 0.65);	//Lower max height for super jumps
 	
-	boss.iBaseHealth = 400;
-	boss.iHealthPerPlayer = 40;
+	boss.iBaseHealth = 800;
+	boss.iHealthPerPlayer = 80;
 	boss.nClass = TFClass_Medic;
 	boss.iMaxRageDamage = -1;
 	boss.bMinion = true;
@@ -287,7 +330,9 @@ public void MinionRanger_OnSpawn(SaxtonHaleBase boss)
 {
 	char sAttribs[64];
 	strcopy(sAttribs, sizeof(sAttribs), "9 ; 0.4");
-	boss.CallFunction("CreateWeapon", 211, "tf_weapon_medigun", 100, TFQual_Collectors, sAttribs);
+	int iMedigun = boss.CallFunction("CreateWeapon", 211, "tf_weapon_medigun", 100, TFQual_Collectors, sAttribs);
+	if (iMedigun > MaxClients)
+		SetEntPropFloat(iMedigun, Prop_Send, "m_flChargeLevel", 1.0);
 	
 	/*
 	Medigun attribute:
@@ -296,9 +341,9 @@ public void MinionRanger_OnSpawn(SaxtonHaleBase boss)
 	*/
 	
 	strcopy(sAttribs, sizeof(sAttribs), "2 ; 1.25 ; 5 ; 1.2 ; 17 ; 0.25 ; 252 ; 0.5 ; 259 ; 1.0");
-	int iWeapon = boss.CallFunction("CreateWeapon", 37, "tf_weapon_bonesaw", 10, TFQual_Collectors, sAttribs);
-	if (iWeapon > MaxClients)
-		SetEntPropEnt(boss.iClient, Prop_Send, "m_hActiveWeapon", iWeapon);
+	boss.CallFunction("CreateWeapon", 37, "tf_weapon_bonesaw", 10, TFQual_Collectors, sAttribs);
+	if (iMedigun > MaxClients && !TF2_SwitchToWeapon(boss.iClient, iMedigun))
+		SetEntPropEnt(boss.iClient, Prop_Send, "m_hActiveWeapon", iMedigun);
 	
 	/*
 	Ubersaw attributes:

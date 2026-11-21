@@ -13,6 +13,14 @@
 #define BOSS_ISOLATION_MARK_DURATION	0.5
 #define BOSS_STUN_SELF_WINDOW	0.2
 
+#define BOSS_RAGE_MAX_PERCENTAGE	5.0
+#define BOSS_RAGE_DOUBLE_PRESS_TIME	0.3
+#define BOSS_ISOLATION_ROUND_GRACE	20.0
+#define BOSS_HEALTH_SCALE	1.15
+#define BOSS_KNOCKBACK_SCALE	0.6
+#define BOSS_SENTRY_LEVEL1_DAMAGE	0.67
+#define ATTRIB_DAMAGE_FORCE_REDUCTION	252
+
 static char g_sClientBossRageMusic[MAXPLAYERS][255];
 
 static float g_flClientBossRageMusicVolume[MAXPLAYERS];
@@ -36,6 +44,16 @@ static float g_flClientBossFallSpeed[MAXPLAYERS];
 static float g_flClientBossRageCooldownCleared[MAXPLAYERS];
 static float g_flClientBossSelfStunTime[MAXPLAYERS];
 
+static float g_vecClientBossPushVelocity[MAXPLAYERS][3];
+static int g_iClientBossPushTick[MAXPLAYERS];
+
+static float g_flClientBossRagePressTime[MAXPLAYERS];
+static bool g_bClientBossRageSuper[MAXPLAYERS];
+static int g_iBossMinionHitVictim;
+static int g_iBossMinionHitTick;
+static float g_flClientMinionHitUber[MAXPLAYERS];
+static float g_flClientMinionHitBanner[MAXPLAYERS];
+
 public void SaxtonHaleBoss_Create(SaxtonHaleBase boss)
 {
 	boss.bSuperRage = false;
@@ -51,6 +69,8 @@ public void SaxtonHaleBoss_Create(SaxtonHaleBase boss)
 	g_flClientBossFallSpeed[boss.iClient] = 0.0;
 	g_flClientBossRageCooldownCleared[boss.iClient] = -1.0;
 	g_flClientBossSelfStunTime[boss.iClient] = 0.0;
+	g_flClientBossRagePressTime[boss.iClient] = 0.0;
+	g_bClientBossRageSuper[boss.iClient] = false;
 
 	boss.iBaseHealth = 0;
 	boss.iHealthPerPlayer = 0;
@@ -61,7 +81,7 @@ public void SaxtonHaleBoss_Create(SaxtonHaleBase boss)
 
 	boss.flSpeed = 370.0;
 	boss.flSpeedMult = 0.07;
-	boss.flMaxRagePercentage = 2.0;
+	boss.flMaxRagePercentage = BOSS_RAGE_MAX_PERCENTAGE;
 	boss.iRageDamage = 0;
 	boss.flRageLastTime = 0.0;	//this probably should've been a boolean. but whatever
 	boss.flEnvDamageCap = 200.0;
@@ -98,6 +118,10 @@ public int SaxtonHaleBoss_CalculateMaxHealth(SaxtonHaleBase boss)
 	
 	flHealth += float(boss.iBaseHealth);
 	flHealth = Pow(flHealth, boss.flHealthExponential);
+
+	if (!boss.bMinion)
+		flHealth *= BOSS_HEALTH_SCALE;
+
 	return RoundToNearest(flHealth * boss.flHealthMultiplier);
 }
 
@@ -106,6 +130,13 @@ public void SaxtonHaleBoss_OnThink(SaxtonHaleBase boss)
 	if (IsFakeClient(boss.iClient) && boss.iRageDamage >= boss.iMaxRageDamage && BaseBoss_GetRageCooldownLeft(boss) <= 0.0)
 		boss.CallFunction("OnRage");
 	
+	if (g_flClientBossRagePressTime[boss.iClient] > 0.0 && GetGameTime() - g_flClientBossRagePressTime[boss.iClient] >= BOSS_RAGE_DOUBLE_PRESS_TIME)
+	{
+		g_flClientBossRagePressTime[boss.iClient] = 0.0;
+		if (BaseBoss_CanRage(boss, false))
+			boss.CallFunction("OnRage");
+	}
+
 	BaseBoss_UpdateIsolation(boss);
 	
 	bool bGlow = (boss.flGlowTime == -1.0 || boss.flGlowTime >= GetGameTime() || g_bClientBossIsolated[boss.iClient]);
@@ -164,6 +195,9 @@ public void SaxtonHaleBoss_OnThink(SaxtonHaleBase boss)
 				Format(sMessage, sizeof(sMessage), "Rage: %d%%%%%s", RoundToFloor(flRage), (flRage >= 100.0) ? " (Ready)" : "");
 			}
 
+			if (flRage >= 200.0)
+				StrCat(sMessage, sizeof(sMessage), ", Double press E to 200%% rage!");
+
 			if (flRageCooldown > 0.0)
 			{
 				iColor[0] = 105;
@@ -216,6 +250,9 @@ public void SaxtonHaleBoss_OnSpawn(SaxtonHaleBase boss)
 	
 	if (!boss.bMinion)
 	{
+		TF2Attrib_SetByDefIndex(boss.iClient, ATTRIB_DAMAGE_FORCE_REDUCTION, BOSS_KNOCKBACK_SCALE);
+		TF2Attrib_ClearCache(boss.iClient);
+
 		//Give every boss ground pound by default
 		if (!boss.HasClass("GroundPound"))
 			boss.CreateClass("GroundPound");
@@ -293,13 +330,13 @@ public void SaxtonHaleBoss_OnRage(SaxtonHaleBase boss)
 	boss.flRageLastTime = GetGameTime();
 	boss.bSuperRage = false;
 	
-	if (boss.iRageDamage >= boss.iMaxRageDamage * 2)
+	if (g_bClientBossRageSuper[boss.iClient] && boss.iRageDamage >= boss.iMaxRageDamage * 2)
 	{
 		//Super rage by 200% or higher
 		boss.bSuperRage = true;
 		boss.iRageDamage -= boss.iMaxRageDamage * 2;
 	}
-	else if (boss.iRageDamage >= boss.iMaxRageDamage * boss.flMaxRagePercentage)
+	else if (boss.flMaxRagePercentage < 2.0 && boss.iRageDamage >= boss.iMaxRageDamage * boss.flMaxRagePercentage)
 	{
 		//Super rage by max rage percentage, but less than 200%
 		boss.bSuperRage = true;
@@ -424,6 +461,153 @@ float BaseBoss_GetRageCooldown(SaxtonHaleBase boss)
 	return flCooldown - (flCooldown - flCooldownMin) * float(iPlayers - BOSS_RAGE_COOLDOWN_PLAYERS_LOW) / float(BOSS_RAGE_COOLDOWN_PLAYERS_HIGH - BOSS_RAGE_COOLDOWN_PLAYERS_LOW);
 }
 
+static bool BaseBoss_CanRage(SaxtonHaleBase boss, bool bSuper)
+{
+	if (boss.iMaxRageDamage == -1 || !IsPlayerAlive(boss.iClient))
+		return false;
+
+	if (boss.iRageDamage < boss.iMaxRageDamage * (bSuper ? 2 : 1))
+		return false;
+
+	return (BaseBoss_GetRageCooldownLeft(boss) <= 0.0);
+}
+
+bool BaseBoss_PressRage(SaxtonHaleBase boss)
+{
+	int iClient = boss.iClient;
+
+	if (g_flClientBossRagePressTime[iClient] > 0.0)
+	{
+		g_flClientBossRagePressTime[iClient] = 0.0;
+		if (BaseBoss_CanRage(boss, true))
+		{
+			g_bClientBossRageSuper[iClient] = true;
+			boss.CallFunction("OnRage");
+			g_bClientBossRageSuper[iClient] = false;
+			return true;
+		}
+	}
+
+	if (!BaseBoss_CanRage(boss, false))
+		return false;
+
+	if (BaseBoss_CanRage(boss, true))
+	{
+		g_flClientBossRagePressTime[iClient] = GetGameTime();
+		return true;
+	}
+
+	boss.CallFunction("OnRage");
+	return true;
+}
+
+bool BaseBoss_FilterKnockback(int iVictim, int iAttacker, int iInflictor, int &iDamageType)
+{
+	if (iVictim <= 0 || iVictim > MaxClients)
+		return false;
+
+	g_iClientBossPushTick[iVictim] = 0;
+
+	if (iAttacker == iVictim || iAttacker <= 0 || iAttacker > MaxClients || !SaxtonHale_IsValidBoss(iVictim, false))
+		return false;
+
+	if ((iDamageType & DMG_PREVENT_PHYSICS_FORCE) || TagsDamage_IsKnockbackForced(iVictim))
+		return false;
+
+	if ((iDamageType & (DMG_BULLET | DMG_BUCKSHOT)) && iInflictor == iAttacker && !(iDamageType & DMG_CRIT))
+	{
+		iDamageType |= DMG_PREVENT_PHYSICS_FORCE;
+		return true;
+	}
+
+	GetEntPropVector(iVictim, Prop_Data, "m_vecAbsVelocity", g_vecClientBossPushVelocity[iVictim]);
+	g_iClientBossPushTick[iVictim] = GetGameTickCount();
+	return false;
+}
+
+void BaseBoss_OnPlayerHurt(int iVictim, bool bMiniCrit)
+{
+	if (iVictim <= 0 || iVictim > MaxClients || g_iClientBossPushTick[iVictim] == 0 || g_iClientBossPushTick[iVictim] != GetGameTickCount())
+		return;
+
+	g_iClientBossPushTick[iVictim] = 0;
+	if (bMiniCrit)
+		TeleportEntity(iVictim, NULL_VECTOR, NULL_VECTOR, g_vecClientBossPushVelocity[iVictim]);
+}
+
+void BaseBoss_SaveMinionMeters(int iVictim, int iAttacker)
+{
+	g_iBossMinionHitVictim = 0;
+	if (iAttacker <= 0 || iAttacker > MaxClients || iAttacker == iVictim || !IsClientInGame(iAttacker) || TF2_GetClientTeam(iAttacker) != TFTeam_Attack)
+		return;
+	
+	SaxtonHaleBase boss = SaxtonHaleBase(iVictim);
+	if (!boss.bValid || !boss.bMinion)
+		return;
+	
+	g_iBossMinionHitVictim = iVictim;
+	g_iBossMinionHitTick = GetGameTickCount();
+	for (int iClient = 1; iClient <= MaxClients; iClient++)
+	{
+		g_flClientMinionHitUber[iClient] = -1.0;
+		g_flClientMinionHitBanner[iClient] = -1.0;
+		if (!IsClientInGame(iClient) || !IsPlayerAlive(iClient) || TF2_GetClientTeam(iClient) != TFTeam_Attack)
+			continue;
+		
+		int iMedigun = BaseBoss_GetMedigun(iClient);
+		if (iMedigun > MaxClients)
+			g_flClientMinionHitUber[iClient] = GetEntPropFloat(iMedigun, Prop_Send, "m_flChargeLevel");
+		
+		if (TF2_GetPlayerClass(iClient) == TFClass_Soldier)
+			g_flClientMinionHitBanner[iClient] = GetEntPropFloat(iClient, Prop_Send, "m_flRageMeter");
+	}
+}
+
+void BaseBoss_RestoreMinionMeters(int iVictim)
+{
+	if (g_iBossMinionHitVictim == 0 || g_iBossMinionHitVictim != iVictim || g_iBossMinionHitTick != GetGameTickCount())
+		return;
+	
+	g_iBossMinionHitVictim = 0;
+	for (int iClient = 1; iClient <= MaxClients; iClient++)
+	{
+		if (!IsClientInGame(iClient) || TF2_GetClientTeam(iClient) != TFTeam_Attack)
+			continue;
+		
+		if (g_flClientMinionHitUber[iClient] >= 0.0)
+		{
+			int iMedigun = BaseBoss_GetMedigun(iClient);
+			if (iMedigun > MaxClients && GetEntPropFloat(iMedigun, Prop_Send, "m_flChargeLevel") > g_flClientMinionHitUber[iClient])
+				SetEntPropFloat(iMedigun, Prop_Send, "m_flChargeLevel", g_flClientMinionHitUber[iClient]);
+		}
+		
+		if (g_flClientMinionHitBanner[iClient] >= 0.0 && GetEntPropFloat(iClient, Prop_Send, "m_flRageMeter") > g_flClientMinionHitBanner[iClient])
+			SetEntPropFloat(iClient, Prop_Send, "m_flRageMeter", g_flClientMinionHitBanner[iClient]);
+	}
+}
+
+static int BaseBoss_GetMedigun(int iClient)
+{
+	int iWeapon = GetPlayerWeaponSlot(iClient, WeaponSlot_Secondary);
+	if (iWeapon > MaxClients && HasEntProp(iWeapon, Prop_Send, "m_flChargeLevel"))
+		return iWeapon;
+	
+	return -1;
+}
+
+static bool BaseBoss_IsLevel1Sentry(int iEntity)
+{
+	if (!IsValidEntity(iEntity))
+		return false;
+
+	char sClassname[32];
+	GetEntityClassname(iEntity, sClassname, sizeof(sClassname));
+	if (strcmp(sClassname, "obj_sentrygun") != 0)
+		return false;
+
+	return (GetEntProp(iEntity, Prop_Send, "m_iUpgradeLevel") == 1 && !GetEntProp(iEntity, Prop_Send, "m_bMiniBuilding"));
+}
+
 float BaseBoss_GetRageCooldownLeft(SaxtonHaleBase boss)
 {
 	if (boss.flRageLastTime <= 0.0)
@@ -458,7 +642,7 @@ static void BaseBoss_UpdateIsolation(SaxtonHaleBase boss)
 	int iClient = boss.iClient;
 	float flTime = GetGameTime();
 	
-	if (boss.bMinion || !g_bRoundStarted || !IsPlayerAlive(iClient))
+	if (boss.bMinion || !g_bRoundStarted || !IsPlayerAlive(iClient) || flTime - g_flRoundStartTime < BOSS_ISOLATION_ROUND_GRACE)
 	{
 		g_bClientBossIsolated[iClient] = false;
 		BaseBoss_ClearIsolationHighlight(iClient);
@@ -664,6 +848,12 @@ public Action SaxtonHaleBoss_OnTakeDamage(SaxtonHaleBase boss, int &attacker, in
 		}
 	}
 
+	if (inflictor > MaxClients && BaseBoss_IsLevel1Sentry(inflictor) && SaxtonHale_IsValidAttack(attacker))
+	{
+		damage *= BOSS_SENTRY_LEVEL1_DAMAGE;
+		action = Plugin_Changed;
+	}
+
 	if (MaxClients < attacker)
 	{
 		char strAttacker[32];
@@ -716,6 +906,12 @@ public void SaxtonHaleBoss_UpdateHudInfo(SaxtonHaleBase boss, float flinterval, 
 public void SaxtonHaleBoss_Destroy(SaxtonHaleBase boss)
 {
 	ClearBossEffects(boss.iClient);
+
+	if (!boss.bMinion)
+	{
+		TF2Attrib_RemoveByDefIndex(boss.iClient, ATTRIB_DAMAGE_FORCE_REDUCTION);
+		TF2Attrib_ClearCache(boss.iClient);
+	}
 
 	//Drop any cached boss HUD text (nanomachines/explosive charge/etc.) so it
 	//doesn't persist if this client becomes a valid boss again next round or

@@ -16,7 +16,7 @@ public void ModifiersAngry_GetModifiersInfo(SaxtonHaleBase boss, char[] sInfo, i
 	StrCat(sInfo, length, "\nColor: Brown");
 	StrCat(sInfo, length, "\n ");
 	StrCat(sInfo, length, "\n- Gains twice as much rage");
-	StrCat(sInfo, length, "\n- Increase max rage percentage cap to 250%%");
+	StrCat(sInfo, length, "\n- Increase max rage percentage cap to 625%%");
 	StrCat(sInfo, length, "\n- Loses rage over time");
 }
 

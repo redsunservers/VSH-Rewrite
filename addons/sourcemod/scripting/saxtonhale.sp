@@ -338,6 +338,7 @@ int g_iNextBossId;		//Newest created id
 
 bool g_bEnabled;
 bool g_bRoundStarted;
+float g_flRoundStartTime;
 bool g_bTF2Items;
 
 int g_iSpritesLaserbeam;
@@ -1033,6 +1034,7 @@ public void OnMapStart()
 public void OnGameFrame()
 {
 	if (!g_bEnabled) return;
+	WeaponKeys_OnGameFrame();
 	if (g_iTotalRoundPlayed <= 0) return;
 
 	int iHealthBar = FindEntityByClassname(-1, "monster_resource");
@@ -1520,6 +1522,8 @@ public Action Client_OnTakeDamage(int victim, int &attacker, int &inflictor, flo
 		if (WeaponKeys_OnTakeDamage(victim, attacker, damagetype, weapon, damagecustom))
 			finalAction = Plugin_Changed;
 		
+		BaseBoss_SaveMinionMeters(victim, attacker);
+		
 		if (bossVictim.bValid)
 		{
 			action = bossVictim.CallFunction("OnTakeDamage", attacker, inflictor, damage, damagetype, weapon, damageForce, damagePosition, damagecustom);
@@ -1625,6 +1629,7 @@ public void Client_OnTakeDamagePost(int victim, int attacker, int inflictor, flo
 	
 	Tags_ClearMiniCritMark(victim);
 	WeaponKeys_OnTakeDamagePost(victim, attacker, damage);
+	BaseBoss_RestoreMinionMeters(victim);
 	
 	if (victim != attacker && SaxtonHale_IsValidAttack(attacker) && weapon != INVALID_ENT_REFERENCE && HasEntProp(weapon, Prop_Send, "m_iItemDefinitionIndex"))
 	{
@@ -1687,6 +1692,9 @@ public Action Client_OnTakeDamageAlive(int victim, int &attacker, int &inflictor
 			finalAction = action;
 		
 		if (WeaponKeys_OnTakeDamageAlive(victim, attacker, damage) && finalAction < Plugin_Changed)
+			finalAction = Plugin_Changed;
+
+		if (BaseBoss_FilterKnockback(victim, attacker, inflictor, damagetype) && finalAction < Plugin_Changed)
 			finalAction = Plugin_Changed;
 		
 		// Give telefrag assists after tags modified it

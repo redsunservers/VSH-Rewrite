@@ -17,6 +17,7 @@ enum TagsFilterType			//List of possible filters
 	TagsFilterType_SelfDamage,
 	TagsFilterType_VictimCond,
 	TagsFilterType_IgnoreMinions,
+	TagsFilterType_VictimAirborne,
 }
 
 enum struct TagsFilterStruct
@@ -41,7 +42,7 @@ enum struct TagsFilterStruct
 				this.nValue = TagsTarget_GetType(sValue);
 				return !(this.nValue == TagsTarget_Invalid);
 			}
-			case TagsFilterType_Aim, TagsFilterType_SentryTarget, TagsFilterType_FeignDeath, TagsFilterType_VictimUber, TagsFilterType_SelfDamage, TagsFilterType_IgnoreMinions:
+			case TagsFilterType_Aim, TagsFilterType_SentryTarget, TagsFilterType_FeignDeath, TagsFilterType_VictimUber, TagsFilterType_SelfDamage, TagsFilterType_IgnoreMinions, TagsFilterType_VictimAirborne:
 			{
 				this.nValue = !!StringToInt(sValue);	//Turn into boolean
 				return true;
@@ -194,6 +195,15 @@ enum struct TagsFilterStruct
 				
 				return true;
 			}
+			case TagsFilterType_VictimAirborne:
+			{
+				int iVictim = tParams.GetInt("victim");
+				if (iVictim <= 0 || iVictim > MaxClients || !IsClientInGame(iVictim))
+					return false;
+				
+				bool bAirborne = (!(GetEntityFlags(iVictim) & FL_ONGROUND) && GetEntProp(iVictim, Prop_Data, "m_nWaterLevel") == 0);
+				return (this.nValue ? bAirborne : !bAirborne);
+			}
 		}
 		
 		return false;
@@ -279,6 +289,7 @@ TagsFilterType TagsFilter_GetType(const char[] sTarget)
 		mFilterType.SetValue("selfdamage", TagsFilterType_SelfDamage);
 		mFilterType.SetValue("victimcond", TagsFilterType_VictimCond);
 		mFilterType.SetValue("ignoreminions", TagsFilterType_IgnoreMinions);
+		mFilterType.SetValue("victimairborne", TagsFilterType_VictimAirborne);
 	}
 	
 	TagsFilterType nFilterType = TagsFilterType_Invalid;

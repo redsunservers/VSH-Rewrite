@@ -2,6 +2,8 @@
 
 static TagsParams g_tOngoingParams;
 static float g_flLastFunctionCallTime;
+static int g_iTagsDamageKnockbackVictim;
+static int g_iTagsDamageKnockbackTick;
 
 void TagsDamage_Init()
 {
@@ -11,6 +13,9 @@ void TagsDamage_Init()
 
 public Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
+	if (g_iTagsDamageKnockbackVictim == victim)
+		g_iTagsDamageKnockbackVictim = 0;
+
 	//Get values to pass around
 	TagsParams tParams = new TagsParams();
 	TagsDamage_CallFunctions(tParams, victim, attacker, inflictor, damage, damagetype, weapon, damagecustom);
@@ -29,6 +34,12 @@ public Action TagsDamage_OnTakeDamage(int victim, int &attacker, int &inflictor,
 			aDamageType.GetString(i, sBuffer, iBlockSize);
 			int iDamageType = TagsDamage_GetType(sBuffer);
 			
+			if (iDamageType == -DMG_PREVENT_PHYSICS_FORCE)
+			{
+				g_iTagsDamageKnockbackVictim = victim;
+				g_iTagsDamageKnockbackTick = GetGameTickCount();
+			}
+
 			if (iDamageType > 0)
 				damagetype |= iDamageType;
 			else if (iDamageType < 0)
@@ -73,6 +84,12 @@ public Action TagsDamage_OnTakeDamageAlive(int victim, int &attacker, int &infli
 		action = Plugin_Changed;
 	}
 	
+	if (tParams.GetFloatEx("rounddamage", flValue) && 0 < attacker <= MaxClients)
+	{
+		damage = flValue * float(g_iPlayerDamage[attacker]);
+		action = Plugin_Changed;
+	}
+	
 	if (tParams.GetFloatEx("multiply", flValue))
 	{
 		damage *= flValue;
@@ -99,6 +116,11 @@ public Action TagsDamage_OnTakeDamageAlive(int victim, int &attacker, int &infli
 	
 	delete tParams;
 	return action;
+}
+
+bool TagsDamage_IsKnockbackForced(int iVictim)
+{
+	return (g_iTagsDamageKnockbackVictim == iVictim && g_iTagsDamageKnockbackTick == GetGameTickCount());
 }
 
 void TagsDamage_CallFunctions(TagsParams tParams, int victim, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, int damagecustom)

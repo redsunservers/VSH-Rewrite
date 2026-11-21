@@ -94,6 +94,8 @@ public void Merasmus_Create(SaxtonHaleBase boss)
 {
 	boss.CreateClass("TeleportView");
 	boss.CreateClass("BombProjectile");
+	boss.SetPropFloat("BombProjectile", "Radius", 150.0);
+	boss.SetPropFloat("BombProjectile", "Damage", 120.0);
 	
 	boss.CreateClass("WeaponSpells");
 	WeaponSpells_AddSpells(boss, haleSpells_Jump);
