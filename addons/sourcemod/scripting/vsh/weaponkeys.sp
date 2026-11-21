@@ -16,14 +16,23 @@
 #define WEAPONKEYS_DMG_MELEE	(1 << 27)
 #define WEAPONKEYS_EXPLOSION_WEAPONID	23
 #define WEAPONKEYS_EXPLOSION_SOUND	11
-#define WEAPONKEYS_REQUIRED_HOLD	0.5
+#define WEAPONKEYS_PASS_CHECK_FROM	0.2
+#define WEAPONKEYS_PASS_CHECK_UNTIL	0.4
+#define WEAPONKEYS_PASS_CHECK_MISSES	8
+#define WEAPONKEYS_PASS_BOX_MARGIN	2.0
+#define WEAPONKEYS_PASS_MAX_DISTANCE	128.0
+#define WEAPONKEYS_PASS_MAX_PLAYERS	4
 
 static int g_iWeaponKeysCollideOffset = -1;
 static int g_iWeaponKeysCollideState;
 static int g_iWeaponKeysCollideMisses;
-static int g_iWeaponKeysPipeState[2048+1];
-static float g_flWeaponKeysPipeCreated[2048+1];
-static bool g_bWeaponKeysPipeMissed[2048+1];
+static ArrayList g_aWeaponKeysProjectiles;
+static bool g_bWeaponKeysProjWatched[2048+1];
+static int g_iWeaponKeysProjTick[2048+1];
+static int g_iWeaponKeysProjZeroTick[2048+1];
+static bool g_bWeaponKeysProjMissed[2048+1];
+static int g_iWeaponKeysProjBlocker[2048+1];
+static float g_vecWeaponKeysProjVelocity[2048+1][3];
 
 static ConVar g_cvWeaponKeysDonkWindow;
 static float g_flWeaponKeysDonkEnd[MAXPLAYERS][MAXPLAYERS];
@@ -52,11 +61,13 @@ static float g_flWeaponKeysFireTime[MAXPLAYERS];
 
 void WeaponKeys_Init()
 {
+	g_aWeaponKeysProjectiles = new ArrayList();
+	
 	int iOffset = FindSendPropInfo("CTFGrenadePipebombProjectile", "m_hOriginalLauncher");
 	if (iOffset > 4)
 		g_iWeaponKeysCollideOffset = iOffset - 4;
 	else
-		LogMessage("Could not locate offset for CTFGrenadePipebombProjectile::m_hOriginalLauncher, \"passteammates\" is disabled");
+		LogMessage("Could not locate offset for CTFGrenadePipebombProjectile::m_hOriginalLauncher: grenades, stickies and jars bounce off teammates as in TF2, rockets, arrows, flares and syringes are only moved past them");
 	
 	g_cvWeaponKeysDonkWindow = FindConVar("tf_double_donk_window");
 	g_cvWeaponKeysDamageRange = FindConVar("tf_damage_range");
@@ -66,68 +77,206 @@ void WeaponKeys_Init()
 
 void WeaponKeys_OnEntityCreated(int iEntity, const char[] sClassname)
 {
-	if (g_iWeaponKeysCollideOffset <= 0 || g_iWeaponKeysCollideState == -1 || iEntity <= MaxClients || iEntity >= sizeof(g_iWeaponKeysPipeState))
+	if (iEntity <= MaxClients || iEntity >= sizeof(g_iWeaponKeysProjTick))
 		return;
 	
-	if (strcmp(sClassname, "tf_projectile_pipe") != 0 && strcmp(sClassname, "tf_projectile_pipe_remote") != 0)
+	g_bWeaponKeysProjWatched[iEntity] = false;
+	g_iWeaponKeysProjBlocker[iEntity] = 0;
+	
+	if (strcmp(sClassname, "tf_projectile_healing_bolt") == 0 || strcmp(sClassname, "tf_projectile_grapplinghook") == 0)
 		return;
 	
-	g_iWeaponKeysPipeState[iEntity] = 0;
-	g_flWeaponKeysPipeCreated[iEntity] = GetGameTime();
-	g_bWeaponKeysPipeMissed[iEntity] = false;
-	SDKHook(iEntity, SDKHook_VPhysicsUpdate, WeaponKeys_PipeVPhysicsUpdate);
+	if (strcmp(sClassname, "tf_projectile_syringe") == 0 || strcmp(sClassname, "tf_projectile_rocket") == 0
+		|| strcmp(sClassname, "tf_projectile_sentryrocket") == 0 || strcmp(sClassname, "tf_projectile_flare") == 0
+		|| strcmp(sClassname, "tf_projectile_arrow") == 0 || strcmp(sClassname, "tf_projectile_energy_ball") == 0)
+		SDKHook(iEntity, SDKHook_Touch, WeaponKeys_ProjectileTouch);
+	
+	if (g_iWeaponKeysCollideOffset <= 0 || g_iWeaponKeysCollideState == -1 || GetEntSendPropOffs(iEntity, "m_hOriginalLauncher", true) != g_iWeaponKeysCollideOffset + 4)
+		return;
+	
+	g_bWeaponKeysProjWatched[iEntity] = true;
+	g_iWeaponKeysProjTick[iEntity] = GetGameTickCount();
+	g_iWeaponKeysProjZeroTick[iEntity] = 0;
+	g_bWeaponKeysProjMissed[iEntity] = false;
+	g_aWeaponKeysProjectiles.Push(EntIndexToEntRef(iEntity));
+	SDKHook(iEntity, SDKHook_VPhysicsUpdate, WeaponKeys_ProjectileVPhysicsUpdate);
 }
 
-public void WeaponKeys_PipeVPhysicsUpdate(int iPipe)
+void WeaponKeys_OnGameFrame()
 {
-	if (g_iWeaponKeysCollideState == -1 || iPipe <= MaxClients || iPipe >= sizeof(g_iWeaponKeysPipeState))
-		return;
-	
-	if (g_iWeaponKeysPipeState[iPipe] == 0)
+	for (int i = g_aWeaponKeysProjectiles.Length - 1; i >= 0; i--)
 	{
-		int iLauncher = GetEntPropEnt(iPipe, Prop_Send, "m_hOriginalLauncher");
-		if (iLauncher <= MaxClients)
-			return;
-		
-		int iOwner = GetEntPropEnt(iLauncher, Prop_Send, "m_hOwnerEntity");
-		g_iWeaponKeysPipeState[iPipe] = (SaxtonHale_IsValidAttack(iOwner) && Config_GetWeaponKeyInt(iOwner, iLauncher, "passteammates") == 1) ? 1 : -1;
+		int iEntity = EntRefToEntIndex(g_aWeaponKeysProjectiles.Get(i));
+		if (iEntity <= MaxClients || iEntity >= sizeof(g_iWeaponKeysProjTick) || !WeaponKeys_KeepCollideOff(iEntity))
+			g_aWeaponKeysProjectiles.Erase(i);
 	}
+}
+
+public void WeaponKeys_ProjectileVPhysicsUpdate(int iEntity)
+{
+	if (iEntity > MaxClients && iEntity < sizeof(g_iWeaponKeysProjTick) && g_bWeaponKeysProjWatched[iEntity])
+		WeaponKeys_KeepCollideOff(iEntity);
+}
+
+static bool WeaponKeys_KeepCollideOff(int iEntity)
+{
+	if (g_iWeaponKeysCollideState == -1)
+		return false;
 	
-	if (g_iWeaponKeysPipeState[iPipe] != 1)
-		return;
+	int iNow = GetGameTickCount();
+	if (iNow <= g_iWeaponKeysProjTick[iEntity] || GetEntProp(iEntity, Prop_Send, "m_iTeamNum") != view_as<int>(TFTeam_Attack))
+		return true;
 	
-	int iValue = GetEntData(iPipe, g_iWeaponKeysCollideOffset, 1);
+	int iValue = GetEntData(iEntity, g_iWeaponKeysCollideOffset, 1);
 	if (g_iWeaponKeysCollideState == 1)
 	{
 		if (iValue == 1)
-			SetEntData(iPipe, g_iWeaponKeysCollideOffset, 0, 1);
+			SetEntData(iEntity, g_iWeaponKeysCollideOffset, 0, 1);
 		
-		return;
+		return true;
 	}
 	
-	float flAge = GetGameTime() - g_flWeaponKeysPipeCreated[iPipe];
-	if ((iValue != 0 && iValue != 1) || (iValue == 1 && flAge < 0.2))
+	if (iValue != 0 && iValue != 1)
 	{
 		WeaponKeys_CollideCheckFailed();
+		return false;
 	}
-	else if (iValue == 1)
+	
+	float flAge = float(iNow - g_iWeaponKeysProjTick[iEntity]) * GetTickInterval();
+	if (iValue == 0)
+	{
+		g_iWeaponKeysProjZeroTick[iEntity] = iNow;
+	}
+	else if (iNow - g_iWeaponKeysProjZeroTick[iEntity] <= 2 && flAge > WEAPONKEYS_PASS_CHECK_FROM && flAge < WEAPONKEYS_PASS_CHECK_UNTIL)
 	{
 		g_iWeaponKeysCollideState = 1;
-		SetEntData(iPipe, g_iWeaponKeysCollideOffset, 0, 1);
+		SetEntData(iEntity, g_iWeaponKeysCollideOffset, 0, 1);
+		return true;
 	}
-	else if (flAge > 0.6 && !g_bWeaponKeysPipeMissed[iPipe])
+	
+	if (flAge > WEAPONKEYS_PASS_CHECK_UNTIL && !g_bWeaponKeysProjMissed[iEntity])
 	{
-		g_bWeaponKeysPipeMissed[iPipe] = true;
+		g_bWeaponKeysProjMissed[iEntity] = true;
 		g_iWeaponKeysCollideMisses++;
-		if (g_iWeaponKeysCollideMisses >= 3)
+		if (g_iWeaponKeysCollideMisses >= WEAPONKEYS_PASS_CHECK_MISSES)
+		{
 			WeaponKeys_CollideCheckFailed();
+			return false;
+		}
 	}
+	
+	return true;
 }
 
 static void WeaponKeys_CollideCheckFailed()
 {
 	g_iWeaponKeysCollideState = -1;
-	LogMessage("Offset check failed for CBaseProjectile::m_bCanCollideWithTeammates (m_hOriginalLauncher - 4), \"passteammates\" is disabled until the plugin reloads");
+	LogMessage("Offset check failed for CBaseProjectile::m_bCanCollideWithTeammates (m_hOriginalLauncher - 4): until the plugin reloads grenades, stickies and jars bounce off teammates as in TF2, rockets, arrows, flares and syringes are only moved past them");
+}
+
+public Action WeaponKeys_ProjectileTouch(int iEntity, int iOther)
+{
+	if (iOther <= 0 || iOther > MaxClients || iEntity <= MaxClients || iEntity >= sizeof(g_iWeaponKeysProjBlocker))
+		return Plugin_Continue;
+	
+	int iTeam = GetEntProp(iEntity, Prop_Send, "m_iTeamNum");
+	if (iTeam != view_as<int>(TFTeam_Attack) || GetClientTeam(iOther) != iTeam)
+		return Plugin_Continue;
+	
+	MoveType nMoveType = GetEntityMoveType(iEntity);
+	if (nMoveType != MOVETYPE_FLY && nMoveType != MOVETYPE_FLYGRAVITY)
+		return Plugin_Continue;
+	
+	float vecVelocity[3];
+	GetEntPropVector(iEntity, Prop_Data, "m_vecAbsVelocity", vecVelocity);
+	if (GetVectorLength(vecVelocity) < 1.0)
+		return Plugin_Continue;
+	
+	g_iWeaponKeysProjBlocker[iEntity] = iOther;
+	g_vecWeaponKeysProjVelocity[iEntity] = vecVelocity;
+	RequestFrame(WeaponKeys_ProjectileMovePast, EntIndexToEntRef(iEntity));
+	return Plugin_Handled;
+}
+
+public void WeaponKeys_ProjectileMovePast(int iRef)
+{
+	int iEntity = EntRefToEntIndex(iRef);
+	if (iEntity <= MaxClients || iEntity >= sizeof(g_iWeaponKeysProjBlocker))
+		return;
+	
+	float vecOrigin[3], vecVelocity[3], vecDirection[3];
+	GetEntPropVector(iEntity, Prop_Data, "m_vecAbsOrigin", vecOrigin);
+	vecVelocity = g_vecWeaponKeysProjVelocity[iEntity];
+	float flSpeed = GetVectorLength(vecVelocity);
+	if (flSpeed < 1.0)
+		return;
+	
+	for (int i = 0; i < 3; i++)
+		vecDirection[i] = vecVelocity[i] / flSpeed;
+	
+	int iTeam = GetEntProp(iEntity, Prop_Send, "m_iTeamNum");
+	int iOwner = GetEntPropEnt(iEntity, Prop_Send, "m_hOwnerEntity");
+	int iBlocker = g_iWeaponKeysProjBlocker[iEntity];
+	g_iWeaponKeysProjBlocker[iEntity] = 0;
+	if (iBlocker <= 0 || iBlocker > MaxClients || !IsClientInGame(iBlocker) || !IsPlayerAlive(iBlocker))
+		iBlocker = WeaponKeys_FindTeammateAt(vecOrigin, iTeam, iOwner);
+	
+	for (int i = 0; i < WEAPONKEYS_PASS_MAX_PLAYERS && iBlocker > 0; i++)
+	{
+		WeaponKeys_MovePastPlayer(vecOrigin, vecDirection, iBlocker);
+		iBlocker = WeaponKeys_FindTeammateAt(vecOrigin, iTeam, iOwner);
+	}
+	
+	TeleportEntity(iEntity, vecOrigin, NULL_VECTOR, vecVelocity);
+}
+
+static void WeaponKeys_MovePastPlayer(float vecOrigin[3], const float vecDirection[3], int iPlayer)
+{
+	float vecPlayer[3], vecMins[3], vecMaxs[3];
+	GetClientAbsOrigin(iPlayer, vecPlayer);
+	GetClientMins(iPlayer, vecMins);
+	GetClientMaxs(iPlayer, vecMaxs);
+	
+	float flExit = WEAPONKEYS_PASS_MAX_DISTANCE;
+	for (int i = 0; i < 3; i++)
+	{
+		if (FloatAbs(vecDirection[i]) < 0.001)
+			continue;
+		
+		float flSide = vecPlayer[i] + ((vecDirection[i] > 0.0) ? (vecMaxs[i] + WEAPONKEYS_PASS_BOX_MARGIN) : (vecMins[i] - WEAPONKEYS_PASS_BOX_MARGIN));
+		float flDistance = (flSide - vecOrigin[i]) / vecDirection[i];
+		if (flDistance < flExit)
+			flExit = flDistance;
+	}
+	
+	if (flExit < 0.0)
+		flExit = 0.0;
+	
+	for (int i = 0; i < 3; i++)
+		vecOrigin[i] += vecDirection[i] * (flExit + 1.0);
+}
+
+static int WeaponKeys_FindTeammateAt(const float vecPoint[3], int iTeam, int iIgnore)
+{
+	for (int iClient = 1; iClient <= MaxClients; iClient++)
+	{
+		if (iClient == iIgnore || !IsClientInGame(iClient) || !IsPlayerAlive(iClient) || GetClientTeam(iClient) != iTeam)
+			continue;
+		
+		float vecPlayer[3], vecMins[3], vecMaxs[3];
+		GetClientAbsOrigin(iClient, vecPlayer);
+		GetClientMins(iClient, vecMins);
+		GetClientMaxs(iClient, vecMaxs);
+		
+		bool bInside = true;
+		for (int i = 0; i < 3 && bInside; i++)
+			bInside = (vecPoint[i] > vecPlayer[i] + vecMins[i] - WEAPONKEYS_PASS_BOX_MARGIN && vecPoint[i] < vecPlayer[i] + vecMaxs[i] + WEAPONKEYS_PASS_BOX_MARGIN);
+		
+		if (bInside)
+			return iClient;
+	}
+	
+	return 0;
 }
 
 bool WeaponKeys_OnTakeDamage(int iVictim, int iAttacker, int &iDamageType, int iWeapon, int iDamageCustom)
@@ -264,13 +413,6 @@ void WeaponKeys_OnThink(int iClient)
 	if (iWeapon <= MaxClients || !IsValidEntity(iWeapon))
 		return;
 	
-	if (Config_GetWeaponKeyInt(iClient, iWeapon, "damagerequired") > g_iPlayerDamage[iClient])
-	{
-		float flHold = GetGameTime() + WEAPONKEYS_REQUIRED_HOLD;
-		if (GetEntPropFloat(iWeapon, Prop_Send, "m_flNextPrimaryAttack") < flHold)
-			SetEntPropFloat(iWeapon, Prop_Send, "m_flNextPrimaryAttack", flHold + WEAPONKEYS_REQUIRED_HOLD);
-	}
-	
 	if (TF2_GetPlayerClass(iClient) != TFClass_Scout)
 		return;
 	
@@ -282,29 +424,6 @@ void WeaponKeys_OnThink(int iClient)
 	float flBlock = GetGameTime() + 1.0;
 	if (GetEntPropFloat(iWeapon, Prop_Send, "m_flNextSecondaryAttack") < flBlock)
 		SetEntPropFloat(iWeapon, Prop_Send, "m_flNextSecondaryAttack", flBlock + 1.0);
-}
-
-bool WeaponKeys_GetDamageRequired(int iClient, int &iRequired)
-{
-	iRequired = 0;
-	if (g_iTotalRoundPlayed <= 0 || !SaxtonHale_IsValidAttack(iClient) || !IsPlayerAlive(iClient))
-		return false;
-	
-	for (int iSlot = WeaponSlot_Primary; iSlot <= WeaponSlot_Melee; iSlot++)
-	{
-		int iWeapon = GetPlayerWeaponSlot(iClient, iSlot);
-		if (iWeapon <= MaxClients)
-			continue;
-		
-		int iValue = Config_GetWeaponKeyInt(iClient, iWeapon, "damagerequired");
-		if (iValue > g_iPlayerDamage[iClient])
-		{
-			iRequired = iValue;
-			return true;
-		}
-	}
-	
-	return false;
 }
 
 bool WeaponKeys_OnTakeDamageAliveFalloff(int iVictim, int iAttacker, float &flDamage, int iDamageType, int iWeapon)
@@ -512,9 +631,6 @@ static void WeaponKeys_MissExplodeThink(int iClient, int iWeapon, bool bSameWeap
 		return;
 	
 	if (!HasEntProp(iWeapon, Prop_Send, "m_iDetonated") || GetEntProp(iWeapon, Prop_Send, "m_iDetonated") != 0)
-		return;
-	
-	if (Config_GetWeaponKeyInt(iClient, iWeapon, "damagerequired") > g_iPlayerDamage[iClient])
 		return;
 	
 	if (Config_GetWeaponKeyFloat(iClient, iWeapon, "missexplode") > 0.0)

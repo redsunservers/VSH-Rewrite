@@ -69,6 +69,7 @@ public void BombProjectile_OnThink(SaxtonHaleBase boss)
 			TeleportEntity(iBomb, NULL_VECTOR, vecAngleVelocity, vecVelocity);
 			
 			SetEntPropFloat(iBomb, Prop_Send, "m_flDamage", boss.GetPropFloat("BombProjectile", "Damage"));
+			SetEntPropFloat(iBomb, Prop_Send, "m_DmgRadius", boss.GetPropFloat("BombProjectile", "Radius"));
 			SDK_SetFuseTime(iBomb, GetGameTime() + 2.0);	//Fuse time
 			SetEntProp(iBomb, Prop_Send, "m_CollisionGroup", 24);
 		}

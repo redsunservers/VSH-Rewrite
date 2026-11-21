@@ -133,6 +133,7 @@ public void Event_RoundArenaStart(Event event, const char[] sName, bool bDontBro
 	}
 
 	g_bRoundStarted = true;
+	g_flRoundStartTime = GetGameTime();
 	g_iTotalAttackCount = SaxtonHale_GetAliveAttackPlayers();
 	
 	Afk_RoundArenaStart();
@@ -634,10 +635,7 @@ public void Event_ObjectDeflected(Event event, const char[] sName, bool bDontBro
 	if (!g_bEnabled) return;
 	if (g_iTotalRoundPlayed <= 0) return;
 
-	if (event.GetInt("weaponid") != 0)
-		return;
-
-	Tags_OnAirblastPush(GetClientOfUserId(event.GetInt("userid")), GetClientOfUserId(event.GetInt("ownerid")));
+	Tags_OnAirblastDeflect(GetClientOfUserId(event.GetInt("userid")), GetClientOfUserId(event.GetInt("ownerid")), event.GetInt("weaponid") != 0);
 }
 
 public Action Event_SappedObject(Event event, const char[] sName, bool bDontBroadcast)
@@ -862,6 +860,8 @@ public void Event_PlayerHurt(Event event, const char[] sName, bool bDontBroadcas
 	SaxtonHaleBase boss = SaxtonHaleBase(iClient);
 	if (boss.bValid)
 	{
+		BaseBoss_OnPlayerHurt(iClient, event.GetBool("minicrit"));
+
 		int iAttacker = GetClientOfUserId(event.GetInt("attacker"));
 		int iDamageAmount = event.GetInt("damageamount");
 		
