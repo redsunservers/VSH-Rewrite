@@ -16,6 +16,7 @@
 #define WEAPONKEYS_DMG_MELEE	(1 << 27)
 #define WEAPONKEYS_EXPLOSION_WEAPONID	23
 #define WEAPONKEYS_EXPLOSION_SOUND	11
+#define WEAPONKEYS_EXPLOSION_NO_PARTICLE	65535
 #define WEAPONKEYS_PASS_CHECK_FROM	0.2
 #define WEAPONKEYS_PASS_CHECK_UNTIL	0.4
 #define WEAPONKEYS_PASS_CHECK_MISSES	8
@@ -682,7 +683,7 @@ static void WeaponKeys_MissExplode(int iClient, int iWeapon)
 	TE_WriteNum("entindex", iClient);
 	TE_WriteNum("m_nDefID", -1);
 	TE_WriteNum("m_nSound", WEAPONKEYS_EXPLOSION_SOUND);
-	TE_WriteNum("m_iCustomParticleIndex", -1);
+	TE_WriteNum("m_iCustomParticleIndex", WEAPONKEYS_EXPLOSION_NO_PARTICLE);
 	TE_SendToAll();
 }
 

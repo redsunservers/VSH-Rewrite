@@ -16,6 +16,7 @@ public void Zombie_Create(SaxtonHaleBase boss)
 	g_bZombieSpawnProtect[boss.iClient] = true;
 	g_bZombieProtected[boss.iClient] = false;
 	g_bZombieRestoreCollision[boss.iClient] = false;
+	g_flZombieLastDamage[boss.iClient] = 0.0;
 }
 
 public bool Zombie_IsBossHidden(SaxtonHaleBase boss)

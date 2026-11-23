@@ -25,9 +25,3 @@ public void ModifiersSpeed_GetRenderColor(SaxtonHaleBase boss, int iColor[4])
 	iColor[2] = 144;
 	iColor[3] = 255;
 }
-
-public void ModifiersSpeed_GetParticleEffect(SaxtonHaleBase boss, int index, char[] sEffect, int length)
-{
-	if (index == 0)
-		strcopy(sEffect, length, "utaunt_auroraglow_green_parent");
-}
