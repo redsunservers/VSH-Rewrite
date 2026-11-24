@@ -419,6 +419,41 @@ public void Tags_SetEntProp(int iClient, int iTarget, TagsParams tParams)
 	}
 }
 
+public void Tags_ModelScale(int iClient, int iTarget, TagsParams tParams)
+{
+	if (iTarget <= 0 || !IsValidEdict(iTarget) || !HasEntProp(iTarget, Prop_Send, "m_flModelScale"))
+		return;
+	
+	float flScale = tParams.GetFloat("value", 1.0);
+	
+	float flBackstab;
+	if (tParams.GetFloatEx("backstab", flBackstab))
+	{
+		int iCount = 0;
+		for (int iVictim = 1; iVictim <= MaxClients; iVictim++)
+			iCount += g_iBackstabCount[iClient][iVictim];
+		
+		flScale += flBackstab * float(iCount);
+	}
+	
+	float flMax, flFull;
+	bool bMax = tParams.GetFloatEx("max", flMax);
+	if (bMax && tParams.GetFloatEx("full", flFull) && flFull > 0.0)
+	{
+		float flProgress = (tParams.GetFloat("rounddamage") * float(g_iPlayerDamage[iClient]) + tParams.GetFloat("roundassist") * float(g_iPlayerAssistDamage[iClient])) / flFull;
+		if (flProgress > 1.0)
+			flProgress = 1.0;
+		
+		flScale += (flMax - flScale) * flProgress;
+	}
+	
+	if (bMax && flScale > flMax)
+		flScale = flMax;
+	
+	if (GetEntPropFloat(iTarget, Prop_Send, "m_flModelScale") != flScale)
+		SetEntPropFloat(iTarget, Prop_Send, "m_flModelScale", flScale);
+}
+
 public void Tags_SetAttrib(int iClient, int iTarget, TagsParams tParams)
 {
 	if (iTarget <= 0 || !IsValidEdict(iTarget))

@@ -87,6 +87,9 @@ public Action TagsDamage_OnTakeDamageAlive(int victim, int &attacker, int &infli
 	if (tParams.GetFloatEx("rounddamage", flValue) && 0 < attacker <= MaxClients)
 	{
 		damage = flValue * float(g_iPlayerDamage[attacker]);
+		float flAssist;
+		if (tParams.GetFloatEx("roundassist", flAssist))
+			damage += flAssist * float(g_iPlayerAssistDamage[attacker]);
 		action = Plugin_Changed;
 	}
 	
