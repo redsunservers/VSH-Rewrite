@@ -519,7 +519,7 @@ public void Tags_AddAttrib(int iClient, int iTarget, TagsParams tParams)
 		g_aAttrib.Set(iSize, iIndex, TagsAttrib_Index);
 		g_aAttrib.Set(iSize, GetGameTime() + flDuration, TagsAttrib_Duration);
 	}
-	else if (g_aAttrib.Get(iPos, TagsAttrib_Duration) <= GetGameTime() + flDuration)
+	else if (view_as<float>(g_aAttrib.Get(iPos, TagsAttrib_Duration)) <= GetGameTime() + flDuration)
 	{
 		//Set new duration
 		g_aAttrib.Set(iPos, GetGameTime() + flDuration, TagsAttrib_Duration);
@@ -1113,7 +1113,7 @@ public Action Timer_ResetAttrib(Handle hTimer, DataPack data)
 	{
 		if (g_aAttrib.Get(iPos, TagsAttrib_Ref) == iRef
 			&& g_aAttrib.Get(iPos, TagsAttrib_Index) == iIndex
-			&& g_aAttrib.Get(iPos, TagsAttrib_Duration) <= GetGameTime() + 0.1)
+			&& view_as<float>(g_aAttrib.Get(iPos, TagsAttrib_Duration)) <= GetGameTime() + 0.1)
 		{
 			//Found with same ref, attrib index and outside of time
 			TF2Attrib_RemoveByDefIndex(iEntity, iIndex);
