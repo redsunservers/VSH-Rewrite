@@ -77,6 +77,7 @@ public void Horsemann_Create(SaxtonHaleBase boss)
 	boss.flHealthExponential = 1.05;
 	boss.nClass = TFClass_DemoMan;
 	boss.iMaxRageDamage = 3000;
+	boss.SetPropFloat("SaxtonHaleBoss", "RageGainHealthCap", 1.0);
 }
 
 public void Horsemann_GetBossName(SaxtonHaleBase boss, char[] sName, int length)

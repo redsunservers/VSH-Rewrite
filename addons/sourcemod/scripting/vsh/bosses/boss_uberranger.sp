@@ -309,8 +309,8 @@ public void MinionRanger_Create(SaxtonHaleBase boss)
 {
 	boss.CreateClass("BraveJump");
 	
-	boss.iBaseHealth = 800;
-	boss.iHealthPerPlayer = 80;
+	boss.iBaseHealth = 540;
+	boss.iHealthPerPlayer = 54;
 	boss.nClass = TFClass_Medic;
 	boss.iMaxRageDamage = -1;
 	boss.bMinion = true;

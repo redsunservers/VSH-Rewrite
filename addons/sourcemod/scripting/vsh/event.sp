@@ -774,8 +774,8 @@ public void Event_PlayerInventoryUpdate(Event event, const char[] sName, bool bD
 	if (!g_bEnabled) return;
 
 	int iClient = GetClientOfUserId(event.GetInt("userid"));
-	if (GetClientTeam(iClient) <= 1) return;
-	
+	if (iClient <= 0 || GetClientTeam(iClient) <= 1) return;
+
 	TF2_CheckClientWeapons(iClient);
 	AltWeapon_UpdateActive(iClient);
 	
