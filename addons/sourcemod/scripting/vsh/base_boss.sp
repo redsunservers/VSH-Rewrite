@@ -49,6 +49,7 @@ static int g_iClientBossPushTick[MAXPLAYERS];
 
 static float g_flClientBossRagePressTime[MAXPLAYERS];
 static bool g_bClientBossRageSuper[MAXPLAYERS];
+static int g_iClientBossRageGained[MAXPLAYERS];
 static int g_iBossMinionHitVictim;
 static int g_iBossMinionHitTick;
 static float g_flClientMinionHitUber[MAXPLAYERS];
@@ -60,6 +61,7 @@ public void SaxtonHaleBoss_Create(SaxtonHaleBase boss)
 	
 	boss.SetPropFloat("SaxtonHaleBoss", "RageCooldown", BOSS_RAGE_COOLDOWN_DEFAULT);
 	boss.SetPropFloat("SaxtonHaleBoss", "RageCooldownMin", BOSS_RAGE_COOLDOWN_MIN_DEFAULT);
+	boss.SetPropFloat("SaxtonHaleBoss", "RageGainHealthCap", 0.0);
 	
 	g_bClientBossIsolated[boss.iClient] = false;
 	g_flClientBossIsolationNextCheck[boss.iClient] = 0.0;
@@ -71,6 +73,7 @@ public void SaxtonHaleBoss_Create(SaxtonHaleBase boss)
 	g_flClientBossSelfStunTime[boss.iClient] = 0.0;
 	g_flClientBossRagePressTime[boss.iClient] = 0.0;
 	g_bClientBossRageSuper[boss.iClient] = false;
+	g_iClientBossRageGained[boss.iClient] = 0;
 
 	boss.iBaseHealth = 0;
 	boss.iHealthPerPlayer = 0;
@@ -309,6 +312,22 @@ public void SaxtonHaleBoss_AddRage(SaxtonHaleBase boss, int iAmount)
 	int iRageRequirement = boss.iMaxRageDamage;
 	if (iRageRequirement < 0)	//No rage (-1)
 		return;
+	
+	if (iAmount > 0)
+	{
+		float flGainCap = boss.GetPropFloat("SaxtonHaleBoss", "RageGainHealthCap");
+		if (flGainCap > 0.0)
+		{
+			int iGainLeft = RoundToNearest(float(boss.iMaxHealth) * flGainCap) - g_iClientBossRageGained[boss.iClient];
+			if (iGainLeft <= 0)
+				return;
+			
+			if (iAmount > iGainLeft)
+				iAmount = iGainLeft;
+		}
+		
+		g_iClientBossRageGained[boss.iClient] += iAmount;
+	}
 	
 	//Add/Remove rage
 	int iRage = boss.iRageDamage + iAmount;
