@@ -170,8 +170,8 @@ void NextBoss_SetNextBoss()
 
 		//Roll for multi boss
 		char sMultiBoss[MAX_TYPE_CHAR];
-		if ((bPartyDuo || (Preferences_Get(iMainBoss, VSHPreferences_MultiBoss)
-			&& GetRandomFloat(0.0, 1.0) <= g_ConfigConvar.LookupFloat("vsh_boss_chance_multi")))
+		if (iPartner > 0 && (bPartyDuo
+			|| GetRandomFloat(0.0, 1.0) <= g_ConfigConvar.LookupFloat("vsh_boss_chance_multi"))
 			&& NextBoss_GetRandomMulti(sMultiBoss, sizeof(sMultiBoss), iMainBoss, iPartner))
 		{
 			ArrayList aList = new ArrayList(ByteCountToCells(MAX_TYPE_CHAR));
@@ -478,9 +478,7 @@ stock bool NextBoss_GetRandomMulti(char[] sBossMulti, int iLength, int iPartyBos
 	int iPlayersDuo = 0;
 	for (int iClient = 1; iClient <= MaxClients; iClient++)
 	{
-		if (IsClientInGame(iClient) && TF2_GetClientTeam(iClient) > TFTeam_Spectator && Preferences_Get(iClient, VSHPreferences_PickAsBoss) && Preferences_Get(iClient, VSHPreferences_MultiBoss))
-			iPlayersDuo++;
-		else if (iPartyPartner > 0 && (iClient == iPartyBoss || iClient == iPartyPartner))
+		if (iPartyPartner > 0 && (iClient == iPartyBoss || iClient == iPartyPartner))
 			iPlayersDuo++;
 	}
 	

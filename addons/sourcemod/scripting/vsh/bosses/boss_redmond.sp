@@ -1,4 +1,5 @@
 #define REDMOND_MODEL		"models/player/kirillian/boss/boss_redmond_v2.mdl"
+#define REDMOND_FIREBALL_DAMAGE	50.0
 
 static char g_strRedmondWin[][] = {
 	"vo/halloween_mann_brothers/sf13_redmond_win05.mp3",
@@ -43,7 +44,8 @@ public void Redmond_Create(SaxtonHaleBase boss)
 	WeaponSpells_AddSpells(boss, haleSpells_Fireball);
 	WeaponSpells_RageSpells(boss, haleSpells_Monoculus);
 	boss.SetPropFloat("WeaponSpells", "RageRequirement", 0.0);
-	boss.SetPropFloat("WeaponSpells", "Cooldown", 8.0);
+	boss.SetPropFloat("WeaponSpells", "Cooldown", 10.0);
+	boss.SetPropInt("WeaponSpells", "MaxCharges", 3);
 	
 	boss.iHealthPerPlayer = 550;
 	boss.flHealthExponential = 1.05;
@@ -73,7 +75,7 @@ public void Redmond_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length)
 	StrCat(sInfo, length, "\nHealth: Low");
 	StrCat(sInfo, length, "\n ");
 	StrCat(sInfo, length, "\nAbilities");
-	StrCat(sInfo, length, "\n- Alt-attack to use spell (8 second cooldown)");
+	StrCat(sInfo, length, "\n- Alt-attack to use spell (10 second cooldown)");
 	StrCat(sInfo, length, "\n- Press Reload to cycle spells:");
 	StrCat(sInfo, length, "\n  Shadow Leap (Teleport) > Fireball");
 	StrCat(sInfo, length, "\n ");
@@ -85,6 +87,17 @@ public void Redmond_GetBossInfo(SaxtonHaleBase boss, char[] sInfo, int length)
 
 public Action Redmond_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
+	if (inflictor > MaxClients && IsValidEntity(inflictor) && (damagetype & DMG_BURN))
+	{
+		char sInflictor[64];
+		GetEntityClassname(inflictor, sInflictor, sizeof(sInflictor));
+		if (StrEqual(sInflictor, "tf_projectile_spellfireball"))
+		{
+			damage = REDMOND_FIREBALL_DAMAGE;
+			return Plugin_Changed;
+		}
+	}
+	
 	//Monos spell damage sucks, buff it
 	if (weapon > MaxClients)
 	{

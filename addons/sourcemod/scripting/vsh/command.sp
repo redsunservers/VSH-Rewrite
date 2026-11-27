@@ -26,8 +26,6 @@ public void Command_Init()
 	Command_Create("settings", Command_Preferences);
 	Command_Create("preferences", Command_Preferences);
 	Command_Create("bosstoggle", Command_Preferences_Boss);
-	Command_Create("duo", Command_Preferences_Multi);
-	Command_Create("multi", Command_Preferences_Multi);
 	Command_Create("music", Command_Preferences_Music);
 	Command_Create("revival", Command_Preferences_Revival);
 	Command_Create("zombie", Command_Preferences_Revival);
@@ -257,20 +255,6 @@ public Action Command_Preferences_Boss(int iClient, int iArgs)
 	}
 
 	ClientCommand(iClient, "vsh_preferences boss");
-	return Plugin_Handled;
-}
-
-public Action Command_Preferences_Multi(int iClient, int iArgs)
-{
-	if (!g_bEnabled) return Plugin_Continue;
-
-	if (iClient == 0)
-	{
-		ReplyToCommand(iClient, "This command can only be used in-game.");
-		return Plugin_Handled;
-	}
-
-	ClientCommand(iClient, "vsh_preferences multi");
 	return Plugin_Handled;
 }
 
