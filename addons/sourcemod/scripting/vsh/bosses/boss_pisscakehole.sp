@@ -165,7 +165,7 @@ public void PissCakehole_OnThink(SaxtonHaleBase boss)
 }
 
 //Decrease damage on kill up to a cap
-public Action PissCakehole_OnAttackDamage(SaxtonHaleBase boss, int &attacker, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
+public Action PissCakehole_OnAttackDamage(SaxtonHaleBase boss, int victim, int &inflictor, float &damage, int &damagetype, int &weapon, float damageForce[3], float damagePosition[3], int damagecustom)
 {
 	float flDamageMultiplier = 1.0 - (i_PlayerCounter[boss.iClient] * 0.05);
 	if(flDamageMultiplier < 0.5)

@@ -30,6 +30,8 @@ void DuoParty_Init()
 
 	Command_Create("duopref", DuoParty_Command_Menu);
 	RegConsoleCmd("sm_duopref", DuoParty_Command_Menu);
+	Command_Create("party", DuoParty_Command_Menu);
+	RegConsoleCmd("sm_party", DuoParty_Command_Menu);
 	RegConsoleCmd("sm_accept", DuoParty_Command_Accept);
 	RegConsoleCmd("sm_optin", DuoParty_Command_OptIn);
 	RegConsoleCmd("sm_partyname", DuoParty_Command_PartyName);

@@ -19,6 +19,7 @@ static Handle g_hUberRangerMinionAFKTimer[MAXPLAYERS + 1];
 
 static bool g_bUberRangerPlayerWasSummoned[MAXPLAYERS + 1];
 static bool g_bUberRangerMinionHasMoved[MAXPLAYERS + 1];
+static int g_iUberRangerSummonOwed[MAXPLAYERS + 1];
 
 static char g_strUberRangerRoundStart[][] = {
 	"vo/medic_battlecry05.mp3"
@@ -69,6 +70,7 @@ public void UberRanger_Create(SaxtonHaleBase boss)
 	
 	g_bUberRangerHasSwappedWeapons[boss.iClient] = false;
 	g_bUberRangerChargeTold[boss.iClient] = false;
+	g_iUberRangerSummonOwed[boss.iClient] = 0;
 	
 	for (int i = 1; i <= MaxClients; i++)
 		g_bUberRangerPlayerWasSummoned[i] = false;
@@ -192,6 +194,7 @@ public void UberRanger_OnRage(SaxtonHaleBase boss)
 	int iTotalSummons = 1;
 	if (boss.bSuperRage)
 		iTotalSummons = 3;
+	iTotalSummons += g_iUberRangerSummonOwed[boss.iClient];
 	
 	ArrayList aValidMinions = GetValidSummonableClients();
 	char sMessage[64];
@@ -212,6 +215,8 @@ public void UberRanger_OnRage(SaxtonHaleBase boss)
 			iSpawns++;
 		} 
 	}
+	
+	g_iUberRangerSummonOwed[boss.iClient] = iTotalSummons - iSpawns;
 	
 	if (iSpawns > 0)
 	{

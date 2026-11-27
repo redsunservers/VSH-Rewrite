@@ -14,6 +14,7 @@
 static float g_flSeeldierMinionSmackTime[MAXPLAYERS];
 static ConVar g_cvSeeldierGravity;
 static float g_flSeeldierMinionBlastReady[MAXPLAYERS];
+static int g_iSeeldierSummonOwed[MAXPLAYERS + 1];
 
 public void Seeldier_Create(SaxtonHaleBase boss)
 {
@@ -24,6 +25,7 @@ public void Seeldier_Create(SaxtonHaleBase boss)
 	boss.flHealthExponential = 1.05;
 	boss.nClass = TFClass_Soldier;
 	boss.iMaxRageDamage = 2000;
+	g_iSeeldierSummonOwed[boss.iClient] = 0;
 }
 
 public void Seeldier_GetBossMultiType(SaxtonHaleBase boss, char[] sType, int length)
@@ -81,10 +83,12 @@ public void Seeldier_OnRage(SaxtonHaleBase boss)
 {
 	int iTotalMinions = 3;
 	if (boss.bSuperRage) iTotalMinions *= 2;
+	iTotalMinions += g_iSeeldierSummonOwed[boss.iClient];
 	
 	ArrayList aValidMinions = GetValidSummonableClients();
 	
 	int iLength = aValidMinions.Length;
+	g_iSeeldierSummonOwed[boss.iClient] = (iLength < iTotalMinions) ? iTotalMinions - iLength : 0;
 	if (iLength < iTotalMinions)
 		iTotalMinions = iLength;
 	else
@@ -312,7 +316,7 @@ public void SeeldierMinion_GetSound(SaxtonHaleBase boss, char[] sSound, int leng
 	strcopy(sSound, length, SEELDIER_SEE_SND);
 }
 
-public void SeeldierMinion_GetSoundKill(SaxtonHaleBase boss, TFClassType playerClass, char[] sSound, int length)
+public void SeeldierMinion_GetSoundKill(SaxtonHaleBase boss, char[] sSound, int length, TFClassType nClass)
 {
 	strcopy(sSound, length, SEELDIER_SEE_SND);
 }

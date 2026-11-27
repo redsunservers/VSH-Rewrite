@@ -234,7 +234,7 @@ enum
 char g_strPreferencesName[][] = {
 	"Boss Selection",
 	"",
-	"Multi Boss",
+	"",
 	"Music",
 	"Revival",
 	"Hale modifiers"

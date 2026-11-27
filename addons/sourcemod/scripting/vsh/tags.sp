@@ -1,6 +1,7 @@
 static int g_iBackstabCount[MAXPLAYERS][MAXPLAYERS];
 static int g_iClimbAmount[MAXPLAYERS];
 static int g_iZombieUsed[MAXPLAYERS];
+static int g_iZombieOwed[MAXPLAYERS + 1];
 static float g_flUberBeforeHealingBuilding[MAXPLAYERS];
 static float g_flDispenserBoost[MAXPLAYERS];
 
@@ -40,6 +41,7 @@ void Tags_ResetClient(int iClient)
 	
 	g_iClimbAmount[iClient] = 0;
 	g_iZombieUsed[iClient] = 0;
+	g_iZombieOwed[iClient] = 0;
 	g_flUberBeforeHealingBuilding[iClient] = 0.0;
 	g_flDispenserBoost[iClient] = 0.0;
 	
@@ -804,11 +806,13 @@ public void Tags_SummonZombie(int iClient, int iTarget, TagsParams tParams)
 	int iMaxCount = iMax - (iReduce * g_iZombieUsed[iTarget]);
 	if (iMaxCount < iMin)
 		iMaxCount = iMin;
+	iMaxCount += g_iZombieOwed[iTarget];
 	
 	//Collect list of valid players
 	ArrayList aDeadPlayers = GetValidSummonableClients();
 	int iLength = aDeadPlayers.Length;
 	
+	g_iZombieOwed[iTarget] = (iMaxCount > iLength) ? iMaxCount - iLength : 0;
 	if (iMaxCount > iLength)
 		iMaxCount = iLength;
 	
