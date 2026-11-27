@@ -316,7 +316,7 @@ public void SeeldierMinion_GetSound(SaxtonHaleBase boss, char[] sSound, int leng
 	strcopy(sSound, length, SEELDIER_SEE_SND);
 }
 
-public void SeeldierMinion_GetSoundKill(SaxtonHaleBase boss, char[] sSound, int length, TFClassType nClass)
+public void SeeldierMinion_GetSoundKill(SaxtonHaleBase boss, char[] sSound, int length, TFClassType playerClass)
 {
 	strcopy(sSound, length, SEELDIER_SEE_SND);
 }
